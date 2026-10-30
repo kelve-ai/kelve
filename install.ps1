@@ -1,13 +1,13 @@
 # Installs the `kelve` command, the newest release, for Windows:
 #
-#   irm https://raw.githubusercontent.com/kelve-ai/kelve/main/install.ps1 | iex
+#   irm https://kelve.ai/install.ps1 | iex
 #
 # It downloads the build from GitHub Releases, checks it against the
 # release's checksums, puts kelve.exe in %LOCALAPPDATA%\kelve\bin, or in
-# KELVE_INSTALL_DIR, and adds that folder to your PATH. Then `kelve open .`
-# opens kelve in your browser. Downloaded this way, rather than in a
-# browser, kelve.exe isn't marked as from the internet, so SmartScreen
-# doesn't stop it.
+# KELVE_INSTALL_DIR, and adds that folder to your PATH. Then it sets kelve
+# up: connects your agent, adds its hook, and how much kelve marks for you.
+# Downloaded this way, rather than in a browser, kelve.exe isn't marked as
+# from the internet, so SmartScreen doesn't stop it.
 #
 # It's run with `iex`, in the person's own window: it never calls `exit`,
 # which would close it, and says what went wrong instead.

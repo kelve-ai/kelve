@@ -16,7 +16,7 @@ similar = { workspace = true }
 # Walking a folder as git would: .gitignore and the like.
 ignore = "0.4.33"
 # Reading git itself, never running it: pure Rust, read-only use.
-gix = { version = "0.89", default-features = false, features = ["revision", "sha1"] }
+gix = { version = "0.90", default-features = false, features = ["revision", "sha1"] }
 # Passages of code, by the shape of the code. Grammars are compiled in, so
 # nothing is fetched or run.
 tree-sitter = "0.27"

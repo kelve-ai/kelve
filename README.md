@@ -22,6 +22,8 @@ Then, when it's done something:
 Show me what you did in kelve.
 ```
 
+Claude Code and Codex show you their work in kelve automatically, before they merge it.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
   <img src=".github/assets/change-light.png" alt="kelve on an example: a change an agent made to a payments service, opened on what it does, with the files in order beside it.">

@@ -28,7 +28,7 @@ kelve-graph-api = { path = "crates/graph-api" }
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.8.9", features = ["macros", "multipart"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["trace", "limit", "timeout", "compression-gzip", "set-header"] }
+tower-http = { version = "0.7", features = ["trace", "limit", "timeout", "compression-gzip", "set-header"] }
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "form", "query"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 http-body-util = "0.1"
@@ -53,7 +53,7 @@ uuid = { version = "1", features = ["v7", "serde"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde", "std"] }
 regex = "1"
 # Line diffs for the lines a piece of work changed.
-similar = "2"
+similar = "3"
 # The shared graph's OpenAPI document, from the types its API speaks.
 utoipa = "6.0.0"
 ts-rs = { version = "12", features = ["chrono-impl", "uuid-impl", "serde-json-impl", "no-serde-warnings"] }
@@ -61,12 +61,12 @@ ts-rs = { version = "12", features = ["chrono-impl", "uuid-impl", "serde-json-im
 # Crypto
 sha2 = "0.11"
 hmac = "0.13"
-getrandom = "0.3"
-base64 = "0.22"
+getrandom = "0.4"
+base64 = "0.23"
 # Reading tokens: the VOPRF of RFC 9497, as Privacy Pass issues tokens.
 voprf = { version = "0.5", default-features = false, features = ["ristretto255-ciphersuite", "std"] }
 rand_core = { version = "0.6", features = ["getrandom"] }
-chacha20poly1305 = "0.10"
+chacha20poly1305 = "0.11"
 
 # Unpacking a release, for `kelve update`: a .tar.gz on macOS and Linux,
 # a .zip on Windows, each holding the one binary. flate2 was already built

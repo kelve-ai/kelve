@@ -24,11 +24,11 @@ jobs:
     name: Rust
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all --all-features --locked
@@ -45,7 +45,7 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
@@ -65,9 +65,9 @@ jobs:
     # six hours, without one.
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: cargo test --all --locked
       # The Windows installer reads as PowerShell: the release installs
       # with it, once there's one (release.yml).
@@ -78,6 +78,18 @@ jobs:
           $errors = $null
           [System.Management.Automation.Language.Parser]::ParseFile("$PWD\install.ps1", [ref]$null, [ref]$errors) | Out-Null
           if ($errors) { $errors | ForEach-Object { Write-Host $_ }; exit 1 }
+      # Run in Git Bash, as an agent on Windows may, install.sh hands over
+      # to install.ps1: here a stand-in that only says it ran.
+      - name: install.sh hands Windows to install.ps1
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/ps1"
+          echo "Write-Host 'install.ps1 ran'" > "$RUNNER_TEMP/ps1/install.ps1"
+          (cd "$RUNNER_TEMP/ps1" && python -m http.server 8765 >/dev/null 2>&1 &)
+          sleep 3
+          KELVE_INSTALLER=http://127.0.0.1:8765/install.ps1 sh install.sh | tee "$RUNNER_TEMP/out.txt"
+          grep -q 'install.ps1 ran' "$RUNNER_TEMP/out.txt"
 
   # kelve as people use it, in a browser, against a kelve built from this
   # checkout, with a stand-in for the person's agent, the stand-in shared
@@ -86,9 +98,9 @@ jobs:
     name: End to end
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - run: bun install --frozen-lockfile
         working-directory: web
@@ -102,7 +114,7 @@ jobs:
         working-directory: web
       - name: What the tests saw, when they fail
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: e2e
           path: |
@@ -123,7 +135,7 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.64.1-noble
       options: --ipc=host
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Playwright's image has no unzip, which setting Bun up needs.
       - run: apt-get update && apt-get install -y --no-install-recommends unzip
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -135,7 +147,7 @@ jobs:
         working-directory: web
       - name: Both screenshots, when they differ
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: looks
           path: |

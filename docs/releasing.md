@@ -25,13 +25,13 @@ The release stays a draft until every platform's build is attached, then it's pu
 On macOS and Linux, `install.sh` installs the newest release's build for the computer it runs on, checked against `SHA256SUMS`, into `~/.local/bin`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kelve-ai/kelve/main/install.sh | sh
+curl -fsSL https://kelve.ai/install.sh | sh
 ```
 
 On Windows, `install.ps1` does the same in PowerShell, into `%LOCALAPPDATA%\kelve\bin`, and adds that folder to the person's `PATH`:
 
 ```powershell
-irm https://raw.githubusercontent.com/kelve-ai/kelve/main/install.ps1 | iex
+irm https://kelve.ai/install.ps1 | iex
 ```
 
 Then each runs `kelve setup`, which connects the person's agent, adds kelve's hook to its settings, and sets how much kelve marks: in a terminal it asks, and run by an agent it leaves the agent one word to choose.
@@ -40,7 +40,7 @@ Both need the repository and its releases to be public. `KELVE_INSTALL_DIR` puts
 
 A command installed this way isn't marked as downloaded from the internet, so it needs no signing: macOS's Gatekeeper and Windows' SmartScreen check what a browser downloads. A `kelve.exe` downloaded in a browser, from the release page, may get a SmartScreen warning until it's signed.
 
-When kelve.ai serves the scripts, by redirecting `https://kelve.ai/install.sh` and `https://kelve.ai/install.ps1` to the addresses above, those are the ones to give people; change them here and in each script's first lines.
+kelve.ai serves both scripts: each deploy of the site copies them from kelve at the commit it builds against, so a change to either reaches people once the site deploys again. Run on Windows in Git Bash, MSYS2 or Cygwin, as an agent told to install from `kelve.ai/install.sh` may, `install.sh` hands over to `install.ps1` in PowerShell; `KELVE_INSTALLER` gives it another `install.ps1` to run.
 
 ## Updating
 
