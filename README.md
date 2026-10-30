@@ -22,13 +22,11 @@ Ask your agent:
 Install kelve from kelve.ai/install.sh
 ```
 
-Then, when it's done something:
+Then your agent shows you its work when it commits, pushes or opens a pull request. Or ask it:
 
 ```
 Show me what you did in kelve.
 ```
-
-Claude Code and Codex show you their work in kelve automatically, before they merge it.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
@@ -140,7 +138,7 @@ cargo install --path crates/cli --locked
 kelve setup
 ```
 
-Then start a new session with your agent, so it has kelve's tools, and ask it to show you something in kelve.
+Then start a new session with your agent, so it has kelve's tools.
 
 ## Docs
 

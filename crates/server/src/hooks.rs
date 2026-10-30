@@ -113,8 +113,9 @@ mod tests {
         let claude = home.join(".claude");
         std::fs::create_dir_all(&claude).unwrap();
         std::fs::create_dir_all(home.join(".codex")).unwrap();
-        // Claude Code's, from an older kelve, on fewer events.
-        let older = r#"{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"kelve moment --agent claude --on UserPromptSubmit"}]}],"Stop":[{"hooks":[{"type":"command","command":"say done"}]}]}}"#;
+        // Claude Code's, from an older kelve: on fewer events, and on one
+        // kelve no longer uses, before a command.
+        let older = r#"{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"kelve moment --agent claude --on UserPromptSubmit"}]}],"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"kelve moment --agent claude --on PreToolUse"}]}],"Stop":[{"hooks":[{"type":"command","command":"say done"}]}]}}"#;
         std::fs::write(claude.join("settings.json"), older).unwrap();
         // Codex's, with no kelve hook: never asked for, so never added.
         let theirs = r#"{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"say done"}]}]}}"#;
@@ -123,7 +124,9 @@ mod tests {
         assert!(installed(Agent::Claude, &home, &claude));
         let now = std::fs::read_to_string(claude.join("settings.json")).unwrap();
         assert!(
-            now.contains("--on PreToolUse") && now.contains("say done"),
+            now.contains("--on PostToolUseFailure")
+                && !now.contains("--on PreToolUse")
+                && now.contains("say done"),
             "{now}"
         );
         assert_eq!(

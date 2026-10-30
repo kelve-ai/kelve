@@ -247,6 +247,33 @@ fn typed(choices: &[&str], default: usize) -> anyhow::Result<usize> {
     }
 }
 
+/// What setup says when it connects an agent again, whose kelve was set to
+/// read elsewhere.
+const OVERRIDDEN: &str =
+    " afresh, without the kelve settings it had, such as another graph to read";
+
+/// Why an agent's connection to kelve, as `claude mcp get kelve` shows it,
+/// should be made again: kelve's own settings in its environment, such as
+/// `KELVE_GRAPH_URL` from developing kelve, which would keep a new kelve
+/// reading another graph; or a command that isn't there any more.
+fn stale(shown: &str) -> Option<&'static str> {
+    let mut env = false;
+    for line in shown.lines() {
+        let line = line.trim();
+        if line.starts_with("Environment:") {
+            env = true;
+        } else if env && line.starts_with("KELVE_") {
+            return Some(OVERRIDDEN);
+        } else if let Some(command) = line.strip_prefix("Command:") {
+            let command = Path::new(command.trim());
+            if command.is_absolute() && !command.exists() {
+                return Some(" again: the kelve it ran isn't there any more");
+            }
+        }
+    }
+    None
+}
+
 /// Connects the agent to kelve with its own command, as `kelve mcp` from
 /// wherever this kelve is: what it said, or the line to run instead.
 fn connect(c: Connectable, me: &Path, home: &Path) -> Result<String, String> {
@@ -254,14 +281,28 @@ fn connect(c: Connectable, me: &Path, home: &Path) -> Result<String, String> {
     let quietly = |cmd: &mut Command| cmd.output().ok().filter(|o| o.status.success()).is_some();
     match c.agent {
         Agent::Claude => {
-            if quietly(Command::new("claude").args(["mcp", "get", "kelve"])) {
-                return Ok("Claude Code was connected already".into());
+            let had = Command::new("claude")
+                .args(["mcp", "get", "kelve"])
+                .output()
+                .ok();
+            let mut again = "";
+            if let Some(had) = had.filter(|o| o.status.success()) {
+                match stale(&String::from_utf8_lossy(&had.stdout)) {
+                    None => return Ok("Claude Code was connected already".into()),
+                    // Connected as it shouldn't be: taken out, and connected afresh.
+                    Some(why) => {
+                        quietly(
+                            Command::new("claude").args(["mcp", "remove", "kelve", "-s", "user"]),
+                        );
+                        again = why;
+                    }
+                }
             }
             quietly(
                 Command::new("claude")
                     .args(["mcp", "add", "--scope", "user", "kelve", "--", &me, "mcp"]),
             )
-            .then(|| "Connected to Claude Code".to_string())
+            .then(|| format!("Connected to Claude Code{again}"))
             .ok_or_else(|| "claude mcp add --scope user kelve -- kelve mcp".to_string())
         }
         Agent::Codex => {
@@ -284,7 +325,11 @@ fn connect(c: Connectable, me: &Path, home: &Path) -> Result<String, String> {
                 Ok(text) => serde_json::from_str(&text).map_err(|_| line.to_string())?,
                 Err(_) => serde_json::json!({}),
             };
-            if json["mcpServers"]["kelve"].is_object() {
+            let had = &json["mcpServers"]["kelve"];
+            let setting = had["env"]
+                .as_object()
+                .is_some_and(|env| env.keys().any(|k| k.starts_with("KELVE_")));
+            if had.is_object() && !setting {
                 return Ok("Cursor was connected already".into());
             }
             if !json.is_object() {
@@ -297,7 +342,11 @@ fn connect(c: Connectable, me: &Path, home: &Path) -> Result<String, String> {
                 serde_json::to_string_pretty(&json).unwrap_or_default(),
             )
             .map_err(|_| line.to_string())?;
-            Ok("Connected to Cursor".into())
+            Ok(if setting {
+                format!("Connected to Cursor{OVERRIDDEN}")
+            } else {
+                "Connected to Cursor".into()
+            })
         }
         _ => Err("kelve mcp".into()),
     }
@@ -454,6 +503,21 @@ mod tests {
             Some(Agent::Gemini)
         );
         assert_eq!(running_in(|_| None), None, "a person in a terminal");
+    }
+
+    #[test]
+    fn a_connection_that_sets_kelves_own_settings_is_made_again() {
+        let dev = "kelve:\n  Scope: User config (available in all your projects)\n  Status: ✔ Connected\n  Type: stdio\n  Command: kelve\n  Args: mcp\n  Environment:\n    KELVE_GRAPH_URL=http://localhost:4620\n";
+        assert_eq!(stale(dev), Some(OVERRIDDEN));
+        // Absolute on every system: Windows's need a drive.
+        let missing = std::env::temp_dir().join("kelve-that-was-taken-out");
+        let gone = format!(
+            "kelve:\n  Command: {}\n  Args: mcp\n  Environment:\n",
+            missing.display()
+        );
+        assert!(stale(&gone).is_some(), "{gone}");
+        let fine = "kelve:\n  Command: kelve\n  Args: mcp\n  Environment:\n\nTo remove this server, run: claude mcp remove kelve -s user\n";
+        assert_eq!(stale(fine), None);
     }
 
     #[test]

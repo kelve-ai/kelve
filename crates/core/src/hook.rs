@@ -1,8 +1,8 @@
 //! The hook that tells the person's coding agent what kelve has for it, at the
 //! moment it helps: the notes they left it, as they send a message; lessons
 //! from the shared graph, as it reads or edits a file and as something fails;
-//! and, before it merges work it hasn't shown the person, to show it in kelve
-//! first. One command, `kelve moment`, naming the agent and the event, on each
+//! and, when it hands work over that it hasn't shown the person (a commit, a
+//! push, a pull request), to show it in kelve. One command, `kelve moment`, naming the agent and the event, on each
 //! agent's own events: installed and taken out together, only with the person's
 //! yes. kelve adds only its own entries, and takes out only those, leaving
 //! everything else in the file as it was.
@@ -185,8 +185,6 @@ impl Agent {
                     Some("Read|Edit|Write|MultiEdit|NotebookEdit|Bash"),
                 ),
                 ("PostToolUseFailure", None),
-                // Before a command: a merge of work not shown yet.
-                ("PreToolUse", Some("Bash")),
                 // A turn ends: what a hard stretch taught, asked once.
                 ("Stop", None),
             ],
@@ -203,7 +201,6 @@ impl Agent {
             Agent::Codex => vec![
                 ("UserPromptSubmit", None),
                 ("PostToolUse", Some("Bash|Edit|Write")),
-                ("PreToolUse", Some("Bash")),
             ],
             Agent::Droid => vec![
                 ("UserPromptSubmit", None),
@@ -499,8 +496,7 @@ pub fn remove(agent: Agent, text: &str) -> Result<Option<String>, String> {
 pub struct Moment {
     /// `prompt`, `read`, `edit`, `ran`, `failed`, `next`: the agent is
     /// about to call its model, and can be given what was kept for it;
-    /// `end`: its turn ends; or `merging`: it's about to merge, its
-    /// command whole.
+    /// or `end`: its turn ends.
     pub what: String,
     pub agent: String,
     pub session: String,
@@ -832,20 +828,17 @@ pub fn moved_to(command: &str) -> Option<String> {
     }
 }
 
-/// A merge a command makes: of a branch, or, for `gh pr merge` with none
-/// named, the branch the command runs on; and the folder it runs in, when
-/// it moves there first (`cd x && …`, `git -C x …`).
+/// Work a command hands over for review, and the folder it runs in, when it
+/// moves there first (`cd x && …`, `git -C x …`).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Merge {
-    pub branch: Option<String>,
+pub struct Handover {
     pub dir: Option<String>,
 }
 
-/// The merge a command makes, if it makes one: `git merge <branch>`, or
-/// `gh pr merge`. Not one that's undone or carried on (`--abort`,
-/// `--continue`), or a pull request named by its number, whose branch
-/// isn't known without asking GitHub.
-pub fn merging(command: &str) -> Option<Merge> {
+/// Whether a command hands work over: `git commit`, `git push` or `gh pr
+/// create`. Not a commit or push only tried out (`--dry-run`), and not what
+/// only looks at work, like `git status` or `gh pr view`.
+pub fn handing_over(command: &str) -> Option<Handover> {
     let mut dir: Option<String> = None;
     for c in commands(command) {
         let words: Vec<&str> = c.split_whitespace().collect();
@@ -866,44 +859,16 @@ pub fn merging(command: &str) -> Option<Merge> {
                         _ => break,
                     }
                 }
-                if rest.get(i) != Some(&"merge") {
-                    continue;
+                let what = rest.get(i).copied();
+                let args = rest.get(i + 1..).unwrap_or_default();
+                // Only tried out: `--dry-run`, and for a push, `-n` too.
+                let tried =
+                    args.contains(&"--dry-run") || (what == Some("push") && args.contains(&"-n"));
+                if matches!(what, Some("commit" | "push")) && !tried {
+                    return Some(Handover { dir: at });
                 }
-                let mut args = rest[i + 1..].iter();
-                let mut branch = None;
-                while let Some(a) = args.next() {
-                    match *a {
-                        "--abort" | "--continue" | "--quit" | "--skip" => return None,
-                        "-m" | "-s" | "-X" | "-F" | "--strategy" | "--strategy-option"
-                        | "--file" => {
-                            args.next();
-                        }
-                        a if a.starts_with('-') => {}
-                        a => {
-                            branch = Some(a.trim_matches(['"', '\'']).to_string());
-                            break;
-                        }
-                    }
-                }
-                return branch.map(|b| Merge {
-                    branch: Some(b),
-                    dir: at,
-                });
             }
-            ["gh", "pr", "merge", args @ ..] => {
-                let named = args.iter().find(|a| !a.starts_with('-'));
-                return match named {
-                    Some(n) if n.chars().all(|c| c.is_ascii_digit()) || n.contains("://") => None,
-                    Some(n) => Some(Merge {
-                        branch: Some((*n).to_string()),
-                        dir: dir.clone(),
-                    }),
-                    None => Some(Merge {
-                        branch: None,
-                        dir: dir.clone(),
-                    }),
-                };
-            }
+            ["gh", "pr", "create", ..] => return Some(Handover { dir: dir.clone() }),
             _ => {}
         }
     }
@@ -968,13 +933,10 @@ pub fn moment(agent: Agent, on: &str, event: &Value) -> Option<Moment> {
         m.what = "end".into();
         return Some(m);
     }
-    // Before a command: only a merge is anything to kelve.
+    // Before a command: nothing, now kelve asks after work is handed over.
+    // A hook from an older kelve still sends it.
     if lower == "pretooluse" {
-        let command = first_str(&input, &["command"])?;
-        merging(&command)?;
-        m.what = "merging".into();
-        m.command = Some(command.trim().to_string());
-        return Some(m);
+        return None;
     }
     let tool = first_str(event, &["tool_name", "toolName"])
         .or_else(|| call.and_then(|c| first_str(c, &["name"])))
@@ -1190,18 +1152,6 @@ pub fn reply(agent: Agent, on: &str, text: &str) -> Option<String> {
     }
     let lower = on.to_lowercase();
     let prompt = lower == "userpromptsubmit";
-    // Before a merge, Claude Code and Qoder take kelve's word only as why
-    // the command didn't run: it's stopped once, and runs when asked again.
-    if lower == "pretooluse" && matches!(agent, Agent::Claude | Agent::Qoder) {
-        return Some(
-            json!({ "hookSpecificOutput": {
-                "hookEventName": on,
-                "permissionDecision": "deny",
-                "permissionDecisionReason": text,
-            } })
-            .to_string(),
-        );
-    }
     // As a turn ends, they take kelve's word only as why to go on: the
     // stop is held up once, and the agent answers before it hands back.
     if lower == "stop" && matches!(agent, Agent::Claude | Agent::Qoder) {
@@ -1241,87 +1191,47 @@ mod tests {
     const HOME: &str = "/Users/sam";
 
     #[test]
-    fn a_merge_is_seen_before_it_runs_and_nothing_else_is() {
-        let m = |branch: Option<&str>, dir: Option<&str>| {
-            Some(Merge {
-                branch: branch.map(str::to_string),
+    fn work_handed_over_is_seen_and_nothing_else_is() {
+        let at = |dir: Option<&str>| {
+            Some(Handover {
                 dir: dir.map(str::to_string),
             })
         };
         assert_eq!(
-            merging("git merge --ff-only fix-retries"),
-            m(Some("fix-retries"), None)
+            handing_over("git commit -qam 'Wait between tries'"),
+            at(None)
+        );
+        assert_eq!(handing_over("git push -u origin fix"), at(None));
+        assert_eq!(
+            handing_over("gh pr create --title Retries --body x"),
+            at(None)
         );
         assert_eq!(
-            merging("cd ~/projects/ledger && git merge -q --no-ff -m 'Retries' worktree-fix"),
-            m(Some("worktree-fix"), Some("~/projects/ledger"))
+            handing_over("cd ~/projects/ledger && git add -A && git commit -m Retries"),
+            at(Some("~/projects/ledger"))
         );
-        assert_eq!(
-            merging("git -C ../ledger merge fix"),
-            m(Some("fix"), Some("../ledger"))
-        );
-        assert_eq!(merging("gh pr merge --squash"), m(None, None));
-        assert_eq!(
-            merging("gh pr merge fix-retries --merge"),
-            m(Some("fix-retries"), None)
-        );
-        // Undone, carried on, a pull request by number, or no merge at all.
+        assert_eq!(handing_over("git -C ../ledger push"), at(Some("../ledger")));
+        // Tried out, only looked at, or not git at all.
         for none in [
-            "git merge --abort",
-            "git merge --continue",
-            "gh pr merge 42",
-            "git merge-base main fix",
+            "git commit --dry-run",
+            "git push --dry-run",
+            "git push -n",
             "git status",
+            "git log --oneline",
+            "gh pr view 3",
+            "gh pr merge --squash",
             "cargo test",
-            "echo git merge x",
+            "echo git commit",
         ] {
-            assert_eq!(merging(none), None, "{none}");
+            assert_eq!(handing_over(none), None, "{none}");
         }
-        // Before a command, only a merge is a moment, its command whole.
-        let event = |command: &str| json!({ "session_id": "s", "cwd": "/w/ledger", "tool_name": "Bash", "tool_input": { "command": command } });
-        let got = moment(
-            Agent::Claude,
-            "PreToolUse",
-            &event("git merge --ff-only fix"),
-        )
-        .unwrap();
-        assert_eq!(
-            (got.what.as_str(), got.command.as_deref()),
-            ("merging", Some("git merge --ff-only fix"))
-        );
-        assert_eq!(
-            moment(Agent::Claude, "PreToolUse", &event("cargo test")),
-            None
-        );
-        // Claude Code and Qoder are stopped once and told why; Codex is given a line.
-        let said: Value =
-            serde_json::from_str(&reply(Agent::Claude, "PreToolUse", "Show it first.").unwrap())
-                .unwrap();
-        assert_eq!(said["hookSpecificOutput"]["permissionDecision"], "deny");
-        assert_eq!(
-            said["hookSpecificOutput"]["permissionDecisionReason"],
-            "Show it first."
-        );
-        let said: Value =
-            serde_json::from_str(&reply(Agent::Codex, "PreToolUse", "Show it first.").unwrap())
-                .unwrap();
-        assert_eq!(
-            said["hookSpecificOutput"]["additionalContext"],
-            "Show it first."
-        );
-        assert_eq!(said["hookSpecificOutput"].get("permissionDecision"), None);
-        assert_eq!(
-            reply(Agent::Claude, "PreToolUse", ""),
-            None,
-            "nothing to say, nothing stopped"
-        );
-        // Only where the agent can be told before a command.
+        // Before a command is nothing to kelve now, even from an older hook.
+        let event = json!({ "session_id": "s", "cwd": "/w/ledger", "tool_name": "Bash", "tool_input": { "command": "git push" } });
+        assert_eq!(moment(Agent::Claude, "PreToolUse", &event), None);
+        // And it's no longer installed.
         for agent in [Agent::Claude, Agent::Qoder, Agent::Codex] {
             assert!(
-                agent
-                    .events()
-                    .iter()
-                    .any(|(e, m)| *e == "PreToolUse" && *m == Some("Bash")),
+                !agent.events().iter().any(|(e, _)| *e == "PreToolUse"),
                 "{}",
                 agent.name()
             );
