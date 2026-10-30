@@ -310,10 +310,15 @@ mod tests {
         dir
     }
 
+    /// Unique in this run: the clock alone can give two tests started
+    /// together the same name (macOS keeps time to the microsecond), and one
+    /// would take the other's folder away.
     fn uuid_like() -> String {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         format!(
-            "{}-{}",
+            "{}-{}-{}",
             std::process::id(),
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_nanos())
