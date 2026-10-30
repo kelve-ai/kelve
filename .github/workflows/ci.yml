@@ -78,6 +78,18 @@ jobs:
           $errors = $null
           [System.Management.Automation.Language.Parser]::ParseFile("$PWD\install.ps1", [ref]$null, [ref]$errors) | Out-Null
           if ($errors) { $errors | ForEach-Object { Write-Host $_ }; exit 1 }
+      # Run in Git Bash, as an agent on Windows may, install.sh hands over
+      # to install.ps1: here a stand-in that only says it ran.
+      - name: install.sh hands Windows to install.ps1
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/ps1"
+          echo "Write-Host 'install.ps1 ran'" > "$RUNNER_TEMP/ps1/install.ps1"
+          (cd "$RUNNER_TEMP/ps1" && python -m http.server 8765 >/dev/null 2>&1 &)
+          sleep 3
+          KELVE_INSTALLER=http://127.0.0.1:8765/install.ps1 sh install.sh | tee "$RUNNER_TEMP/out.txt"
+          grep -q 'install.ps1 ran' "$RUNNER_TEMP/out.txt"
 
   # kelve as people use it, in a browser, against a kelve built from this
   # checkout, with a stand-in for the person's agent, the stand-in shared

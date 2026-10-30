@@ -1,7 +1,14 @@
 #!/bin/sh
 # Installs the `kelve` command, the newest release, for macOS or Linux:
 #
-#   curl -fsSL https://raw.githubusercontent.com/kelve-ai/kelve/main/install.sh | sh
+#   curl -fsSL https://kelve.ai/install.sh | sh
+#
+# On Windows, in PowerShell:
+#
+#   irm https://kelve.ai/install.ps1 | iex
+#
+# Run on Windows anyway, in Git Bash, MSYS2 or Cygwin, as an agent may, it
+# hands over to that.
 #
 # It downloads the build for this computer from GitHub Releases, checks it
 # against the release's checksums, and puts it in ~/.local/bin, or in
@@ -10,6 +17,18 @@
 set -eu
 
 repo=kelve-ai/kelve
+
+# Windows installs with PowerShell. `iex` runs the script's text, not a
+# file, so PowerShell's execution policy doesn't stop it. KELVE_INSTALLER
+# names another install.ps1, for trying this out.
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*)
+    ps1=${KELVE_INSTALLER:-https://kelve.ai/install.ps1}
+    echo "On Windows, kelve installs with PowerShell, from $ps1."
+    exec powershell.exe -NoProfile -Command "irm '$ps1' | iex"
+    ;;
+esac
+
 case "$(uname -s)-$(uname -m)" in
   Darwin-arm64) name=macos-arm64 ;;
   Darwin-x86_64) name=macos-x86_64 ;;
