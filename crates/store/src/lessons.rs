@@ -861,10 +861,12 @@ pub async fn stretches_asked(conn: &mut Conn, session: &str) -> Result<i64> {
     .await?)
 }
 
-/// A command passed in a session, now.
+/// A command passed in a session, now: after what failed before it, even
+/// in the same millisecond, so the turn's end can tell it got past them.
 pub async fn passed_now(conn: &mut Conn, session: &str) -> Result<()> {
     sqlx::query(
-        "insert into moments (session, at, passed_at) values (?1, ?2, ?2)
+        "insert into moments (session, at, passed_at) values (?1, ?2, max(?2, coalesce(
+             (select max(failed_at) + 1 from failed where session = ?1), 0)))
          on conflict (session) do update set passed_at = excluded.passed_at",
     )
     .bind(session)
