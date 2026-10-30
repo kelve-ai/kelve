@@ -86,7 +86,9 @@ clap = { version = "4", features = ["derive", "env"] }
 anstream = "1"
 anstyle = "1"
 # Reading keys for setup's choices, on macOS, Linux and Windows alike.
-crossterm = "0.29"
+# use-dev-tty reads them with poll, not kqueue: the installer gives setup
+# /dev/tty, which macOS's kqueue can't watch.
+crossterm = { version = "0.29", features = ["use-dev-tty"] }
 
 
 [workspace.lints.rust]

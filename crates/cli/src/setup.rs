@@ -124,7 +124,16 @@ fn ask(question: &str, choices: &[&str], default: usize) -> anyhow::Result<usize
     match pick(choices, default) {
         Ok(Some(i)) => Ok(i),
         Ok(None) => anyhow::bail!("Setup stopped. Run `kelve setup` to start it again."),
-        Err(_) => typed(choices, default),
+        Err(_) => {
+            // In place of the choices, if they were drawn.
+            crossterm::execute!(
+                std::io::stderr(),
+                crossterm::cursor::MoveToColumn(0),
+                crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+            )
+            .ok();
+            typed(choices, default)
+        }
     }
 }
 
