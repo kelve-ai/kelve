@@ -2,6 +2,12 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **Your agent shows you its work as it hands it over.** When it commits, pushes or opens a pull request for work you haven't seen, kelve's hook has it open that work in kelve, without being asked, once for each commit. It used to wait until the agent merged, which is after work is reviewed.
+- **Setup's choices take the arrow keys,** and a command in backticks is never split across lines.
+- **Setup puts a stale connection right.** An agent connected with kelve settings of its own, such as another graph from developing kelve, is connected afresh, and setup says so.
+
 ## 0.1.1, 30 October 2026
 
 - **The command line keeps its secret safe.** It sends it over https anywhere, and over plain http only to this computer; given a plain http address elsewhere in `KELVE_URL`, it says what to do instead.

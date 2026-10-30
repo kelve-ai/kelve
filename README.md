@@ -28,7 +28,7 @@ Then, when it's done something:
 Show me what you did in kelve.
 ```
 
-Claude Code and Codex show you their work in kelve automatically, before they merge it.
+Your agent shows you its work in kelve by itself, as it hands it over: when it commits, pushes or opens a pull request.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">

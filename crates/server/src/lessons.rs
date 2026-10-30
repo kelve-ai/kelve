@@ -407,7 +407,7 @@ fn file_text(file: &str) -> String {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MomentIn {
-    /// `read`, `edit`, `ran`, `failed`, `prompt`, `next`, or `merging`.
+    /// `read`, `edit`, `ran`, `failed`, `prompt`, `next` or `end`.
     pub what: String,
     pub session: String,
     /// The folder it works in.
@@ -444,19 +444,14 @@ pub struct MomentOut {
 }
 
 /// A moment in the agent's work: the lesson that helps now, if one does;
-/// what came of lessons given before it; and, when something that failed
-/// passes, a job to write what it learned.
+/// what came of lessons given before it; when something that failed passes,
+/// a job to write what it learned; and, when it hands work over, to show it
+/// in kelve.
 pub async fn moment(
     State(app): State<Shared>,
     _agent: Agent,
     Json(m): Json<MomentIn>,
 ) -> ApiResult<Json<MomentOut>> {
-    // About to merge: work kelve hasn't shown is shown first.
-    if m.what == "merging" {
-        let text =
-            crate::handoff::before(&app, &m.cwd, m.command.as_deref().unwrap_or_default()).await?;
-        return Ok(Json(MomentOut { text }));
-    }
     let session = m.session.trim();
     if session.is_empty() {
         return Ok(Json(MomentOut::default()));
@@ -532,7 +527,9 @@ pub async fn moment(
                 }
                 notice_tools(&app, &root, command).await?;
                 let given = on_command(&app, session, agent, &root, command).await?;
-                [wrote, given]
+                // Work handed over: shown in kelve, if it hasn't been.
+                let show = crate::handoff::after(&app, &m.cwd, command).await?;
+                [wrote, given, show]
                     .into_iter()
                     .filter(|t| !t.is_empty())
                     .collect::<Vec<_>>()

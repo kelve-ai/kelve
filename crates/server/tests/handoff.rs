@@ -1,6 +1,6 @@
-//! Work shown before it's merged: kelve's hook has the agent show a
-//! worktree in kelve before merging it, once for each commit, unless kelve
-//! has shown it since.
+//! Work shown as it's handed over: kelve's hook has the agent show its work
+//! in kelve when it commits, pushes or opens a pull request, once for each
+//! commit, unless kelve has shown it since.
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
@@ -8,7 +8,7 @@ mod common;
 
 use std::path::Path;
 
-use kelve_server::handoff::before;
+use kelve_server::handoff::after;
 
 fn git(dir: &Path, args: &[&str], date: Option<&str>) {
     let mut cmd = std::process::Command::new("git");
@@ -38,7 +38,7 @@ fn git(dir: &Path, args: &[&str], date: Option<&str>) {
 }
 
 #[tokio::test]
-async fn a_merge_of_work_not_shown_is_shown_first_once() {
+async fn work_handed_over_and_not_shown_is_shown_once() {
     let main = common::folder(&[("src/retry.rs", "pub fn again() {}\n")]);
     git(&main, &["init", "-q", "-b", "main"], None);
     git(&main, &["add", "."], None);
@@ -58,25 +58,24 @@ async fn a_merge_of_work_not_shown_is_shown_first_once() {
     std::fs::write(wt.join("src/retry.rs"), "pub fn again() { wait(); }\n").unwrap();
     git(&wt, &["commit", "-qam", "Wait between tries"], None);
     let app = common::kelve(None).await;
+    let wt_s = wt.display().to_string();
     let main_s = main.display().to_string();
 
-    // Not shown: the agent is told to show it first, once.
-    let said = before(&app, &main_s, "git merge --ff-only fix")
+    // Committed and not shown: the agent is told to show it, once.
+    let said = after(&app, &wt_s, "git commit -qam 'Wait between tries'")
         .await
         .unwrap();
-    assert!(said.contains("Before you merge `fix`"), "{said}");
+    assert!(said.contains("show the person it in kelve"), "{said}");
     assert!(said.contains("what: worktree"));
     assert_eq!(
-        before(&app, &main_s, "git merge --ff-only fix")
-            .await
-            .unwrap(),
+        after(&app, &wt_s, "git push -u origin fix").await.unwrap(),
         "",
-        "once"
+        "once for each commit"
     );
-    // Not a merge: nothing.
-    assert_eq!(before(&app, &main_s, "cargo test").await.unwrap(), "");
+    // Not handing anything over: nothing.
+    assert_eq!(after(&app, &wt_s, "cargo test").await.unwrap(), "");
 
-    // More work, then shown in kelve as a worktree: merging it goes ahead.
+    // More work, then shown in kelve as a worktree: pushing it says nothing.
     std::fs::write(
         wt.join("src/retry.rs"),
         "pub fn again() { wait(); jitter(); }\n",
@@ -89,25 +88,19 @@ async fn a_merge_of_work_not_shown_is_shown_first_once() {
     );
     {
         let mut conn = app.db.acquire().await.unwrap();
-        kelve_store::reader::open(
-            &mut conn,
-            "change",
-            &wt.display().to_string(),
-            "",
-            "since main",
-            "Retries",
-        )
-        .await
-        .unwrap();
+        kelve_store::reader::open(&mut conn, "change", &wt_s, "", "since main", "Retries")
+            .await
+            .unwrap();
     }
     assert_eq!(
-        before(&app, &main_s, &format!("cd {main_s} && git merge fix"))
+        after(&app, &main_s, &format!("cd {wt_s} && git push"))
             .await
             .unwrap(),
         ""
     );
 
-    // A commit made after it was shown is new work: shown first, again.
+    // A commit made after it was shown is new work: shown again, when a pull
+    // request is opened for it.
     std::fs::write(
         wt.join("src/retry.rs"),
         "pub fn again() { wait(); jitter(); cap(); }\n",
@@ -118,10 +111,8 @@ async fn a_merge_of_work_not_shown_is_shown_first_once() {
         &["commit", "-qam", "Cap the wait"],
         Some("2099-01-01T00:00:00Z"),
     );
-    let said = before(&app, &wt.display().to_string(), "gh pr merge --squash")
-        .await
-        .unwrap();
-    assert!(said.contains("Before you merge this branch"), "{said}");
+    let said = after(&app, &wt_s, "gh pr create --fill").await.unwrap();
+    assert!(said.contains("show the person it in kelve"), "{said}");
 
     let _ = std::fs::remove_dir_all(&wt);
     let _ = std::fs::remove_dir_all(&main);
