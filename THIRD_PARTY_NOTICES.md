@@ -9,7 +9,7 @@ app's dependencies: run it again after changing them.
 
 ## In the web app
 
-- @codemirror/autocomplete 6.20.3, MIT: <https://code.haverbeke.berlin/codemirror/autocomplete>
+- @codemirror/autocomplete 6.20.4, MIT: <https://code.haverbeke.berlin/codemirror/autocomplete>
 - @codemirror/commands 6.11.1, MIT: <https://code.haverbeke.berlin/codemirror/commands>
 - @codemirror/lang-css 6.3.1, MIT: <https://github.com/codemirror/lang-css>
 - @codemirror/lang-go 6.0.1, MIT: <https://github.com/codemirror/lang-go>
@@ -23,7 +23,7 @@ app's dependencies: run it again after changing them.
 - @codemirror/lint 6.9.7, MIT: <https://code.haverbeke.berlin/codemirror/lint>
 - @codemirror/state 6.7.6, MIT: <https://code.haverbeke.berlin/codemirror/state>
 - @codemirror/streamparser 6.0.0, MIT: <https://code.haverbeke.berlin/codemirror/streamparser>
-- @codemirror/view 6.43.14, MIT: <https://code.haverbeke.berlin/codemirror/view>
+- @codemirror/view 6.43.15, MIT: <https://code.haverbeke.berlin/codemirror/view>
 - @fontsource-variable/geist 5.3.0, OFL-1.1: <https://github.com/fontsource/font-files>
 - @fontsource-variable/geist-mono 5.3.0, OFL-1.1: <https://github.com/fontsource/font-files>
 - @lezer/common 1.5.3, MIT: <https://code.haverbeke.berlin/lezer/common>
@@ -49,11 +49,11 @@ app's dependencies: run it again after changing them.
 - dequal 2.0.3, MIT: <lukeed/dequal>
 - devlop 1.1.0, MIT: <wooorm/devlop>
 - escape-string-regexp 5.0.0, MIT: <sindresorhus/escape-string-regexp>
-- highlight.js 11.11.1, BSD-3-Clause: <git://github.com/highlightjs/highlight.js>
+- highlight.js 11.12.0, BSD-3-Clause: <git://github.com/highlightjs/highlight.js>
 - longest-streak 3.1.0, MIT: <wooorm/longest-streak>
 - markdown-table 3.0.4, MIT: <wooorm/markdown-table>
 - mdast-util-find-and-replace 3.0.3, MIT: <syntax-tree/mdast-util-find-and-replace>
-- mdast-util-from-markdown 2.0.3, MIT: <syntax-tree/mdast-util-from-markdown>
+- mdast-util-from-markdown 2.1.0, MIT: <syntax-tree/mdast-util-from-markdown>
 - mdast-util-gfm 3.1.0, MIT: <syntax-tree/mdast-util-gfm>
 - mdast-util-gfm-autolink-literal 2.0.1, MIT: <syntax-tree/mdast-util-gfm-autolink-literal>
 - mdast-util-gfm-footnote 2.1.0, MIT: <syntax-tree/mdast-util-gfm-footnote>
@@ -93,9 +93,9 @@ app's dependencies: run it again after changing them.
 - micromark-util-symbol 2.0.1, MIT: <https://github.com/micromark/micromark/tree/main/packages/micromark-util-symbol>
 - micromark-util-types 2.0.3, MIT: <https://github.com/micromark/micromark/tree/main/packages/micromark-util-types>
 - ms 2.1.3, MIT: <vercel/ms>
-- react 19.3.0, MIT: <https://github.com/react/react>
-- react-dom 19.3.0, MIT: <https://github.com/react/react>
-- react-resizable-panels 4.14.5, MIT: <https://github.com/bvaughn/react-resizable-panels>
+- react 19.3.1, MIT: <https://github.com/react/react>
+- react-dom 19.3.1, MIT: <https://github.com/react/react>
+- react-resizable-panels 4.15.0, MIT: <https://github.com/bvaughn/react-resizable-panels>
 - scheduler 0.28.0, MIT: <https://github.com/react/react>
 - style-mod 4.1.4, MIT: <https://code.haverbeke.berlin/marijn/style-mod>
 - unist-util-is 6.0.1, MIT: <syntax-tree/unist-util-is>
@@ -107,7 +107,7 @@ app's dependencies: run it again after changing them.
 
 ### Their license texts
 
-#### @codemirror/autocomplete 6.20.3 (LICENSE), @codemirror/commands 6.11.1 (LICENSE), @codemirror/lang-css 6.3.1 (LICENSE), @codemirror/lang-html 6.4.12 (LICENSE), @codemirror/lang-javascript 6.2.5 (LICENSE), @codemirror/lang-markdown 6.5.2 (LICENSE), @codemirror/lang-python 6.2.1 (LICENSE), @codemirror/lang-rust 6.0.2 (LICENSE), @codemirror/language 6.13.1 (LICENSE), @codemirror/legacy-modes 6.5.5 (LICENSE), @codemirror/lint 6.9.7 (LICENSE), @codemirror/state 6.7.6 (LICENSE), @codemirror/streamparser 6.0.0 (LICENSE), @codemirror/view 6.43.14 (LICENSE)
+#### @codemirror/autocomplete 6.20.4 (LICENSE), @codemirror/commands 6.11.1 (LICENSE), @codemirror/lang-css 6.3.1 (LICENSE), @codemirror/lang-html 6.4.12 (LICENSE), @codemirror/lang-javascript 6.2.5 (LICENSE), @codemirror/lang-markdown 6.5.2 (LICENSE), @codemirror/lang-python 6.2.1 (LICENSE), @codemirror/lang-rust 6.0.2 (LICENSE), @codemirror/language 6.13.1 (LICENSE), @codemirror/legacy-modes 6.5.5 (LICENSE), @codemirror/lint 6.9.7 (LICENSE), @codemirror/state 6.7.6 (LICENSE), @codemirror/streamparser 6.0.0 (LICENSE), @codemirror/view 6.43.15 (LICENSE)
 
 ```text
 MIT License
@@ -534,7 +534,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-#### decode-named-character-reference 1.3.0 (license), markdown-table 3.0.4 (license), mdast-util-find-and-replace 3.0.3 (license), mdast-util-from-markdown 2.0.3 (license), mdast-util-gfm 3.1.0 (license), mdast-util-gfm-footnote 2.1.0 (license), mdast-util-gfm-strikethrough 2.0.1 (license), mdast-util-to-markdown 2.2.0 (license), micromark 4.0.3 (license), micromark-core-commonmark 2.0.4 (license), micromark-extension-gfm-table 2.1.2 (license), micromark-factory-destination 2.0.1 (license), micromark-factory-label 2.0.1 (license), micromark-factory-space 2.1.0 (license), micromark-factory-title 2.0.1 (license), micromark-factory-whitespace 2.0.1 (license), micromark-util-character 2.1.1 (license), micromark-util-chunked 2.0.1 (license), micromark-util-classify-character 2.0.1 (license), micromark-util-combine-extensions 2.0.1 (license), micromark-util-decode-numeric-character-reference 2.0.2 (license), micromark-util-decode-string 2.0.1 (license), micromark-util-edit-map 1.0.0 (license), micromark-util-encode 2.0.1 (license), micromark-util-html-tag-name 2.0.1 (license), micromark-util-normalize-identifier 2.0.1 (license), micromark-util-resolve-all 2.0.1 (license), micromark-util-sanitize-uri 2.0.1 (license), micromark-util-subtokenize 2.1.0 (license), micromark-util-symbol 2.0.1 (license), micromark-util-types 2.0.3 (license)
+#### decode-named-character-reference 1.3.0 (license), markdown-table 3.0.4 (license), mdast-util-find-and-replace 3.0.3 (license), mdast-util-from-markdown 2.1.0 (license), mdast-util-gfm 3.1.0 (license), mdast-util-gfm-footnote 2.1.0 (license), mdast-util-gfm-strikethrough 2.0.1 (license), mdast-util-to-markdown 2.2.0 (license), micromark 4.0.3 (license), micromark-core-commonmark 2.0.4 (license), micromark-extension-gfm-table 2.1.2 (license), micromark-factory-destination 2.0.1 (license), micromark-factory-label 2.0.1 (license), micromark-factory-space 2.1.0 (license), micromark-factory-title 2.0.1 (license), micromark-factory-whitespace 2.0.1 (license), micromark-util-character 2.1.1 (license), micromark-util-chunked 2.0.1 (license), micromark-util-classify-character 2.0.1 (license), micromark-util-combine-extensions 2.0.1 (license), micromark-util-decode-numeric-character-reference 2.0.2 (license), micromark-util-decode-string 2.0.1 (license), micromark-util-edit-map 1.0.0 (license), micromark-util-encode 2.0.1 (license), micromark-util-html-tag-name 2.0.1 (license), micromark-util-normalize-identifier 2.0.1 (license), micromark-util-resolve-all 2.0.1 (license), micromark-util-sanitize-uri 2.0.1 (license), micromark-util-subtokenize 2.1.0 (license), micromark-util-symbol 2.0.1 (license), micromark-util-types 2.0.3 (license)
 
 ```text
 (The MIT License)
@@ -628,7 +628,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-#### highlight.js 11.11.1 (LICENSE)
+#### highlight.js 11.12.0 (LICENSE)
 
 ```text
 BSD 3-Clause License
@@ -797,7 +797,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-#### react 19.3.0 (LICENSE), react-dom 19.3.0 (LICENSE), scheduler 0.28.0 (LICENSE)
+#### react 19.3.1 (LICENSE), react-dom 19.3.1 (LICENSE), scheduler 0.28.0 (LICENSE)
 
 ```text
 MIT License
@@ -823,7 +823,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-#### react-resizable-panels 4.14.5 (LICENSE.md)
+#### react-resizable-panels 4.15.0 (LICENSE.md)
 
 ```text
 The MIT License (MIT)
@@ -954,7 +954,7 @@ THE SOFTWARE.
 ## In the kelve binary
 
 - adler2 2.0.1, 0BSD OR MIT OR Apache-2.0: <https://github.com/oyvindln/adler2>
-- aead 0.5.2, MIT OR Apache-2.0: <https://github.com/RustCrypto/traits>
+- aead 0.6.1, MIT OR Apache-2.0: <https://github.com/RustCrypto/traits>
 - aho-corasick 1.1.5, Unlicense OR MIT: <https://github.com/BurntSushi/aho-corasick>
 - allocator-api2 0.2.21, MIT OR Apache-2.0: <https://github.com/zakarumych/allocator-api2>
 - android_system_properties 0.1.6, MIT OR Apache-2.0: <https://github.com/nical/android_system_properties>
@@ -989,10 +989,9 @@ THE SOFTWARE.
 - cfg_aliases 0.2.2, MIT: <https://github.com/katharostech/cfg_aliases>
 - cfg-if 1.0.5, MIT OR Apache-2.0: <https://github.com/rust-lang/cfg-if>
 - chacha20 0.10.2, MIT OR Apache-2.0: <https://github.com/RustCrypto/stream-ciphers>
-- chacha20 0.9.1, Apache-2.0 OR MIT: <https://github.com/RustCrypto/stream-ciphers>
-- chacha20poly1305 0.10.1, Apache-2.0 OR MIT: <https://github.com/RustCrypto/AEADs/tree/master/chacha20poly1305>
+- chacha20poly1305 0.11.0, Apache-2.0 OR MIT: <https://github.com/RustCrypto/AEADs>
 - chrono 0.4.45, MIT OR Apache-2.0: <https://github.com/chronotope/chrono>
-- cipher 0.4.4, MIT OR Apache-2.0: <https://github.com/RustCrypto/traits>
+- cipher 0.5.2, MIT OR Apache-2.0: <https://github.com/RustCrypto/traits>
 - clap 4.6.7, MIT OR Apache-2.0: <https://github.com/clap-rs/clap>
 - clap_builder 4.6.7, MIT OR Apache-2.0: <https://github.com/clap-rs/clap>
 - clap_derive 4.6.7, MIT OR Apache-2.0: <https://github.com/clap-rs/clap>
@@ -1067,7 +1066,6 @@ THE SOFTWARE.
 - futures-util 0.3.34, MIT OR Apache-2.0: <https://github.com/rust-lang/futures-rs>
 - generic-array 0.14.9, MIT: <https://github.com/fizyk20/generic-array.git>
 - getrandom 0.2.17, MIT OR Apache-2.0: <https://github.com/rust-random/getrandom>
-- getrandom 0.3.4, MIT OR Apache-2.0: <https://github.com/rust-random/getrandom>
 - getrandom 0.4.3, MIT OR Apache-2.0: <https://github.com/rust-random/getrandom>
 - gix 0.90.0, MIT OR Apache-2.0: <https://github.com/GitoxideLabs/gitoxide>
 - gix-actor 0.44.1, MIT OR Apache-2.0: <https://github.com/GitoxideLabs/gitoxide>
@@ -1147,7 +1145,7 @@ THE SOFTWARE.
 - idna_adapter 1.2.2, Apache-2.0 OR MIT: <https://github.com/hsivonen/idna_adapter>
 - ignore 0.4.33, Unlicense OR MIT: <https://github.com/BurntSushi/ripgrep/tree/master/crates/ignore>
 - indexmap 2.14.2, Apache-2.0 OR MIT: <https://github.com/indexmap-rs/indexmap>
-- inout 0.1.4, MIT OR Apache-2.0: <https://github.com/RustCrypto/utils>
+- inout 0.2.5, MIT OR Apache-2.0: <https://github.com/RustCrypto/utils>
 - ipnet 2.12.2, MIT OR Apache-2.0: <https://github.com/krisprice/ipnet>
 - is_terminal_polyfill 1.70.2, MIT OR Apache-2.0: <https://github.com/polyfill-rs/is_terminal_polyfill>
 - itoa 1.0.18, MIT OR Apache-2.0: <https://github.com/dtolnay/itoa>
@@ -1189,7 +1187,6 @@ THE SOFTWARE.
 - num-traits 0.2.19, MIT OR Apache-2.0: <https://github.com/rust-num/num-traits>
 - once_cell 1.21.4, MIT OR Apache-2.0: <https://github.com/matklad/once_cell>
 - once_cell_polyfill 1.70.2, MIT OR Apache-2.0: <https://github.com/polyfill-rs/once_cell_polyfill>
-- opaque-debug 0.3.1, MIT OR Apache-2.0: <https://github.com/RustCrypto/utils>
 - openssl-probe 0.2.1, MIT OR Apache-2.0: <https://github.com/rustls/openssl-probe>
 - parking 2.2.1, Apache-2.0 OR MIT: <https://github.com/smol-rs/parking>
 - parking_lot 0.12.5, MIT OR Apache-2.0: <https://github.com/Amanieu/parking_lot>
@@ -1197,18 +1194,17 @@ THE SOFTWARE.
 - percent-encoding 2.3.2, MIT OR Apache-2.0: <https://github.com/servo/rust-url/>
 - pin-project-lite 0.2.17, Apache-2.0 OR MIT: <https://github.com/taiki-e/pin-project-lite>
 - pkg-config 0.3.34, MIT OR Apache-2.0: <https://github.com/rust-lang/pkg-config-rs>
-- poly1305 0.8.0, Apache-2.0 OR MIT: <https://github.com/RustCrypto/universal-hashes>
+- poly1305 0.9.1, Apache-2.0 OR MIT: <https://github.com/RustCrypto/universal-hashes>
 - portable-atomic 1.15.0, Apache-2.0 OR MIT: <https://github.com/taiki-e/portable-atomic>
 - portable-atomic-util 0.2.8, Apache-2.0 OR MIT: <https://github.com/taiki-e/portable-atomic-util>
 - potential_utf 0.1.6, Unicode-3.0: <https://github.com/unicode-org/icu4x>
 - proc-macro2 1.0.107, MIT OR Apache-2.0: <https://github.com/dtolnay/proc-macro2>
 - prodash 31.0.1, MIT: <https://github.com/GitoxideLabs/prodash>
-- pulldown-cmark 0.13.4, MIT: <https://github.com/raphlinus/pulldown-cmark>
+- pulldown-cmark 0.13.5, MIT: <https://github.com/raphlinus/pulldown-cmark>
 - quinn 0.11.12, MIT OR Apache-2.0: <https://github.com/quinn-rs/quinn>
 - quinn-proto 0.11.19, MIT OR Apache-2.0: <https://github.com/quinn-rs/quinn>
 - quinn-udp 0.5.16, MIT OR Apache-2.0: <https://github.com/quinn-rs/quinn>
 - quote 1.0.47, MIT OR Apache-2.0: <https://github.com/dtolnay/quote>
-- r-efi 5.3.0, MIT OR Apache-2.0 OR LGPL-2.1-or-later: <https://github.com/r-efi/r-efi>
 - r-efi 6.0.0, MIT OR Apache-2.0 OR LGPL-2.1-or-later: <https://github.com/r-efi/r-efi>
 - rand 0.10.3, MIT OR Apache-2.0: <https://github.com/rust-random/rand>
 - rand_core 0.10.1, MIT OR Apache-2.0: <https://github.com/rust-random/rand_core>
@@ -1220,13 +1216,13 @@ THE SOFTWARE.
 - regex-syntax 0.8.11, MIT OR Apache-2.0: <https://github.com/rust-lang/regex>
 - reqwest 0.13.5, MIT OR Apache-2.0: <https://github.com/seanmonstar/reqwest>
 - ring 0.17.14, Apache-2.0 AND ISC: <https://github.com/briansmith/ring>
-- rust-embed 8.12.0, MIT: <https://pyrossh.dev/repos/rust-embed>
-- rust-embed-impl 8.12.0, MIT: <https://pyrossh.dev/repos/rust-embed>
-- rust-embed-utils 8.12.0, MIT: <https://pyrossh.dev/repos/rust-embed>
+- rust-embed 8.13.0, MIT: <https://pyrossh.dev/repos/rust-embed>
+- rust-embed-impl 8.13.0, MIT: <https://pyrossh.dev/repos/rust-embed>
+- rust-embed-utils 8.13.0, MIT: <https://pyrossh.dev/repos/rust-embed>
 - rustc_version 0.4.1, MIT OR Apache-2.0: <https://github.com/djc/rustc-version-rs>
 - rustc-hash 2.1.3, Apache-2.0 OR MIT: <https://github.com/rust-lang/rustc-hash>
 - rustix 1.1.5, Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT: <https://github.com/bytecodealliance/rustix>
-- rustls 0.23.45, Apache-2.0 OR ISC OR MIT: <https://github.com/rustls/rustls>
+- rustls 0.23.46, Apache-2.0 OR ISC OR MIT: <https://github.com/rustls/rustls>
 - rustls-native-certs 0.8.4, Apache-2.0 OR ISC OR MIT: <https://github.com/rustls/rustls-native-certs>
 - rustls-pki-types 1.15.1, MIT OR Apache-2.0: <https://github.com/rustls/pki-types>
 - rustls-platform-verifier 0.7.1, MIT OR Apache-2.0: <https://github.com/rustls/rustls-platform-verifier>
@@ -1244,20 +1240,20 @@ THE SOFTWARE.
 - serde 1.0.229, MIT OR Apache-2.0: <https://github.com/serde-rs/serde>
 - serde_core 1.0.229, MIT OR Apache-2.0: <https://github.com/serde-rs/serde>
 - serde_derive 1.0.229, MIT OR Apache-2.0: <https://github.com/serde-rs/serde>
-- serde_json 1.0.151, MIT OR Apache-2.0: <https://github.com/serde-rs/json>
+- serde_json 1.0.154, MIT OR Apache-2.0: <https://github.com/serde-rs/json>
 - serde_path_to_error 0.1.20, MIT OR Apache-2.0: <https://github.com/dtolnay/path-to-error>
 - serde_urlencoded 0.7.1, MIT/Apache-2.0: <https://github.com/nox/serde_urlencoded>
 - sha1 0.11.0, MIT OR Apache-2.0: <https://github.com/RustCrypto/hashes>
 - sha1dc 0.1.5, MIT OR Apache-2.0: <https://github.com/srijs/sha1dc>
 - sha2 0.10.9, MIT OR Apache-2.0: <https://github.com/RustCrypto/hashes>
-- sha2 0.11.0, MIT OR Apache-2.0: <https://github.com/RustCrypto/hashes>
+- sha2 0.11.1, MIT OR Apache-2.0: <https://github.com/RustCrypto/hashes>
 - sharded-slab 0.1.7, MIT: <https://github.com/hawkw/sharded-slab>
 - shlex 2.0.1, MIT OR Apache-2.0: <https://github.com/comex/rust-shlex>
 - signal-hook-registry 1.4.8, MIT OR Apache-2.0: <https://github.com/vorner/signal-hook>
 - simd_cesu8 1.2.0, Apache-2.0 OR MIT: <https://github.com/seancroach/simd_cesu8>
 - simd-adler32 0.3.10, MIT: <https://github.com/mcountryman/simd-adler32>
 - simdutf8 0.1.5, MIT OR Apache-2.0: <https://github.com/rusticstuff/simdutf8>
-- similar 2.7.0, Apache-2.0: <https://github.com/mitsuhiko/similar>
+- similar 3.2.1, Apache-2.0: <https://github.com/mitsuhiko/similar>
 - slab 0.4.12, MIT: <https://github.com/tokio-rs/slab>
 - smallvec 1.16.2, MIT OR Apache-2.0: <https://github.com/servo/rust-smallvec>
 - socket2 0.6.5, MIT OR Apache-2.0: <https://github.com/rust-lang/socket2>
@@ -1287,13 +1283,14 @@ THE SOFTWARE.
 - thread_local 1.1.10, MIT OR Apache-2.0: <https://github.com/Amanieu/thread_local-rs>
 - tinystr 0.8.4, Unicode-3.0: <https://github.com/unicode-org/icu4x>
 - tinyvec 1.13.3, Zlib OR Apache-2.0 OR MIT: <https://github.com/Lokathor/tinyvec>
-- tokio 1.53.1, MIT: <https://github.com/tokio-rs/tokio>
+- tokio 1.54.1, MIT: <https://github.com/tokio-rs/tokio>
 - tokio-macros 2.7.2, MIT: <https://github.com/tokio-rs/tokio>
 - tokio-rustls 0.26.6, MIT OR Apache-2.0: <https://github.com/rustls/tokio-rustls>
 - tokio-stream 0.1.19, MIT: <https://github.com/tokio-rs/tokio>
 - tokio-util 0.7.19, MIT: <https://github.com/tokio-rs/tokio>
 - tower 0.5.3, MIT: <https://github.com/tower-rs/tower>
 - tower-http 0.6.11, MIT: <https://github.com/tower-rs/tower-http>
+- tower-http 0.7.1, MIT: <https://github.com/tower-rs/tower-http>
 - tower-layer 0.3.3, MIT: <https://github.com/tower-rs/tower>
 - tower-service 0.3.3, MIT: <https://github.com/tower-rs/tower>
 - tracing 0.1.44, MIT: <https://github.com/tokio-rs/tracing>
@@ -1320,12 +1317,12 @@ THE SOFTWARE.
 - unicode-ident 1.0.26, (MIT OR Apache-2.0) AND Unicode-3.0: <https://github.com/dtolnay/unicode-ident>
 - unicode-normalization 0.1.25, MIT OR Apache-2.0: <https://github.com/unicode-rs/unicode-normalization>
 - unicode-properties 0.1.4, MIT/Apache-2.0: <https://github.com/unicode-rs/unicode-properties>
-- universal-hash 0.5.1, MIT OR Apache-2.0: <https://github.com/RustCrypto/traits>
+- universal-hash 0.6.1, MIT OR Apache-2.0: <https://github.com/RustCrypto/traits>
 - untrusted 0.9.0, ISC: <https://github.com/briansmith/untrusted>
 - url 2.5.8, MIT OR Apache-2.0: <https://github.com/servo/rust-url>
 - utf8_iter 1.0.4, Apache-2.0 OR MIT: <https://github.com/hsivonen/utf8_iter>
 - utf8parse 0.2.2, Apache-2.0 OR MIT: <https://github.com/alacritty/vte>
-- uuid 1.26.1, Apache-2.0 OR MIT: <https://github.com/uuid-rs/uuid>
+- uuid 1.29.0, Apache-2.0 OR MIT: <https://github.com/uuid-rs/uuid>
 - valuable 0.1.1, MIT: <https://github.com/tokio-rs/valuable>
 - vcpkg 0.2.15, MIT/Apache-2.0: <https://github.com/mcgoo/vcpkg-rs>
 - version_check 0.9.5, MIT/Apache-2.0: <https://github.com/SergioBenitez/version_check>
@@ -1333,7 +1330,6 @@ THE SOFTWARE.
 - walkdir 2.5.0, Unlicense/MIT: <https://github.com/BurntSushi/walkdir>
 - want 0.3.1, MIT: <https://github.com/seanmonstar/want>
 - wasi 0.11.1+wasi-snapshot-preview1, Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT: <https://github.com/bytecodealliance/wasi>
-- wasip2 1.0.4+wasi-0.2.12, Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT: <https://github.com/bytecodealliance/wasi-rs>
 - wasm-bindgen 0.2.129, MIT OR Apache-2.0: <https://github.com/wasm-bindgen/wasm-bindgen>
 - wasm-bindgen-futures 0.4.79, MIT OR Apache-2.0: <https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures>
 - wasm-bindgen-macro 0.2.129, MIT OR Apache-2.0: <https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro>
@@ -1361,7 +1357,6 @@ THE SOFTWARE.
 - windows-sys 0.52.0, MIT OR Apache-2.0: <https://github.com/microsoft/windows-rs>
 - windows-sys 0.61.2, MIT OR Apache-2.0: <https://github.com/microsoft/windows-rs>
 - windows-targets 0.52.6, MIT OR Apache-2.0: <https://github.com/microsoft/windows-rs>
-- wit-bindgen 0.57.1, Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT: <https://github.com/bytecodealliance/wit-bindgen>
 - writeable 0.6.4, Unicode-3.0: <https://github.com/unicode-org/icu4x>
 - yoke 0.8.3, Unicode-3.0: <https://github.com/unicode-org/icu4x>
 - yoke-derive 0.8.4, Unicode-3.0: <https://github.com/unicode-org/icu4x>
@@ -1375,11 +1370,11 @@ THE SOFTWARE.
 - zlib-rs 0.6.8, Zlib: <https://github.com/trifectatechfoundation/zlib-rs>
 - zmij 1.0.23, MIT: <https://github.com/dtolnay/zmij>
 
-These ship no license file of their own, and are under the standard text of the license named above: crc-catalog 2.5.0, defmt 0.3.100, defmt-parser 1.0.0, jni 0.22.4, jni-macros 0.22.4, jni-sys-macros 0.4.1, r-efi 5.3.0, r-efi 6.0.0, rustls-platform-verifier-android 0.2.0, tree-sitter-typescript 0.23.2, ts-rs 12.0.1, ts-rs-macros 12.0.1, valuable 0.1.1.
+These ship no license file of their own, and are under the standard text of the license named above: crc-catalog 2.5.0, defmt 0.3.100, defmt-parser 1.0.0, jni 0.22.4, jni-macros 0.22.4, jni-sys-macros 0.4.1, r-efi 6.0.0, rustls-platform-verifier-android 0.2.0, tree-sitter-typescript 0.23.2, ts-rs 12.0.1, ts-rs-macros 12.0.1, valuable 0.1.1.
 
 ### Their license texts
 
-#### The Apache License 2.0, for adler2 2.0.1 (LICENSE-APACHE), aead 0.5.2 (LICENSE-APACHE), allocator-api2 0.2.21 (LICENSE-APACHE), anstream 1.0.0 (LICENSE-APACHE), anstyle 1.0.14 (LICENSE-APACHE), anstyle-parse 1.0.0 (LICENSE-APACHE), anstyle-query 1.1.5 (LICENSE-APACHE), anstyle-wincon 3.0.11 (LICENSE-APACHE), anyhow 1.0.104 (LICENSE-APACHE), arc-swap 1.9.2 (LICENSE-APACHE), async-compression 0.4.50 (LICENSE-APACHE), atomic-waker 1.1.2 (LICENSE-APACHE), autocfg 1.5.1 (LICENSE-APACHE), aws-lc-rs 1.18.1 (LICENSE), base16ct 0.2.0 (LICENSE-APACHE), base64 0.22.1 (LICENSE-APACHE), base64 0.23.1 (LICENSE-APACHE), bitflags 1.3.2 (LICENSE-APACHE), bitflags 2.13.2 (LICENSE-APACHE), block-buffer 0.10.4 (LICENSE-APACHE), block-buffer 0.12.1 (LICENSE-APACHE), bstr 1.13.1 (LICENSE-APACHE), bumpalo 3.20.3 (LICENSE-APACHE), cc 1.5.1 (LICENSE-APACHE), cfg-if 1.0.5 (LICENSE-APACHE), chacha20 0.10.2 (LICENSE-APACHE), chacha20 0.9.1 (LICENSE-APACHE), chacha20poly1305 0.10.1 (LICENSE-APACHE), chrono 0.4.45 (LICENSE.txt), cipher 0.4.4 (LICENSE-APACHE), clap 4.6.7 (LICENSE-APACHE), clap_builder 4.6.7 (LICENSE-APACHE), clap_derive 4.6.7 (LICENSE-APACHE), clap_lex 1.1.1 (LICENSE-APACHE), cmake 0.1.58 (LICENSE-APACHE), cmov 0.5.4 (LICENSE-APACHE), colorchoice 1.0.5 (LICENSE-APACHE), compression-codecs 0.4.45 (LICENSE-APACHE), compression-core 0.4.33 (LICENSE-APACHE), const-oid 0.10.2 (LICENSE-APACHE), const-oid 0.9.6 (LICENSE-APACHE), core_detect 1.0.0 (LICENSE-APACHE), core-foundation 0.10.1 (LICENSE-APACHE), core-foundation-sys 0.8.7 (LICENSE-APACHE), cpufeatures 0.2.17 (LICENSE-APACHE), cpufeatures 0.3.1 (LICENSE-APACHE), crc32fast 1.5.2 (LICENSE-APACHE), crossbeam-channel 0.5.17 (LICENSE-APACHE), crossbeam-deque 0.8.8 (LICENSE-APACHE), crossbeam-epoch 0.9.21 (LICENSE-APACHE), crossbeam-queue 0.3.14 (LICENSE-APACHE), crossbeam-utils 0.8.23 (LICENSE-APACHE), crypto-bigint 0.5.5 (LICENSE-APACHE), crypto-common 0.1.6 (LICENSE-APACHE), crypto-common 0.2.2 (LICENSE-APACHE), ctutils 0.4.2 (LICENSE-APACHE), curve25519-dalek-derive 0.1.1 (LICENSE-APACHE), defmt 1.1.1 (LICENSE-APACHE), defmt-macros 1.1.1 (LICENSE-APACHE), der 0.7.10 (LICENSE-APACHE), derive-where 1.7.0 (LICENSE-APACHE), digest 0.10.7 (LICENSE-APACHE), digest 0.11.3 (LICENSE-APACHE), displaydoc 0.2.7 (LICENSE-APACHE), either 1.18.0 (LICENSE-APACHE), elliptic-curve 0.13.8 (LICENSE-APACHE), encoding_rs 0.8.41 (LICENSE-APACHE), equivalent 1.0.2 (LICENSE-APACHE), errno 0.3.14 (LICENSE-APACHE), etcetera 0.11.0 (LICENSE-APACHE), event-listener 5.4.2 (LICENSE-APACHE), fastrand 2.5.0 (LICENSE-APACHE), ff 0.13.1 (LICENSE-APACHE), filetime 0.2.29 (LICENSE-APACHE), find-msvc-tools 0.1.14 (LICENSE-APACHE), flate2 1.1.10 (LICENSE-APACHE), flume 0.12.0 (LICENSE-APACHE), fnv 1.0.7 (LICENSE-APACHE), form_urlencoded 1.2.2 (LICENSE-APACHE), futures 0.3.34 (LICENSE-APACHE), futures-channel 0.3.34 (LICENSE-APACHE), futures-core 0.3.34 (LICENSE-APACHE), futures-executor 0.3.34 (LICENSE-APACHE), futures-intrusive 0.5.0 (LICENSE-APACHE), futures-io 0.3.34 (LICENSE-APACHE), futures-macro 0.3.34 (LICENSE-APACHE), futures-sink 0.3.34 (LICENSE-APACHE), futures-task 0.3.34 (LICENSE-APACHE), futures-util 0.3.34 (LICENSE-APACHE), getrandom 0.2.17 (LICENSE-APACHE), getrandom 0.3.4 (LICENSE-APACHE), getrandom 0.4.3 (LICENSE-APACHE), gix 0.90.0 (LICENSE-APACHE), gix-actor 0.44.1 (LICENSE-APACHE), gix-attributes 0.37.1 (LICENSE-APACHE), gix-bitmap 0.6.1 (LICENSE-APACHE), gix-chunk 0.10.1 (LICENSE-APACHE), gix-command 0.12.1 (LICENSE-APACHE), gix-commitgraph 0.42.0 (LICENSE-APACHE), gix-config 0.62.2 (LICENSE-APACHE), gix-config-value 0.21.1 (LICENSE-APACHE), gix-date 0.18.1 (LICENSE-APACHE), gix-diff 0.70.0 (LICENSE-APACHE), gix-discover 0.57.1 (LICENSE-APACHE), gix-error 0.5.2 (LICENSE-APACHE), gix-filter 0.36.1 (LICENSE-APACHE), gix-fs 0.24.1 (LICENSE-APACHE), gix-glob 0.29.1 (LICENSE-APACHE), gix-hash 0.28.1 (LICENSE-APACHE), gix-hashtable 0.18.0 (LICENSE-APACHE), gix-index 0.58.0 (LICENSE-APACHE), gix-lock 26.0.0 (LICENSE-APACHE), gix-macros 0.2.0 (LICENSE-APACHE), gix-note 0.3.1 (LICENSE-APACHE), gix-object 0.66.1 (LICENSE-APACHE), gix-odb 0.87.0 (LICENSE-APACHE), gix-pack 0.77.0 (LICENSE-APACHE), gix-packetline 0.24.1 (LICENSE-APACHE), gix-parallel 0.50.1 (LICENSE-APACHE), gix-path 0.14.1 (LICENSE-APACHE), gix-protocol 0.68.0 (LICENSE-APACHE), gix-quote 0.10.1 (LICENSE-APACHE), gix-ref 0.69.1 (LICENSE-APACHE), gix-refspec 0.47.1 (LICENSE-APACHE), gix-revision 0.52.0 (LICENSE-APACHE), gix-revwalk 0.38.0 (LICENSE-APACHE), gix-sec 0.16.1 (LICENSE-APACHE), gix-shallow 0.15.1 (LICENSE-APACHE), gix-tempfile 26.0.0 (LICENSE-APACHE), gix-trace 0.3.1 (LICENSE-APACHE), gix-transport 0.62.0 (LICENSE-APACHE), gix-traverse 0.64.0 (LICENSE-APACHE), gix-url 0.40.1 (LICENSE-APACHE), gix-utils 0.5.2 (LICENSE-APACHE), gix-validate 0.13.1 (LICENSE-APACHE), gix-worktree-stream 0.39.0 (LICENSE-APACHE), gix-zlib 0.4.0 (LICENSE-APACHE), group 0.13.0 (LICENSE-APACHE), hash32 0.3.1 (LICENSE-APACHE), hashbrown 0.16.1 (LICENSE-APACHE), hashbrown 0.17.1 (LICENSE-APACHE), hashlink 0.11.1 (LICENSE-APACHE), heapless 0.8.0 (LICENSE-APACHE), heck 0.5.0 (LICENSE-APACHE), hex 0.4.3 (LICENSE-APACHE), hkdf 0.13.0 (LICENSE-APACHE), hmac 0.13.0 (LICENSE-APACHE), http 1.5.0 (LICENSE-APACHE), httparse 1.10.1 (LICENSE-APACHE), httpdate 1.0.3 (LICENSE-APACHE), hybrid-array 0.4.15 (LICENSE-APACHE), hyper-rustls 0.27.10 (LICENSE-APACHE), iana-time-zone 0.1.65 (LICENSE-APACHE), iana-time-zone-haiku 0.1.2 (LICENSE-APACHE), idna 1.1.0 (LICENSE-APACHE), idna_adapter 1.2.2 (LICENSE-APACHE), indexmap 2.14.2 (LICENSE-APACHE), inout 0.1.4 (LICENSE-APACHE), ipnet 2.12.2 (LICENSE-APACHE), is_terminal_polyfill 1.70.2 (LICENSE-APACHE), itoa 1.0.18 (LICENSE-APACHE), jni-sys 0.4.1 (LICENSE-APACHE), jobserver 0.1.35 (LICENSE-APACHE), js-sys 0.3.106 (LICENSE-APACHE), lazy_static 1.5.1 (LICENSE-APACHE), libc 0.2.189 (LICENSE-APACHE), linux-raw-sys 0.12.1 (LICENSE-APACHE), linux-raw-sys 0.12.1 (LICENSE-Apache-2.0_WITH_LLVM-exception), lock_api 0.4.14 (LICENSE-APACHE), log 0.4.34 (LICENSE-APACHE), lru-slab 0.1.3 (LICENSE-APACHE), md-5 0.11.0 (LICENSE-APACHE), memmap2 0.9.11 (LICENSE-APACHE), mime 0.3.17 (LICENSE-APACHE), miniz_oxide 0.9.1 (LICENSE-APACHE.md), multiversion 0.8.0 (LICENSE-APACHE), multiversion_no_op 1.0.0 (LICENSE-APACHE), multiversion-macros 0.8.0 (LICENSE-APACHE), num-traits 0.2.19 (LICENSE-APACHE), once_cell 1.21.4 (LICENSE-APACHE), once_cell_polyfill 1.70.2 (LICENSE-APACHE), opaque-debug 0.3.1 (LICENSE-APACHE), openssl-probe 0.2.1 (LICENSE-APACHE), parking 2.2.1 (LICENSE-APACHE), parking_lot 0.12.5 (LICENSE-APACHE), parking_lot_core 0.9.12 (LICENSE-APACHE), percent-encoding 2.3.2 (LICENSE-APACHE), pin-project-lite 0.2.17 (LICENSE-APACHE), pkg-config 0.3.34 (LICENSE-APACHE), poly1305 0.8.0 (LICENSE-APACHE), portable-atomic 1.15.0 (LICENSE-APACHE), portable-atomic-util 0.2.8 (LICENSE-APACHE), proc-macro2 1.0.107 (LICENSE-APACHE), quinn 0.11.12 (LICENSE-APACHE), quinn-proto 0.11.19 (LICENSE-APACHE), quinn-udp 0.5.16 (LICENSE-APACHE), quote 1.0.47 (LICENSE-APACHE), rand 0.10.3 (LICENSE-APACHE), rand_core 0.10.1 (LICENSE-APACHE), rand_core 0.6.4 (LICENSE-APACHE), rand_pcg 0.10.2 (LICENSE-APACHE), regex 1.13.1 (LICENSE-APACHE), regex-automata 0.4.18 (LICENSE-APACHE), regex-syntax 0.8.11 (LICENSE-APACHE), reqwest 0.13.5 (LICENSE-APACHE), rustc_version 0.4.1 (LICENSE-APACHE), rustc-hash 2.1.3 (LICENSE-APACHE), rustix 1.1.5 (LICENSE-APACHE), rustix 1.1.5 (LICENSE-Apache-2.0_WITH_LLVM-exception), rustls 0.23.45 (LICENSE-APACHE), rustls-native-certs 0.8.4 (LICENSE-APACHE), rustls-pki-types 1.15.1 (LICENSE-APACHE), rustls-platform-verifier 0.7.1 (LICENSE-APACHE), rustversion 1.0.23 (LICENSE-APACHE), ryu 1.0.23 (LICENSE-APACHE), scopeguard 1.2.0 (LICENSE-APACHE), sec1 0.7.3 (LICENSE-APACHE), security-framework 3.7.0 (LICENSE-APACHE), security-framework-sys 2.17.0 (LICENSE-APACHE), semver 1.0.28 (LICENSE-APACHE), serde 1.0.229 (LICENSE-APACHE), serde_core 1.0.229 (LICENSE-APACHE), serde_derive 1.0.229 (LICENSE-APACHE), serde_json 1.0.151 (LICENSE-APACHE), serde_path_to_error 0.1.20 (LICENSE-APACHE), serde_urlencoded 0.7.1 (LICENSE-APACHE), sha1 0.11.0 (LICENSE-APACHE), sha1dc 0.1.5 (LICENSE-APACHE), sha2 0.10.9 (LICENSE-APACHE), sha2 0.11.0 (LICENSE-APACHE), signal-hook-registry 1.4.8 (LICENSE-APACHE), simd_cesu8 1.2.0 (LICENSE-APACHE), simdutf8 0.1.5 (LICENSE-Apache), similar 2.7.0 (LICENSE), smallvec 1.16.2 (LICENSE-APACHE), socket2 0.6.5 (LICENSE-APACHE), sqlx 0.9.0 (LICENSE-APACHE), stable_deref_trait 1.2.1 (LICENSE-APACHE), streaming-iterator 0.1.9 (LICENSE-APACHE), stringprep 0.1.5 (LICENSE-APACHE), syn 2.0.119 (LICENSE-APACHE), syn 3.0.6 (LICENSE-APACHE), sync_wrapper 1.0.2 (LICENSE), tar 0.4.46 (LICENSE-APACHE), target-features 0.1.6 (LICENSE-APACHE), tempfile 3.27.0 (LICENSE-APACHE), thiserror 2.0.21 (LICENSE-APACHE), thiserror-impl 2.0.21 (LICENSE-APACHE), thread_local 1.1.10 (LICENSE-APACHE), tinyvec 1.13.3 (LICENSE-APACHE.md), tokio-rustls 0.26.6 (LICENSE-APACHE), typed-path 0.13.0 (LICENSE-APACHE), typenum 1.20.1 (LICENSE-APACHE), unicase 2.9.0 (LICENSE-APACHE), unicode-bidi 0.3.18 (LICENSE-APACHE), unicode-bom 2.0.3 (LICENSE), unicode-ident 1.0.26 (LICENSE-APACHE), unicode-normalization 0.1.25 (LICENSE-APACHE), unicode-properties 0.1.4 (LICENSE-APACHE), universal-hash 0.5.1 (LICENSE-APACHE), url 2.5.8 (LICENSE-APACHE), utf8_iter 1.0.4 (LICENSE-APACHE), utf8parse 0.2.2 (LICENSE-APACHE), uuid 1.26.1 (LICENSE-APACHE), vcpkg 0.2.15 (LICENSE-APACHE), version_check 0.9.5 (LICENSE-APACHE), voprf 0.5.0 (LICENSE-APACHE), wasi 0.11.1+wasi-snapshot-preview1 (LICENSE-APACHE), wasi 0.11.1+wasi-snapshot-preview1 (LICENSE-Apache-2.0_WITH_LLVM-exception), wasip2 1.0.4+wasi-0.2.12 (LICENSE-APACHE), wasip2 1.0.4+wasi-0.2.12 (LICENSE-Apache-2.0_WITH_LLVM-exception), wasm-bindgen 0.2.129 (LICENSE-APACHE), wasm-bindgen-futures 0.4.79 (LICENSE-APACHE), wasm-bindgen-macro 0.2.129 (LICENSE-APACHE), wasm-bindgen-macro-support 0.2.129 (LICENSE-APACHE), wasm-bindgen-shared 0.2.129 (LICENSE-APACHE), web-sys 0.3.106 (LICENSE-APACHE), web-time 1.1.0 (LICENSE-APACHE), whoami 2.1.3 (LICENSE_APACHE), windows_aarch64_gnullvm 0.52.6 (license-apache-2.0), windows_aarch64_msvc 0.52.6 (license-apache-2.0), windows_i686_gnu 0.52.6 (license-apache-2.0), windows_i686_gnullvm 0.52.6 (license-apache-2.0), windows_i686_msvc 0.52.6 (license-apache-2.0), windows_x86_64_gnu 0.52.6 (license-apache-2.0), windows_x86_64_gnullvm 0.52.6 (license-apache-2.0), windows_x86_64_msvc 0.52.6 (license-apache-2.0), windows-core 0.62.2 (license-apache-2.0), windows-implement 0.60.2 (license-apache-2.0), windows-interface 0.59.3 (license-apache-2.0), windows-link 0.2.1 (license-apache-2.0), windows-result 0.4.1 (license-apache-2.0), windows-strings 0.5.1 (license-apache-2.0), windows-sys 0.52.0 (license-apache-2.0), windows-sys 0.61.2 (license-apache-2.0), windows-targets 0.52.6 (license-apache-2.0), wit-bindgen 0.57.1 (LICENSE-APACHE), wit-bindgen 0.57.1 (LICENSE-Apache-2.0_WITH_LLVM-exception), zeroize 1.9.0 (LICENSE-APACHE)
+#### The Apache License 2.0, for adler2 2.0.1 (LICENSE-APACHE), aead 0.6.1 (LICENSE-APACHE), allocator-api2 0.2.21 (LICENSE-APACHE), anstream 1.0.0 (LICENSE-APACHE), anstyle 1.0.14 (LICENSE-APACHE), anstyle-parse 1.0.0 (LICENSE-APACHE), anstyle-query 1.1.5 (LICENSE-APACHE), anstyle-wincon 3.0.11 (LICENSE-APACHE), anyhow 1.0.104 (LICENSE-APACHE), arc-swap 1.9.2 (LICENSE-APACHE), async-compression 0.4.50 (LICENSE-APACHE), atomic-waker 1.1.2 (LICENSE-APACHE), autocfg 1.5.1 (LICENSE-APACHE), aws-lc-rs 1.18.1 (LICENSE), base16ct 0.2.0 (LICENSE-APACHE), base64 0.22.1 (LICENSE-APACHE), base64 0.23.1 (LICENSE-APACHE), bitflags 1.3.2 (LICENSE-APACHE), bitflags 2.13.2 (LICENSE-APACHE), block-buffer 0.10.4 (LICENSE-APACHE), block-buffer 0.12.1 (LICENSE-APACHE), bstr 1.13.1 (LICENSE-APACHE), bumpalo 3.20.3 (LICENSE-APACHE), cc 1.5.1 (LICENSE-APACHE), cfg-if 1.0.5 (LICENSE-APACHE), chacha20 0.10.2 (LICENSE-APACHE), chacha20poly1305 0.11.0 (LICENSE-APACHE), chrono 0.4.45 (LICENSE.txt), cipher 0.5.2 (LICENSE-APACHE), clap 4.6.7 (LICENSE-APACHE), clap_builder 4.6.7 (LICENSE-APACHE), clap_derive 4.6.7 (LICENSE-APACHE), clap_lex 1.1.1 (LICENSE-APACHE), cmake 0.1.58 (LICENSE-APACHE), cmov 0.5.4 (LICENSE-APACHE), colorchoice 1.0.5 (LICENSE-APACHE), compression-codecs 0.4.45 (LICENSE-APACHE), compression-core 0.4.33 (LICENSE-APACHE), const-oid 0.10.2 (LICENSE-APACHE), const-oid 0.9.6 (LICENSE-APACHE), core_detect 1.0.0 (LICENSE-APACHE), core-foundation 0.10.1 (LICENSE-APACHE), core-foundation-sys 0.8.7 (LICENSE-APACHE), cpufeatures 0.2.17 (LICENSE-APACHE), cpufeatures 0.3.1 (LICENSE-APACHE), crc32fast 1.5.2 (LICENSE-APACHE), crossbeam-channel 0.5.17 (LICENSE-APACHE), crossbeam-deque 0.8.8 (LICENSE-APACHE), crossbeam-epoch 0.9.21 (LICENSE-APACHE), crossbeam-queue 0.3.14 (LICENSE-APACHE), crossbeam-utils 0.8.23 (LICENSE-APACHE), crypto-bigint 0.5.5 (LICENSE-APACHE), crypto-common 0.1.6 (LICENSE-APACHE), crypto-common 0.2.2 (LICENSE-APACHE), ctutils 0.4.2 (LICENSE-APACHE), curve25519-dalek-derive 0.1.1 (LICENSE-APACHE), defmt 1.1.1 (LICENSE-APACHE), defmt-macros 1.1.1 (LICENSE-APACHE), der 0.7.10 (LICENSE-APACHE), derive-where 1.7.0 (LICENSE-APACHE), digest 0.10.7 (LICENSE-APACHE), digest 0.11.3 (LICENSE-APACHE), displaydoc 0.2.7 (LICENSE-APACHE), either 1.18.0 (LICENSE-APACHE), elliptic-curve 0.13.8 (LICENSE-APACHE), encoding_rs 0.8.41 (LICENSE-APACHE), equivalent 1.0.2 (LICENSE-APACHE), errno 0.3.14 (LICENSE-APACHE), etcetera 0.11.0 (LICENSE-APACHE), event-listener 5.4.2 (LICENSE-APACHE), fastrand 2.5.0 (LICENSE-APACHE), ff 0.13.1 (LICENSE-APACHE), filetime 0.2.29 (LICENSE-APACHE), find-msvc-tools 0.1.14 (LICENSE-APACHE), flate2 1.1.10 (LICENSE-APACHE), flume 0.12.0 (LICENSE-APACHE), fnv 1.0.7 (LICENSE-APACHE), form_urlencoded 1.2.2 (LICENSE-APACHE), futures 0.3.34 (LICENSE-APACHE), futures-channel 0.3.34 (LICENSE-APACHE), futures-core 0.3.34 (LICENSE-APACHE), futures-executor 0.3.34 (LICENSE-APACHE), futures-intrusive 0.5.0 (LICENSE-APACHE), futures-io 0.3.34 (LICENSE-APACHE), futures-macro 0.3.34 (LICENSE-APACHE), futures-sink 0.3.34 (LICENSE-APACHE), futures-task 0.3.34 (LICENSE-APACHE), futures-util 0.3.34 (LICENSE-APACHE), getrandom 0.2.17 (LICENSE-APACHE), getrandom 0.4.3 (LICENSE-APACHE), gix 0.90.0 (LICENSE-APACHE), gix-actor 0.44.1 (LICENSE-APACHE), gix-attributes 0.37.1 (LICENSE-APACHE), gix-bitmap 0.6.1 (LICENSE-APACHE), gix-chunk 0.10.1 (LICENSE-APACHE), gix-command 0.12.1 (LICENSE-APACHE), gix-commitgraph 0.42.0 (LICENSE-APACHE), gix-config 0.62.2 (LICENSE-APACHE), gix-config-value 0.21.1 (LICENSE-APACHE), gix-date 0.18.1 (LICENSE-APACHE), gix-diff 0.70.0 (LICENSE-APACHE), gix-discover 0.57.1 (LICENSE-APACHE), gix-error 0.5.2 (LICENSE-APACHE), gix-filter 0.36.1 (LICENSE-APACHE), gix-fs 0.24.1 (LICENSE-APACHE), gix-glob 0.29.1 (LICENSE-APACHE), gix-hash 0.28.1 (LICENSE-APACHE), gix-hashtable 0.18.0 (LICENSE-APACHE), gix-index 0.58.0 (LICENSE-APACHE), gix-lock 26.0.0 (LICENSE-APACHE), gix-macros 0.2.0 (LICENSE-APACHE), gix-note 0.3.1 (LICENSE-APACHE), gix-object 0.66.1 (LICENSE-APACHE), gix-odb 0.87.0 (LICENSE-APACHE), gix-pack 0.77.0 (LICENSE-APACHE), gix-packetline 0.24.1 (LICENSE-APACHE), gix-parallel 0.50.1 (LICENSE-APACHE), gix-path 0.14.1 (LICENSE-APACHE), gix-protocol 0.68.0 (LICENSE-APACHE), gix-quote 0.10.1 (LICENSE-APACHE), gix-ref 0.69.1 (LICENSE-APACHE), gix-refspec 0.47.1 (LICENSE-APACHE), gix-revision 0.52.0 (LICENSE-APACHE), gix-revwalk 0.38.0 (LICENSE-APACHE), gix-sec 0.16.1 (LICENSE-APACHE), gix-shallow 0.15.1 (LICENSE-APACHE), gix-tempfile 26.0.0 (LICENSE-APACHE), gix-trace 0.3.1 (LICENSE-APACHE), gix-transport 0.62.0 (LICENSE-APACHE), gix-traverse 0.64.0 (LICENSE-APACHE), gix-url 0.40.1 (LICENSE-APACHE), gix-utils 0.5.2 (LICENSE-APACHE), gix-validate 0.13.1 (LICENSE-APACHE), gix-worktree-stream 0.39.0 (LICENSE-APACHE), gix-zlib 0.4.0 (LICENSE-APACHE), group 0.13.0 (LICENSE-APACHE), hash32 0.3.1 (LICENSE-APACHE), hashbrown 0.16.1 (LICENSE-APACHE), hashbrown 0.17.1 (LICENSE-APACHE), hashlink 0.11.1 (LICENSE-APACHE), heapless 0.8.0 (LICENSE-APACHE), heck 0.5.0 (LICENSE-APACHE), hex 0.4.3 (LICENSE-APACHE), hkdf 0.13.0 (LICENSE-APACHE), hmac 0.13.0 (LICENSE-APACHE), http 1.5.0 (LICENSE-APACHE), httparse 1.10.1 (LICENSE-APACHE), httpdate 1.0.3 (LICENSE-APACHE), hybrid-array 0.4.15 (LICENSE-APACHE), hyper-rustls 0.27.10 (LICENSE-APACHE), iana-time-zone 0.1.65 (LICENSE-APACHE), iana-time-zone-haiku 0.1.2 (LICENSE-APACHE), idna 1.1.0 (LICENSE-APACHE), idna_adapter 1.2.2 (LICENSE-APACHE), indexmap 2.14.2 (LICENSE-APACHE), inout 0.2.5 (LICENSE-APACHE), ipnet 2.12.2 (LICENSE-APACHE), is_terminal_polyfill 1.70.2 (LICENSE-APACHE), itoa 1.0.18 (LICENSE-APACHE), jni-sys 0.4.1 (LICENSE-APACHE), jobserver 0.1.35 (LICENSE-APACHE), js-sys 0.3.106 (LICENSE-APACHE), lazy_static 1.5.1 (LICENSE-APACHE), libc 0.2.189 (LICENSE-APACHE), linux-raw-sys 0.12.1 (LICENSE-APACHE), linux-raw-sys 0.12.1 (LICENSE-Apache-2.0_WITH_LLVM-exception), lock_api 0.4.14 (LICENSE-APACHE), log 0.4.34 (LICENSE-APACHE), lru-slab 0.1.3 (LICENSE-APACHE), md-5 0.11.0 (LICENSE-APACHE), memmap2 0.9.11 (LICENSE-APACHE), mime 0.3.17 (LICENSE-APACHE), miniz_oxide 0.9.1 (LICENSE-APACHE.md), multiversion 0.8.0 (LICENSE-APACHE), multiversion_no_op 1.0.0 (LICENSE-APACHE), multiversion-macros 0.8.0 (LICENSE-APACHE), num-traits 0.2.19 (LICENSE-APACHE), once_cell 1.21.4 (LICENSE-APACHE), once_cell_polyfill 1.70.2 (LICENSE-APACHE), openssl-probe 0.2.1 (LICENSE-APACHE), parking 2.2.1 (LICENSE-APACHE), parking_lot 0.12.5 (LICENSE-APACHE), parking_lot_core 0.9.12 (LICENSE-APACHE), percent-encoding 2.3.2 (LICENSE-APACHE), pin-project-lite 0.2.17 (LICENSE-APACHE), pkg-config 0.3.34 (LICENSE-APACHE), poly1305 0.9.1 (LICENSE-APACHE), portable-atomic 1.15.0 (LICENSE-APACHE), portable-atomic-util 0.2.8 (LICENSE-APACHE), proc-macro2 1.0.107 (LICENSE-APACHE), quinn 0.11.12 (LICENSE-APACHE), quinn-proto 0.11.19 (LICENSE-APACHE), quinn-udp 0.5.16 (LICENSE-APACHE), quote 1.0.47 (LICENSE-APACHE), rand 0.10.3 (LICENSE-APACHE), rand_core 0.10.1 (LICENSE-APACHE), rand_core 0.6.4 (LICENSE-APACHE), rand_pcg 0.10.2 (LICENSE-APACHE), regex 1.13.1 (LICENSE-APACHE), regex-automata 0.4.18 (LICENSE-APACHE), regex-syntax 0.8.11 (LICENSE-APACHE), reqwest 0.13.5 (LICENSE-APACHE), rustc_version 0.4.1 (LICENSE-APACHE), rustc-hash 2.1.3 (LICENSE-APACHE), rustix 1.1.5 (LICENSE-APACHE), rustix 1.1.5 (LICENSE-Apache-2.0_WITH_LLVM-exception), rustls 0.23.46 (LICENSE-APACHE), rustls-native-certs 0.8.4 (LICENSE-APACHE), rustls-pki-types 1.15.1 (LICENSE-APACHE), rustls-platform-verifier 0.7.1 (LICENSE-APACHE), rustversion 1.0.23 (LICENSE-APACHE), ryu 1.0.23 (LICENSE-APACHE), scopeguard 1.2.0 (LICENSE-APACHE), sec1 0.7.3 (LICENSE-APACHE), security-framework 3.7.0 (LICENSE-APACHE), security-framework-sys 2.17.0 (LICENSE-APACHE), semver 1.0.28 (LICENSE-APACHE), serde 1.0.229 (LICENSE-APACHE), serde_core 1.0.229 (LICENSE-APACHE), serde_derive 1.0.229 (LICENSE-APACHE), serde_json 1.0.154 (LICENSE-APACHE), serde_path_to_error 0.1.20 (LICENSE-APACHE), serde_urlencoded 0.7.1 (LICENSE-APACHE), sha1 0.11.0 (LICENSE-APACHE), sha1dc 0.1.5 (LICENSE-APACHE), sha2 0.10.9 (LICENSE-APACHE), sha2 0.11.1 (LICENSE-APACHE), signal-hook-registry 1.4.8 (LICENSE-APACHE), simd_cesu8 1.2.0 (LICENSE-APACHE), simdutf8 0.1.5 (LICENSE-Apache), similar 3.2.1 (LICENSE), smallvec 1.16.2 (LICENSE-APACHE), socket2 0.6.5 (LICENSE-APACHE), sqlx 0.9.0 (LICENSE-APACHE), stable_deref_trait 1.2.1 (LICENSE-APACHE), streaming-iterator 0.1.9 (LICENSE-APACHE), stringprep 0.1.5 (LICENSE-APACHE), syn 2.0.119 (LICENSE-APACHE), syn 3.0.6 (LICENSE-APACHE), sync_wrapper 1.0.2 (LICENSE), tar 0.4.46 (LICENSE-APACHE), target-features 0.1.6 (LICENSE-APACHE), tempfile 3.27.0 (LICENSE-APACHE), thiserror 2.0.21 (LICENSE-APACHE), thiserror-impl 2.0.21 (LICENSE-APACHE), thread_local 1.1.10 (LICENSE-APACHE), tinyvec 1.13.3 (LICENSE-APACHE.md), tokio-rustls 0.26.6 (LICENSE-APACHE), typed-path 0.13.0 (LICENSE-APACHE), typenum 1.20.1 (LICENSE-APACHE), unicase 2.9.0 (LICENSE-APACHE), unicode-bidi 0.3.18 (LICENSE-APACHE), unicode-bom 2.0.3 (LICENSE), unicode-ident 1.0.26 (LICENSE-APACHE), unicode-normalization 0.1.25 (LICENSE-APACHE), unicode-properties 0.1.4 (LICENSE-APACHE), universal-hash 0.6.1 (LICENSE-APACHE), url 2.5.8 (LICENSE-APACHE), utf8_iter 1.0.4 (LICENSE-APACHE), utf8parse 0.2.2 (LICENSE-APACHE), uuid 1.29.0 (LICENSE-APACHE), vcpkg 0.2.15 (LICENSE-APACHE), version_check 0.9.5 (LICENSE-APACHE), voprf 0.5.0 (LICENSE-APACHE), wasi 0.11.1+wasi-snapshot-preview1 (LICENSE-APACHE), wasi 0.11.1+wasi-snapshot-preview1 (LICENSE-Apache-2.0_WITH_LLVM-exception), wasm-bindgen 0.2.129 (LICENSE-APACHE), wasm-bindgen-futures 0.4.79 (LICENSE-APACHE), wasm-bindgen-macro 0.2.129 (LICENSE-APACHE), wasm-bindgen-macro-support 0.2.129 (LICENSE-APACHE), wasm-bindgen-shared 0.2.129 (LICENSE-APACHE), web-sys 0.3.106 (LICENSE-APACHE), web-time 1.1.0 (LICENSE-APACHE), whoami 2.1.3 (LICENSE_APACHE), windows_aarch64_gnullvm 0.52.6 (license-apache-2.0), windows_aarch64_msvc 0.52.6 (license-apache-2.0), windows_i686_gnu 0.52.6 (license-apache-2.0), windows_i686_gnullvm 0.52.6 (license-apache-2.0), windows_i686_msvc 0.52.6 (license-apache-2.0), windows_x86_64_gnu 0.52.6 (license-apache-2.0), windows_x86_64_gnullvm 0.52.6 (license-apache-2.0), windows_x86_64_msvc 0.52.6 (license-apache-2.0), windows-core 0.62.2 (license-apache-2.0), windows-implement 0.60.2 (license-apache-2.0), windows-interface 0.59.3 (license-apache-2.0), windows-link 0.2.1 (license-apache-2.0), windows-result 0.4.1 (license-apache-2.0), windows-strings 0.5.1 (license-apache-2.0), windows-sys 0.52.0 (license-apache-2.0), windows-sys 0.61.2 (license-apache-2.0), windows-targets 0.52.6 (license-apache-2.0), zeroize 1.9.0 (LICENSE-APACHE)
 
 Their copies of it carry these notices:
 
@@ -1657,7 +1652,7 @@ AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ```
 
-#### adler2 2.0.1 (LICENSE-MIT), allocator-api2 0.2.21 (LICENSE-MIT), anyhow 1.0.104 (LICENSE-MIT), atomic-waker 1.1.2 (LICENSE-MIT), curve25519-dalek-derive 0.1.1 (LICENSE-MIT), displaydoc 0.2.7 (LICENSE-MIT), etcetera 0.11.0 (LICENSE-MIT), event-listener 5.4.2 (LICENSE-MIT), fastrand 2.5.0 (LICENSE-MIT), flume 0.12.0 (LICENSE-MIT), group 0.13.0 (LICENSE-MIT), itoa 1.0.18 (LICENSE-MIT), lazy_static 1.5.1 (LICENSE-MIT), linux-raw-sys 0.12.1 (LICENSE-MIT), once_cell 1.21.4 (LICENSE-MIT), parking 2.2.1 (LICENSE-MIT), pin-project-lite 0.2.17 (LICENSE-MIT), portable-atomic 1.15.0 (LICENSE-MIT), portable-atomic-util 0.2.8 (LICENSE-MIT), proc-macro2 1.0.107 (LICENSE-MIT), quote 1.0.47 (LICENSE-MIT), rustc-hash 2.1.3 (LICENSE-MIT), rustix 1.1.5 (LICENSE-MIT), rustversion 1.0.23 (LICENSE-MIT), semver 1.0.28 (LICENSE-MIT), serde 1.0.229 (LICENSE-MIT), serde_core 1.0.229 (LICENSE-MIT), serde_derive 1.0.229 (LICENSE-MIT), serde_json 1.0.151 (LICENSE-MIT), serde_path_to_error 0.1.20 (LICENSE-MIT), simd_cesu8 1.2.0 (LICENSE-MIT), syn 2.0.119 (LICENSE-MIT), syn 3.0.6 (LICENSE-MIT), thiserror 2.0.21 (LICENSE-MIT), thiserror-impl 2.0.21 (LICENSE-MIT), typed-path 0.13.0 (LICENSE-MIT), unicode-ident 1.0.26 (LICENSE-MIT), voprf 0.5.0 (LICENSE-MIT), wasi 0.11.1+wasi-snapshot-preview1 (LICENSE-MIT), wasip2 1.0.4+wasi-0.2.12 (LICENSE-MIT), wit-bindgen 0.57.1 (LICENSE-MIT), zmij 1.0.23 (LICENSE-MIT)
+#### adler2 2.0.1 (LICENSE-MIT), allocator-api2 0.2.21 (LICENSE-MIT), anyhow 1.0.104 (LICENSE-MIT), atomic-waker 1.1.2 (LICENSE-MIT), curve25519-dalek-derive 0.1.1 (LICENSE-MIT), displaydoc 0.2.7 (LICENSE-MIT), etcetera 0.11.0 (LICENSE-MIT), event-listener 5.4.2 (LICENSE-MIT), fastrand 2.5.0 (LICENSE-MIT), flume 0.12.0 (LICENSE-MIT), group 0.13.0 (LICENSE-MIT), itoa 1.0.18 (LICENSE-MIT), lazy_static 1.5.1 (LICENSE-MIT), linux-raw-sys 0.12.1 (LICENSE-MIT), once_cell 1.21.4 (LICENSE-MIT), parking 2.2.1 (LICENSE-MIT), pin-project-lite 0.2.17 (LICENSE-MIT), portable-atomic 1.15.0 (LICENSE-MIT), portable-atomic-util 0.2.8 (LICENSE-MIT), proc-macro2 1.0.107 (LICENSE-MIT), quote 1.0.47 (LICENSE-MIT), rustc-hash 2.1.3 (LICENSE-MIT), rustix 1.1.5 (LICENSE-MIT), rustversion 1.0.23 (LICENSE-MIT), semver 1.0.28 (LICENSE-MIT), serde 1.0.229 (LICENSE-MIT), serde_core 1.0.229 (LICENSE-MIT), serde_derive 1.0.229 (LICENSE-MIT), serde_json 1.0.154 (LICENSE-MIT), serde_path_to_error 0.1.20 (LICENSE-MIT), simd_cesu8 1.2.0 (LICENSE-MIT), syn 2.0.119 (LICENSE-MIT), syn 3.0.6 (LICENSE-MIT), thiserror 2.0.21 (LICENSE-MIT), thiserror-impl 2.0.21 (LICENSE-MIT), typed-path 0.13.0 (LICENSE-MIT), unicode-ident 1.0.26 (LICENSE-MIT), voprf 0.5.0 (LICENSE-MIT), wasi 0.11.1+wasi-snapshot-preview1 (LICENSE-MIT), zmij 1.0.23 (LICENSE-MIT)
 
 ```text
 Permission is hereby granted, free of charge, to any
@@ -1685,10 +1680,10 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-#### aead 0.5.2 (LICENSE-MIT)
+#### aead 0.6.1 (LICENSE-MIT)
 
 ```text
-Copyright (c) 2019 The RustCrypto Project Developers
+Copyright (c) 2019-2026 The RustCrypto Project Developers
 Copyright (c) 2019 MobileCoin, LLC
 
 Permission is hereby granted, free of charge, to any
@@ -2750,7 +2745,7 @@ The `cfg_aliases!` macro uses a lot of the code from [`tectonic_cfg_support::tar
 ---
 ```
 
-#### chacha20 0.10.2 (LICENSE-MIT)
+#### chacha20 0.10.2 (LICENSE-MIT), chacha20poly1305 0.11.0 (LICENSE-MIT)
 
 ```text
 Copyright (c) 2019-2026 The RustCrypto Project Developers
@@ -2780,70 +2775,10 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-#### chacha20 0.9.1 (LICENSE-MIT)
+#### cipher 0.5.2 (LICENSE-MIT)
 
 ```text
-Copyright (c) 2019-2023 The RustCrypto Project Developers
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the
-Software without restriction, including without
-limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-```
-
-#### chacha20poly1305 0.10.1 (LICENSE-MIT)
-
-```text
-Copyright (c) 2019 The RustCrypto Project Developers
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the
-Software without restriction, including without
-limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-```
-
-#### cipher 0.4.4 (LICENSE-MIT)
-
-```text
-Copyright (c) 2016-2020 RustCrypto Developers
+Copyright (c) 2016-2025 RustCrypto Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
@@ -5076,37 +5011,6 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-#### getrandom 0.3.4 (LICENSE-MIT)
-
-```text
-Copyright (c) 2018-2025 The rust-random Project Developers
-Copyright (c) 2014 The Rust Project Developers
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the
-Software without restriction, including without
-limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-```
-
 #### getrandom 0.4.3 (LICENSE-MIT)
 
 ```text
@@ -5546,7 +5450,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
-#### hyper-rustls 0.27.10 (LICENSE-ISC), rustls 0.23.45 (LICENSE-ISC), rustls-native-certs 0.8.4 (LICENSE-ISC)
+#### hyper-rustls 0.27.10 (LICENSE-ISC), rustls 0.23.46 (LICENSE-ISC), rustls-native-certs 0.8.4 (LICENSE-ISC)
 
 ```text
 ISC License (ISC)
@@ -5566,7 +5470,7 @@ ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ```
 
-#### hyper-rustls 0.27.10 (LICENSE-MIT), rustls 0.23.45 (LICENSE-MIT), rustls-native-certs 0.8.4 (LICENSE-MIT)
+#### hyper-rustls 0.27.10 (LICENSE-MIT), rustls 0.23.46 (LICENSE-MIT), rustls-native-certs 0.8.4 (LICENSE-MIT)
 
 ```text
 Copyright (c) 2016 Joseph Birr-Pixton <jpixton@gmail.com>
@@ -5791,10 +5695,10 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-#### inout 0.1.4 (LICENSE-MIT)
+#### inout 0.2.5 (LICENSE-MIT)
 
 ```text
-Copyright (c) 2022 The RustCrypto Project Developers
+Copyright (c) 2022-2025 The RustCrypto Project Developers
 Copyright (c) 2022 Artyom Pavlov
 
 Permission is hereby granted, free of charge, to any
@@ -6096,7 +6000,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-#### md-5 0.11.0 (LICENSE-MIT), sha1 0.11.0 (LICENSE-MIT), sha2 0.11.0 (LICENSE-MIT)
+#### md-5 0.11.0 (LICENSE-MIT), sha1 0.11.0 (LICENSE-MIT), sha2 0.11.1 (LICENSE-MIT)
 
 ```text
 Copyright (c) 2016-2026 The RustCrypto Project Developers
@@ -6447,36 +6351,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-#### opaque-debug 0.3.1 (LICENSE-MIT)
-
-```text
-Copyright (c) 2018-2024 The RustCrypto Project Developers
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the
-Software without restriction, including without
-limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-```
-
 #### parking 2.2.1 (LICENSE-THIRD-PARTY)
 
 ```text
@@ -6491,10 +6365,10 @@ option. All files in the project carrying such notice may not be
 copied, modified, or distributed except according to those terms.
 ```
 
-#### poly1305 0.8.0 (LICENSE-MIT)
+#### poly1305 0.9.1 (LICENSE-MIT)
 
 ```text
-Copyright (c) 2015-2019 RustCrypto Developers
+Copyright (c) 2015-2026 The RustCrypto Project Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
@@ -6551,7 +6425,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-#### pulldown-cmark 0.13.4 (LICENSE)
+#### pulldown-cmark 0.13.5 (LICENSE)
 
 ```text
 The MIT License
@@ -7071,7 +6945,7 @@ OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ```
 
-#### rust-embed 8.12.0 (LICENSE), rust-embed-impl 8.12.0 (LICENSE), rust-embed-utils 8.12.0 (LICENSE)
+#### rust-embed 8.13.0 (LICENSE), rust-embed-impl 8.13.0 (LICENSE), rust-embed-utils 8.13.0 (LICENSE)
 
 ```text
 The MIT License (MIT)
@@ -7998,7 +7872,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 3. This notice may not be removed or altered from any source distribution.
 ```
 
-#### tokio 1.53.1 (LICENSE), tokio-stream 0.1.19 (LICENSE), tokio-util 0.7.19 (LICENSE)
+#### tokio 1.54.1 (LICENSE), tokio-stream 0.1.19 (LICENSE), tokio-util 0.7.19 (LICENSE)
 
 ```text
 MIT License
@@ -8111,7 +7985,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-#### tower-http 0.6.11 (LICENSE)
+#### tower-http 0.6.11 (LICENSE), tower-http 0.7.1 (LICENSE)
 
 ```text
 Copyright (c) 2019-2021 Tower Contributors
@@ -8401,10 +8275,10 @@ notice may not be copied, modified, or distributed except
 according to those terms.
 ```
 
-#### universal-hash 0.5.1 (LICENSE-MIT)
+#### universal-hash 0.6.1 (LICENSE-MIT)
 
 ```text
-Copyright (c) 2019-2020 RustCrypto Developers
+Copyright (c) 2019-2025 RustCrypto Developers
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
@@ -8526,7 +8400,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-#### uuid 1.26.1 (LICENSE-MIT)
+#### uuid 1.29.0 (LICENSE-MIT)
 
 ```text
 Copyright (c) 2014 The Rust Project Developers
