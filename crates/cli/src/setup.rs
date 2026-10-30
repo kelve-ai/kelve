@@ -509,8 +509,13 @@ mod tests {
     fn a_connection_that_sets_kelves_own_settings_is_made_again() {
         let dev = "kelve:\n  Scope: User config (available in all your projects)\n  Status: ✔ Connected\n  Type: stdio\n  Command: kelve\n  Args: mcp\n  Environment:\n    KELVE_GRAPH_URL=http://localhost:4620\n";
         assert_eq!(stale(dev), Some(OVERRIDDEN));
-        let gone = "kelve:\n  Command: /nowhere/kelve-that-was\n  Args: mcp\n  Environment:\n";
-        assert!(stale(gone).is_some());
+        // Absolute on every system: Windows's need a drive.
+        let missing = std::env::temp_dir().join("kelve-that-was-taken-out");
+        let gone = format!(
+            "kelve:\n  Command: {}\n  Args: mcp\n  Environment:\n",
+            missing.display()
+        );
+        assert!(stale(&gone).is_some(), "{gone}");
         let fine = "kelve:\n  Command: kelve\n  Args: mcp\n  Environment:\n\nTo remove this server, run: claude mcp remove kelve -s user\n";
         assert_eq!(stale(fine), None);
     }
