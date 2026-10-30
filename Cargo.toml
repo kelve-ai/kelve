@@ -85,6 +85,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 clap = { version = "4", features = ["derive", "env"] }
 anstream = "1"
 anstyle = "1"
+# Reading keys for setup's choices, on macOS, Linux and Windows alike.
+crossterm = "0.29"
 
 
 [workspace.lints.rust]
