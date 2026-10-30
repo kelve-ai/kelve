@@ -2,11 +2,13 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
-## Unreleased
+## 0.1.2, 30 October 2026
 
 - **Your agent shows you its work as it hands it over.** When it commits, pushes or opens a pull request for work you haven't seen, kelve's hook has it open that work in kelve, without being asked, once for each commit. It used to wait until the agent merged, which is after work is reviewed.
 - **Setup's choices take the arrow keys,** and a command in backticks is never split across lines.
 - **Setup puts a stale connection right.** An agent connected with kelve settings of its own, such as another graph from developing kelve, is connected afresh, and setup says so.
+- **A note done stays done.** Marking a note done took its jobs off your agent's list a moment later, which could take off the job asked when the note's words changed back. It's done before kelve says so now.
+- **`kelve update` on Windows waits out a busy file.** Windows holds a program just written while Defender reads it, and putting it in place then could fail; kelve tries again for up to two seconds.
 
 ## 0.1.1, 30 October 2026
 
