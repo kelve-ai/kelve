@@ -2,6 +2,11 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## 0.1.3, 30 October 2026
+
+- **Setup's arrow keys work when the installer runs it.** On macOS, installed with `curl … | sh`, the keys came out as `^[[C` and setup fell back to typing. If keys can't be read, typing a choice now takes the choices' place.
+- **Your agent is told to show its work however it commits.** kelve's hook missed a commit or push run with other commands, a value in quotes before git's command, a folder given from `~`, and the branch a pull request names. It reads the whole command now, as the shell does.
+
 ## 0.1.2, 30 October 2026
 
 - **Your agent shows you its work as it hands it over.** When it commits, pushes or opens a pull request for work you haven't seen, kelve's hook has it open that work in kelve, without being asked, once for each commit. It used to wait until the agent merged, which is after work is reviewed.
