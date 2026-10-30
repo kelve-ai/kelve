@@ -59,7 +59,7 @@ jobs:
       matrix:
         include:
           - { name: Windows, os: windows-latest }
-          - { name: macOS, os: macos-14 }
+          - { name: macOS, os: macos-15 }
     runs-on: ${{ matrix.os }}
     # A test that hangs fails here, with its log, rather than at GitHub's
     # six hours, without one.
