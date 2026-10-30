@@ -91,9 +91,14 @@ export async function signIn(page: Page, w?: Pick<World, 'base' | 'secretFile' |
   await page.reload()
 }
 
-/** The person has been through the first run, so what's opened goes straight to the reader. */
-async function started(page: Page, base: string) {
+/**
+ * The person has been through the first run, so what's opened goes straight
+ * to the reader. Whether they hadn't been before.
+ */
+async function started(page: Page, base: string): Promise<boolean> {
+  const before = (await (await page.request.get(`${base}/api/settings`)).json()) as { hints: string[] }
   await page.request.post(`${base}/api/settings`, { data: { hintSeen: 'started' } })
+  return !before.hints.includes('started')
 }
 
 /**
@@ -110,7 +115,9 @@ export async function open(page: Page, what: Record<string, unknown>, opts: { wo
   const opened = await agent.open(what)
   if (!opened.shown) await page.goto(await newLink(w.logFile, before))
   else await page.waitForURL(/#\/o\/\d+/)
-  await started(page, w.base)
+  // The page may have read its settings before that, and be showing the
+  // first run, with what was opened a click away: it reads them again.
+  if (await started(page, w.base)) await page.reload()
   if (opts.work !== false) await agent.work()
   // Not working yet: the way in is still found first, as it always is.
   else if (what.what !== 'file') await agent.findWay()
