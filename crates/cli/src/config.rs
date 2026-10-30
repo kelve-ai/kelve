@@ -72,6 +72,27 @@ pub fn parse_url(given: &str) -> anyhow::Result<String> {
     }
 }
 
+/// Whether the secret may go to `url`: over https anywhere, and over plain
+/// http only to this computer, where nothing on the way can read it.
+pub fn safe_for_secret(url: &str) -> bool {
+    let Ok(u) = url::Url::parse(url) else {
+        return false;
+    };
+    match u.scheme() {
+        "https" => true,
+        "http" => match u.host() {
+            Some(url::Host::Domain(d)) => {
+                let d = d.to_ascii_lowercase();
+                d == "localhost" || d.ends_with(".localhost")
+            }
+            Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
+            Some(url::Host::Ipv6(ip)) => ip.is_loopback(),
+            None => false,
+        },
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,5 +133,26 @@ mod tests {
         );
         assert!(parse_url("localhost:4600").is_err());
         assert!(parse_url("ftp://localhost").is_err());
+    }
+
+    #[test]
+    fn the_secret_goes_over_plain_http_only_to_this_computer() {
+        for here in [
+            "http://localhost:4600",
+            "http://kelve.localhost:4600",
+            "http://127.0.0.1:4600",
+            "http://[::1]:4600",
+            "https://kelve.example.com",
+        ] {
+            assert!(safe_for_secret(here), "{here}");
+        }
+        for away in [
+            "http://kelve.example.com",
+            "http://192.168.1.20:4600",
+            "http://localhost.example.com",
+            "ftp://localhost",
+        ] {
+            assert!(!safe_for_secret(away), "{away}");
+        }
     }
 }

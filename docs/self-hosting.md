@@ -8,7 +8,7 @@ kelve reads these from the environment as it starts. Everything else is set in t
 
 | Variable | What it does |
 |---|---|
-| `KELVE_URL` | Where you open kelve. Links are made from it, and kelve answers at its host. Default `http://kelve.localhost:4600`, or `kelve.localhost` on the port in `KELVE_BIND`. Browsers send any name under `.localhost` to the computer they run on. kelve also answers at `localhost` on its port. |
+| `KELVE_URL` | Where you open kelve. Links are made from it, and kelve answers at its host. Default `http://kelve.localhost:4600`, or `kelve.localhost` on the port in `KELVE_BIND`. Browsers send any name under `.localhost` to the computer they run on. kelve also answers at `localhost` on its port. The command line sends its secret only over https, or over plain http to this computer. |
 | `KELVE_BIND` | The address kelve listens on. Default `127.0.0.1:4600`. |
 | `KELVE_DATA` | Where kelve keeps its files: its store, its sealing key, its log and reports of what went wrong. Default the folder the secret is in: `~/.config/kelve`, or `kelve` under `XDG_CONFIG_HOME`, or under `%APPDATA%` on Windows. |
 | `KELVE_STORE` | The store's file. Default one in the data folder for each shared graph: `kelve.db` for kelve's own, `kelve-<host>-<port>.db` for any other, such as `kelve-localhost-4620.db`, and `kelve-off.db` for none. |
