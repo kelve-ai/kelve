@@ -1141,7 +1141,8 @@ async fn a_folder_nobody_opened_is_walked_for_its_imports_and_lessons_reach_the_
         .0
         .text;
     assert_eq!(said, "");
-    // Walked, then its libraries looked up in the graph.
+    // Walked, then its libraries looked up in the graph, and the lessons
+    // about them fetched.
     let mut walked = None;
     for _ in 0..200 {
         let mut conn = app.db.acquire().await.unwrap();
@@ -1151,7 +1152,10 @@ async fn a_folder_nobody_opened_is_walked_for_its_imports_and_lessons_reach_the_
         let used = kelve_store::lessons::used_in(&mut conn, &root_s, &["src/lib.rs".into()])
             .await
             .unwrap();
-        if walked.is_some_and(|(files, _)| files > 0) && !used.is_empty() {
+        let fetched = kelve_store::lessons::about(&mut conn, std::slice::from_ref(&rand))
+            .await
+            .unwrap();
+        if walked.is_some_and(|(files, _)| files > 0) && !used.is_empty() && !fetched.is_empty() {
             break;
         }
         drop(conn);
