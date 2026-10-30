@@ -122,6 +122,12 @@ cd web && bun run build && bun run looks
 
 After a change meant to show, take them again with `bun run looks --update-snapshots`, look at what changed, and commit them.
 
+The README's pictures, in `.github/assets`, are some of those states taken at twice the pixels, so they stay sharp on dense screens and in GitHub's narrow column, and compressed. `web/e2e/pictures` says which. After a change to what they show, take them again, look at each, and commit them:
+
+```bash
+cd web && bun run build && bun run pictures
+```
+
 ## How fast it is
 
 Opening a file should feel instant. To see how long kelve takes over what the reader asks for, on a change as large as you like:

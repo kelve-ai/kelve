@@ -10,6 +10,12 @@
 
 <p align="center">kelve opens your agent’s work in plain words, part by part, with each idea down to first principles. It runs on your computer, with the agent you already use.</p>
 
+<p align="center">
+  <a href="https://kelve.ai/docs/"><b>Docs</b></a> ·
+  <a href="https://kelve.ai/demo/#/example">Try the example</a> ·
+  <a href="https://kelve.ai">kelve.ai</a>
+</p>
+
 Ask your agent:
 
 ```
@@ -29,7 +35,7 @@ Claude Code and Codex show you their work in kelve automatically, before they me
   <img src=".github/assets/change-light.png" alt="kelve on an example: a change an agent made to a payments service, opened on what it does, with the files in order beside it.">
 </picture>
 
-This is kelve itself, on an example: a change an agent made to a payments service. It opens on what the change does, with In order beside it. Open a step, an idea or a folder, or leave a note: [open the example](https://kelve.ai/demo/index.html#/example).
+This is kelve itself, on an example: a change an agent made to a payments service. It opens on what the change does, with In order beside it. Open a step, an idea or a folder, or leave a note: [open the example](https://kelve.ai/demo/#/example).
 
 ## Read it in order.
 
@@ -42,7 +48,7 @@ It reads along the way, so you can start at once, and stop when you know enough.
   <img src=".github/assets/in-order-light.png" alt="The way in: the change first, then each file in order, then the tests and the docs as parts of their own.">
 </picture>
 
-[See it in the example →](https://kelve.ai/demo/index.html#/example?f=src%2Fbank%2Fmod.rs&r=code&t=order&as=path)
+[See it in the example →](https://kelve.ai/demo/#/example?f=src%2Fbank%2Fmod.rs&r=code&t=order&as=path)
 
 ## Every part, in plain words.
 
@@ -57,19 +63,14 @@ Your agent writes each page to the same rules, and kelve checks every part again
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/plainly-dark.png">
-  <img src=".github/assets/plainly-light.png" alt="A file read plainly: what it’s for, what it fixes, and each part by its goal, with what it did before and its code below.">
+  <img src=".github/assets/plainly-light.png" alt="A file read plainly: what it’s for, what it fixes, and each part by its goal, with what it did before and its code a click away.">
 </picture>
 
-[Read this file plainly in the example →](https://kelve.ai/demo/index.html#/example?f=src%2Fretry.rs&r=plainly)
+[Read this file plainly in the example →](https://kelve.ai/demo/#/example?f=src%2Fretry.rs&r=plainly)
 
 ## Anything your agent opens.
 
 Code or words: a repo, a thesis, your notes, one file, or just what your agent did. Ask in your own words, and it opens there in kelve, the same way each time: what it is first, then the rest in order.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/anything-dark.png">
-  <img src=".github/assets/anything-light.png" alt="A page of docs in kelve, with each idea it rests on marked beside the paragraph that uses it.">
-</picture>
 
 ## Your agent does the reading.
 
@@ -80,12 +81,7 @@ kelve has no model and no key of its own. It runs on your computer, beside your 
 - **Only what you’ll read.** It reads the way in first, and the rest when you ask. Its dial, at the top of every page, shows it working, and opens its list.
 - **Nothing to sign up for.** kelve works signed out. Sign in only to join the shared graph.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/agent-dark.png">
-  <img src=".github/assets/agent-light.png" alt="Your agent’s list beside the code: what it’s reading now, what’s next, and what’s ready for you.">
-</picture>
-
-[See your agent’s list in the example →](https://kelve.ai/demo/index.html#/example?f=src%2Fretry.rs&r=code&k=list&as=list-way)
+[See your agent’s list in the example →](https://kelve.ai/demo/#/example?f=src%2Fretry.rs&r=code&k=list&as=list-way)
 
 ## The shared graph.
 
@@ -148,7 +144,7 @@ Then start a new session with your agent, so it has kelve's tools, and ask it to
 
 ## Docs
 
-- [Install](https://kelve.ai/docs/install/), [connect your agent](https://kelve.ai/docs/connect/) and [what goes where](https://kelve.ai/docs/what-goes/), on kelve.ai.
+- **[kelve’s docs](https://kelve.ai/docs/)**, on kelve.ai: installing kelve, using it with your agent, and what it does with your work. To start: [install](https://kelve.ai/docs/install/), [connect your agent](https://kelve.ai/docs/connect/) and [what goes where](https://kelve.ai/docs/what-goes/).
 - [How kelve is built](docs/architecture.md), [developing it](docs/developing.md), [its settings](docs/self-hosting.md) and [releasing it](docs/releasing.md).
 - [Contributing](CONTRIBUTING.md), [working on kelve with agents](AGENTS.md) and [reporting a security problem](SECURITY.md).
 
