@@ -231,20 +231,37 @@ fn replace(exe: &Path, binary: &[u8], move_aside: bool) -> std::io::Result<()> {
     if move_aside {
         let old = dir.join(OLD);
         let _ = std::fs::remove_file(&old);
-        if let Err(e) = std::fs::rename(exe, &old) {
+        if let Err(e) = rename(exe, &old) {
             let _ = std::fs::remove_file(&new);
             return Err(e);
         }
-        if let Err(e) = std::fs::rename(&new, exe) {
-            let _ = std::fs::rename(&old, exe);
+        if let Err(e) = rename(&new, exe) {
+            let _ = rename(&old, exe);
             let _ = std::fs::remove_file(&new);
             return Err(e);
         }
         return Ok(());
     }
-    std::fs::rename(&new, exe).inspect_err(|_| {
+    rename(&new, exe).inspect_err(|_| {
         let _ = std::fs::remove_file(&new);
     })
+}
+
+/// Renames `from` to `to`, waiting out a file Windows has busy: a program
+/// just written is held a moment, as Defender reads it, and renaming it then
+/// fails with a sharing violation (32) or access denied (5). Up to two
+/// seconds; anywhere else, once.
+fn rename(from: &Path, to: &Path) -> std::io::Result<()> {
+    let mut tries = 0;
+    loop {
+        match std::fs::rename(from, to) {
+            Err(e) if cfg!(windows) && matches!(e.raw_os_error(), Some(32 | 5)) && tries < 20 => {
+                tries += 1;
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            done => return done,
+        }
+    }
 }
 
 /// Removes the `kelve.old.exe` an update on Windows left beside kelve, once
