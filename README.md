@@ -57,7 +57,7 @@ Your agent writes each page to the same rules, and kelve checks every part again
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/plainly-dark.png">
-  <img src=".github/assets/plainly-light.png" alt="A file read plainly: what it’s for, what it fixes, and each part by its goal, with what it did before and its code below.">
+  <img src=".github/assets/plainly-light.png" alt="A file read plainly: what it’s for, what it fixes, and each part by its goal, with what it did before and its code a click away.">
 </picture>
 
 [Read this file plainly in the example →](https://kelve.ai/demo/index.html#/example?f=src%2Fretry.rs&r=plainly)
@@ -65,11 +65,6 @@ Your agent writes each page to the same rules, and kelve checks every part again
 ## Anything your agent opens.
 
 Code or words: a repo, a thesis, your notes, one file, or just what your agent did. Ask in your own words, and it opens there in kelve, the same way each time: what it is first, then the rest in order.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/anything-dark.png">
-  <img src=".github/assets/anything-light.png" alt="A page of docs in kelve, with each idea it rests on marked beside the paragraph that uses it.">
-</picture>
 
 ## Your agent does the reading.
 
@@ -79,11 +74,6 @@ kelve has no model and no key of its own. It runs on your computer, beside your 
 - **On your computer.** kelve runs beside your agent. What you open goes to no one but it.
 - **Only what you’ll read.** It reads the way in first, and the rest when you ask. Its dial, at the top of every page, shows it working, and opens its list.
 - **Nothing to sign up for.** kelve works signed out. Sign in only to join the shared graph.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/agent-dark.png">
-  <img src=".github/assets/agent-light.png" alt="Your agent’s list beside the code: what it’s reading now, what’s next, and what’s ready for you.">
-</picture>
 
 [See your agent’s list in the example →](https://kelve.ai/demo/index.html#/example?f=src%2Fretry.rs&r=code&k=list&as=list-way)
 
