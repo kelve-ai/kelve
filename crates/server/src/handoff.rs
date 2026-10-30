@@ -4,10 +4,10 @@
 //! it's merged, so the agent shows it as it hands it over, not as it merges.
 
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 
-use kelve_core::hook::{Handover, handing_over};
+use kelve_core::hook::Handover;
 
 use crate::error::ApiResult;
 use crate::state::Shared;
@@ -19,28 +19,27 @@ const LATELY: i64 = 50;
 /// told once.
 static TOLD: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);
 
-/// The folder a command hands work over in: where the agent works, or where
-/// the command moves to first.
-fn folder(cwd: &Path, handover: &Handover) -> PathBuf {
-    match handover.dir.as_deref() {
-        Some(d) if d == "~" || d.starts_with("~/") => std::env::home_dir()
-            .map(|h| h.join(d.trim_start_matches('~').trim_start_matches('/')))
-            .unwrap_or_else(|| cwd.join(d)),
-        Some(d) => cwd.join(d),
-        None => cwd.to_path_buf(),
+/// A folder as the hook gives it, with a `~` for the home folder put right.
+pub fn at_home(path: &str) -> PathBuf {
+    match path.strip_prefix('~') {
+        Some(rest) if rest.is_empty() || rest.starts_with('/') => std::env::home_dir().map_or_else(
+            || PathBuf::from(path),
+            |h| h.join(rest.trim_start_matches('/')),
+        ),
+        _ => PathBuf::from(path),
     }
 }
 
-/// What kelve says after the agent ran `command` in `cwd`: to show the work
-/// in kelve, when the command handed it over and kelve hasn't shown its
-/// commit since it was made, and the agent hasn't been told already; else
-/// nothing.
-pub async fn after(app: &Shared, cwd: &str, command: &str) -> ApiResult<String> {
-    let Some(handover) = handing_over(command) else {
+/// What kelve says after the agent handed work over: to show it in kelve,
+/// when kelve hasn't shown its commit, the branch named or else the one
+/// checked out, since it was made, and the agent hasn't been told already;
+/// else nothing.
+pub async fn after(app: &Shared, handover: &Handover) -> ApiResult<String> {
+    let Some(at) = handover.dir.as_deref().map(at_home) else {
         return Ok(String::new());
     };
-    let at = folder(Path::new(cwd), &handover);
-    let found = tokio::task::spawn_blocking(move || kelve_engine::git::head(&at, "HEAD"))
+    let spec = handover.branch.clone().unwrap_or_else(|| "HEAD".into());
+    let found = tokio::task::spawn_blocking(move || kelve_engine::git::head(&at, &spec))
         .await
         .ok()
         .flatten();

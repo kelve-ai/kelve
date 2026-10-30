@@ -12,7 +12,7 @@
 //! moments, and how kelve answers it. No IO: the caller reads and writes the
 //! files, and runs the command.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 
 /// The command every entry runs, before its agent and event.
@@ -517,6 +517,10 @@ pub struct Moment {
     pub replaced: Option<String>,
     /// The agent can't be given text now: keep it for its next `next`.
     pub hold: bool,
+    /// Work the command handed over, read from the whole command, not its
+    /// key: the folder, absolute but for a `~` kelve knows, and the branch.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub handover: Option<Handover>,
 }
 
 const READS: [&str; 8] = [
@@ -817,22 +821,52 @@ fn failed_with(response: &Value) -> Option<String> {
     (!said.is_empty()).then(|| said.join("\n"))
 }
 
+/// A command's words, as the shell splits them: at spaces outside quotes,
+/// the quotes taken off. `git -c user.name='Ada Lovelace' commit` is four.
+fn words(command: &str) -> Vec<String> {
+    let (mut out, mut word, mut quote, mut any) = (Vec::new(), String::new(), None, false);
+    for c in command.chars() {
+        match (quote, c) {
+            (None, '\'' | '"') => (quote, any) = (Some(c), true),
+            (Some(q), _) if c == q => quote = None,
+            (None, c) if c.is_whitespace() => {
+                if any {
+                    out.push(std::mem::take(&mut word));
+                }
+                any = false;
+            }
+            _ => {
+                word.push(c);
+                any = true;
+            }
+        }
+    }
+    if any {
+        out.push(word);
+    }
+    out
+}
+
 /// The folder a command moves to before it does anything else: `cd x &&
 /// cargo test` works in `x`.
 pub fn moved_to(command: &str) -> Option<String> {
     let first = commands(command).into_iter().next()?;
-    let words: Vec<&str> = first.split_whitespace().collect();
-    match words.as_slice() {
-        ["cd", dir] => Some(dir.trim_matches(|c| c == '"' || c == '\'').to_string()),
+    match words(first).as_slice() {
+        [cd, dir] if cd == "cd" => Some(dir.clone()),
         _ => None,
     }
 }
 
-/// Work a command hands over for review, and the folder it runs in, when it
-/// moves there first (`cd x && …`, `git -C x …`).
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+/// Work a command hands over for review: the folder it runs in, when it
+/// moves there first (`cd x && …`, `git -C x …`), and the branch, when it
+/// names one that isn't the one checked out (`gh pr create --head x`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Handover {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dir: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub branch: Option<String>,
 }
 
 /// Whether a command hands work over: `git commit`, `git push` or `gh pr
@@ -841,9 +875,15 @@ pub struct Handover {
 pub fn handing_over(command: &str) -> Option<Handover> {
     let mut dir: Option<String> = None;
     for c in commands(command) {
-        let words: Vec<&str> = c.split_whitespace().collect();
+        let words = words(c);
+        let words: Vec<&str> = words.iter().map(String::as_str).collect();
         match words.as_slice() {
-            ["cd", to, ..] => dir = Some((*to).to_string()),
+            ["cd", to, ..] => {
+                dir = Some(match &dir {
+                    Some(d) => absolute(d, to),
+                    None => (*to).to_string(),
+                });
+            }
             ["git", rest @ ..] => {
                 let mut i = 0;
                 let mut at = dir.clone();
@@ -851,7 +891,10 @@ pub fn handing_over(command: &str) -> Option<Handover> {
                 while let Some(w) = rest.get(i) {
                     match *w {
                         "-C" => {
-                            at = rest.get(i + 1).map(|d| (*d).to_string());
+                            at = rest.get(i + 1).map(|d| match &at {
+                                Some(from) => absolute(from, d),
+                                None => (*d).to_string(),
+                            });
                             i += 2;
                         }
                         "-c" => i += 2,
@@ -865,10 +908,22 @@ pub fn handing_over(command: &str) -> Option<Handover> {
                 let tried =
                     args.contains(&"--dry-run") || (what == Some("push") && args.contains(&"-n"));
                 if matches!(what, Some("commit" | "push")) && !tried {
-                    return Some(Handover { dir: at });
+                    return Some(Handover {
+                        dir: at,
+                        branch: None,
+                    });
                 }
             }
-            ["gh", "pr", "create", ..] => return Some(Handover { dir: dir.clone() }),
+            ["gh", "pr", "create", args @ ..] => {
+                let branch = args.iter().enumerate().find_map(|(i, a)| match *a {
+                    "--head" | "-H" => args.get(i + 1).map(|b| (*b).to_string()),
+                    a => a.strip_prefix("--head=").map(str::to_string),
+                });
+                return Some(Handover {
+                    dir: dir.clone(),
+                    branch,
+                });
+            }
             _ => {}
         }
     }
@@ -977,6 +1032,15 @@ pub fn moment(agent: Agent, on: &str, event: &Value) -> Option<Moment> {
     let ran = first_str(&input, &["command", "CommandLine", "command_line", "cmd"])
         .filter(|c| !c.contains("*** Begin Patch"))
         .map(|c| c.trim().to_string());
+    // Work handed over, from the whole command: its key may be another of
+    // the commands run with it.
+    let handover = ran.as_deref().and_then(handing_over).map(|h| Handover {
+        dir: Some(
+            h.dir
+                .map_or_else(|| m.cwd.clone(), |d| absolute(&m.cwd, &d)),
+        ),
+        ..h
+    });
     // A command that moves first (`cd x && …`) works there, as in another
     // worktree: that's the folder its moment is about.
     if let Some(dir) = ran.as_deref().and_then(moved_to) {
@@ -1022,6 +1086,7 @@ pub fn moment(agent: Agent, on: &str, event: &Value) -> Option<Moment> {
             None => m.what = "ran".into(),
         }
         m.command = Some(command);
+        m.handover = handover;
         return Some(m);
     }
     let what = if READS.contains(&t.as_str()) {
@@ -1127,9 +1192,15 @@ fn written(input: &Value) -> Option<String> {
     (!all.trim().is_empty()).then(|| crate::text::clip(&all, 20_000))
 }
 
-/// A path, made absolute against the folder the agent works in.
+/// A path, made absolute against the folder the agent works in. One from
+/// the home folder (`~/x`) stays as it is: kelve knows where home is.
 fn absolute(cwd: &str, path: &str) -> String {
-    if path.starts_with('/') || path.chars().nth(1) == Some(':') || cwd.is_empty() {
+    if path.starts_with('/')
+        || path == "~"
+        || path.starts_with("~/")
+        || path.chars().nth(1) == Some(':')
+        || cwd.is_empty()
+    {
         path.to_string()
     } else {
         format!(
@@ -1195,6 +1266,7 @@ mod tests {
         let at = |dir: Option<&str>| {
             Some(Handover {
                 dir: dir.map(str::to_string),
+                branch: None,
             })
         };
         assert_eq!(
@@ -1211,6 +1283,36 @@ mod tests {
             at(Some("~/projects/ledger"))
         );
         assert_eq!(handing_over("git -C ../ledger push"), at(Some("../ledger")));
+        // Words in quotes are one word, as the shell has them.
+        assert_eq!(
+            handing_over(
+                "git -c user.name='Ada Lovelace' -c user.email=ada@example.com commit -m \"Retries; and backoff\""
+            ),
+            at(None)
+        );
+        assert_eq!(
+            handing_over("cd \"/w/my ledger\" && git commit -m x"),
+            at(Some("/w/my ledger"))
+        );
+        assert_eq!(
+            handing_over("cd ~/w && git -C ledger push"),
+            at(Some("~/w/ledger"))
+        );
+        // A pull request for a branch named: that branch's work.
+        for named in [
+            "gh pr create --head fix --fill",
+            "gh pr create -R ada/ledger -H fix --fill",
+            "gh pr create --head=fix",
+        ] {
+            assert_eq!(
+                handing_over(named),
+                Some(Handover {
+                    dir: None,
+                    branch: Some("fix".into())
+                }),
+                "{named}"
+            );
+        }
         // Tried out, only looked at, or not git at all.
         for none in [
             "git commit --dry-run",
@@ -1222,9 +1324,33 @@ mod tests {
             "gh pr merge --squash",
             "cargo test",
             "echo git commit",
+            "echo \"git commit\"",
         ] {
             assert_eq!(handing_over(none), None, "{none}");
         }
+        // The hook reads it from the whole command, whatever its key: a
+        // commit with others run after it, a push whose output is filtered.
+        let handed = |cwd: &str, command: &str| {
+            let event = json!({ "session_id": "s", "cwd": cwd, "tool_name": "Bash", "tool_input": { "command": command }, "tool_response": { "stdout": "", "stderr": "" } });
+            moment(Agent::Claude, "PostToolUse", &event).unwrap()
+        };
+        let m = handed(
+            "/w",
+            "cd ~/ledger && cargo fmt --check && git add -A && git -c user.name='Ada Lovelace' commit -m 'Retries' && git log -1 --format='%h %s'",
+        );
+        assert_eq!(m.cwd, "~/ledger", "kelve puts home right");
+        assert_eq!(m.handover, at(Some("~/ledger")));
+        let m = handed(
+            "/w",
+            "git -C ledger push -u origin fix 2>&1 | grep -v '^remote:' ; echo pushed",
+        );
+        assert_eq!(m.command.as_deref(), Some("echo pushed"));
+        assert_eq!(m.handover, at(Some("/w/ledger")));
+        assert_eq!(
+            handed("/w/ledger", "git push").handover,
+            at(Some("/w/ledger"))
+        );
+        assert_eq!(handed("/w/ledger", "cargo test").handover, None);
         // Before a command is nothing to kelve now, even from an older hook.
         let event = json!({ "session_id": "s", "cwd": "/w/ledger", "tool_name": "Bash", "tool_input": { "command": "git push" } });
         assert_eq!(moment(Agent::Claude, "PreToolUse", &event), None);
@@ -1548,5 +1674,9 @@ mod tests {
             Some("/w/kelve-way2".into())
         );
         assert_eq!(moved_to("cargo test; cd /w"), None);
+        assert_eq!(
+            moved_to("cd '/w/my ledger' && cargo test"),
+            Some("/w/my ledger".into())
+        );
     }
 }

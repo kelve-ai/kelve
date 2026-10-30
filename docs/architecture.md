@@ -133,7 +133,7 @@ What people's agents learned using an idea, kept in the shared graph beside its 
 
 ## Work shown as it's handed over
 
-When the agent commits, pushes or opens a pull request for work kelve hasn't shown the person, kelve's hook says to show it in kelve now, once for each commit (`server::handoff`, `core::hook::handing_over`). It's said after the command has run, so nothing is held up, and it works for every agent whose hook sees its commands. kelve's instructions to agents say the same, for agents with no hook.
+When the agent commits, pushes or opens a pull request for work kelve hasn't shown the person, kelve's hook says to show it in kelve now, once for each commit (`server::handoff`, `core::hook::handing_over`). The hook reads it from the whole command, as the shell would, with what's in quotes kept whole: a commit run among other commands counts, in the folder it runs in (`cd x && …`, `git -C x …`), and a pull request for a branch named (`--head x`) is that branch's work. It's said after the command has run, so nothing is held up, and it works for every agent whose hook sees its commands. kelve's instructions to agents say the same, for agents with no hook.
 
 ## When something goes wrong
 

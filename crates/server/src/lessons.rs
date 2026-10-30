@@ -434,6 +434,9 @@ pub struct MomentIn {
     /// For an edit: the text it replaced, when the agent's tool says.
     #[serde(default)]
     pub replaced: Option<String>,
+    /// Work the command handed over, when it did.
+    #[serde(default)]
+    pub handover: Option<kelve_core::hook::Handover>,
 }
 
 /// What kelve has for the agent at a moment: text to put before it, or
@@ -450,8 +453,9 @@ pub struct MomentOut {
 pub async fn moment(
     State(app): State<Shared>,
     _agent: Agent,
-    Json(m): Json<MomentIn>,
+    Json(mut m): Json<MomentIn>,
 ) -> ApiResult<Json<MomentOut>> {
+    m.cwd = crate::handoff::at_home(&m.cwd).display().to_string();
     let session = m.session.trim();
     if session.is_empty() {
         return Ok(Json(MomentOut::default()));
@@ -527,9 +531,7 @@ pub async fn moment(
                 }
                 notice_tools(&app, &root, command).await?;
                 let given = on_command(&app, session, agent, &root, command).await?;
-                // Work handed over: shown in kelve, if it hasn't been.
-                let show = crate::handoff::after(&app, &m.cwd, command).await?;
-                [wrote, given, show]
+                [wrote, given]
                     .into_iter()
                     .filter(|t| !t.is_empty())
                     .collect::<Vec<_>>()
@@ -558,6 +560,15 @@ pub async fn moment(
             store::take_held(&mut conn, session).await?.join("\n\n")
         }
         _ => String::new(),
+    };
+    // Work handed over: shown in kelve, if it hasn't been.
+    let text = match &m.handover {
+        Some(h) => [text, crate::handoff::after(&app, h).await?]
+            .into_iter()
+            .filter(|t| !t.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n"),
+        None => text,
     };
     if m.hold && !text.is_empty() {
         let mut conn = app.db.acquire().await?;
