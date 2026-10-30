@@ -2293,7 +2293,7 @@ dependencies = [
 
 [[package]]
 name = "kelve"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anstream",
  "anstyle",
@@ -2316,7 +2316,7 @@ dependencies = [
 
 [[package]]
 name = "kelve-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "regex",
@@ -2331,7 +2331,7 @@ dependencies = [
 
 [[package]]
 name = "kelve-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "gix",
  "ignore",
@@ -2352,7 +2352,7 @@ dependencies = [
 
 [[package]]
 name = "kelve-graph-api"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "axum",
  "base64 0.23.1",
@@ -2371,7 +2371,7 @@ dependencies = [
 
 [[package]]
 name = "kelve-server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "axum",
  "base64 0.23.1",
@@ -2404,7 +2404,7 @@ dependencies = [
 
 [[package]]
 name = "kelve-store"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "kelve-core",

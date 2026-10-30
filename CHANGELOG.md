@@ -2,6 +2,11 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## 0.1.1, 30 October 2026
+
+- **The command line keeps its secret safe.** It sends it over https anywhere, and over plain http only to this computer; given a plain http address elsewhere in `KELVE_URL`, it says what to do instead.
+- **What an agent learned is asked for, even on a fast machine.** A command that passed in the same millisecond as the failure before it now counts as getting past it, so the turn's end asks what was learned.
+
 ## 0.1.0, 30 October 2026
 
 The first release.
