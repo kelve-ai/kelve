@@ -477,7 +477,8 @@ pub async fn note_done(
         &done.did,
         done.opened,
         reader::DoneFor::Read(&done.version),
-    )?;
+    )
+    .await?;
     Ok(Json(serde_json::json!({ "done": true })))
 }
 
