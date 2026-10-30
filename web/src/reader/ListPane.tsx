@@ -278,14 +278,17 @@ export function AgentLine({ list, agent: chosen, open, onClick, reading }: {
     <button
       type="button"
       className={`agent-line${working ? '' : ' idle'}${open ? ' open' : ''}${said ? ' reading' : ''}`}
-      aria-label={`${agent}’s list: ${working ? 'working' : 'not working'}, ${said ? `${read} of ${of} read` : `${left} to do`}`}
+      // What it shows comes first, as it reads, so it can be said to pick it.
+      aria-label={`${agent} ${said ?? `${left} to do`}: its list, ${working ? 'working' : 'not working'}`}
       aria-expanded={open}
       onClick={onClick}
     >
       <State state={working ? 'now' : 'queued'} />
-      <span className="an">{agent}</span>
+      {/* Spaces between the parts, which flex doesn't draw, so the text
+          reads as it looks: "Claude Code 2", as its label begins. */}
+      <span className="an">{agent}</span>{' '}
       {said ? <em>{said}</em> : <i>{left}</i>}
-      {said && <i className="short">{read}/{of}</i>}
+      {said && <>{' '}<i className="short">{read}/{of}</i></>}
       {said && (
         <span className="mini" aria-hidden="true">
           <i style={{ width: `${(100 * read) / of}%` }} />

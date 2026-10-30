@@ -83,7 +83,12 @@ export async function link(w: Pick<World, 'base' | 'secretFile' | 'logFile'> = w
 /** Signs the page's browser in. */
 export async function signIn(page: Page, w?: Pick<World, 'base' | 'secretFile' | 'logFile'>, opts: { new?: boolean } = {}) {
   await page.goto(await link(w))
-  if (!opts.new) await started(page, (w ?? world()).base)
+  if (opts.new) return
+  await started(page, (w ?? world()).base)
+  // The page read its settings before that: read them again, so what's
+  // opened next goes straight to the reader. A goto that only changes the
+  // address's # stays on the page, as a browser does.
+  await page.reload()
 }
 
 /** The person has been through the first run, so what's opened goes straight to the reader. */
