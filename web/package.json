@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
     "notices": "bun notices.ts",
-    "looks": "docker run --rm --ipc=host -v \"$PWD/..\":/work -w /work/web -e CI mcr.microsoft.com/playwright:v1.62.0-noble node node_modules/@playwright/test/cli.js test -c playwright.looks.config.ts"
+    "looks": "docker run --rm --ipc=host -v \"$PWD/..\":/work -w /work/web -e CI mcr.microsoft.com/playwright:v1.64.1-noble node node_modules/@playwright/test/cli.js test -c playwright.looks.config.ts"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.4",

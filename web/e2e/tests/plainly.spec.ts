@@ -26,7 +26,7 @@ test('a code file reads plainly, a part at a time, its code a click away', async
   // Asked of your agent, on its list, until it's written; the code meanwhile.
   await expect(page.locator('.pl-waiting .wline')).toContainText('Claude Code')
   await expect(page.locator('.fv .cm-content')).toContainText('200 * 2u64.pow(attempt)')
-  await page.getByRole('button', { name: /^Claude Code’s list/ }).click()
+  await page.getByRole('button', { name: /^Claude Code .*: its list,/ }).click()
   const list = page.locator('.lpane')
   // Reading it plainly is part of reading what's open.
   await expect(list.getByRole('listitem').filter({ hasText: 'Reading' })).toContainText('1 file')
