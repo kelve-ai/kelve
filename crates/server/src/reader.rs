@@ -1803,7 +1803,7 @@ pub enum DoneFor<'a> {
 }
 
 /// The agent says a note is done, for the words it read, and what it did.
-pub fn note_done(
+pub async fn note_done(
     app: &Shared,
     folder: &Path,
     id: &str,
@@ -1856,17 +1856,16 @@ pub fn note_done(
     front.done_at = Some(Utc::now().to_rfc3339());
     front.opened = opened;
     std::fs::write(&path, kelve_core::notes::join(&front, body)).map_err(ApiError::internal)?;
-    // Done as it is now: its jobs, if they're still on the list, come off.
-    // Done for older words, the job for these stays.
+    // Done as it is now: its jobs, if they're still on the list, come off,
+    // before it's said to be done: come off later, they could take the job
+    // asked when its words change back. Done for older words, the job for
+    // these stays.
     if current {
-        let app2 = app.clone();
         let prefix = crate::list::note_prefix(&root_of_notes(app, folder), id);
-        tokio::spawn(async move {
-            if let Ok(mut conn) = app2.db.acquire().await {
-                let _ = kelve_store::asks::drop_like(&mut conn, &prefix, None, true).await;
-            }
-            app2.publish(ServerEvent::Asks);
-        });
+        if let Ok(mut conn) = app.db.acquire().await {
+            let _ = kelve_store::asks::drop_like(&mut conn, &prefix, None, true).await;
+        }
+        app.publish(ServerEvent::Asks);
     }
     app.publish(ServerEvent::Notes);
     Ok(())

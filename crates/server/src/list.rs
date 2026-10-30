@@ -229,7 +229,9 @@ pub async fn note_done_job(app: &Shared, payload: &Value) -> pipeline::Result<Th
         did,
         payload["opened"].as_i64(),
         done_for,
-    ) {
+    )
+    .await
+    {
         tracing::warn!(error = ?e, "couldn't keep what the agent did with a note");
     }
     Ok(Then::Done)

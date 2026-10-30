@@ -115,9 +115,106 @@ fn on_path(command: &str) -> bool {
     })
 }
 
-/// Asks the person, in the terminal: the answer, or the default when they
-/// just press return.
+/// Asks the person, in the terminal: the question, then its choices on a
+/// line of their own, the one taken marked with kelve's square. ← and → move
+/// it, return takes it, and a choice's first letter takes that one. Where the
+/// terminal can't give keys one at a time, they type the choice instead.
 fn ask(question: &str, choices: &[&str], default: usize) -> anyhow::Result<usize> {
+    style::line(question);
+    match pick(choices, default) {
+        Ok(Some(i)) => Ok(i),
+        Ok(None) => anyhow::bail!("Setup stopped. Run `kelve setup` to start it again."),
+        Err(_) => typed(choices, default),
+    }
+}
+
+/// The choice taken with the keys, or none when the person stops setup with
+/// Ctrl-C or Esc.
+fn pick(choices: &[&str], default: usize) -> std::io::Result<Option<usize>> {
+    use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
+    use crossterm::{cursor, queue, terminal};
+
+    /// Puts the terminal back as it was, however this ends.
+    struct Raw;
+    impl Drop for Raw {
+        fn drop(&mut self) {
+            terminal::disable_raw_mode().ok();
+            crossterm::execute!(std::io::stderr(), cursor::Show).ok();
+        }
+    }
+
+    // The choices, the one at `at` marked; with the keys, while choosing.
+    let row = |at: usize, keys: bool| {
+        let shown: Vec<String> = choices
+            .iter()
+            .enumerate()
+            .map(|(i, c)| {
+                if i == at {
+                    format!("{} {}", style::mark(), style::bold(c))
+                } else {
+                    format!("  {}", style::soft(c))
+                }
+            })
+            .collect();
+        let keys = if keys {
+            format!("    {}", style::soft("← → then return"))
+        } else {
+            String::new()
+        };
+        format!("  {}{keys}", shown.join("   "))
+    };
+    let draw = |text: String| -> std::io::Result<()> {
+        let mut err = std::io::stderr();
+        queue!(
+            err,
+            cursor::MoveToColumn(0),
+            terminal::Clear(terminal::ClearType::CurrentLine)
+        )?;
+        err.flush()?;
+        anstream::eprint!("{text}");
+        std::io::stderr().flush()
+    };
+
+    terminal::enable_raw_mode()?;
+    let _raw = Raw;
+    crossterm::execute!(std::io::stderr(), cursor::Hide)?;
+    let mut at = default;
+    let taken = loop {
+        draw(row(at, true))?;
+        let Event::Key(key) = event::read()? else {
+            continue;
+        };
+        if key.kind != KeyEventKind::Press {
+            continue;
+        }
+        match key.code {
+            KeyCode::Left | KeyCode::Up | KeyCode::BackTab => {
+                at = (at + choices.len() - 1) % choices.len();
+            }
+            KeyCode::Right | KeyCode::Down | KeyCode::Tab => at = (at + 1) % choices.len(),
+            KeyCode::Enter => break Some(at),
+            KeyCode::Esc => break None,
+            KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => break None,
+            KeyCode::Char(c) => {
+                let c = c.to_lowercase().to_string();
+                if let Some(i) = choices
+                    .iter()
+                    .position(|ch| ch.to_lowercase().starts_with(&c))
+                {
+                    at = i;
+                    break Some(at);
+                }
+            }
+            _ => {}
+        }
+    };
+    draw(taken.map_or_else(String::new, |at| row(at, false)))?;
+    anstream::eprint!("\r\n");
+    Ok(taken)
+}
+
+/// The choice typed, or the default when they just press return.
+fn typed(choices: &[&str], default: usize) -> anyhow::Result<usize> {
     let shown: Vec<String> = choices
         .iter()
         .enumerate()
@@ -130,7 +227,10 @@ fn ask(question: &str, choices: &[&str], default: usize) -> anyhow::Result<usize
         })
         .collect();
     loop {
-        anstream::print!("  {question} {} ", shown.join(" / "));
+        anstream::print!(
+            "  Type one, or return for the one in brackets: {} ",
+            shown.join(" / ")
+        );
         std::io::stdout().flush().ok();
         let mut line = String::new();
         std::io::stdin().lock().read_line(&mut line)?;

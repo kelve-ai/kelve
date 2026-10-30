@@ -94,12 +94,14 @@ fn measured() -> Option<usize> {
 }
 
 /// Text as lines no wider than `room`, broken between words. A word too
-/// long for a line, like a path, has a line to itself.
+/// long for a line, like a path, has a line to itself, and a command in
+/// backticks is one word, so it's never split.
 pub fn wrap(text: &str, room: usize) -> Vec<String> {
     let room = room.max(10);
     let mut lines = Vec::new();
     let mut line = String::new();
-    for word in text.split_whitespace() {
+    for word in words(text) {
+        let word = word.as_str();
         let fits = line.chars().count() + 1 + word.chars().count() <= room;
         if !line.is_empty() && !fits {
             lines.push(std::mem::take(&mut line));
@@ -113,6 +115,25 @@ pub fn wrap(text: &str, room: usize) -> Vec<String> {
         lines.push(line);
     }
     lines
+}
+
+/// The words in `text`, with what's between a pair of backticks kept as one.
+fn words(text: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    let mut open = false;
+    for word in text.split_whitespace() {
+        match out.last_mut() {
+            Some(last) if open => {
+                last.push(' ');
+                last.push_str(word);
+            }
+            _ => out.push(word.to_string()),
+        }
+        if word.matches('`').count() % 2 == 1 {
+            open = !open;
+        }
+    }
+    out
 }
 
 /// Text after `first` on its first line, wrapped, its other lines indented
@@ -227,6 +248,21 @@ mod tests {
         assert_eq!(lines.join(" "), text);
         assert!(lines.iter().any(|l| l.starts_with("~/Library")));
         assert_eq!(wrap("", 30), vec![String::new()]);
+    }
+
+    #[test]
+    fn a_command_in_backticks_is_never_split() {
+        let text = "✓ Notes and lessons: one hook in Claude Code’s settings. `kelve hook remove claude` takes it out.";
+        let lines = wrap(text, 64);
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.contains("`kelve hook remove claude`")),
+            "{lines:?}"
+        );
+        assert_eq!(lines.join(" "), text);
+        // An unclosed backtick keeps the rest together, rather than losing it.
+        assert_eq!(wrap("a `b c", 3).join(" "), "a `b c");
     }
 
     #[test]
