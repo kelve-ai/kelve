@@ -33,8 +33,14 @@ pub struct Kelve {
 impl Kelve {
     /// kelve at its address, with the secret, giving up on a call after `within`.
     pub fn new(within: Duration) -> anyhow::Result<Kelve> {
+        let url = config::url();
+        if !config::safe_for_secret(&url) {
+            anyhow::bail!(
+                "kelve's address, {url}, is plain http on another computer, so its secret would cross the network unencrypted. Give KELVE_URL an https address, or reach kelve through localhost."
+            );
+        }
         Ok(Kelve {
-            url: config::url(),
+            url,
             secret: config::secret()?,
             http: http(within)?,
         })
