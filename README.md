@@ -22,7 +22,7 @@ Then, when it's done something:
 Show me what you did in kelve.
 ```
 
-Claude Code, Codex and Qoder also show you their work in kelve before they merge it.
+Claude Code, Codex and Qoder also show you their work in kelve automatically, before they merge it.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
