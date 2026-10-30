@@ -1,0 +1,178 @@
+{
+  "about": "Lessons for the ledger example. Each is one a capable agent wouldn't get right from the error, the docs or unprompted, checked against the docs on 27 October 2026. `theirs`: what other people's agents learned using the ideas the change rests on, each with what came of it for other projects, seeded into the stand-in graph in this order, each with the card the real graph would make for it from its words: what it's matched by; `contradicts` names an earlier one by its place in this list, from 0: another good way, linked both ways. `story`: what the example's agent meets as it works on the change, as Claude Code's hook gives it to `kelve moment`: files it reads and edits, the usual way written where another agent found a better one, a test that fails with an error that points the wrong way and then passes, and work of its own it replaces with a better way. `learned`: what it writes, when kelve asks.",
+  "theirs": [
+    {
+      "about": [
+        "Unique keys",
+        "Idempotency keys"
+      ],
+      "says": "A unique violation as a charge's key is stored after the charge means a second try got past the lookup and was charged too. Storing the key with `ON CONFLICT DO NOTHING` makes the error go away and leaves the double charge. `SELECT … FOR UPDATE` on the lookup doesn't stop it: it locks only rows already there.",
+      "do": "Claim the key with an insert before charging, and charge only when your insert made the row.",
+      "example": "INSERT INTO requests (key) VALUES ($1)\n  ON CONFLICT (key) DO NOTHING\n  RETURNING key  -- no row: another try has it",
+      "holdsWhen": "Postgres at read committed, its default, when tries of one request can arrive together.",
+      "record": {
+        "held": 0,
+        "didnt": 0
+      },
+      "card": {
+        "cues": [
+          "duplicate key",
+          "unique violation",
+          "FOR UPDATE"
+        ],
+        "codes": [
+          "23505"
+        ],
+        "variants": [
+          "error returned from database: duplicate key value violates unique constraint <str>",
+          "ERROR:  duplicate key value violates unique constraint <str>"
+        ]
+      },
+      "seenAs": "error returned from database: duplicate key value violates unique constraint <str>"
+    },
+    {
+      "about": [
+        "Unique keys",
+        "Idempotency keys"
+      ],
+      "says": "`ON CONFLICT (key) DO NOTHING RETURNING` gives no row when the key is already there, so a retry needs a second query for the first try's row. A no-op update, `DO UPDATE SET key = excluded.key`, returns the stored row in the same statement, at the cost of writing it again.",
+      "do": "Get the stored row back in the same statement, with `ON CONFLICT (key) DO UPDATE SET key = excluded.key RETURNING`.",
+      "example": "INSERT INTO requests (key) VALUES ($1)\n  ON CONFLICT (key) DO UPDATE SET key = excluded.key\n  RETURNING receipt",
+      "holdsWhen": "Postgres 9.5 and later, where writing the row again, and an update trigger firing, on a retry don't matter.",
+      "seenAs": "ON CONFLICT (key) DO NOTHING",
+      "record": {
+        "held": 12,
+        "didnt": 0
+      },
+      "card": {
+        "cues": [
+          "ON CONFLICT (key) DO NOTHING",
+          "DO NOTHING RETURNING"
+        ],
+        "codes": []
+      }
+    },
+    {
+      "about": [
+        "Unique keys",
+        "Idempotency keys"
+      ],
+      "says": "When `ON CONFLICT DO NOTHING RETURNING` gives no row, a `SELECT` of the key in a second statement finds the stored row, even one another transaction was still writing: the insert waits for that transaction, and at read committed the next statement sees what it committed. Nothing is written again on a retry.",
+      "do": "When `DO NOTHING RETURNING` gives no row, select the stored row in a second statement.",
+      "example": "INSERT … ON CONFLICT (key) DO NOTHING RETURNING receipt;\n-- no row:\nSELECT receipt FROM requests WHERE key = $1;",
+      "holdsWhen": "Postgres at read committed, its default, where writing the row on every retry would cost more than a second query.",
+      "contradicts": [
+        1
+      ],
+      "record": {
+        "held": 5,
+        "didnt": 0
+      },
+      "card": {
+        "cues": [
+          "DO NOTHING RETURNING"
+        ],
+        "codes": []
+      }
+    }
+  ],
+  "story": [
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "src/retry.rs"
+      }
+    },
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Edit",
+      "tool_input": {
+        "file_path": "src/api/v1/charges.rs",
+        "new_string": "sqlx::query(\"INSERT INTO requests (key, receipt) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING\")"
+      }
+    },
+    {
+      "hook_event_name": "PostToolUseFailure",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "cargo test"
+      },
+      "error": "running 4 tests\ntest a_retried_charge_is_charged_once ... FAILED\nError: error returned from database: duplicate key value violates unique constraint \"requests_pkey\""
+    },
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Edit",
+      "tool_input": {
+        "file_path": "src/api/v1/charges.rs",
+        "new_string": "let key = headers.get(\"Idempotency-Key\").and_then(|v| v.to_str().ok());"
+      }
+    },
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "cargo test"
+      },
+      "tool_response": {
+        "stdout": "test result: ok. 4 passed",
+        "stderr": ""
+      }
+    },
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "src/bank/mod.rs"
+      }
+    },
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Edit",
+      "tool_input": {
+        "file_path": "src/bank/mod.rs",
+        "new_string": "let receipt = tokio::time::timeout(TOTAL, with_retries(|_| async {\n    self.send(request, payment).await\n}))\n.await\n.map_err(|_| Error::Timeout)??;"
+      }
+    },
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Edit",
+      "tool_input": {
+        "file_path": "src/bank/mod.rs",
+        "old_string": "let receipt = tokio::time::timeout(TOTAL, with_retries(|_| async {\n    self.send(request, payment).await\n}))\n.await\n.map_err(|_| Error::Timeout)??;",
+        "new_string": "let receipt = with_retries(|_| async {\n    tokio::time::timeout(TIMEOUT, self.send(request, payment))\n        .await\n        .map_err(|_| Error::Timeout)?\n})\n.await?;"
+      }
+    },
+    {
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "cargo test"
+      },
+      "tool_response": {
+        "stdout": "test result: ok. 4 passed",
+        "stderr": ""
+      }
+    },
+    {
+      "hook_event_name": "Stop",
+      "stop_hook_active": false
+    }
+  ],
+  "learned": {
+    "lessons": [
+      {
+        "about": [
+          "Timeouts",
+          "Retries"
+        ],
+        "says": "One timeout around a whole retry loop lets a slow first try use up all the time, so the retries it was there for never run. A timeout on each try ends the slow one and leaves time for the next; a deadline around the loop can still cap the whole.",
+        "do": "Give each try its own timeout inside the retry loop, as well as any deadline around it.",
+        "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
+        "holdsWhen": "Any retry loop around a call that can hang, such as a request to another service.",
+        "seenAs": "tokio::time::timeout(TOTAL"
+      }
+    ],
+    "same": []
+  }
+}

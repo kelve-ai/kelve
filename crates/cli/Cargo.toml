@@ -1,0 +1,35 @@
+[package]
+name = "kelve"
+description = "kelve: see what anything is built on, and how and why it works. The command line and the local service."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+default-run = "kelve"
+
+[[bin]]
+name = "kelve"
+path = "src/main.rs"
+
+[dependencies]
+kelve-core = { workspace = true }
+kelve-server = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+url = { workspace = true }
+clap = { workspace = true }
+anstream = { workspace = true }
+anstyle = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+sha2 = { workspace = true }
+flate2 = { workspace = true }
+tar = { workspace = true }
+zip = { workspace = true }
+
+[lints]
+workspace = true

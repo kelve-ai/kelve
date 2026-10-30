@@ -1,0 +1,35 @@
+{"id":"kelve:i000000000001","name":"Retries","definition":"Trying a failed call again, in the hope it works the next time.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000002","name":"Transient errors","definition":"Failures that pass on their own, so trying again can work.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000003","name":"Idempotence","definition":"Doing something twice has the same effect as doing it once.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000004","name":"Circuit breakers","definition":"Stopping calls to a service that keeps failing, for a while.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000005","name":"Timeouts","definition":"Giving up on a call that takes too long, so the caller can move on.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000006","name":"Exponential growth","definition":"Growth by the same multiple each step.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000007","name":"Arithmetic","definition":"Adding, subtracting, multiplying and dividing numbers.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000008","name":"State","definition":"What a system remembers from one moment to the next.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000009","name":"Function","definition":"A rule that gives one output for each input.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000010","name":"Two-phase commit","definition":"Asking every party first, then telling all of them to make a change.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000011","name":"Atomicity","definition":"A change that happens whole, or not at all.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000012","name":"Partial failure","definition":"Part of a system failing while the rest goes on.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000013","name":"Accounting equation","definition":"Assets equal liabilities plus equity, always.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000014","name":"Exponential backoff","definition":"Waiting longer after each failure, each wait a multiple of the last.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000015","name":"Network congestion","definition":"A service or link given more load than it can carry.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000016","name":"Jitter","definition":"A random amount taken from a wait, so many clients don't act at the same moment.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000017","name":"Idempotency keys","definition":"A key sent with a request, so the same request sent twice is carried out once.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000018","name":"Unique keys","definition":"A rule that no two rows of a table may share a value.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000019","name":"Identifier","definition":"A name or number that picks out one thing.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000020","name":"Authorisation holds","definition":"Holding money for a payment first, and taking it only once the payment is settled.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000021","name":"Double-entry bookkeeping","definition":"Recording every movement of money twice: once as it leaves an account, once as it arrives.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000022","name":"Time and clocks","definition":"Measuring time, and agreeing on it across machines.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000023","name":"Database transactions","definition":"A group of changes to a database made together, or not at all.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000024","name":"Advisory locks","definition":"A lock a program names and the database keeps, meaning whatever the program says.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000025","name":"HMAC","definition":"A code made from a message and a shared secret, proving who sent it and that it wasn't changed.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000026","name":"Hash function","definition":"A function from any data to a short, fixed-size value.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000027","name":"Secret","definition":"Something only those meant to know it know.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000028","name":"Constant-time comparison","definition":"Comparing secrets in a way that takes the same time whatever they hold.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000029","name":"Mutual exclusion","definition":"Only one thing at a time in the part that touches a shared resource.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000030","name":"Concurrency","definition":"Several things running at the same time.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000031","name":"Randomness","definition":"Having no pattern anyone can use to predict it.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000032","name":"Bandwidth","definition":"How much a link can carry in a given time.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000033","name":"Timing attacks","definition":"Learning a secret from how long a system takes to answer.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000034","name":"Thundering herd problem","definition":"Many waiting processes woken at once for something only one can have.","kind":"concept","sameAs":null}
+{"id":"kelve:i000000000035","name":"Rate limiting","definition":"A service refusing requests beyond a set rate.","kind":"concept","sameAs":null}

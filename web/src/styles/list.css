@@ -1,0 +1,98 @@
+/* Your agent's list (boards Q-1 to Q-9): the line
+   at the top of every page, the list beside the work, and what's shown for
+   something not written yet. The rows themselves are ui.css's .lrow. */
+
+/* The line at the top: kelve's square, the agent's name, how much is left. */
+.agent-line {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 9px;
+  height: 30px; padding: 0 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink);
+}
+.agent-line i { font-style: normal; font-weight: 400; color: var(--quiet); font-variant-numeric: tabular-nums; }
+.agent-line.idle { color: var(--soft); }
+.agent-line:hover, .agent-line.open { background: var(--well); }
+.agent-line:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* While what's open is read: how far, in words, and a line under them that fills. */
+.agent-line { position: relative; flex: none; }
+.agent-line em { font-style: normal; font-weight: 400; color: var(--soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.agent-line .mini { position: absolute; left: 10px; right: 10px; bottom: 3px; display: flex; height: 2px; border-radius: 1px; background: var(--rule); overflow: hidden; }
+.agent-line .mini i { display: block; height: 100%; background: var(--ink); transition: width 0.3s ease; }
+.agent-line .mini i.checking { background: var(--mute); }
+.agent-line .short { display: none; }
+
+/* The list, beside the work. */
+.lpane { padding: 22px 24px 40px 26px; }
+.lhead { display: flex; align-items: center; gap: 12px; padding: 0 8px; }
+.lhead h2 { margin: 0; font-size: 17px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+.lstate { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--soft); }
+.lstate .lsq { width: 7px; height: 7px; border-radius: 2px; }
+.lhead .quiet-link { font-size: 13px; }
+.lhead .lclose { margin-left: auto; }
+.lhead .lstate ~ .lclose { margin-left: 0; }
+.lopen { all: unset; cursor: pointer; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lrow.top .lopen { white-space: normal; }
+.lopen:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 3px; }
+/* Take off, beside Do next or Open on the row you point at, quiet; on a
+   touch screen, where nothing is pointed at, always there. */
+.lrow .lact { align-items: center; gap: 12px; }
+.loff { font-size: 13px; line-height: 20px; padding: 2px 0; }
+.loff:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 3px; }
+.lboth { display: inline-flex; align-items: center; gap: 12px; }
+.lboth .loff { display: none; }
+.lrow:hover .lboth .loff, .lrow:focus-within .lboth .loff { display: inline; }
+@media (hover: none) {
+  .lrow .lact, .lboth .loff { display: inline-flex; }
+  .lrow .lact + .lm { display: none; }
+}
+
+/* What your agent has in hand of a line now (List-1, List-2): each file or
+   folder with its square filling as it goes. */
+.lhand { grid-column: 2 / -1; margin: 5px 0 1px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.lhand li { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12.5px; line-height: 18px; color: var(--soft); }
+.lhand .wq { width: 8px; height: 8px; }
+.lhand code { font-family: var(--mono); font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Asked for, and on the list: the square before the words, the place after. */
+.raised .lsq + * , .raised.on-list { gap: 9px; }
+.raised .place { font-weight: 400; color: var(--quiet); }
+
+/* Something not written yet, in one slim line (Waiting-0 to Waiting-6): a
+   rounded band, kelve's square, a few words, and at most one thing to do,
+   always there. Being written, a thin line moves across, still when motion
+   is turned down. */
+.waiting { max-width: 760px; }
+.wline {
+  box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; row-gap: 6px;
+  min-height: 40px; padding: 6px 6px 6px 14px; border-radius: 10px; background: var(--well);
+  font-size: 14px; line-height: 20px; color: var(--ink);
+}
+.wline .lsq { flex: none; }
+.wl-t { flex: 1 1 12em; min-width: 0; padding: 4px 0; }
+.wl-t b { font-weight: 500; }
+.wl-q { color: var(--quiet); }
+.wline .raised.small { flex: none; margin-left: auto; }
+.wl-ok { flex: none; margin-left: auto; padding: 4px 8px 4px 0; font-size: 13px; color: var(--added-ink); }
+.wl-ok:focus { outline: none; }
+.wl-ok:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 3px; }
+.wl-bar { position: relative; flex: none; width: 72px; height: 3px; margin: 0 10px 0 auto; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.wl-bar i { position: absolute; top: 0; bottom: 0; left: 18%; width: 34%; border-radius: 2px; background: var(--red); animation: wl-move 1.6s ease-in-out infinite; }
+@keyframes wl-move { from { left: -34%; } to { left: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .wl-bar i { animation: none; }
+}
+/* An entry being written: its steps, small, under the line. */
+.wl-steps { display: flex; flex-wrap: wrap; column-gap: 18px; row-gap: 4px; margin: 8px 0 0 14px; padding: 0; list-style: none; font-size: 12.5px; line-height: 18px; color: var(--quiet); }
+.wl-steps li { display: inline-flex; align-items: center; gap: 7px; }
+.wl-steps .lsq { width: 7px; height: 7px; border-radius: 2px; }
+.wl-steps li:not([data-state="wait"]) { color: var(--soft); }
+
+/* The list, your agent not working: the same line at its top. */
+.lpane > .wline { margin: 16px 0 6px; }
+
+/* What's paused (J-1 to J-3): two short grey bars where the square would
+   be; Show or Hide in the heading; what was paused just now tinted a while. */
+.lgroup .lfold { margin-left: auto; font-size: 12.5px; font-weight: 500; color: var(--ink); }
+.lpause { justify-self: center; box-sizing: border-box; width: 7px; height: 9px; border-left: 2.5px solid var(--dim); border-right: 2.5px solid var(--dim); }
+.lrow.top > .lpause { margin-top: 6px; }
+.lrow.just { background: var(--well); }
+.lrest { cursor: default; }
+.lrest:hover { background: none; }

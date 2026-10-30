@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: A question, or an idea
+    url: https://github.com/kelve-ai/kelve/discussions
+    about: Ask, or suggest something, in Discussions.
+  - name: How kelve works
+    url: https://kelve.ai/docs/
+    about: The docs explain kelve in plain words.
+  - name: A security problem
+    url: https://github.com/kelve-ai/kelve/blob/main/SECURITY.md
+    about: Please report it privately, as SECURITY.md says.

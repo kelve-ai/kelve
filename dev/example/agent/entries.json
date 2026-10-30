@@ -1,0 +1,1725 @@
+{
+ "about": "The entries the example’s agent writes, from real pages. Each claim quotes its page exactly. A live entry isn’t in the example graph: the agent writes it while you watch.",
+ "entries": [
+  {
+   "idea": "Retries",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A retry is the same call made again after it fails, in the hope that what went wrong has passed.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "A call across a network can fail for reasons that have nothing to do with the request: a dropped connection, a server busy for a moment. Faults like these are transient: they pass^1. Trying again turns many of them into successes, at the cost of a little time."
+    },
+    {
+     "id": "b3",
+     "part": "limits",
+     "type": "paragraph",
+     "text": "A retry is only safe when doing the work twice does no more harm than doing it once. An operation that can be repeated as often as needed without unintended effects is called idempotent^2, and a call that isn’t needs something that makes it so before it is retried."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Faults are classed by how long they last, permanent or transient.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Faults are commonly categorized by their locality (internal or external to the system), cause (natural or human-made), duration (permanent or transient), and effect on system behavior."
+      }
+     ],
+     "block": "b2",
+     "words": "Faults like these are transient: they pass"
+    },
+    {
+     "text": "An idempotent operation can be repeated or retried as often as needed without unintended effects.",
+     "sources": [
+      2
+     ],
+     "quotes": [
+      {
+       "source": 2,
+       "text": "This is a very useful property in many situations, as it means that an operation can be repeated or retried as often as necessary without causing unintended effects."
+      }
+     ],
+     "block": "b3",
+     "words": "An operation that can be repeated as often as needed without unintended effects is called idempotent"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Fault_tolerance",
+     "title": "Fault tolerance",
+     "publisher": "Wikipedia",
+     "published": ""
+    },
+    {
+     "n": 2,
+     "url": "https://en.wikipedia.org/wiki/Idempotence",
+     "title": "Idempotence",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ],
+   "extend": {
+    "blocks": [
+     {
+      "id": "b4",
+      "part": "how",
+      "fold": "example",
+      "follows": "b2",
+      "type": "paragraph",
+      "text": "A client sends a payment and the connection drops before any answer comes. It waits a moment and sends the same request again. If the first one never arrived, the payment goes through now; if it did, the server must see that this is the same payment, not a second one."
+     }
+    ],
+    "claims": [],
+    "sources": []
+   }
+  },
+  {
+   "idea": "Transient errors",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A transient error is a failure that passes on its own: try the same thing a moment later and it may work.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Faults differ in how long they last: some are permanent, some transient^1. A declined card will be declined again; a timeout or a dropped connection may not happen twice. Code that retries has to tell the two apart, and try again only on the kind that passes."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Faults are classed by how long they last, permanent or transient.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Faults are commonly categorized by their locality (internal or external to the system), cause (natural or human-made), duration (permanent or transient), and effect on system behavior."
+      }
+     ],
+     "block": "b2",
+     "words": "Faults differ in how long they last: some are permanent, some transient"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Fault_tolerance",
+     "title": "Fault tolerance",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Exponential backoff",
+   "live": false,
+   "minutes": 3,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**Exponential backoff makes each wait before a retry longer than the last, usually twice as long, so a service that is struggling gets less load the longer it struggles.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "A client that fails waits a short base time, then twice that, then four times, up to a ceiling. It is feedback: each failure lowers the rate at which the client tries, until it finds a rate that works^1."
+    },
+    {
+     "id": "b4",
+     "part": "how",
+     "fold": "example",
+     "type": "paragraph",
+     "text": "Say the base wait is 1 second and the ceiling is 30. After the first failure the client waits 1 second, then 2, 4, 8 and 16. The sixth wait would be 32 seconds, so it waits 30, and every wait after that is 30 too."
+    },
+    {
+     "id": "b5",
+     "part": "how",
+     "fold": "rule",
+     "type": "paragraph",
+     "text": "The wait after the nth failure is the base times the multiplier to the power n, held at the ceiling. A multiplier of 2 is the usual choice, but any multiplier above 1 makes the waits grow exponentially."
+    },
+    {
+     "id": "b3",
+     "part": "limits",
+     "type": "paragraph",
+     "text": "On its own it isn’t enough. Clients that failed together back off for the same times, so they come back together and collide again^1. That is why backoff is used with jitter, which picks a random wait below the ceiling."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Exponential backoff uses feedback to lower the rate of a process until it finds one that works.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Exponential backoff is an algorithm that uses feedback to multiplicatively decrease the rate of some process, in order to gradually find an acceptable rate."
+      }
+     ],
+     "block": "b2",
+     "words": "each failure lowers the rate at which the client tries, until it finds a rate that works"
+    },
+    {
+     "text": "Without randomness, senders back off for the same time and collide again.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "A deterministic exponential backoff algorithm is unsuitable for this use case since each sender would back off for the same time period, leading them to retransmit simultaneously and cause another collision."
+      }
+     ],
+     "block": "b3",
+     "words": "Clients that failed together back off for the same times, so they come back together and collide again"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Exponential_backoff",
+     "title": "Exponential backoff",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Jitter",
+   "live": true,
+   "minutes": 3,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**If every client waits the same time before retrying, they all come back at once and fail together again. A random wait spreads them out.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Adding randomness to make a system faster sounds backwards^1. But clients that failed at the same moment, backing off by the same rule, stay in step: their retries arrive in spikes. Jitter breaks the step. With full jitter, each wait is a random time between nothing and the current backoff ceiling, and the spikes spread into a steady rate^1."
+    },
+    {
+     "id": "b3",
+     "part": "how",
+     "type": "paragraph",
+     "text": "In AWS’s simulation of many clients competing for one resource, plain exponential backoff without jitter did worst of the approaches tried^1. Jitter spreads retries out in time; it doesn’t make fewer of them. For that, there are retry budgets and circuit breakers."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Adding randomness to improve performance can seem counter-intuitive.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Initially, jitter may appear to be a counter-intuitive idea: trying to improve the performance of a system by adding randomness."
+      }
+     ],
+     "block": "b2",
+     "words": "Adding randomness to make a system faster sounds backwards"
+    },
+    {
+     "text": "Jitter spreads spikes of retries out to an approximately constant rate.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The time series above makes a great case for jitter – we want to spread out the spikes to an approximately constant rate."
+      }
+     ],
+     "block": "b2",
+     "words": "the spikes spread into a steady rate"
+    },
+    {
+     "text": "Exponential backoff without jitter did worst in the simulation.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The no-jitter exponential backoff approach is the clear loser."
+      }
+     ],
+     "block": "b3",
+     "words": "plain exponential backoff without jitter did worst of the approaches tried"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
+     "title": "Exponential Backoff And Jitter",
+     "publisher": "AWS Architecture Blog",
+     "published": "2015-03-04"
+    }
+   ]
+  },
+  {
+   "idea": "Idempotency keys",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**An idempotency key is a value sent with a request so that, however many times the same request arrives, the work is done once.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "In HTTP, GET, PUT and DELETE are meant to be idempotent, but POST is not^1. A payment is usually a POST: sent twice, it charges twice. So the client makes a key once, sends it with every try, and the server remembers the keys it has answered. A repeat with a known key gets the first answer back instead of a second charge."
+    }
+   ],
+   "claims": [
+    {
+     "text": "In HTTP, GET, PUT and DELETE should be idempotent, but POST need not be.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Of the major HTTP methods, GET, PUT, and DELETE should be implemented in an idempotent manner according to the standard, but POST doesn't need to be."
+      }
+     ],
+     "block": "b2",
+     "words": "GET, PUT and DELETE are meant to be idempotent, but POST is not"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Idempotence",
+     "title": "Idempotence",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Idempotence",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**An operation is idempotent when doing it twice has the same effect as doing it once.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Applying it again changes nothing beyond the first time^1. Setting a light to on is idempotent; flipping its switch is not. That is what makes an operation safe to repeat or retry as often as needed^1, and why systems that retry care about it."
+    }
+   ],
+   "claims": [
+    {
+     "text": "An idempotent operation can be applied many times without changing the result beyond the first.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "is the property of certain operations in mathematics and computer science whereby they can be applied multiple times without changing the result beyond the initial application"
+      }
+     ],
+     "block": "b2",
+     "words": "Applying it again changes nothing beyond the first time"
+    },
+    {
+     "text": "It means an operation can be repeated or retried as often as needed without unintended effects.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "This is a very useful property in many situations, as it means that an operation can be repeated or retried as often as necessary without causing unintended effects."
+      }
+     ],
+     "block": "b2",
+     "words": "safe to repeat or retry as often as needed"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Idempotence",
+     "title": "Idempotence",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Timeouts",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A timeout is a limit on how long to wait for an answer, after which the caller gives up and does something else.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Rather than wait for ever for something that may never happen, the wait ends when the time is up^1. A call to a service that has hung would otherwise hold its caller, and everything waiting on it, indefinitely."
+    },
+    {
+     "id": "b3",
+     "part": "limits",
+     "type": "paragraph",
+     "text": "Choosing the limit is hard: too short and healthy calls fail early, too long and failures are slow to show^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A timeout aborts a wait instead of waiting indefinitely.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The basic idea is that in situations where a system must wait for something to happen, rather than waiting indefinitely, the waiting will be aborted after the timeout period has elapsed."
+      }
+     ],
+     "block": "b2",
+     "words": "Rather than wait for ever for something that may never happen, the wait ends when the time is up"
+    },
+    {
+     "text": "Short timeouts fail healthy requests; long ones make errors slow.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "short timeout values can fail healthy requests prematurely, leading to complex workarounds, while long timeout values can result in slow error responses and poor user experiences"
+      }
+     ],
+     "block": "b3",
+     "words": "too short and healthy calls fail early, too long and failures are slow to show"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Timeout_(computing)",
+     "title": "Timeout computing",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Authorisation holds",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**An authorisation hold sets money aside for a payment first, and takes it only when the payment is settled.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "The card’s provider puts a hold on the amount, so the funds can’t be spent twice, until the merchant settles the transaction or the hold runs out^1. It is a payment in two steps, an authorisation and a settlement, with time between them^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A hold reduces the available funds until the transaction is settled or the hold expires.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "puts a hold of the amount approved by the cardholder, reducing the balance of available funds until the merchant clears the transaction (also called settlement), after the transaction is completed or aborted, or because the hold expires"
+      }
+     ],
+     "block": "b2",
+     "words": "until the merchant settles the transaction or the hold runs out"
+    },
+    {
+     "text": "Holds come from payments made in two steps, authorisation then settlement.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The usual reason for authorization holds is where there is a two-step process in the payment, consisting of an authorization and a settlement with a time lag in between."
+      }
+     ],
+     "block": "b2",
+     "words": "It is a payment in two steps, an authorisation and a settlement, with time between them"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Authorization_hold",
+     "title": "Authorization hold",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Double-entry bookkeeping",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**In double-entry bookkeeping, every movement of money is written down twice: once where it leaves, once where it arrives, in equal and opposite amounts.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Because each transaction is a debit and a matching credit, the books always balance^1, and an entry missing its pair shows up as an error^1. A ledger kept this way never stores a balance: an account’s balance is the sum of its entries."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Every transaction is recorded with equal and opposite entries, so the books balance.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "is a method of bookkeeping in which every financial transaction is recorded with equal and opposite entries (debits and credits) - thus \"balancing the books\""
+      }
+     ],
+     "block": "b2",
+     "words": "each transaction is a debit and a matching credit, the books always balance"
+    },
+    {
+     "text": "Double-entry bookkeeping lets errors and fraud be found.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The purpose of double-entry bookkeeping is to maintain accuracy in financial records and allow detection of errors or fraud."
+      }
+     ],
+     "block": "b2",
+     "words": "an entry missing its pair shows up as an error"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Double-entry_bookkeeping",
+     "title": "Double-entry bookkeeping",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Database transactions",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A database transaction groups several changes so they happen together or not at all, and keeps them apart from other work going on at the same time.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Moving money is the usual example: taking an amount from one account and adding it to another is one transaction^1. If it stopped halfway, money would vanish. Transactions also keep programs working on the database at the same moment from seeing each other’s half-finished work^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A transfer between accounts is one transaction: a subtraction and an addition.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "One example is a transfer from one bank account to another: the complete transaction requires subtracting the amount to be transferred from one account and adding that same amount to the other."
+      }
+     ],
+     "block": "b2",
+     "words": "taking an amount from one account and adding it to another is one transaction"
+    },
+    {
+     "text": "Transactions isolate programs using a database at the same time.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "To provide isolation between programs accessing a database concurrently."
+      }
+     ],
+     "block": "b2",
+     "words": "keep programs working on the database at the same moment from seeing each other’s half-finished work"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Database_transaction",
+     "title": "Database transaction",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Atomicity",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A change is atomic when it can’t be split: all of it happens, or none of it does.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "A transaction made of several operations is atomic if they all occur or none occur^1. That rules out partial updates, which cause more trouble than refusing the whole change would^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Atomicity means a transaction’s operations all occur or none occur.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "is the property of a database transaction consisting of an indivisible and irreducible series of database operations such that either all occur, or none occur"
+      }
+     ],
+     "block": "b2",
+     "words": "if they all occur or none occur"
+    },
+    {
+     "text": "Atomicity prevents partial updates, which cause worse problems than rejecting the whole.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "A guarantee of atomicity prevents partial database updates from occurring, because they can cause greater problems than rejecting the whole series outright."
+      }
+     ],
+     "block": "b2",
+     "words": "That rules out partial updates, which cause more trouble than refusing the whole change would"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Atomicity_(database_systems)",
+     "title": "Atomicity database systems",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Advisory locks",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**An advisory lock is a lock that only works because everyone agrees to take it before touching what it guards.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Most locks are advisory: each thread takes the lock before it reaches the data, by cooperation^1. Nothing stops code that skips the lock, unlike a mandatory lock, which refuses access outright^1. A database can keep advisory locks under names a program chooses, such as one per customer, so two charges for the same customer never run at once."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Advisory locks work by each thread acquiring the lock before accessing the data.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Generally, locks are advisory locks, where each thread cooperates by acquiring the lock before accessing the corresponding data."
+      }
+     ],
+     "block": "b2",
+     "words": "each thread takes the lock before it reaches the data, by cooperation"
+    },
+    {
+     "text": "Mandatory locks force an error on unauthorised access to a locked resource.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Some systems also implement mandatory locks, where attempting unauthorized access to a locked resource will force an exception in the entity attempting to make the access."
+      }
+     ],
+     "block": "b2",
+     "words": "unlike a mandatory lock, which refuses access outright"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Lock_(computer_science)",
+     "title": "Lock computer science",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Mutual exclusion",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**Mutual exclusion means only one thing at a time may be in the part of a program that touches a shared resource.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "One thread never enters that critical section while another is in it^1. Without it, two changes made at once can leave shared data in a state neither intended. Dijkstra first set out and solved the problem in 1965^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Mutual exclusion requires that no thread enters a critical section another is in.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "It is the requirement that one thread of execution never enters a critical section while a concurrent thread of execution is already accessing said critical section"
+      }
+     ],
+     "block": "b2",
+     "words": "One thread never enters that critical section while another is in it"
+    },
+    {
+     "text": "Dijkstra first identified and solved mutual exclusion in 1965.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The requirement of mutual exclusion was first identified and solved by Edsger W. Dijkstra in his seminal 1965 paper"
+      }
+     ],
+     "block": "b2",
+     "words": "Dijkstra first set out and solved the problem in 1965"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Mutual_exclusion",
+     "title": "Mutual exclusion",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "HMAC",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**An HMAC is a code made from a message and a secret key, which proves the message came from someone with the key and wasn’t changed on the way.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "It mixes a cryptographic hash function with the secret^1, and checks both that the data is intact and that it is authentic^1. Both sides share the same key, so no public key infrastructure is needed^1: a bank signing its webhooks with a secret it shares with you is the usual case."
+    }
+   ],
+   "claims": [
+    {
+     "text": "An HMAC involves a cryptographic hash function and a secret key.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "is a specific type of message authentication code (MAC) involving a cryptographic hash function and a secret cryptographic key"
+      }
+     ],
+     "block": "b2",
+     "words": "It mixes a cryptographic hash function with the secret"
+    },
+    {
+     "text": "An HMAC can verify both a message’s integrity and its authenticity.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "As with any MAC, it may be used to simultaneously verify both the data integrity and authenticity of a message."
+      }
+     ],
+     "block": "b2",
+     "words": "checks both that the data is intact and that it is authentic"
+    },
+    {
+     "text": "HMAC uses a shared secret instead of public key infrastructure.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "HMAC can provide authentication using a shared secret instead of using digital signatures with asymmetric cryptography."
+      }
+     ],
+     "block": "b2",
+     "words": "Both sides share the same key, so no public key infrastructure is needed"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/HMAC",
+     "title": "HMAC",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Constant-time comparison",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A constant-time comparison takes the same time whatever the values compared, so its timing gives nothing away.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "An ordinary comparison stops at the first difference, so a wrong guess that matches more takes longer, and an attacker who measures that can work towards the secret^1. Constant-time functions are a standard defence^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "With precise timing, an attacker may work backwards to the input.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "with precise measurements of the time for each operation, an attacker may be able to work backwards to the input"
+      }
+     ],
+     "block": "b2",
+     "words": "an attacker who measures that can work towards the secret"
+    },
+    {
+     "text": "Countermeasures to timing attacks include constant-time functions.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Countermeasures include blinding and constant-time functions."
+      }
+     ],
+     "block": "b2",
+     "words": "Constant-time functions are a standard defence"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Timing_attack",
+     "title": "Timing attack",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Timing attacks",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A timing attack learns a secret by measuring how long a system takes to answer.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Every operation takes time, and the time can depend on the input^1. Measured precisely enough, those differences leak information the system meant to keep^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "The time an operation takes can differ with its input.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Every logical operation in a computer takes time to execute, and the time can differ based on the input"
+      }
+     ],
+     "block": "b2",
+     "words": "Every operation takes time, and the time can depend on the input"
+    },
+    {
+     "text": "Information can leak through the time a system takes to respond.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Information can leak from a system through measurement of the time it takes to respond to certain queries."
+      }
+     ],
+     "block": "b2",
+     "words": "those differences leak information the system meant to keep"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Timing_attack",
+     "title": "Timing attack",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Unique keys",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A unique key is a column, or set of columns, whose value no two rows of a table may share.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "It identifies one row and no other^1, and the database enforces it: an insert that would repeat a value is refused^1. That refusal is what lets a table remember each request key once."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A unique key can uniquely identify a record.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The remaining candidate keys are called unique keys because they can uniquely identify a record in a relation."
+      }
+     ],
+     "block": "b2",
+     "words": "It identifies one row and no other"
+    },
+    {
+     "text": "Enforcing a key constraint is a data integrity feature of the database.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The enforcement of a key constraint (i.e. a uniqueness constraint) in a table is also a data integrity feature of the database."
+      }
+     ],
+     "block": "b2",
+     "words": "the database enforces it"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Unique_key",
+     "title": "Unique key",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Randomness",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**Something is random when it has no pattern anyone can use to predict it.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "A single random event can’t be predicted, though over many trials the share of each outcome can be, when its probability is known^1. Computers usually make numbers that only look random, from a rule^2."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Individual random events are unpredictable, though their frequencies can be predicted from a known distribution.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Individual random events are, by definition, unpredictable, but if there is a known probability distribution, the frequency of different outcomes over repeated events (or \"trials\") is predictable."
+      }
+     ],
+     "block": "b2",
+     "words": "A single random event can’t be predicted"
+    },
+    {
+     "text": "Pseudorandom numbers look random but come from a deterministic process.",
+     "sources": [
+      2
+     ],
+     "quotes": [
+      {
+       "source": 2,
+       "text": "A pseudorandom sequence of numbers is one that appears to be statistically random, despite having been produced by a completely deterministic and repeatable process."
+      }
+     ],
+     "block": "b2",
+     "words": "Computers usually make numbers that only look random, from a rule"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Randomness",
+     "title": "Randomness",
+     "publisher": "Wikipedia",
+     "published": ""
+    },
+    {
+     "n": 2,
+     "url": "https://en.wikipedia.org/wiki/Pseudorandomness",
+     "title": "Pseudorandomness",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Probability",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A probability is a number from 0 to 1 saying how likely something is: 0 can’t happen, 1 must.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "The larger the number, the likelier the event^1. A fair coin gives heads and tails the same probability, one half each."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A probability is between 0 and 1, larger meaning likelier.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The probability of an event is a number between 0 and 1; the larger the probability, the more likely an event is to occur."
+      }
+     ],
+     "block": "b2",
+     "words": "The larger the number, the likelier the event"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Probability",
+     "title": "Probability",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "State",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A system’s state is what it remembers from one moment to the next.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "A stateful system remembers earlier events; a stateless one doesn’t^1. What a program does next is decided by its inputs and its state together^1, which is why changing state safely is at the root of so much else."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A stateful system remembers preceding events; a stateless one doesn’t.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "a system is described as stateful if it is designed to remember preceding events or user interactions and stateless if it doesn't"
+      }
+     ],
+     "block": "b2",
+     "words": "A stateful system remembers earlier events; a stateless one doesn’t"
+    },
+    {
+     "text": "A deterministic program’s output is determined by its inputs and its state.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The output of a digital circuit or deterministic computer program at any time is completely determined by its current inputs and its state."
+      }
+     ],
+     "block": "b2",
+     "words": "What a program does next is decided by its inputs and its state together"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/State_(computer_science)",
+     "title": "State computer science",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Thundering herd problem",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A thundering herd is many waiting processes woken at once for something only one of them can have.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "They all wake, one wins, and the rest fail and go back to sleep, having used the machine for nothing^1. Clients retrying on the same schedule after a failure make the same herd against a service."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Only one woken process can respond; the others fail and sleep again.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "However, only one process is able to respond to the event or access the new resource, causing most other processes to fail and go back to sleep."
+      }
+     ],
+     "block": "b2",
+     "words": "They all wake, one wins, and the rest fail and go back to sleep"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Thundering_herd_problem",
+     "title": "Thundering herd problem",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Exponential growth",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**Something grows exponentially when it grows by the same multiple each step, so the bigger it is, the faster it grows.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Its rate of growth is proportional to its present size^1. It can start slowly: exponential doesn’t mean fast^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "An exponentially growing quantity grows at a rate proportional to its size.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The quantity grows at a rate directly proportional to its present size."
+      }
+     ],
+     "block": "b2",
+     "words": "Its rate of growth is proportional to its present size"
+    },
+    {
+     "text": "Something growing exponentially can be growing slowly at first.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Indeed, something that grows exponentially can in fact be growing slowly at first."
+      }
+     ],
+     "block": "b2",
+     "words": "It can start slowly"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Exponential_growth",
+     "title": "Exponential growth",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Circuit breakers",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A circuit breaker stops calling a service that keeps failing, for a while, instead of trying it again and again.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Like the switch in a fuse box, it opens after enough failures, and calls fail at once without being sent; after a pause it lets one through to see whether the service is back. It spots a service that has stopped answering and stops the repeated tries^1, which a fixed timeout can only do slowly^1. It is usually used together with retries and timeouts^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A circuit breaker identifies unresponsive services and prevents repeated attempts.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "the Circuit Breaker pattern can proactively identify unresponsive services and can prevent repeated attempts"
+      }
+     ],
+     "block": "b2",
+     "words": "It spots a service that has stopped answering and stops the repeated tries"
+    },
+    {
+     "text": "Timeouts can delay error responses or fail healthy requests early.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Unlike timeout-based methods, which can lead to delayed error responses or the premature failure of healthy requests"
+      }
+     ],
+     "block": "b2",
+     "words": "which a fixed timeout can only do slowly"
+    },
+    {
+     "text": "Circuit breakers are used with retry, fallback and timeout.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "The circuit breaker pattern can be used in conjunction with other patterns, such as retry, fallback, and timeout, to enhance fault tolerance in systems."
+      }
+     ],
+     "block": "b2",
+     "words": "It is usually used together with retries and timeouts"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Circuit_breaker_design_pattern",
+     "title": "Circuit breaker design pattern",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Network congestion",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A network or a service is congested when it is given more load than it can carry, and everything through it slows.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Requests queue, some are lost, and new connections are refused^1. Retrying aggressively to make up for what was lost can keep the congestion going even after the load that caused it has gone^1. That is why clients that retry back off."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Congestion causes queueing delay, packet loss or blocked connections.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Typical effects include queueing delay, packet loss or the blocking of new connections."
+      }
+     ],
+     "block": "b2",
+     "words": "Requests queue, some are lost, and new connections are refused"
+    },
+    {
+     "text": "Aggressive retransmission can increase congestion even after the load falls.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Network protocols that use aggressive retransmissions to compensate for packet loss due to congestion can increase congestion, even after the initial load has been reduced to a level that would not normally have induced network congestion."
+      }
+     ],
+     "block": "b2",
+     "words": "Retrying aggressively to make up for what was lost can keep the congestion going"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Network_congestion",
+     "title": "Network congestion",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Rate limiting",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**Rate limiting caps how many requests a service takes in a given time, and refuses the rest.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "It controls the rate of requests sent or received^1, which protects a service from floods of traffic, whether an attack or a crowd of clients retrying at once^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Rate limiting controls the rate of requests sent or received.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "rate limiting is used to control the rate of requests sent or received by a network interface controller"
+      }
+     ],
+     "block": "b2",
+     "words": "It controls the rate of requests sent or received"
+    },
+    {
+     "text": "Rate limiting can be used to prevent denial-of-service attacks.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "It can be used to prevent DoS attacks and limit web scraping."
+      }
+     ],
+     "block": "b2",
+     "words": "which protects a service from floods of traffic"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Rate_limiting",
+     "title": "Rate limiting",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Two-phase commit",
+   "live": false,
+   "minutes": 2,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**Two-phase commit is how several parties agree to make a change together: first everyone says whether they can, then everyone does it, or no one does.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "A coordinator asks every participant whether it can commit, and then tells them all to commit or all to roll back^1. It still reaches the right outcome through many temporary failures^1, though not all of them."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Two-phase commit coordinates all participants on whether to commit or abort.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "It is a distributed algorithm that coordinates all the processes that participate in a distributed atomic transaction on whether to commit or abort (roll back) the transaction."
+      }
+     ],
+     "block": "b2",
+     "words": "A coordinator asks every participant whether it can commit, and then tells them all to commit or all to roll back"
+    },
+    {
+     "text": "Two-phase commit achieves its goal even through many temporary failures.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "achieves its goal even in many cases of temporary system failure"
+      }
+     ],
+     "block": "b2",
+     "words": "It still reaches the right outcome through many temporary failures"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Two-phase_commit_protocol",
+     "title": "Two-phase commit protocol",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Accounting equation",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**The accounting equation says what a business owns equals what it owes plus what belongs to its owners, and every entry keeps it true.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "Like any equation, its two sides are always equal^1, and it is the foundation double-entry bookkeeping is built on^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Each side of the accounting equation is always equal.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Like any equation, each side will always be equal."
+      }
+     ],
+     "block": "b2",
+     "words": "its two sides are always equal"
+    },
+    {
+     "text": "The accounting equation is the foundation of double-entry bookkeeping.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "is the foundation for the double-entry bookkeeping system and the cornerstone of accounting science"
+      }
+     ],
+     "block": "b2",
+     "words": "it is the foundation double-entry bookkeeping is built on"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Accounting_equation",
+     "title": "Accounting equation",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Pseudorandomness",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**Pseudorandom numbers come from a rule that makes them look random, though they aren’t.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "They appear statistically random while being produced by a deterministic, repeatable process^1. The rule starts from a seed, and the same seed gives the same numbers every time^1."
+    }
+   ],
+   "claims": [
+    {
+     "text": "Pseudorandom sequences appear random but come from a deterministic, repeatable process.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "A pseudorandom sequence of numbers is one that appears to be statistically random, despite having been produced by a completely deterministic and repeatable process."
+      }
+     ],
+     "block": "b2",
+     "words": "They appear statistically random while being produced by a deterministic, repeatable process"
+    },
+    {
+     "text": "The same seed yields the same sequence every time.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "Since the same seed will yield the same sequence every time"
+      }
+     ],
+     "block": "b2",
+     "words": "the same seed gives the same numbers every time"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Pseudorandomness",
+     "title": "Pseudorandomness",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  },
+  {
+   "idea": "Hash function",
+   "live": false,
+   "minutes": 1,
+   "blocks": [
+    {
+     "id": "b1",
+     "part": "lead",
+     "type": "paragraph",
+     "text": "**A hash function turns data of any size into a short value of fixed size.**"
+    },
+    {
+     "id": "b2",
+     "part": "how",
+     "type": "paragraph",
+     "text": "It maps data of arbitrary size to fixed-size values, called hashes^1. The same input always gives the same hash, which is what lets a hash stand for the data it came from."
+    }
+   ],
+   "claims": [
+    {
+     "text": "A hash function maps data of arbitrary size to fixed-size values.",
+     "sources": [
+      1
+     ],
+     "quotes": [
+      {
+       "source": 1,
+       "text": "A hash function is any function that can be used to map data of arbitrary size to fixed-size values"
+      }
+     ],
+     "block": "b2",
+     "words": "It maps data of arbitrary size to fixed-size values, called hashes"
+    }
+   ],
+   "sources": [
+    {
+     "n": 1,
+     "url": "https://en.wikipedia.org/wiki/Hash_function",
+     "title": "Hash function",
+     "publisher": "Wikipedia",
+     "published": ""
+    }
+   ]
+  }
+ ]
+}

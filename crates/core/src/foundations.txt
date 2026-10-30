@@ -1,0 +1,111 @@
+# Foundations: the shared graph's ground floor, the first principles where
+# going down stops. An idea with one of these names is a foundation until
+# three model families say otherwise; the list changes only by proposal.
+# Seeding stops here too. One name a line; names
+# match as kelve matches them. A starting list, for Nathan to change: the
+# seeding list (14 October) and the graph trial's (19 October), made one.
+
+# Mathematics
+Algebra
+Arithmetic
+Boolean algebra
+Calculus
+Combinatorics
+Function (mathematics)
+Graph theory
+Linear algebra
+Logarithm
+Logic
+Matrix
+Modular arithmetic
+Number theory
+Probability
+Proof
+Set
+Statistics
+Vector
+
+# Computation
+Abstraction
+Algorithm
+Automata theory
+Big O notation
+Binary number
+Bit
+Byte
+Compiler
+Computability
+Computer
+Computer program
+Data
+Data structure
+Encoding
+Information theory
+Interpreter
+Machine code
+Programming language
+Turing machine
+
+# Machines
+Central processing unit
+Computer memory
+Disk storage
+File system
+Instruction set
+Kernel
+Operating system
+Process
+Thread
+Virtual memory
+
+# Networks
+Bandwidth
+Client-server model
+Computer network
+Internet
+Internet protocol
+Latency
+Network protocol
+OSI model
+Packet
+Transmission Control Protocol
+
+# Data and security
+Cryptography
+Database
+Encryption
+Hash function
+Public-key cryptography
+Relational model
+
+# Building software
+Software
+Software architecture
+Software engineering
+Source code
+Specification
+Version control
+
+# Thinking about a system
+State
+Determinism
+Identifier
+Measurement
+Statistical model
+Randomness
+Formal grammar
+Tree
+Graph
+Function
+
+# Systems that fail and share
+Concurrency
+Partial failure
+Time and clocks
+Network communication
+Memory hierarchy
+
+# Trust
+Trust boundary
+Secret
+One-way function

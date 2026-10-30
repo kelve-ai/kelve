@@ -1,0 +1,28 @@
+# Dependabot asks once a month whether kelve's dependencies have newer
+# versions, one pull request for each kind, so there are three at most.
+# A security fix comes as soon as there is one. After merging one that
+# changes Rust's or the web app's, run `bun run notices` in `web/` and
+# commit THIRD_PARTY_NOTICES.md (AGENTS.md).
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      rust:
+        patterns: ["*"]
+  - package-ecosystem: bun
+    directory: /web
+    schedule:
+      interval: monthly
+    groups:
+      web:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

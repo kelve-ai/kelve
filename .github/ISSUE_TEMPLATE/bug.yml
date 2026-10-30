@@ -1,0 +1,46 @@
+name: Something's wrong
+description: kelve did something it shouldn't have, or didn't do what its docs say.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. If it's a security problem, please don't open an issue: follow [SECURITY.md](https://github.com/kelve-ai/kelve/blob/main/SECURITY.md) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: input
+    id: version
+    attributes:
+      label: kelve's version
+      description: "`kelve --version`."
+  - type: dropdown
+    id: how
+    attributes:
+      label: How you run kelve
+      options:
+        - A release download
+        - Built from source
+  - type: input
+    id: agent
+    attributes:
+      label: The agent, if one was involved
+      placeholder: Claude Code, Cursor, Codex, Gemini…
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: kelve's logs from around the time. Leave out tokens, keys and the text of your files.
+      render: text

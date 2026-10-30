@@ -1,0 +1,124 @@
+name: Release
+
+# Runs CI (ci.yml) on a version tag (`git tag v0.1.0 && git push origin
+# v0.1.0`), and only once it passes builds the `kelve` command for each
+# platform, with the web app inside, and attaches it to a GitHub Release,
+# with checksums. The release stays a
+# draft until every build is attached, then it's published. `install.sh`
+# and `install.ps1` install the newest, and are tried on it once it's out.
+# docs/releasing.md says more.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+# Actions are pinned to the commit of a release, as in ci.yml.
+
+env:
+  CARGO_TERM_COLOR: always
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  draft:
+    name: Draft the release
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # `kelve --version` says the workspace's version, so the tag must say
+      # the same.
+      - name: The tag matches kelve's version
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          test "$GITHUB_REF_NAME" = "v$version" || { echo "The tag is $GITHUB_REF_NAME, but Cargo.toml says $version."; exit 1; }
+      - run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --title "kelve $GITHUB_REF_NAME" --generate-notes
+
+  build:
+    name: ${{ matrix.name }}
+    needs: draft
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: macos-arm64, os: macos-14, target: aarch64-apple-darwin }
+          - { name: macos-x86_64, os: macos-14, target: x86_64-apple-darwin }
+          - { name: linux-x86_64, os: ubuntu-22.04, target: x86_64-unknown-linux-gnu }
+          - { name: linux-arm64, os: ubuntu-22.04-arm, target: aarch64-unknown-linux-gnu }
+          - { name: windows-x86_64, os: windows-latest, target: x86_64-pc-windows-msvc }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      # The web app first: the command carries it inside.
+      - run: bun install --frozen-lockfile && bun run build
+        working-directory: web
+      - run: cargo build --release --locked -p kelve --target ${{ matrix.target }}
+      # Named for the platform, so builds for two machines of one system
+      # don't collide.
+      - name: Attach it
+        shell: bash
+        run: |
+          dir="target/${{ matrix.target }}/release"
+          n="kelve-${{ matrix.name }}"
+          mkdir -p out
+          if [ "${{ runner.os }}" = Windows ]; then
+            (cd "$dir" && 7z a "$OLDPWD/out/$n.zip" kelve.exe)
+          else
+            tar -czf "out/$n.tar.gz" -C "$dir" kelve
+          fi
+          gh release upload "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY"
+
+  publish:
+    name: Publish the release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checksums
+        run: |
+          mkdir out && cd out
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY"
+          sha256sum kelve-* > SHA256SUMS
+          gh release upload "$GITHUB_REF_NAME" SHA256SUMS --repo "$GITHUB_REPOSITORY"
+      - run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false
+
+  # Installed as people install it, from the release just published: the
+  # scripts in this tag, the builds from GitHub. Installing needs the
+  # repository public, so this waits until it is.
+  installs:
+    name: Installs on ${{ matrix.name }}
+    needs: publish
+    if: ${{ !github.event.repository.private }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: macOS, os: macos-14 }
+          - { name: Linux, os: ubuntu-22.04 }
+          - { name: Windows, os: windows-latest }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: install.sh
+        if: runner.os != 'Windows'
+        run: |
+          sh install.sh
+          test "$("$HOME/.local/bin/kelve" --version)" = "kelve ${GITHUB_REF_NAME#v}"
+      - name: install.ps1
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-Content install.ps1 -Raw | Invoke-Expression
+          $said = & "$env:LOCALAPPDATA\kelve\bin\kelve.exe" --version
+          if ($said -ne "kelve $($env:GITHUB_REF_NAME.TrimStart('v'))") { Write-Host "It said $said."; exit 1 }

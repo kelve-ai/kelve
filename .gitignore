@@ -1,0 +1,24 @@
+/target
+/web/node_modules
+/web/dist
+/data
+.env
+.env.*
+.DS_Store
+*.log
+# The end-to-end tests' world and what they leave behind.
+/web/e2e/.world.json
+/web/test-results
+/web/playwright-report
+/web/looks-report
+
+# Your agents' own settings and worktrees, not part of kelve.
+/.claude/
+
+# The sandbox for developing kelve (dev/kelve.ts), and the newcomer's
+# Claude Code, kept logged in between runs.
+/.sandbox
+/.newcomer-claude
+
+# kelve's own reads and notes for this checkout: yours, not the project's.
+/.kelve/

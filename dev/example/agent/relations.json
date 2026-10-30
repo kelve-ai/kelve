@@ -1,0 +1,415 @@
+{
+  "about": "How the example's agent traces each idea down: what it answers, and what it rests on, down to first principles (crates/core/src/foundations.txt). An idea not here rests on nothing.",
+  "relations": {
+    "Retries": {
+      "question": "What do you do when a call fails for a reason that might pass?",
+      "restsOn": [
+        [
+          "Transient errors",
+          "A retry can only help with a failure that passes."
+        ],
+        [
+          "Idempotence",
+          "Trying again is safe only if doing it twice does no more than once."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Timeouts",
+          "A timeout ends a hung call, so the retry around it can start."
+        ]
+      ],
+      "alternatives": [
+        [
+          "Circuit breakers",
+          "Stop calling a service that keeps failing, instead of trying it again."
+        ]
+      ]
+    },
+    "Transient errors": {
+      "question": "Which failures pass on their own?",
+      "restsOn": [
+        [
+          "Partial failure",
+          "A transient error is part of a system failing for a while, while the rest goes on."
+        ]
+      ]
+    },
+    "Exponential backoff": {
+      "question": "How long should a client wait before trying again?",
+      "restsOn": [
+        [
+          "Retries",
+          "It sets how long to wait between them."
+        ],
+        [
+          "Exponential growth",
+          "Each wait is a fixed multiple of the last."
+        ]
+      ],
+      "answers": [
+        [
+          "Network congestion",
+          "Waiting longer each time lowers the load on a service that is struggling."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Jitter",
+          "Jitter picks a random wait below the ceiling backoff sets."
+        ]
+      ],
+      "alternatives": [
+        [
+          "Circuit breakers",
+          "Stop calling for a while instead of calling less often."
+        ]
+      ]
+    },
+    "Jitter": {
+      "question": "Why add randomness to when clients retry?",
+      "restsOn": [
+        [
+          "Randomness",
+          "A wait chosen at random can't line up with anyone else's."
+        ]
+      ],
+      "answers": [
+        [
+          "Thundering herd problem",
+          "Spreads out clients that would all come back at the same moment."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Exponential backoff",
+          "Sets the ceiling jitter picks under."
+        ]
+      ],
+      "alternatives": [
+        [
+          "Rate limiting",
+          "The server refuses what it can't take, instead of clients spreading out."
+        ]
+      ]
+    },
+    "Randomness": {
+      "question": "What makes a choice random?",
+      "restsOn": [],
+      "usedWith": [
+        [
+          "Pseudorandomness",
+          "A computer's random numbers come from a rule that only looks random."
+        ]
+      ]
+    },
+    "Pseudorandomness": {
+      "question": "How does a computer make numbers that look random?",
+      "restsOn": [
+        [
+          "Randomness",
+          "It imitates the lack of pattern a random sequence has."
+        ]
+      ]
+    },
+    "Thundering herd problem": {
+      "question": "What goes wrong when many waiting processes wake at once?",
+      "restsOn": [
+        [
+          "Network congestion",
+          "Everything arriving at once is more load than the service can take."
+        ]
+      ]
+    },
+    "Network congestion": {
+      "question": "What happens when a service gets more load than it can carry?",
+      "restsOn": [
+        [
+          "Bandwidth",
+          "Congestion is more load than a link's bandwidth can carry."
+        ]
+      ]
+    },
+    "Exponential growth": {
+      "question": "What grows by a fixed multiple each step?",
+      "restsOn": [
+        [
+          "Arithmetic",
+          "Each step multiplies the last by the same amount."
+        ]
+      ]
+    },
+    "Idempotency keys": {
+      "question": "How can a request sent twice be carried out once?",
+      "restsOn": [
+        [
+          "Idempotence",
+          "The key makes repeating a request idempotent."
+        ],
+        [
+          "Unique keys",
+          "The service remembers each key once, and refuses it twice."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Retries",
+          "A retry sends the same key again, so it can't do the work twice."
+        ]
+      ]
+    },
+    "Idempotence": {
+      "question": "Which operations can be repeated safely?",
+      "restsOn": [
+        [
+          "State",
+          "Doing it again leaves the state where the first time left it."
+        ],
+        [
+          "Function",
+          "An idempotent function gives the same result applied once or twice."
+        ]
+      ]
+    },
+    "Timeouts": {
+      "question": "How long should a caller wait for an answer?",
+      "restsOn": [
+        [
+          "Partial failure",
+          "A call can fail by never answering, which only a time limit can tell."
+        ],
+        [
+          "Time and clocks",
+          "A limit needs a clock to measure the wait against."
+        ]
+      ],
+      "alternatives": [
+        [
+          "Circuit breakers",
+          "Watch a service's health instead of guessing a time limit."
+        ]
+      ]
+    },
+    "Authorisation holds": {
+      "question": "How do you take money only once a payment is settled?",
+      "restsOn": [
+        [
+          "Double-entry bookkeeping",
+          "Holding money is moving it to a held account and back."
+        ],
+        [
+          "Two-phase commit",
+          "First every side agrees, then the change is made."
+        ]
+      ]
+    },
+    "Two-phase commit": {
+      "question": "How do several parties agree to make a change together?",
+      "restsOn": [
+        [
+          "Atomicity",
+          "The change happens everywhere, or nowhere."
+        ],
+        [
+          "Partial failure",
+          "Any party can fail midway, so each first says it can commit."
+        ]
+      ]
+    },
+    "Double-entry bookkeeping": {
+      "question": "How do you keep books that always balance?",
+      "restsOn": [
+        [
+          "Accounting equation",
+          "Each entry keeps both sides of the equation equal."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Database transactions",
+          "Both entries are written together, or not at all."
+        ]
+      ]
+    },
+    "Accounting equation": {
+      "question": "What must always be true of a set of accounts?",
+      "restsOn": [
+        [
+          "Arithmetic",
+          "Its two sides are sums that must always be equal."
+        ]
+      ]
+    },
+    "Database transactions": {
+      "question": "How do several changes to a database happen all at once, or not at all?",
+      "restsOn": [
+        [
+          "Atomicity",
+          "A transaction's changes happen together or not at all."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Advisory locks",
+          "A lock taken in a transaction is let go when it ends."
+        ]
+      ]
+    },
+    "Atomicity": {
+      "question": "What does it mean for a change to be indivisible?",
+      "restsOn": [
+        [
+          "State",
+          "Others see the state before the change or after it, never between."
+        ]
+      ]
+    },
+    "Advisory locks": {
+      "question": "How can a program lock something the database doesn't know about?",
+      "restsOn": [
+        [
+          "Mutual exclusion",
+          "Only one holder of the lock goes on at a time."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Database transactions",
+          "A transaction-scoped lock is let go when the transaction ends."
+        ]
+      ]
+    },
+    "Mutual exclusion": {
+      "question": "How do you stop two things changing the same thing at once?",
+      "restsOn": [
+        [
+          "Concurrency",
+          "It's needed only when things run at the same time."
+        ],
+        [
+          "State",
+          "Two changes at once can leave shared state inconsistent."
+        ]
+      ]
+    },
+    "HMAC": {
+      "question": "How do you prove who sent a message, with a secret you share?",
+      "restsOn": [
+        [
+          "Hash function",
+          "The code is a hash of the message mixed with the secret."
+        ],
+        [
+          "Secret",
+          "Only those who share the secret can make the code."
+        ]
+      ],
+      "usedWith": [
+        [
+          "Constant-time comparison",
+          "Checking a code must not leak, through its timing, how much of it matched."
+        ]
+      ]
+    },
+    "Constant-time comparison": {
+      "question": "How do you compare secrets without leaking them through time?",
+      "restsOn": [
+        [
+          "Secret",
+          "It keeps a secret from leaking through how long a check takes."
+        ]
+      ],
+      "answers": [
+        [
+          "Timing attacks",
+          "Taking the same time whatever the input leaves nothing to measure."
+        ]
+      ]
+    },
+    "Timing attacks": {
+      "question": "How can the time something takes give a secret away?",
+      "restsOn": [
+        [
+          "Measurement",
+          "The attacker measures how long each answer takes."
+        ],
+        [
+          "Secret",
+          "What leaks is a secret the system meant to keep."
+        ]
+      ]
+    },
+    "Unique keys": {
+      "question": "How does a database keep two rows from sharing a value?",
+      "restsOn": [
+        [
+          "Identifier",
+          "A unique key identifies one row and no other."
+        ]
+      ]
+    },
+    "Probability": {
+      "question": "How do we measure how likely something is?",
+      "restsOn": []
+    },
+    "State": {
+      "question": "What does a system remember from one moment to the next?",
+      "restsOn": []
+    },
+    "Circuit breakers": {
+      "question": "How do you stop calling a service that keeps failing?",
+      "restsOn": [
+        [
+          "Partial failure",
+          "It notices one part failing and stops sending it work for a while."
+        ]
+      ]
+    },
+    "Rate limiting": {
+      "question": "How does a service refuse more than it can take?",
+      "restsOn": [
+        [
+          "Network congestion",
+          "It turns load away before the service is overwhelmed."
+        ]
+      ]
+    }
+  },
+  "definitions": {
+    "Idempotence": "Doing something twice has the same effect as doing it once.",
+    "Circuit breakers": "Stopping calls to a service that keeps failing, for a while.",
+    "Partial failure": "Part of a system failing while the rest goes on.",
+    "Exponential growth": "Growth by the same multiple each step.",
+    "Network congestion": "A service or link given more load than it can carry.",
+    "Randomness": "Having no pattern anyone can use to predict it.",
+    "Thundering herd problem": "Many waiting processes woken at once for something only one can have.",
+    "Rate limiting": "A service refusing requests beyond a set rate.",
+    "Pseudorandomness": "Numbers from a rule that only look random.",
+    "Probability": "How likely something is, as a number from 0 to 1.",
+    "Arithmetic": "Adding, subtracting, multiplying and dividing numbers.",
+    "State": "What a system remembers from one moment to the next.",
+    "Function": "A rule that gives one output for each input.",
+    "Time and clocks": "Measuring time, and agreeing on it across machines.",
+    "Unique keys": "A rule that no two rows of a table may share a value.",
+    "Two-phase commit": "Asking every party first, then telling all of them to make a change.",
+    "Atomicity": "A change that happens whole, or not at all.",
+    "Accounting equation": "Assets equal liabilities plus equity, always.",
+    "Mutual exclusion": "Only one thing at a time in the part that touches a shared resource.",
+    "Concurrency": "Several things running at the same time.",
+    "Hash function": "A function from any data to a short, fixed-size value.",
+    "Secret": "Something only those meant to know it know.",
+    "Timing attacks": "Learning a secret from how long a system takes to answer.",
+    "Measurement": "Finding a quantity by comparing it with a standard.",
+    "Identifier": "A name or number that picks out one thing.",
+    "Bandwidth": "How much a link can carry in a given time.",
+    "Database transactions": "A group of changes to a database made together, or not at all.",
+    "Double-entry bookkeeping": "Recording every movement of money twice: as it leaves an account, and as it arrives.",
+    "Advisory locks": "A lock a program names and the database keeps.",
+    "Retries": "Trying a failed call again, in the hope it works the next time.",
+    "Transient errors": "Failures that pass on their own, so trying again can work.",
+    "Exponential backoff": "Waiting longer after each failure, each wait a multiple of the last.",
+    "Jitter": "A random amount taken from a wait, so many clients don't act at the same moment.",
+    "Timeouts": "Giving up on a call that takes too long, so the caller can move on.",
+    "Constant-time comparison": "Comparing secrets in a way that takes the same time whatever they hold."
+  }
+}

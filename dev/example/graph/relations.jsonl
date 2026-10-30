@@ -1,0 +1,42 @@
+{"from":"kelve:i000000000001","kind":"restsOn","to":"kelve:i000000000002","why":"A retry can only help with a failure that passes.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000001","kind":"restsOn","to":"kelve:i000000000003","why":"Trying again is safe only if doing it twice does no more than once.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000001","kind":"alternative","to":"kelve:i000000000004","why":"Stop calling a service that keeps failing, instead of trying it again.","state":"live","model":"example"}
+{"from":"kelve:i000000000001","kind":"usedWith","to":"kelve:i000000000005","why":"A timeout ends a hung call, so the retry around it can start.","state":"live","model":"example"}
+{"from":"kelve:i000000000006","kind":"restsOn","to":"kelve:i000000000007","why":"Each step multiplies the last by the same amount.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000003","kind":"restsOn","to":"kelve:i000000000008","why":"Doing it again leaves the state where the first time left it.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000003","kind":"restsOn","to":"kelve:i000000000009","why":"An idempotent function gives the same result applied once or twice.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000010","kind":"restsOn","to":"kelve:i000000000011","why":"The change happens everywhere, or nowhere.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000010","kind":"restsOn","to":"kelve:i000000000012","why":"Any party can fail midway, so each first says it can commit.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000011","kind":"restsOn","to":"kelve:i000000000008","why":"Others see the state before the change or after it, never between.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000013","kind":"restsOn","to":"kelve:i000000000007","why":"Its two sides are sums that must always be equal.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000014","kind":"restsOn","to":"kelve:i000000000001","why":"It sets how long to wait between them.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000014","kind":"restsOn","to":"kelve:i000000000006","why":"Each wait is a fixed multiple of the last.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000014","kind":"answers","to":"kelve:i000000000015","why":"Waiting longer each time lowers the load on a service that is struggling.","state":"live","model":"example"}
+{"from":"kelve:i000000000014","kind":"alternative","to":"kelve:i000000000004","why":"Stop calling for a while instead of calling less often.","state":"live","model":"example"}
+{"from":"kelve:i000000000014","kind":"usedWith","to":"kelve:i000000000016","why":"Jitter picks a random wait below the ceiling backoff sets.","state":"live","model":"example"}
+{"from":"kelve:i000000000017","kind":"restsOn","to":"kelve:i000000000003","why":"The key makes repeating a request idempotent.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000017","kind":"restsOn","to":"kelve:i000000000018","why":"The service remembers each key once, and refuses it twice.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000017","kind":"usedWith","to":"kelve:i000000000001","why":"A retry sends the same key again, so it can't do the work twice.","state":"live","model":"example"}
+{"from":"kelve:i000000000018","kind":"restsOn","to":"kelve:i000000000019","why":"A unique key identifies one row and no other.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000020","kind":"restsOn","to":"kelve:i000000000021","why":"Holding money is moving it to a held account and back.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000020","kind":"restsOn","to":"kelve:i000000000010","why":"First every side agrees, then the change is made.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000005","kind":"restsOn","to":"kelve:i000000000012","why":"A call can fail by never answering, which only a time limit can tell.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000005","kind":"restsOn","to":"kelve:i000000000022","why":"A limit needs a clock to measure the wait against.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000005","kind":"alternative","to":"kelve:i000000000004","why":"Watch a service's health instead of guessing a time limit.","state":"live","model":"example"}
+{"from":"kelve:i000000000002","kind":"restsOn","to":"kelve:i000000000012","why":"A transient error is part of a system failing for a while, while the rest goes on.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000023","kind":"restsOn","to":"kelve:i000000000011","why":"A transaction's changes happen together or not at all.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000023","kind":"usedWith","to":"kelve:i000000000024","why":"A lock taken in a transaction is let go when it ends.","state":"live","model":"example"}
+{"from":"kelve:i000000000021","kind":"restsOn","to":"kelve:i000000000013","why":"Each entry keeps both sides of the equation equal.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000021","kind":"usedWith","to":"kelve:i000000000023","why":"Both entries are written together, or not at all.","state":"live","model":"example"}
+{"from":"kelve:i000000000025","kind":"restsOn","to":"kelve:i000000000026","why":"The code is a hash of the message mixed with the secret.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000025","kind":"restsOn","to":"kelve:i000000000027","why":"Only those who share the secret can make the code.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000025","kind":"usedWith","to":"kelve:i000000000028","why":"Checking a code must not leak, through its timing, how much of it matched.","state":"live","model":"example"}
+{"from":"kelve:i000000000029","kind":"restsOn","to":"kelve:i000000000030","why":"It's needed only when things run at the same time.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000029","kind":"restsOn","to":"kelve:i000000000008","why":"Two changes at once can leave shared state inconsistent.","rank":2,"state":"live","model":"example"}
+{"from":"kelve:i000000000015","kind":"restsOn","to":"kelve:i000000000032","why":"Congestion is more load than a link's bandwidth can carry.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000004","kind":"restsOn","to":"kelve:i000000000012","why":"It notices one part failing and stops sending it work for a while.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000028","kind":"restsOn","to":"kelve:i000000000027","why":"It keeps a secret from leaking through how long a check takes.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000028","kind":"answers","to":"kelve:i000000000033","why":"Taking the same time whatever the input leaves nothing to measure.","state":"live","model":"example"}
+{"from":"kelve:i000000000024","kind":"restsOn","to":"kelve:i000000000029","why":"Only one holder of the lock goes on at a time.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000034","kind":"restsOn","to":"kelve:i000000000015","why":"Everything arriving at once is more load than the service can take.","rank":1,"state":"live","model":"example"}
+{"from":"kelve:i000000000035","kind":"restsOn","to":"kelve:i000000000015","why":"It turns load away before the service is overwhelmed.","rank":1,"state":"live","model":"example"}

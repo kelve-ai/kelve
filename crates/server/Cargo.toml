@@ -1,0 +1,45 @@
+[package]
+name = "kelve-server"
+description = "kelve's local service: marking what the person opens, writing the entries it leads to, the reader's API, signing in, and the web app itself."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+kelve-core = { workspace = true }
+kelve-store = { workspace = true }
+kelve-engine = { workspace = true }
+kelve-graph-api = { workspace = true }
+tokio = { workspace = true }
+axum = { workspace = true }
+tower-http = { workspace = true }
+reqwest = { workspace = true }
+tokio-stream = { workspace = true }
+futures = { workspace = true }
+url = { workspace = true }
+sqlx = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+sha2 = { workspace = true }
+hmac = { workspace = true }
+getrandom = { workspace = true }
+base64 = { workspace = true }
+chacha20poly1305 = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+# Serves the built web app from inside the binary.
+rust-embed = { version = "8", features = ["mime-guess"] }
+
+[dev-dependencies]
+kelve-graph-api = { workspace = true, features = ["stand-in"] }
+tower = { workspace = true, features = ["util"] }
+http-body-util = "0.1"
+# What went wrong inside a failing test, in its output.
+tracing-subscriber = { workspace = true }
+
+[lints]
+workspace = true

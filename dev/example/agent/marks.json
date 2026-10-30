@@ -1,0 +1,153 @@
+{
+  "about": "What the example's agent marks in each file of the ledger example, the most important first, as kelve keeps only a few a passage: by the exact words on a line, or from one line's words through another's. `use` is the margin's line: how this work uses the idea.",
+  "marks": [
+    {
+      "file": "docs/retries.md",
+      "words": "may be twice as long, up to 30 seconds",
+      "idea": "Exponential backoff",
+      "use": "Each wait may be twice the last, up to a cap."
+    },
+    {
+      "file": "docs/retries.md",
+      "words": "picks a random time below the",
+      "idea": "Jitter",
+      "use": "A random share of the wait, so clients don't come back together."
+    },
+    {
+      "file": "docs/retries.md",
+      "words": "Every payment carries a key",
+      "idea": "Idempotency keys",
+      "use": "The same key on every try, so a payment goes through once."
+    },
+    {
+      "file": "docs/retries.md",
+      "words": "gives up after 15 seconds",
+      "idea": "Timeouts",
+      "use": "A call that hangs gives up, so the retry around it can start."
+    },
+    {
+      "file": "docs/retries.md",
+      "words": "fail for reasons that pass",
+      "idea": "Transient errors",
+      "use": "Only failures that pass are worth another try."
+    },
+    {
+      "file": "migrations/0002_request_keys.sql",
+      "words": "key TEXT PRIMARY KEY",
+      "idea": "Unique keys",
+      "use": "Each key once, so a request sent twice is answered once."
+    },
+    {
+      "file": "src/api/v1/charges.rs",
+      "words": "reserve::hold(",
+      "idea": "Authorisation holds",
+      "use": "The money is held before the bank is asked."
+    },
+    {
+      "file": "src/api/v1/charges.rs",
+      "words": "headers.get(\"Idempotency-Key\")",
+      "idea": "Idempotency keys",
+      "use": "The caller's key says whether this charge was asked for before."
+    },
+    {
+      "file": "src/api/v1/refunds.rs",
+      "words": "app.bank.refund(key,",
+      "idea": "Idempotency keys",
+      "use": "The caller's key goes on to the bank, so a retried refund is given once."
+    },
+    {
+      "file": "src/api/v1/webhooks.rs",
+      "words": "Hmac::<Sha256>::new_from_slice",
+      "idea": "HMAC",
+      "use": "Signed with a secret both sides share, so no one else can pass as the bank."
+    },
+    {
+      "file": "src/api/v1/webhooks.rs",
+      "words": "mac.verify_slice(",
+      "idea": "Constant-time comparison",
+      "use": "Checked in the same time whatever it holds, so the check can't be timed."
+    },
+    {
+      "file": "src/bank/mod.rs",
+      "words": ".header(\"Idempotency-Key\", request)",
+      "idea": "Idempotency keys",
+      "use": "The same key on every try, so the bank takes the payment once."
+    },
+    {
+      "file": "src/bank/mod.rs",
+      "words": ".timeout(TIMEOUT)",
+      "idea": "Timeouts",
+      "use": "A call that hangs gives up, so the retry around it can start."
+    },
+    {
+      "file": "src/error.rs",
+      "words": "pub fn retryable(&self) -> bool",
+      "idea": "Transient errors",
+      "use": "Which failures pass, and are worth another try."
+    },
+    {
+      "file": "src/ledger.rs",
+      "words": "($1, $2, $3, $4, $5), ($1, $6, $7, $4, $5)",
+      "idea": "Double-entry bookkeeping",
+      "use": "Two entries, one taking and one giving, for every movement."
+    },
+    {
+      "file": "src/ledger.rs",
+      "words": "let mut tx = db.begin().await?;",
+      "idea": "Database transactions",
+      "use": "Both entries are written together, or neither is."
+    },
+    {
+      "file": "src/reserve.rs",
+      "words": "Movement { from: \"held\", to: merchant",
+      "idea": "Authorisation holds",
+      "use": "The held money is taken only once the bank has said yes."
+    },
+    {
+      "file": "src/reserve.rs",
+      "words": "pg_advisory_xact_lock(hashtext($1))",
+      "idea": "Advisory locks",
+      "use": "One charge at a time for each customer."
+    },
+    {
+      "file": "src/retry.rs",
+      "words": "BASE * 2u32.pow(attempt)",
+      "idea": "Exponential backoff",
+      "use": "Each wait may be twice the last, up to a cap."
+    },
+    {
+      "file": "src/retry.rs",
+      "words": "gen_range(Duration::ZERO..=ceiling(attempt))",
+      "idea": "Jitter",
+      "use": "A random share of that, so clients don't retry together."
+    },
+    {
+      "file": "src/retry.rs",
+      "from": "let mut attempt = 0;",
+      "through": "attempt += 1;",
+      "idea": "Retries",
+      "use": "Try the call again until it works or can't."
+    },
+    {
+      "file": "src/retry.rs",
+      "words": "!e.retryable()",
+      "idea": "Transient errors",
+      "use": "Only failures a retry might fix are tried again."
+    }
+  ],
+  "ideas": {
+    "Retries": "Trying a failed call again, in the hope it works the next time.",
+    "Transient errors": "Failures that pass on their own, so trying again can work.",
+    "Exponential backoff": "Waiting longer after each failure, each wait a multiple of the last.",
+    "Jitter": "A random amount taken from a wait, so many clients don't act at the same moment.",
+    "Idempotency keys": "A key sent with a request, so the same request sent twice is carried out once.",
+    "Timeouts": "Giving up on a call that takes too long, so the caller can move on.",
+    "Authorisation holds": "Holding money for a payment first, and taking it only once the payment is settled.",
+    "Double-entry bookkeeping": "Recording every movement of money twice: once as it leaves an account, once as it arrives.",
+    "Database transactions": "A group of changes to a database made together, or not at all.",
+    "Advisory locks": "A lock a program names and the database keeps, meaning whatever the program says.",
+    "HMAC": "A code made from a message and a shared secret, proving who sent it and that it wasn't changed.",
+    "Constant-time comparison": "Comparing secrets in a way that takes the same time whatever they hold.",
+    "Unique keys": "A rule that no two rows of a table may share a value."
+  }
+}

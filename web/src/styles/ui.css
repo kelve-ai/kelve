@@ -1,0 +1,116 @@
+/* kelve's controls (board C-1): raised, never
+   black. One main action a page, white with a hairline and a soft shadow;
+   the rest are plain grey links beside it. */
+
+.raised {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 38px; padding: 0 16px; border: 0; border-radius: 9px;
+  background: var(--white); color: var(--ink);
+  font: 600 14px/1 var(--sans); white-space: nowrap; cursor: pointer;
+  box-shadow: 0 0 0 1px var(--edge), 0 1px 2px rgba(var(--shadow), 0.08), 0 4px 12px rgba(var(--shadow), 0.06);
+}
+.raised:hover { box-shadow: 0 0 0 1px var(--quiet), 0 1px 2px rgba(var(--shadow), 0.1), 0 4px 12px rgba(var(--shadow), 0.08); }
+.raised:active { transform: translateY(0.5px); }
+.raised:disabled { opacity: 0.55; cursor: default; }
+.raised:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.raised.small { height: 28px; padding: 0 10px; gap: 6px; border-radius: 7px; font-weight: 500; font-size: 12.5px; box-shadow: 0 0 0 1px var(--edge), 0 1px 2px rgba(var(--shadow), 0.06); }
+
+.quiet-link { all: unset; cursor: pointer; font-size: 14px; color: var(--quiet); }
+.quiet-link:hover { color: var(--ink); }
+.quiet-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 3px; }
+
+/* A choice of a few: plain words, the chosen one softly filled (board L-7). */
+.track { display: inline-flex; flex-wrap: wrap; gap: 2px; }
+.track button {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  height: 28px; padding: 0 10px; border-radius: 7px; font-size: 13px; color: var(--quiet);
+}
+.track button:hover { color: var(--ink); }
+.track button.on { background: var(--well); color: var(--ink); font-weight: 500; }
+.track button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.track .found { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+.track.small button { height: 26px; padding: 0 9px; font-size: 12.5px; }
+
+/* Something to copy: a light well; a command with a $ before it. */
+.well {
+  display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 8px 6px 16px;
+  border-radius: 10px; background: var(--well); box-shadow: inset 0 0 0 1px var(--rule);
+  font: 400 13.5px/22px var(--mono); color: var(--ink);
+}
+.well .what { flex: 1; min-width: 0; overflow-x: auto; white-space: pre; scrollbar-width: none; }
+.well .what::-webkit-scrollbar { display: none; }
+.well .what::before { content: '$ '; color: var(--sq-grey); }
+.well.words { font-family: var(--sans); font-size: 14.5px; }
+.well.words .what { white-space: normal; }
+.well.words .what::before { content: none; }
+.well .raised { flex: none; }
+
+/* A hint, shown once: dark, with an arrow at what it explains. */
+.tip {
+  position: absolute; z-index: 30; width: 300px; padding: 14px 16px;
+  border-radius: 12px; background: #1c1b19; color: #ece8e0;
+  font-size: 14px; line-height: 21px; box-shadow: 0 18px 40px rgba(28, 27, 25, 0.25);
+  /* It never stands in the way: clicks go through it, but for Got it. */
+  pointer-events: none;
+}
+.tip b { color: #fff; font-weight: 600; }
+.tip::before { content: ''; position: absolute; width: 12px; height: 12px; background: #1c1b19; transform: rotate(45deg); }
+.tip.left::before { left: -6px; top: 20px; }
+.tip.right::before { right: -6px; top: 20px; }
+.tip.up::before { left: 24px; top: -6px; }
+.tip.down::before { left: 24px; bottom: -6px; }
+.tip .shown { margin: 8px 0 0; font-size: 12.5px; color: #a39d93; }
+.tip .shown button { all: unset; pointer-events: auto; cursor: pointer; color: #ece8e0; text-decoration: underline; text-underline-offset: 3px; }
+:root[data-theme='dark'] .tip, :root[data-theme='dark'] .tip::before { background: #34312c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .tip, :root:not([data-theme='light']) .tip::before { background: #34312c; } }
+
+/* The one mark: a small square. Red is new in
+   this change, grey isn't; filled is read; black on a line, a first
+   principle. */
+/* Filled while it waits for you, hollow once read (Nathan, 29 October). */
+.sq { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 1.5px; background: var(--sq-grey); box-shadow: inset 0 0 0 1.5px var(--sq-grey); }
+.sq.new { background: var(--red); box-shadow: inset 0 0 0 1.5px var(--red); }
+.sq.read, .sq.new.read { background: none; }
+.sq.fp { position: relative; background: var(--ink); box-shadow: none; /* not the folder page's .fp */ max-width: none; padding: 0; }
+.sq.fp::after { content: ''; position: absolute; left: -3px; right: -3px; bottom: -4px; height: 1.5px; background: var(--ink); }
+.sq.small { width: 6px; height: 6px; border-radius: 1px; }
+.sq.small.fp::after { bottom: -3px; left: -2px; right: -2px; }
+.sq.big { width: 11px; height: 11px; border-radius: 2px; }
+.sq.big.fp::after { bottom: -5px; }
+
+/* A list (boards Q-2, L-1 to L-9): one line each, kelve's square saying
+   where each stands, small headings with counts, and what you can do
+   showing on the row you point at. */
+.lsq { display: inline-block; flex: none; width: 9px; height: 9px; border-radius: 2.5px; box-shadow: inset 0 0 0 1.5px var(--dim); }
+/* Your agent's work is a dial, in ink: never red, which only ever means new. */
+.lsq.now, .lsq.queued, .lsq.done { border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.lsq.now { background: conic-gradient(var(--ink) 66%, transparent 0); }
+.lsq.done { background: var(--ink); }
+.lsq.ready { box-shadow: none; background: var(--ink); }
+.lsq.dash { width: 9px; height: 1.5px; border-radius: 0; box-shadow: none; background: var(--mute); }
+.lgroup { display: flex; align-items: baseline; gap: 8px; margin: 20px 0 4px; padding: 0 8px; font-size: 12.5px; color: var(--quiet); }
+.lgroup b { font-weight: 500; color: var(--soft); }
+.lrow {
+  all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%;
+  display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; column-gap: 12px; align-items: center;
+  min-height: 36px; padding: 7px 8px; border-radius: 8px; font-size: 14px; line-height: 20px; color: var(--ink);
+}
+.lrow:hover, .lrow.on { background: var(--well); }
+.lrow:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.lrow > .lsq { justify-self: center; }
+.lrow .lt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lrow .lt.wrap { white-space: normal; }
+.lrow .lt i { font-style: normal; color: var(--quiet); margin-right: 7px; }
+.lrow .lt code, .lrow small code { font-family: var(--mono); font-size: 0.9em; font-weight: 500; }
+.lrow small { grid-column: 2 / 4; display: block; margin-top: 1px; font-size: 12.5px; line-height: 18px; color: var(--quiet); }
+.lrow .lm { font-size: 12.5px; color: var(--quiet); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lrow .lact { display: none; }
+.lrow:hover .lact, .lrow:focus-within .lact, .lrow.pointed .lact { display: inline-flex; }
+.lrow:hover .lact + .lm, .lrow:focus-within .lact + .lm, .lrow.pointed .lact + .lm { display: none; }
+.lrow.pointed { background: var(--well); }
+.lrow.top { align-items: start; }
+.lrow.top > .lsq { margin-top: 6px; }
+.ladd { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: 14px minmax(0, 1fr); column-gap: 12px; align-items: center; min-height: 34px; padding: 6px 8px; border-radius: 8px; font-size: 14px; color: var(--quiet); }
+.ladd::before { content: '+'; justify-self: center; font-size: 16px; line-height: 1; color: var(--placeholder); }
+.ladd:hover { background: var(--well); color: var(--ink); }
+.ladd:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }

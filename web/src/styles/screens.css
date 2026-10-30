@@ -1,0 +1,183 @@
+/* The pages around the reader (boards O-1
+   to O-9): the first run, the start page, adding to the shared graph, and
+   settings. */
+
+/* ---------------------------------------------------------------- first run (O-1) */
+.ob { display: flex; align-items: stretch; min-height: calc(100vh - 54px); }
+.ob-l { flex: none; width: min(620px, 100%); padding: 56px 64px 40px 72px; }
+/* Set up, on its own: the column in the middle. */
+.ob.solo { justify-content: center; }
+.ob.solo .ob-l { padding: 72px 24px 64px; }
+.ob-l h1 { margin: 0; font-size: 34px; line-height: 42px; font-weight: 600; letter-spacing: -0.022em; }
+.ob-l .lede { margin: 12px 0 0; font-size: 17px; line-height: 27px; color: var(--ink-2); }
+.steps { list-style: none; margin: 34px 0 0; padding: 0; display: flex; flex-direction: column; gap: 22px; }
+.steps > li { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 14px; }
+.steps .n { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: var(--well); font-size: 13px; font-weight: 600; color: var(--quiet); }
+.steps .now .n { background: var(--white); color: var(--ink); box-shadow: 0 0 0 1px var(--edge), 0 1px 2px rgba(var(--shadow), 0.08); }
+.steps h2 { margin: 1px 0 0; font-size: 16px; line-height: 22px; font-weight: 600; }
+.steps .later h2 { color: var(--quiet); font-weight: 500; }
+.steps p { margin: 4px 0 0; font-size: 14.5px; line-height: 22px; color: var(--soft); }
+.steps .track, .steps .well { margin-top: 12px; }
+.wait { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; font-size: 14px; color: var(--soft); }
+.wait i { width: 8px; height: 8px; border-radius: 50%; background: var(--sq-grey); box-shadow: 0 0 0 4px var(--rule); animation: breathe 1.6s ease-in-out infinite; }
+.ob-r { flex: 1; min-width: 0; padding: 44px 40px 40px 0; display: flex; flex-direction: column; }
+.plbl { margin: 0 0 10px 2px; font-size: 13px; color: var(--quiet); }
+.peek { flex: 1; min-height: 520px; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 1px var(--rule), 0 30px 60px rgba(var(--shadow), 0.08); position: relative; }
+.peek iframe { position: absolute; left: 0; top: 0; width: 161%; height: 161%; border: 0; transform: scale(0.62); transform-origin: 0 0; background: var(--page); }
+
+/* ---------------------------------------------------------------- the start page (O-2) */
+.start { max-width: 680px; margin: 72px auto 0; padding: 0 16px 80px; }
+.start h1 { margin: 0; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.022em; }
+.start .lede { margin: 12px 0 12px; font-size: 17px; line-height: 27px; color: var(--soft); }
+.start .well.words { font-size: 20px; line-height: 30px; font-weight: 500; min-height: 56px; }
+.start .or { margin: 14px 0 0; font-size: 14.5px; line-height: 22px; color: var(--soft); }
+/* Set up (board Setup-2): what the install did, ticked; the shared graph; then what to say. */
+.setup { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.setup li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; column-gap: 10px; align-items: baseline; font-size: 15.5px; line-height: 23px; color: var(--ink-2); }
+.setup li .t { color: var(--added-ink); font-weight: 700; }
+.setup li.asked .t { color: var(--quiet); font-weight: 500; }
+.setup li > .row { margin: 0; flex-wrap: nowrap; gap: 14px; }
+.setup li:not(.done):not(.asked) .t::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 3px; box-shadow: inset 0 0 0 1.5px var(--edge); }
+.setup li small { display: block; font-size: 13.5px; line-height: 20px; color: var(--quiet); }
+.joinq { margin: 30px 0 0; padding: 22px 24px; border-radius: 14px; background: var(--white); box-shadow: 0 0 0 1px var(--rule), 0 1px 2px rgba(var(--shadow), 0.05), 0 10px 28px rgba(var(--shadow), 0.06); }
+.joinq h2 { margin: 0; font-size: 19px; line-height: 26px; font-weight: 600; }
+.joinq > p { margin: 8px 0 0; font-size: 15px; line-height: 23px; color: var(--ink-2); }
+.joinq .row { margin-top: 16px; }
+.joinq .fine { margin-top: 14px; font-size: 13.5px; line-height: 20px; color: var(--quiet); }
+.joinq .fine .quiet-link { font-size: inherit; color: var(--soft); text-decoration: underline; text-decoration-color: var(--edge); text-underline-offset: 3px; }
+.then { margin: 28px 0 0; }
+.then > p { margin: 0 0 10px; font-size: 15.5px; line-height: 23px; color: var(--soft); }
+.then > p b { color: var(--ink); font-weight: 600; }
+.hookq { margin: 40px 0 0; padding: 20px 0 0; border-top: 1px solid var(--rule); }
+.hookq h2 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; }
+.hookq p { margin: 6px 0 0; font-size: 14.5px; line-height: 22px; color: var(--soft); }
+.hook-change { margin: 12px 0 0; padding: 10px 14px; border-radius: 9px; background: var(--well); font: 12.5px/20px var(--mono); color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 16px 0 0; }
+/* Opened lately (L-3): a row each, what's ready in it under it, and how much is still on the list. */
+.recent { display: flex; flex-direction: column; margin: 44px -8px 0; }
+.recent .lgroup { margin-top: 0; }
+.recent-one { padding: 9px 8px; border-radius: 8px; }
+.recent-one:hover, .recent-one:focus-within { background: var(--well); }
+.recent-one > a { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: baseline; color: var(--ink); text-decoration: none; }
+.recent-one > a:hover { text-decoration: none; }
+.recent-one > a:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
+.recent-one > a .what { min-width: 0; font-size: 15px; line-height: 22px; font-weight: 500; overflow-wrap: anywhere; }
+.recent-one > a .when { font-size: 12.5px; color: var(--quiet); white-space: nowrap; }
+.recent-one > a small { grid-column: 1; margin-top: 1px; font: 12px/18px var(--mono); color: var(--quiet); overflow-wrap: anywhere; }
+/* What's ready in it: on a line under it, each a link of its own; how much is left, at the right. */
+.recent-ready { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 6px 0 0; font-size: 13px; line-height: 20px; color: var(--quiet); }
+.recent-ready a { display: inline-flex; align-items: center; gap: 7px; font-weight: 500; color: var(--ink); text-decoration: none; }
+.recent-ready a:hover { text-decoration: underline; text-decoration-color: var(--mute); text-underline-offset: 3px; }
+.recent-ready .left { margin-left: auto; }
+
+/* ---------------------------------------------------------------- adding (O-4, O-5) */
+.adding { max-width: 640px; margin: 72px auto 0; padding: 0 16px 80px; }
+.adding h1 { margin: 0; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.022em; }
+.adding .lede { margin: 10px 0 0; font-size: 16px; line-height: 25px; color: var(--soft); }
+.points { list-style: none; margin: 22px 0 0; padding: 0; }
+.points li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; padding: 6px 0; font-size: 15px; line-height: 23px; color: var(--ink-2); }
+.points li::before { content: ''; width: 8px; height: 1.5px; margin-top: 11px; background: var(--sq-grey); }
+.tick { display: flex; align-items: flex-start; gap: 12px; margin: 22px 0 0; font-size: 15px; line-height: 22px; color: var(--ink); cursor: pointer; }
+.tick input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--ink); }
+.tick small { display: block; font-size: 13px; color: var(--quiet); }
+.terms-full { margin: 18px 0 0; padding: 14px 16px; max-height: 360px; overflow: auto; white-space: pre-wrap; font: 13px/20px var(--sans); color: var(--ink-2); background: var(--well-2); border-radius: 9px; }
+.addq { margin: 30px 0 0; padding: 20px 0 0; border-top: 1px solid var(--rule); }
+.addq h3 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; }
+.addq p { margin: 6px 0 0; font-size: 14.5px; line-height: 22px; color: var(--soft); }
+.addq p.what { margin-top: 10px; font-size: 13.5px; line-height: 21px; color: var(--quiet); }
+
+/* ---------------------------------------------------------------- settings (O-6 to O-9, N-6) */
+.set { display: flex; min-height: calc(100vh - 54px); }
+.set > nav { flex: none; width: 240px; padding: 34px 0 0 28px; display: flex; flex-direction: column; gap: 2px; }
+.set > nav a { min-height: 34px; display: flex; align-items: center; padding: 6px 10px; box-sizing: border-box; border-radius: 8px; font-size: 14px; line-height: 20px; color: var(--soft); text-decoration: none; }
+.set > nav a:hover { color: var(--ink); text-decoration: none; }
+.set > nav a.on { background: var(--well); color: var(--ink); }
+.set > nav a:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.set-body { flex: 1; min-width: 0; max-width: 820px; padding: 34px 28px 80px 40px; }
+.set-body > h2 { margin: 0; font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.015em; }
+.set-body .d { margin: 6px 0 10px; font-size: 15px; line-height: 23px; color: var(--soft); max-width: 640px; }
+/* A setting (L-9): a row, its line under it, the choice on the right; no rules between. */
+.set-body .lgroup { margin: 24px 0 2px; padding: 0; }
+.opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; row-gap: 10px; padding: 14px 0; }
+.opt.stack { grid-template-columns: minmax(0, 1fr); }
+.opt b { display: block; font-size: 14.5px; font-weight: 500; color: var(--ink); }
+.opt > div > span { display: block; margin-top: 3px; font-size: 13px; line-height: 19px; color: var(--quiet); max-width: 620px; }
+/* Why nothing more goes to the shared graph today, and when it does. */
+.opt > div > span.held { margin-top: 8px; color: var(--ink-2); }
+.opt > .track { justify-content: flex-end; }
+.opt .mono { color: var(--ink-2); overflow-wrap: anywhere; }
+.opt .row { margin: 0; }
+.ob-opt { margin-top: 28px; }
+.big3 { display: flex; flex-wrap: wrap; gap: 14px 40px; }
+.big3 div { display: flex; flex-direction: column; }
+.big3 b { font-size: 26px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.big3 span { font-size: 13px; color: var(--quiet); }
+.who-gets { list-style: none; margin: 8px 0 10px; padding: 0; }
+.who-gets li { padding: 7px 0; font-size: 14.5px; line-height: 22px; color: var(--soft); }
+.who-gets b { font-weight: 500; color: var(--ink); }
+.report-d { margin: 0 0 10px; font-size: 13.5px; color: var(--soft); }
+.report-d summary, .problems summary { cursor: pointer; }
+.report { margin: 8px 0 0; padding: 12px 14px; max-height: 320px; overflow: auto; background: var(--well-2); border-radius: 8px; font: 12px/18px var(--mono); color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.setting { padding: 14px 0; border-top: 1px solid var(--rule); }
+.setting .h2 { margin: 0; font-size: 14.5px; line-height: 22px; font-weight: 500; }
+.setting .what { margin: 2px 0 10px; font-size: 13.5px; line-height: 20px; color: var(--quiet); }
+.setting .p { margin: 0; font-size: 14px; }
+.problems { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; font-size: 14px; }
+.problems details { margin-top: 6px; color: var(--soft); }
+
+@media (max-width: 760px) {
+  .ob { flex-direction: column; }
+  .ob-l { width: 100%; padding: 32px 16px 24px; }
+  .ob-l h1 { font-size: 26px; line-height: 33px; }
+  .ob-r { padding: 0 16px 40px; }
+  .set { flex-direction: column; }
+  .set > nav { width: auto; padding: 16px 16px 0; flex-direction: row; flex-wrap: wrap; }
+  .set-body { padding: 20px 16px 60px; }
+  .opt { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .opt > .track { justify-content: flex-start; }
+}
+
+/* ---------------------------------------------------------------- the states gallery (development only) */
+.states { padding: 32px 28px 80px; }
+.states header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-bottom: 28px; }
+.states h1 { margin: 0; font-size: 24px; font-weight: 600; }
+.states header p { margin: 0; flex: 1; font-size: 14px; color: var(--quiet); }
+.state { margin: 0 0 40px; }
+.state h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.state h2 code { font: 12px var(--mono); color: var(--quiet); }
+.pair { display: flex; flex-wrap: wrap; gap: 16px; }
+.shot { position: relative; overflow: hidden; border-radius: 8px; box-shadow: 0 0 0 1px var(--rule); }
+.shot iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; }
+.strings { columns: 3 240px; margin: 8px 0 0; padding: 0 0 0 18px; font-size: 13px; line-height: 20px; color: var(--soft); }
+
+/* What kelve marks for you (boards U-1, U-2): in settings, and beside the work. */
+.marks-edit .opt b { text-transform: none; }
+.marks-area b { font-weight: 500; }
+.marks-area .row { display: inline-flex; align-items: center; gap: 14px; }
+.marks-add { display: grid; grid-template-columns: 14px minmax(0, 1fr); column-gap: 12px; align-items: center; min-height: 36px; padding: 0 8px; border-radius: 8px; }
+.marks-add > span { justify-self: center; font-size: 16px; line-height: 1; color: var(--mute); }
+.marks-add textarea { all: unset; min-width: 0; font-size: 14px; color: var(--ink); resize: none; field-sizing: content; white-space: nowrap; overflow: hidden; }
+.marks-add textarea::placeholder { color: var(--quiet); }
+.marks-add:focus-within { background: var(--well); }
+/* Written in place, as a list's row: no box; pointed at or typed in, softly filled. */
+.marks-in { display: block; width: calc(100% + 16px); box-sizing: border-box; margin: 4px -8px 0; padding: 6px 8px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 14px; line-height: 21px; color: var(--ink); resize: none; outline: none; field-sizing: content; }
+.marks-in::placeholder { color: var(--quiet); }
+.marks-in:hover, .marks-in:focus { background: var(--well); }
+.marked { padding: 22px 24px 40px 26px; }
+.marked-who { margin: 6px 8px 0; font-size: 13px; line-height: 19px; color: var(--quiet); }
+.marked-who .mono, .set-body .d .mono { font-family: var(--mono); font-size: 0.92em; }
+.marked-d { margin: 10px 8px 0; font-size: 14px; line-height: 21px; color: var(--soft); }
+.marked .marks-edit .opt { padding: 10px 8px; }
+.marked-link { text-decoration: none; }
+.marked-link .lt { color: var(--soft); }
+.marked-for { all: unset; cursor: pointer; margin-left: auto; padding: 2px 7px; border-radius: 6px; font-size: 12.5px; font-weight: 400; color: var(--quiet); white-space: nowrap; }
+.marked-for:hover { background: var(--well); color: var(--ink); }
+.marked-for:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.marked .lhead .quiet-link { margin-left: auto; }
+/* Lessons in settings: as the reader lists them, each with where it is. */
+.set-rules { margin: 4px 0 0; padding: 0; list-style: none; }
+.set-rules li { position: relative; padding: 6px 0 6px 22px; font-size: 14.5px; line-height: 23px; color: var(--ink-2); max-width: 680px; }
+.set-rules li::before { content: ''; position: absolute; left: 3px; top: 17px; width: 8px; height: 1.5px; background: var(--edge); }
+.set-rules .mono { font-family: var(--mono); font-size: 0.9em; font-weight: 500; }
+.set-rules .lq { display: block; font-size: 13px; line-height: 19px; color: var(--quiet); }
+.set-rules .lq .plink { color: var(--soft); text-decoration: underline; text-decoration-color: var(--edge); text-underline-offset: 3px; }

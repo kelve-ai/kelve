@@ -1,0 +1,20 @@
+{
+ "order": [
+  { "path": "src/retry.rs", "why": "The change itself: how long to wait before trying again." },
+  { "path": "migrations/0002_request_keys.sql", "why": "The key that makes trying again safe." },
+  { "path": "src/api/v1/charges.rs", "why": "Where each charge gets its key." },
+  { "path": "src/api/v1/refunds.rs", "why": "The same, for refunds." },
+  { "path": "src/bank/mod.rs", "why": "The retries wrapped round every call to the bank." },
+  { "path": "tests/retry.rs", "why": "What the retries promise now, as tests." },
+  { "path": "docs/retries.md", "why": "The same, written for people." }
+ ],
+ "folders": [
+  { "path": "src", "line": "The service: what shops ask, the bank, and the books." },
+  { "path": "src/api", "line": "What shops call, by version, so old callers keep working." },
+  { "path": "src/api/v1", "line": "What shops can ask: charges and refunds." },
+  { "path": "src/bank", "line": "Talking to the bank, and nothing else." },
+  { "path": "migrations", "line": "The database's shape, change by change." },
+  { "path": "docs", "line": "How retries work, for people." },
+  { "path": "tests", "line": "What it promises, checked." }
+ ]
+}

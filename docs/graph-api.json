@@ -1,0 +1,4947 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "kelve’s shared graph",
+    "description": "The shared knowledge graph every kelve reads ideas and entries from, and adds them to. It holds general knowledge only: never anyone's work. Everything in it is public domain, under CC0 1.0, the graph as a database included; this API's own code is Apache-2.0. Reading and adding are for someone signed in, with GitHub or Google: a person's kelve gets an account key by signing in, has the graph sign a batch of reading tokens with it, blind, and spends one on each read: the graph knows a token is one it signed, never whose (Privacy Pass's privately verifiable tokens, RFC 9578, on the VOPRF of RFC 9497). Errors are RFC 9457 problem details.",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    },
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://graph.kelve.ai"
+    }
+  ],
+  "paths": {
+    "/v1": {
+      "get": {
+        "tags": [],
+        "summary": "What the graph is.",
+        "operationId": "manifest",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Manifest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account": {
+      "get": {
+        "tags": [],
+        "summary": "The account the key is for: the name the graph made up for them, and\nthe version of the terms they agreed to.",
+        "operationId": "account",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [],
+        "summary": "Deletes the account the key is for: the graph forgets who they are,\nstops all their keys, withdraws ideas only they added and rejects their\nwaiting entries. What others can already read stays, under the handle\nthe graph made up.",
+        "operationId": "delete_account",
+        "responses": {
+          "200": {
+            "description": "Deleted."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a person's account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/account/added": {
+      "get": {
+        "tags": [],
+        "summary": "What the account has added, and how many times its entries were served.",
+        "operationId": "added",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Added"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/account/tokens": {
+      "post": {
+        "tags": [],
+        "summary": "Signs a batch of blinded reading tokens for the account, at most 100, as\nmany as it may have today, with a proof they were signed with the key\nshown everyone. The graph never sees the tokens, so it can't tell later\nwhose one is.",
+        "operationId": "tokens",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenAsk"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenGrant"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "As many as the account may have today: Retry-After says when there are more.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/asks": {
+      "post": {
+        "tags": [],
+        "summary": "A reader's word that an entry didn't help them understand: it needs an\nexample, it's too hard, or something's missing. Kept with the idea, with\nno account and no address, until a revision answers it.",
+        "operationId": "asks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Ask"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Kept, with the idea."
+          },
+          "422": {
+            "description": "Not an ask the graph can take.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/changes": {
+      "get": {
+        "tags": [],
+        "summary": "What became public, in order, for mirrors.",
+        "operationId": "changes",
+        "parameters": [
+          {
+            "name": "after",
+            "in": "query",
+            "description": "The `next` of the last page read.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Feed"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/changesets": {
+      "post": {
+        "tags": [],
+        "summary": "Adds ideas and entries, and proposes relations and taking them back.\nEach change is taken or refused on its own; what's refused comes back in\n`skipped`, with why. A relation must have a why: one plain sentence,\nat most 200 characters, saying what one idea takes from the other. \"Rests\non\" is for what someone must understand first, at most three an idea,\nmost needed first; the problem an idea exists for is \"answers\"; a broader\ncategory is \"kind of\". Relations are reviewed before they're served. The\nsame Idempotency-Key always gets the first answer, so a retry is applied\nonce.",
+        "operationId": "changeset",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Changeset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Applied"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No key, or one the graph doesn't know.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Over a limit: Retry-After says when to try again, in seconds. Titled \"Too many requests\", it's a few seconds. Titled \"Enough for today\", the account has added as many ideas, entries or relations as it may in a day, as the detail says, and \"as a new account\" while it's a new account's limit: Retry-After is the seconds to midnight UTC, when it resets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not taking changes for now: Retry-After says when to try again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/counts": {
+      "post": {
+        "tags": [],
+        "summary": "A week's counts, which a person chose to share: with the install's random\nID, and never an account, a key or a reading token.",
+        "operationId": "counts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Counts"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Taken."
+          },
+          "422": {
+            "description": "Not counts the graph keeps.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/entries/{id}": {
+      "get": {
+        "tags": [],
+        "summary": "An idea's current entry: a redirect to its revision.",
+        "operationId": "entry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "Location is the current revision."
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No entry yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/entries/{id}/revisions/{revision}": {
+      "get": {
+        "tags": [],
+        "summary": "One revision of an entry. It never changes, and is cached for a year.",
+        "operationId": "revision",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/flags": {
+      "post": {
+        "tags": [],
+        "summary": "A reader's word that an entry, a link in it, or a relation is wrong.\nThe graph's models check it again; no account is needed.",
+        "operationId": "flags",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Flag"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Taken, for the reviewers."
+          },
+          "422": {
+            "description": "Not a flag the graph can take.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/follows": {
+      "post": {
+        "tags": [],
+        "summary": "Relations readers followed, from one idea's entry to an idea it relates\nto: one more for each. No account, and nothing about who sent them,\nwhich project or file, or when. The graph orders each idea's relations,\nwithin each kind, by how often they're followed.",
+        "operationId": "follows",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Follows"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Counted."
+          },
+          "422": {
+            "description": "Too many in one batch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/foundations": {
+      "get": {
+        "tags": [],
+        "summary": "The ground floor: every idea that's a first principle.",
+        "operationId": "foundations",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Foundations"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/ideas": {
+      "get": {
+        "tags": [],
+        "summary": "Live ideas by ID, following merges.",
+        "operationId": "ideas",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Up to 100 IDs, separated by commas.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ideas"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/ideas/{id}": {
+      "get": {
+        "tags": [],
+        "summary": "One idea.",
+        "operationId": "idea",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Idea"
+                }
+              }
+            }
+          },
+          "308": {
+            "description": "Merged: Location says into which."
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Withdrawn.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/instructions/{name}": {
+      "get": {
+        "tags": [],
+        "summary": "What a person's agent is told to do for one kind of job: `read`,\n`choose`, `builtOn`, `relate`, `write`, `fix`, `extend`,\n`folders`, `note`, `plainly`, `plainlyFolder` or `plainlyChange`. The\ngraph serves them, so they improve for everyone at once.",
+        "operationId": "instructions",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instructions"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/lessons": {
+      "get": {
+        "tags": [],
+        "summary": "The live lessons about some ideas, best first: what people's agents\nlearned using them. Each with what came of it for projects besides its\nauthor's, and how far it's confirmed.",
+        "operationId": "lessons",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Up to 100 idea IDs, separated by commas.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lessons"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [],
+        "summary": "Adds a lesson. It's checked in code at once, then by the graph's\nmodels; it's live, not confirmed yet, once they pass it. One that says\nwhat a lesson already there says isn't kept again: it's answered as\n`same`, and counted as confirming that one. The same Idempotency-Key\nalways gets the first answer.",
+        "operationId": "add_lesson",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Lesson"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No key, or one the graph doesn't know.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The lesson isn't one the graph takes, as the detail says.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Over a limit, as for changesets: \"as many lessons\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/lessons/outcomes": {
+      "post": {
+        "tags": [],
+        "summary": "What came of lessons an agent was given: held, didn't, or not known,\nand what showed it. Counted once a lesson for each account, and never\nfor its author's. Nothing else goes with it: never the problem, the\ncommand or the file.",
+        "operationId": "outcomes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Outcomes"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Counted."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Too many in one batch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/lessons/{id}": {
+      "get": {
+        "tags": [],
+        "summary": "One lesson: live or the same as one, to anyone; in any other state,\nonly to its author's key. Anyone else is told there's no such lesson.",
+        "operationId": "lesson",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/match": {
+      "post": {
+        "tags": [],
+        "summary": "The ideas each name may be, in the shape of the W3C Reconciliation API.\nNames go only in the body, so they reach no log.",
+        "operationId": "matches",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Candidates for each query, by the asker's own keys.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/Candidates"
+                  },
+                  "propertyNames": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many lookups: wait as Retry-After says.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/names/{prefix}": {
+      "get": {
+        "tags": [],
+        "summary": "One bucket of the name index: every live idea's name whose hash starts\nwith `prefix`, keyed by the whole hash. A kelve finds its own name in\nit, so the graph never learns which name was asked.",
+        "operationId": "names",
+        "parameters": [
+          {
+            "name": "prefix",
+            "in": "path",
+            "description": "The first four hex characters of the SHA-256 of the name, as names are compared.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bucket"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/relations": {
+      "get": {
+        "tags": [],
+        "summary": "How ideas relate, both ways: for each, what it rests on (most needed\nfirst), what it's a kind of, what it answers, its alternatives, what it's\nused with, what rests on it, and the first principles it comes down to.\nOnly live and settled relations are served.",
+        "operationId": "relations",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Up to 50 idea IDs, separated by commas.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Relations"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/relations/{id}/up": {
+      "get": {
+        "tags": [],
+        "summary": "What rests on an idea, a page at a time, most read first.",
+        "operationId": "up",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "description": "The last page's `next`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "At most 200; 50 if not said.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in: read with a reading token, or an account’s key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          },
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/revisions/{revision}/check": {
+      "get": {
+        "tags": [],
+        "summary": "How the graph's check of an entry stands, for the account that wrote\nit: claim by claim, as each is checked against its pages.",
+        "operationId": "checking",
+        "parameters": [
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Checking"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/signin": {
+      "get": {
+        "tags": [],
+        "summary": "A person's kelve starts signing in: the browser goes on to GitHub, or\nGoogle, and comes back to `redirect_uri` with a one-time code and\n`state`. Either only tells the graph who someone is: it keeps a number\nfor the account (GitHub's id, Google's `sub`), never a name or email.",
+        "operationId": "sign_in",
+        "parameters": [
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "description": "http, to 127.0.0.1, [::1] or localhost, on a port (RFC 8252).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "description": "The S256 PKCE challenge.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "description": "S256.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "github, the default, or google.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "On to GitHub, or Google."
+          },
+          "400": {
+            "description": "A page saying what's wrong."
+          },
+          "503": {
+            "description": "That way of signing in isn't set up on this graph: a page saying so."
+          }
+        }
+      },
+      "delete": {
+        "tags": [],
+        "summary": "Signs out: the key it's sent with stops working.",
+        "operationId": "sign_out",
+        "responses": {
+          "204": {}
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/signin/github": {
+      "get": {
+        "tags": [],
+        "summary": "Where GitHub sends the person back.",
+        "operationId": "signed_in_github",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Back to the person's kelve, with `code` and `state`, or `error=access_denied`."
+          },
+          "400": {
+            "description": "A page saying what's wrong."
+          }
+        }
+      }
+    },
+    "/v1/signin/google": {
+      "get": {
+        "tags": [],
+        "summary": "Where Google sends the browser back to, after someone signs in there.",
+        "operationId": "signed_in_google",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Back to kelve's redirect_uri, with a one-time code and state."
+          },
+          "400": {
+            "description": "A page saying what's wrong."
+          }
+        }
+      }
+    },
+    "/v1/signin/token": {
+      "post": {
+        "tags": [],
+        "summary": "Exchanges a sign-in's one-time code, with its PKCE verifier, for a key\nof this kelve's own. A code is taken once, within two minutes.",
+        "operationId": "sign_in_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInCode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/terms": {
+      "get": {
+        "tags": [],
+        "summary": "What a person agrees to before anything they add goes into the graph.",
+        "operationId": "terms",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Terms"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [],
+        "summary": "Agrees to the terms, by their version. The graph takes nothing from an\naccount that hasn't agreed to the terms as they are now.",
+        "operationId": "agree",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Agree"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Not the terms as they are now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v1/tokens/key": {
+      "get": {
+        "tags": [],
+        "summary": "The key the graph signs reading tokens with, the same for everyone:\nasked for with no account, so it can't be one account's alone.",
+        "operationId": "token_key",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenKey"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "type": "object",
+        "description": "The person's account, as the graph knows it.",
+        "required": [
+          "handle"
+        ],
+        "properties": {
+          "agreed": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The version of the terms they agreed to, if any."
+          },
+          "handle": {
+            "type": "string",
+            "description": "The name the graph made up for them."
+          }
+        }
+      },
+      "Added": {
+        "type": "object",
+        "description": "What an account has added, and how often others read it.",
+        "required": [
+          "entries",
+          "relations",
+          "reads"
+        ],
+        "properties": {
+          "entries": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Entries it added that the graph serves.",
+            "minimum": 0
+          },
+          "reads": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many times its entries were served: close to one a reader,\nsince each kelve keeps an entry once it has it.",
+            "minimum": 0
+          },
+          "relations": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Ways ideas relate it added that the graph serves.",
+            "minimum": 0
+          }
+        }
+      },
+      "Agree": {
+        "type": "object",
+        "description": "Agreeing to a version of the terms.",
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Applied": {
+        "type": "object",
+        "description": "What a changeset did.",
+        "required": [
+          "id",
+          "ideas"
+        ],
+        "properties": {
+          "entries": {
+            "type": "object",
+            "description": "Each entry written, by idea ID: its new revision. An entry stays\npending, seen only by the account that wrote it, until the graph's\nown checks pass.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "ideas": {
+            "type": "object",
+            "description": "The ID each `ref` became.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "relations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelationTaken"
+            },
+            "description": "Each relation taken, and where it stands: proposed, until it's\nreviewed."
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What it left out, and why, in sentences."
+          }
+        }
+      },
+      "Ask": {
+        "type": "object",
+        "description": "A reader's word that an entry didn't help them understand, and what it\nneeds. Like a flag, it carries nothing of who sent it, and nothing of their\nwork: the revision they read, and one of three words.",
+        "required": [
+          "revision",
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AskKind",
+            "description": "`example`, `tooHard` or `missing`."
+          },
+          "revision": {
+            "type": "string",
+            "description": "The entry's revision, as the reader saw it."
+          }
+        }
+      },
+      "AskKind": {
+        "type": "string",
+        "description": "What readers, or the graph's own grade, ask an entry to add.",
+        "enum": [
+          "example",
+          "tooHard",
+          "missing",
+          "mistake",
+          "lookAlike"
+        ]
+      },
+      "Axis": {
+        "type": "string",
+        "description": "What a condition is about.",
+        "enum": [
+          "version",
+          "edition",
+          "jurisdiction",
+          "period",
+          "locale",
+          "platform",
+          "setting"
+        ]
+      },
+      "Backing": {
+        "type": "object",
+        "description": "A public page that backs a lesson, and the line on it that does.",
+        "required": [
+          "url",
+          "quote"
+        ],
+        "properties": {
+          "quote": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "Bar": {
+        "type": "object",
+        "required": [
+          "label",
+          "value",
+          "display",
+          "mark",
+          "quiet"
+        ],
+        "properties": {
+          "display": {
+            "type": "string",
+            "description": "The number as shown: \"123 of 184\"."
+          },
+          "label": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean"
+          },
+          "quiet": {
+            "type": "boolean"
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "From 0 to 100, how long the bar is."
+          }
+        }
+      },
+      "Block": {
+        "type": "object",
+        "description": "One block of an entry: one of kelve's components.",
+        "required": [
+          "id",
+          "body"
+        ],
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Body"
+          },
+          "fold": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Fold",
+                "description": "The fold it's in, under its part, closed until the reader opens it.\nNone for a block that's always shown. Blocks in a row with the same\npart and fold are one fold."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique within its entry, and kept from one revision to the next:\n`b1`, `b2`. A block added later gets an id no block had."
+          },
+          "part": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Part",
+                "description": "The part of the entry it's in. None in an entry written before\nentries had parts."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Body": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "A paragraph of two or three sentences. `quiet` for an aside.",
+            "required": [
+              "text",
+              "quiet",
+              "type"
+            ],
+            "properties": {
+              "quiet": {
+                "type": "boolean"
+              },
+              "text": {
+                "$ref": "#/components/schemas/String"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "paragraph"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A heading for a longer entry: a statement, never a label.",
+            "required": [
+              "text",
+              "type"
+            ],
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "heading"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Bullets, only where something is a list.",
+            "required": [
+              "items",
+              "type"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/String"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "list"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Lines of the real thing: a change, a file, a message, a clause.\nkelve copies the text in from what it heard; the model only says\nwhich lines and which to mark.",
+            "required": [
+              "from",
+              "lines",
+              "type"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "lang": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "What it's written in, as kelve tells from what it quoted: a\nlanguage in `code::LANGUAGES`, `prose`, or none for plain output."
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Line"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "excerpt"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A system, a process, a cycle, a timeline: drawn by kelve. With\nsteps, it plays through them once and rests on the last.",
+            "required": [
+              "layout",
+              "nodes",
+              "edges",
+              "steps",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "describe": {
+                "type": "string",
+                "description": "The diagram in words, for anyone who can't see it, and shown\nunder it."
+              },
+              "edges": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Edge"
+                }
+              },
+              "layout": {
+                "$ref": "#/components/schemas/Layout"
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Node"
+                }
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Frame"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "diagram"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Your own numbers, to move: a formula kelve knows, with inputs.",
+            "required": [
+              "formula",
+              "inputs",
+              "output",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "describe": {
+                "type": "string"
+              },
+              "formula": {
+                "$ref": "#/components/schemas/Formula"
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Input"
+                }
+              },
+              "output": {
+                "type": "string",
+                "description": "What the result is, in words: \"Monthly payment\"."
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "explorable"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Bars, for a few numbers side by side.",
+            "required": [
+              "rows",
+              "type"
+            ],
+            "properties": {
+              "caption": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Bar"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "bars"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A small table. `marks` are `[row, column]` cells kelve's red marks.",
+            "required": [
+              "head",
+              "rows",
+              "marks",
+              "type"
+            ],
+            "properties": {
+              "head": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 0
+                  }
+                }
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "table"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Two approaches, or two options, side by side.",
+            "required": [
+              "left",
+              "right",
+              "type"
+            ],
+            "properties": {
+              "left": {
+                "$ref": "#/components/schemas/Side"
+              },
+              "right": {
+                "$ref": "#/components/schemas/Side"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "compare"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Short lines, each with a square: red for the one that matters.",
+            "required": [
+              "rows",
+              "type"
+            ],
+            "properties": {
+              "rows": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Square"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "squares"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "When things happened.",
+            "required": [
+              "rows",
+              "type"
+            ],
+            "properties": {
+              "rows": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Moment"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "timeline"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Whoever you'd have to convince, and what they'd say.",
+            "required": [
+              "lines",
+              "type"
+            ],
+            "properties": {
+              "lines": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Said"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "conversation"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "\"So if anyone asks…\": one sentence you can use.",
+            "required": [
+              "lead",
+              "text",
+              "type"
+            ],
+            "properties": {
+              "lead": {
+                "type": "string"
+              },
+              "text": {
+                "$ref": "#/components/schemas/String"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "answer"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Who says what to whom, in order: people, programs or parts, each\nmessage an arrow from one to another, drawn in turn.",
+            "required": [
+              "actors",
+              "messages",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "actors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "describe": {
+                "type": "string"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SequenceMessage"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "sequence"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A process to walk through a stage at a time, at the reader's pace.",
+            "required": [
+              "cards",
+              "type"
+            ],
+            "properties": {
+              "cards": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StepCard"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "steps"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Things placed on two axes, each from 0 to 100.",
+            "required": [
+              "x",
+              "y",
+              "points",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "describe": {
+                "type": "string"
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QuadrantPoint"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "quadrant"
+                ]
+              },
+              "x": {
+                "$ref": "#/components/schemas/QuadrantAxis"
+              },
+              "y": {
+                "$ref": "#/components/schemas/QuadrantAxis"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Where things sit between two ends, from 0 to 100.",
+            "required": [
+              "low",
+              "high",
+              "points",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "describe": {
+                "type": "string"
+              },
+              "high": {
+                "type": "string"
+              },
+              "low": {
+                "type": "string"
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SpectrumPoint"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "spectrum"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A line or two over time, drawn as you reach it.",
+            "required": [
+              "labels",
+              "series",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "describe": {
+                "type": "string"
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Along the bottom, one for each value: \"2018\", \"2020\"."
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TrendSeries"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "trend"
+                ]
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A decision that branches, from one question at the top.",
+            "required": [
+              "branches",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "branches": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TreeBranch"
+                }
+              },
+              "describe": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "tree"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Two versions of a thing, to drag between.",
+            "required": [
+              "before",
+              "after",
+              "describe",
+              "type"
+            ],
+            "properties": {
+              "after": {
+                "$ref": "#/components/schemas/Version"
+              },
+              "before": {
+                "$ref": "#/components/schemas/Version"
+              },
+              "describe": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "beforeAfter"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "One number, what it means, and where it's from.",
+            "required": [
+              "figure",
+              "text",
+              "type"
+            ],
+            "properties": {
+              "figure": {
+                "type": "string",
+                "description": "As shown: \"1 in 3\", \"62%\", \"£4,200\"."
+              },
+              "share": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "format": "double",
+                "description": "How much of the whole it is, from 0 to 100, drawn as a bar."
+              },
+              "text": {
+                "$ref": "#/components/schemas/String"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "number"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Lines of the real thing, with notes pinned to the ones that matter.\nkelve copies the lines in, as for an excerpt.",
+            "required": [
+              "from",
+              "lines",
+              "notes",
+              "type"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "lang": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Line"
+                }
+              },
+              "notes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CodeNote"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "annotated"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "How many make it through each stage, from the first.",
+            "required": [
+              "stages",
+              "type"
+            ],
+            "properties": {
+              "caption": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "stages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FunnelStage"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "funnel"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "What a block is."
+      },
+      "Bucket": {
+        "type": "object",
+        "description": "One bucket of the name index: every live idea's name whose hash starts\nwith the bucket's prefix, keyed by the whole hash (`name_hash`), each\nwith the ideas that go by it. A kelve asks for a bucket by prefix and\nfinds its own name in it, so the graph never learns which name it was\nafter, as Have I Been Pwned does for passwords.",
+        "required": [
+          "names"
+        ],
+        "properties": {
+          "names": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Candidate"
+              }
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Candidate": {
+        "type": "object",
+        "description": "An idea a name may be. The asker's own model chooses among candidates\nfor what it reads; only the graph decides what it writes.",
+        "required": [
+          "id",
+          "name",
+          "definition",
+          "score",
+          "match"
+        ],
+        "properties": {
+          "definition": {
+            "type": "string",
+            "description": "What it is, in a line: how a model tells two ideas with one name\napart."
+          },
+          "id": {
+            "type": "string"
+          },
+          "match": {
+            "type": "boolean",
+            "description": "Whether this is surely the idea: its name or one of its other names\nis exactly the one asked for, and no other idea's is."
+          },
+          "name": {
+            "type": "string"
+          },
+          "sameAs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "format": "double",
+            "description": "From 0 to 1: how alike the names are."
+          }
+        }
+      },
+      "Candidates": {
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            }
+          }
+        }
+      },
+      "Card": {
+        "type": "object",
+        "description": "What a lesson is matched by.",
+        "properties": {
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Codes and rule ids of the problems it answers: `E0425`, `ValueError`.",
+            "default": []
+          },
+          "cues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Words or names that show it's relevant where they appear: `thread_rng`,\n`\\cite{`, \"et al.\".",
+            "default": []
+          },
+          "holds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "description": "\"Holds when\", as conditions kelve can check against the work.",
+            "default": []
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The kinds of file it's for: `bibliography`, `test`, `data file`.",
+            "default": []
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The commands or tools it's for: `cargo`, `pandoc`, `pytest`.",
+            "default": []
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The problem it answers, as different tools and versions print it,\nnormalised (`lesson::seen_as`).",
+            "default": []
+          }
+        }
+      },
+      "Change": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "Adds an idea, defined, or finds the one the graph already has.",
+            "required": [
+              "ref",
+              "name",
+              "definition",
+              "op"
+            ],
+            "properties": {
+              "definition": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/components/schemas/IdeaKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "addIdea"
+                ]
+              },
+              "ref": {
+                "type": "string"
+              },
+              "sameAs": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Writes an idea's entry. Its idea and the ideas its links lead to are\nIDs, or `ref:` an idea this changeset adds. Its claims, each with\nthe numbers of the sources behind it, are for the graph's checks: an\nolder kelve sends none.",
+            "required": [
+              "entry",
+              "op"
+            ],
+            "properties": {
+              "claims": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              },
+              "entry": {
+                "$ref": "#/components/schemas/Entry"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "setEntry"
+                ]
+              },
+              "revise": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Revise",
+                    "description": "For an idea that has an entry: what this does to it. A fix,\nonly while the graph's checks have found problems; an extend,\nto a sound entry; a rewrite, only when the entry is poor or\nmostly wrong (`kelve_core::entry::revise`)."
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Proposes that one idea relates to another, and why. Both are IDs, or\n`ref:` an idea this changeset adds. It's reviewed before anyone sees it.",
+            "required": [
+              "from",
+              "kind",
+              "to",
+              "why",
+              "op"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/components/schemas/RelationKind"
+              },
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The model that proposed it, by its catalogue ID, so it's reviewed\nby others. None when a person proposes it by hand."
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "relate"
+                ]
+              },
+              "rank": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int32",
+                "description": "For \"rests on\": 1 for the most needed.",
+                "minimum": 0
+              },
+              "to": {
+                "type": "string"
+              },
+              "why": {
+                "type": "string",
+                "description": "One plain sentence: what `from` takes from `to`."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Proposes taking a relation back, and why. The judges review it, as\nthey would a report.",
+            "required": [
+              "from",
+              "kind",
+              "to",
+              "why",
+              "op"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/components/schemas/RelationKind"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "unrelate"
+                ]
+              },
+              "to": {
+                "type": "string"
+              },
+              "why": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "One change in a changeset. An idea the same changeset adds is referred\nto as `ref:` and its `ref` until it has an ID."
+      },
+      "Changeset": {
+        "type": "object",
+        "description": "A batch of changes, and what made them.",
+        "required": [
+          "agent",
+          "changes"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string",
+            "description": "What made it, and its version: `kelve/0.1.0`."
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            }
+          },
+          "comment": {
+            "type": "string"
+          },
+          "written_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WrittenBy",
+                "description": "The person's agent that wrote what it adds, and the model it ran on,\nso one provider's work can be found again if it ever must be."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "CheckStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "accepted",
+          "rejected"
+        ]
+      },
+      "Checking": {
+        "type": "object",
+        "description": "How the graph's check of an entry it hasn't served yet stands, for the\naccount that wrote it.",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimChecked"
+            },
+            "description": "Each claim, by its number from 1, in order."
+          },
+          "problem": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why it was turned away, when it was, in a sentence."
+          },
+          "status": {
+            "$ref": "#/components/schemas/CheckStatus"
+          }
+        }
+      },
+      "Claim": {
+        "type": "object",
+        "description": "A factual statement an entry makes, and the numbers of its sources\nthat support it: none for what any textbook says.",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "block": {
+            "type": "string",
+            "description": "The block that makes it, by id, when the writer said."
+          },
+          "faulted": {
+            "type": "boolean",
+            "description": "Whether it's in a block the graph's checks since found wrong. A\nrevision is served as it was, so the graph never sets it; kelve\nmarks it from the idea's `faulted`, for its agent."
+          },
+          "key": {
+            "type": "string",
+            "description": "Its key (`kelve_core::entry::claims::key`), as the graph serves\nit: the graph works it out from what's sent."
+          },
+          "quotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Quote"
+            },
+            "description": "The words on each cited page that say it, as the writer copied\nthem: the graph finds each on its page before it checks the claim."
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "ClaimChecked": {
+        "type": "object",
+        "description": "One claim's check.",
+        "required": [
+          "n",
+          "state"
+        ],
+        "properties": {
+          "carried": {
+            "type": "boolean",
+            "description": "Carried from an earlier check: the same claim, from the same words\non a page that hasn't changed, so it wasn't judged again."
+          },
+          "found": {
+            "type": "string",
+            "description": "For one that failed: what its pages don't show, or that a quote\nisn't on its page. kelve gives it, as it is, to the agent fixing\nthe claim, with the claim's words and quotes."
+          },
+          "key": {
+            "type": "string",
+            "description": "Its key (`kelve_core::entry::claims::key`)."
+          },
+          "n": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "state": {
+            "$ref": "#/components/schemas/ClaimState"
+          }
+        }
+      },
+      "ClaimState": {
+        "type": "string",
+        "enum": [
+          "waiting",
+          "held",
+          "failed"
+        ]
+      },
+      "CodeNote": {
+        "type": "object",
+        "description": "A note pinned to a line of an annotated excerpt.",
+        "required": [
+          "line",
+          "text"
+        ],
+        "properties": {
+          "line": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Where the line is among the excerpt's lines, from 0.",
+            "minimum": 0
+          },
+          "text": {
+            "$ref": "#/components/schemas/String"
+          }
+        }
+      },
+      "Counts": {
+        "type": "object",
+        "description": "A week of how one kelve was used, as numbers only, which its person chose to\nshare. It says nothing about who sent it, or what they opened, read or\nwrote. Its one ID is the install's, random, made when its person said yes\nand gone when they stop: never sent with the graph's key or reading tokens,\nso the graph can't tie it to an account.",
+        "required": [
+          "week",
+          "install",
+          "agent",
+          "version",
+          "platform",
+          "weeksIn",
+          "days",
+          "deepDays",
+          "contributing",
+          "counts"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string",
+            "description": "What sent it, and its version: `kelve/0.1.0`."
+          },
+          "byDay": {
+            "type": "object",
+            "description": "The same counts, a day at a time: each day with any use, as\n`2026-10-13`, the person's own date.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "contributing": {
+            "type": "boolean",
+            "description": "Whether it adds to the shared graph."
+          },
+          "counts": {
+            "type": "object",
+            "description": "Each count, by what it counts: `opened.change`, `links.followed`,\n`links.written`, `entries.read`, `notes.agent`, and so on.",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Days in the week it was used.",
+            "minimum": 0
+          },
+          "deepDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Days on which three or more links were followed.",
+            "minimum": 0
+          },
+          "install": {
+            "type": "string",
+            "description": "The install's ID: 32 hex characters, 128 random bits."
+          },
+          "platform": {
+            "type": "string",
+            "description": "`macos`, `windows` or `linux`."
+          },
+          "version": {
+            "type": "string",
+            "description": "kelve's version: `0.1.0`."
+          },
+          "week": {
+            "type": "string",
+            "description": "The Monday the week began: `2026-10-12`."
+          },
+          "weeksIn": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Whole weeks since this kelve was first used: 0 in its first week.",
+            "minimum": 0
+          }
+        }
+      },
+      "Dropped": {
+        "type": "object",
+        "description": "A checked claim a revision leaves out, and why.",
+        "required": [
+          "key",
+          "why"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      },
+      "Edge": {
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to": {
+            "type": "string"
+          }
+        }
+      },
+      "Entry": {
+        "type": "object",
+        "description": "An entry: the page for one idea. Every idea has exactly one.",
+        "required": [
+          "idea",
+          "title",
+          "minutes",
+          "madeAt",
+          "blocks",
+          "sources",
+          "links"
+        ],
+        "properties": {
+          "blocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Block"
+            }
+          },
+          "idea": {
+            "$ref": "#/components/schemas/IdeaRef",
+            "description": "The idea it's about."
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "description": "The terms in its prose that lead on, each to an idea."
+          },
+          "madeAt": {
+            "$ref": "#/components/schemas/Timestamp",
+            "description": "When kelve finished writing it."
+          },
+          "minutes": {
+            "type": "integer",
+            "format": "int32",
+            "description": "About how long it takes to read, in minutes.",
+            "minimum": 0
+          },
+          "question": {
+            "type": "string",
+            "description": "The one question it answers, as a reader would ask it: the line under\nthe idea's name. Empty in an entry written before there was one."
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "A title that says what it's about, in plain words."
+          }
+        }
+      },
+      "EntryPage": {
+        "type": "object",
+        "description": "An idea's entry, as one revision of it.",
+        "required": [
+          "entry",
+          "revision",
+          "reviewed"
+        ],
+        "properties": {
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Claim"
+            },
+            "description": "Its claims, each with its key and where it's made: what a writer\nchanging the entry must keep."
+          },
+          "entry": {
+            "$ref": "#/components/schemas/Entry"
+          },
+          "reviewed": {
+            "type": "boolean",
+            "description": "Whether a person has reviewed it, beyond kelve's own checks."
+          },
+          "revision": {
+            "type": "string",
+            "description": "This revision, never reused: an entry at a revision never changes."
+          }
+        }
+      },
+      "Facet": {
+        "type": "object",
+        "description": "One condition a lesson holds under.",
+        "required": [
+          "axis"
+        ],
+        "properties": {
+          "axis": {
+            "$ref": "#/components/schemas/Axis"
+          },
+          "fixed": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "And before this one."
+          },
+          "in": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "On a list axis (a place, a language, a platform, a setting): one of these."
+          },
+          "introduced": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "On an ordered axis (a version, an edition, a date): from this one on."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What it's about on that axis: a package, a style guide, a setting."
+          }
+        }
+      },
+      "Feed": {
+        "type": "object",
+        "description": "What became public, oldest first, for mirrors: `next` is where to ask\nfrom next time.",
+        "required": [
+          "changes",
+          "next"
+        ],
+        "properties": {
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedChange"
+            }
+          },
+          "next": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "FeedChange": {
+        "type": "object",
+        "description": "One thing that became public.",
+        "required": [
+          "seq",
+          "kind",
+          "idea",
+          "at"
+        ],
+        "properties": {
+          "at": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "idea": {
+            "type": "string"
+          },
+          "into": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "description": "`live`: an idea went live. `merged`: a live idea merged `into`\nanother. `entry`: a `revision` became its idea's entry. `pulled`: its\nentry was reverted, back to `revision`, if any. `withdrawn`:\na live idea left the graph. `relation`: a `relation` from `idea`\ncame to `state`. `split`: a live idea was found to be two, one of\nwhich is `into`; it comes once for each."
+          },
+          "relation": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RelationRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RelationState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Flag": {
+        "type": "object",
+        "description": "A reader's word that an entry, or one link in it, is wrong. The graph's\nmodels check it again, with nothing that says who sent it.",
+        "required": [
+          "revision",
+          "why"
+        ],
+        "properties": {
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A link's term, when it's the link that's wrong."
+          },
+          "relation": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RelationRef",
+                "description": "A relation, when it's a relation that's wrong (\"this didn't help me\nunderstand\"); then `revision` may be empty."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "type": "string",
+            "description": "The entry's revision, as the reader saw it."
+          },
+          "why": {
+            "type": "string",
+            "description": "What's wrong, in the reader's words."
+          }
+        }
+      },
+      "Fold": {
+        "type": "string",
+        "description": "What a fold holds: more than the part says, for the reader who wants it.",
+        "enum": [
+          "example",
+          "mistake",
+          "lookAlike",
+          "rule",
+          "depth"
+        ]
+      },
+      "Followed": {
+        "type": "object",
+        "description": "A relation a reader followed: from one idea's entry to the idea it\nrelates to, by how it relates. Nothing else: no account, no install, no\nproject, no file, no time.",
+        "required": [
+          "from",
+          "kind",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RelationKind"
+          },
+          "to": {
+            "type": "string"
+          }
+        }
+      },
+      "Follows": {
+        "type": "object",
+        "description": "Relations followed, sent in a batch at most once an hour, in random\norder, without the account's key.",
+        "required": [
+          "follows"
+        ],
+        "properties": {
+          "follows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Followed"
+            }
+          }
+        }
+      },
+      "Formula": {
+        "type": "string",
+        "description": "The formulas an explorable can use. kelve computes them; the model only\npicks one and sets its inputs.",
+        "enum": [
+          "loanPayment",
+          "compoundGrowth",
+          "chanceAtLeast",
+          "agreementBeyondChance",
+          "percentChange",
+          "rateTimesTime"
+        ]
+      },
+      "Foundations": {
+        "type": "object",
+        "description": "The ground floor.",
+        "required": [
+          "ideas"
+        ],
+        "properties": {
+          "ideas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            }
+          }
+        }
+      },
+      "Frame": {
+        "type": "object",
+        "description": "One step of a step-through: a caption, and the nodes it marks.",
+        "required": [
+          "caption",
+          "marks"
+        ],
+        "properties": {
+          "caption": {
+            "type": "string"
+          },
+          "marks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "FunnelStage": {
+        "type": "object",
+        "required": [
+          "label",
+          "value",
+          "display",
+          "mark"
+        ],
+        "properties": {
+          "display": {
+            "type": "string",
+            "description": "The number as shown: \"4,100\", \"62%\"."
+          },
+          "label": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean"
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "How many reach it, in any unit, the same for every stage."
+          }
+        }
+      },
+      "Idea": {
+        "type": "object",
+        "description": "An idea: what it is, and whether its entry is written yet.",
+        "required": [
+          "id",
+          "name",
+          "definition",
+          "kind"
+        ],
+        "properties": {
+          "asks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IdeaAsk"
+            },
+            "description": "What its readers, or the graph's own grade, ask its entry to add,\nmost asked first: only what the graph would take now. A person's\nkelve that adds to the graph has its agent extend the entry when\nit's opened."
+          },
+          "definition": {
+            "type": "string"
+          },
+          "depth": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "How many steps of served \"rests on\" it is from a foundation: none\nuntil a chain reaches one. The graph works it out.",
+            "minimum": 0
+          },
+          "faulted": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The blocks of that revision those problems are in, by id, as far as\nthe graph can tell: what a fix may change."
+          },
+          "foundation": {
+            "type": "boolean",
+            "description": "Whether it's a first principle, on the ground floor: the open list's\nword, until three model families change it."
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/IdeaKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What the graph's checks found wrong with that revision since it was\naccepted, in sentences: a reader's report the judge upheld, a claim\nits pages no longer support, a page gone. While there are any, a\nperson's kelve may write the entry again, to replace it."
+          },
+          "reads": {
+            "type": "integer",
+            "format": "int64",
+            "description": "How many times its entry has been read, with nothing about who.",
+            "minimum": 0
+          },
+          "revision": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The current revision of its entry, when it has one that's been\naccepted."
+          },
+          "sameAs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "IdeaAsk": {
+        "type": "object",
+        "description": "What an idea's entry is asked to add.",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AskKind"
+          },
+          "part": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Part",
+                "description": "The part it goes under, when it's known."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "readers": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many readers asked: none when it's the graph's own grade.",
+            "minimum": 0
+          }
+        }
+      },
+      "IdeaKind": {
+        "type": "string",
+        "description": "What an idea is.",
+        "enum": [
+          "concept",
+          "tool",
+          "technology",
+          "practice"
+        ]
+      },
+      "IdeaRef": {
+        "type": "object",
+        "description": "An idea, as entries, marks and notes point at it.",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "`kelve:` and its minted part: `kelve:i3k9xq2m7twa8`."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name it goes by: \"Advisory locks\"."
+          }
+        }
+      },
+      "IdeaRelations": {
+        "type": "object",
+        "description": "How one idea relates, both ways: everything served about it.",
+        "required": [
+          "down",
+          "kindOf",
+          "answers",
+          "alternatives",
+          "usedWith",
+          "up",
+          "grounds"
+        ],
+        "properties": {
+          "alternatives": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rel"
+            }
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rel"
+            }
+          },
+          "down": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rel"
+            },
+            "description": "What it rests on, most needed first."
+          },
+          "grounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            },
+            "description": "The first principles it comes down to, by any way."
+          },
+          "kindOf": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rel"
+            }
+          },
+          "up": {
+            "$ref": "#/components/schemas/Up"
+          },
+          "usedWith": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rel"
+            }
+          }
+        }
+      },
+      "Ideas": {
+        "type": "object",
+        "description": "Ideas asked for by ID: the ones found, IDs that now redirect to another,\nIDs of ideas found to be two, and IDs the graph doesn't know.",
+        "required": [
+          "ideas"
+        ],
+        "properties": {
+          "ideas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Idea"
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "redirects": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "split": {
+            "type": "object",
+            "description": "An idea models found to be two (\"normalization\" for text, and\nfor probabilities), by its old ID: the IDs of the ideas it is now.\nWhich one a use of it means is for whoever used it to say.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Input": {
+        "type": "object",
+        "required": [
+          "name",
+          "label",
+          "min",
+          "max",
+          "step",
+          "value"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "max": {
+            "type": "number",
+            "format": "double"
+          },
+          "min": {
+            "type": "number",
+            "format": "double"
+          },
+          "name": {
+            "type": "string",
+            "description": "The formula's name for it: `principal`, `rate`."
+          },
+          "step": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "Instructions": {
+        "type": "object",
+        "description": "What a person's agent is told to do for one kind of job. The graph serves\nthem, so they improve for everyone at once.",
+        "required": [
+          "name",
+          "version",
+          "text"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "Layout": {
+        "type": "string",
+        "enum": [
+          "row",
+          "cycle",
+          "stack",
+          "timeline"
+        ]
+      },
+      "Lesson": {
+        "type": "object",
+        "description": "A lesson, as an agent writes it and the graph serves it. `about` is the\ngraph's IDs once kelve has matched the agent's names.",
+        "required": [
+          "about",
+          "says",
+          "do",
+          "holdsWhen"
+        ],
+        "properties": {
+          "about": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "backedBy": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Backing"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "do": {
+            "type": "string",
+            "description": "What to do about it, as one action."
+          },
+          "example": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "holdsWhen": {
+            "type": "string"
+          },
+          "says": {
+            "type": "string"
+          },
+          "seenAs": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The problem it answers, normalised (`seen_as`)."
+          }
+        }
+      },
+      "LessonOutcome": {
+        "type": "object",
+        "required": [
+          "lesson",
+          "outcome",
+          "shown"
+        ],
+        "properties": {
+          "chance": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How likely it was given, in thousandths, at the moment it fitted:\nwhat weighs it when lessons are measured together.",
+            "minimum": 0
+          },
+          "lesson": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "shown": {
+            "$ref": "#/components/schemas/Shown"
+          },
+          "withheld": {
+            "type": "boolean",
+            "description": "Held back from the agent, to measure the lessons: what came of the\nmoment without it. Never counted in the lesson's record."
+          }
+        }
+      },
+      "LessonPage": {
+        "type": "object",
+        "description": "A lesson as the graph serves it: `about` holds the ideas' IDs.",
+        "required": [
+          "id",
+          "lesson",
+          "state",
+          "record",
+          "standing"
+        ],
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card",
+            "description": "What it's matched by, made by the graph from its own words only:\ncues, codes, the problem as tools print it, and \"holds when\" as\nconditions (`core::matching`). Empty from a graph that makes none;\nkelve then makes its own."
+          },
+          "contradicts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The lessons it contradicts, by ID: another good way, each with when it\nholds. Both stay; what held ranks them."
+          },
+          "given": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many times it was given, across every account, as kelves said what\ncame of it: a kelve holds a lesson back as a control only once it's\nwidely used.",
+            "minimum": 0
+          },
+          "id": {
+            "type": "string",
+            "description": "The graph's ID for it, never reused: `kelve:l…`."
+          },
+          "lesson": {
+            "$ref": "#/components/schemas/Lesson"
+          },
+          "record": {
+            "$ref": "#/components/schemas/Record",
+            "description": "What came of it for projects besides its author's."
+          },
+          "sameAs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "standing": {
+            "$ref": "#/components/schemas/Standing"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LessonState"
+          },
+          "why": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why it was turned away, when it was."
+          }
+        }
+      },
+      "LessonState": {
+        "type": "string",
+        "description": "Where a lesson is in the graph.",
+        "enum": [
+          "checking",
+          "live",
+          "waiting",
+          "turnedAway",
+          "same"
+        ]
+      },
+      "Lessons": {
+        "type": "object",
+        "description": "The live lessons about some ideas, best first, and where merged ideas\nwent.",
+        "required": [
+          "lessons"
+        ],
+        "properties": {
+          "lessons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonPage"
+            }
+          }
+        }
+      },
+      "Line": {
+        "type": "object",
+        "required": [
+          "text",
+          "mark",
+          "dim"
+        ],
+        "properties": {
+          "dim": {
+            "type": "boolean",
+            "description": "Context, shown faint."
+          },
+          "mark": {
+            "type": "boolean",
+            "description": "The line that matters, marked in red."
+          },
+          "n": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Its line number in the real thing, when it has one.",
+            "minimum": 0
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "Link": {
+        "type": "object",
+        "description": "A term in an entry's prose, written `[[term]]`, and the idea it leads\nto. The graph matched the idea; the model only named it.",
+        "required": [
+          "term",
+          "idea",
+          "kind"
+        ],
+        "properties": {
+          "idea": {
+            "$ref": "#/components/schemas/IdeaRef"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LinkKind",
+            "description": "What the link says about it, for the graph; readers see words."
+          },
+          "term": {
+            "type": "string",
+            "description": "The words as the prose has them, without the brackets."
+          }
+        }
+      },
+      "LinkKind": {
+        "type": "string",
+        "description": "What a link in an entry says about the idea it leads to. The person\nonly ever sees words; this keeps the graph sound.",
+        "enum": [
+          "restsOn",
+          "kindOf",
+          "alternative",
+          "related"
+        ]
+      },
+      "Manifest": {
+        "type": "object",
+        "description": "What a graph is: its prefix for idea IDs, and what it calls itself.",
+        "required": [
+          "space",
+          "name",
+          "version"
+        ],
+        "properties": {
+          "minClient": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The oldest kelve that may use it: an older one asks the person to\nupdate."
+          },
+          "name": {
+            "type": "string"
+          },
+          "space": {
+            "type": "string",
+            "description": "The prefix of every idea ID it mints: `kelve`."
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Mark": {
+        "type": "string",
+        "enum": [
+          "none",
+          "ink",
+          "red"
+        ]
+      },
+      "MatchRequest": {
+        "type": "object",
+        "description": "Names to look up, keyed by the asker's own keys.",
+        "required": [
+          "queries"
+        ],
+        "properties": {
+          "queries": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Query"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Moment": {
+        "type": "object",
+        "required": [
+          "when",
+          "text",
+          "mark"
+        ],
+        "properties": {
+          "mark": {
+            "$ref": "#/components/schemas/Mark"
+          },
+          "text": {
+            "type": "string"
+          },
+          "when": {
+            "type": "string",
+            "description": "Rough times only: \"Friday afternoon\", \"9 October\"."
+          }
+        }
+      },
+      "Node": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "mark"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean",
+            "description": "The point that matters, in red."
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Op": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The block with this block's id, replaced by it.",
+            "required": [
+              "block",
+              "op"
+            ],
+            "properties": {
+              "block": {
+                "$ref": "#/components/schemas/Block"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "replace"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A block taken out, and why.",
+            "required": [
+              "id",
+              "why",
+              "op"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ]
+              },
+              "why": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "A new block, after the block with the id `after`, or first.",
+            "required": [
+              "block",
+              "op"
+            ],
+            "properties": {
+              "after": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "block": {
+                "$ref": "#/components/schemas/Block"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "add"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "One change to an entry's blocks, by id."
+      },
+      "Outcome": {
+        "type": "string",
+        "description": "What came of a lesson an agent was given.",
+        "enum": [
+          "held",
+          "didnt",
+          "unknown"
+        ]
+      },
+      "Outcomes": {
+        "type": "object",
+        "description": "What came of lessons an agent was given, sent in a batch, as the\nperson's account so that one project counts once. Nothing else: never\nthe problem, the command or the file.",
+        "required": [
+          "outcomes"
+        ],
+        "properties": {
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonOutcome"
+            }
+          }
+        }
+      },
+      "Part": {
+        "type": "string",
+        "description": "The parts of an entry, in the order they come: an opening that stands\nalone, then five parts, each optional but the opening.",
+        "enum": [
+          "lead",
+          "why",
+          "how",
+          "whyThisWay",
+          "limits",
+          "alternatives"
+        ]
+      },
+      "Problem": {
+        "type": "object",
+        "description": "An error, as RFC 9457 problem details.",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "QuadrantAxis": {
+        "type": "object",
+        "description": "An axis of a quadrant: what its low and high ends mean.",
+        "required": [
+          "low",
+          "high"
+        ],
+        "properties": {
+          "high": {
+            "type": "string"
+          },
+          "low": {
+            "type": "string"
+          }
+        }
+      },
+      "QuadrantPoint": {
+        "type": "object",
+        "required": [
+          "label",
+          "x",
+          "y",
+          "mark"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean"
+          },
+          "x": {
+            "type": "number",
+            "format": "double",
+            "description": "From 0, the low end, to 100, the high end."
+          },
+          "y": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "Query": {
+        "type": "object",
+        "description": "A name to find ideas for, with a word of where it came up.",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "context": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A word or two of the field it's from: \"databases\", \"React\". Never\nanything from what the person opened beyond that."
+          },
+          "limit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "query": {
+            "type": "string"
+          }
+        }
+      },
+      "Quote": {
+        "type": "object",
+        "description": "The words on a page that support a claim, by the entry's number for the\npage.",
+        "required": [
+          "source",
+          "text"
+        ],
+        "properties": {
+          "source": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "Record": {
+        "type": "object",
+        "description": "What came of lessons for projects other than its author's, one count a\nproject, and whether a page backs it.",
+        "required": [
+          "held",
+          "didnt"
+        ],
+        "properties": {
+          "backed": {
+            "type": "boolean"
+          },
+          "didnt": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "held": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "Rel": {
+        "type": "object",
+        "description": "A relation from one idea, as readers see it: the idea at its other end,\nwhy, where it stands, and its rank among rests-on.",
+        "required": [
+          "idea",
+          "why",
+          "state"
+        ],
+        "properties": {
+          "idea": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "rank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "state": {
+            "$ref": "#/components/schemas/RelationState"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      },
+      "RelationKind": {
+        "type": "string",
+        "description": "What one idea's tie to another says.",
+        "enum": [
+          "restsOn",
+          "kindOf",
+          "answers",
+          "alternative",
+          "usedWith"
+        ]
+      },
+      "RelationRef": {
+        "type": "object",
+        "description": "One relation, by its ends and kind.",
+        "required": [
+          "from",
+          "kind",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RelationKind"
+          },
+          "to": {
+            "type": "string"
+          }
+        }
+      },
+      "RelationState": {
+        "type": "string",
+        "description": "Where a relation stands.",
+        "enum": [
+          "proposed",
+          "live",
+          "settled",
+          "held",
+          "retracted"
+        ]
+      },
+      "RelationTaken": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RelationRef"
+          },
+          {
+            "type": "object",
+            "required": [
+              "state"
+            ],
+            "properties": {
+              "state": {
+                "$ref": "#/components/schemas/RelationState"
+              }
+            }
+          }
+        ],
+        "description": "A relation a changeset proposed or took back, and where it stands."
+      },
+      "Relations": {
+        "type": "object",
+        "description": "Relations asked for by idea ID, as `Ideas` is: by each ID found, IDs\nthat redirect, IDs of ideas found to be two, and IDs the graph doesn't\nknow.",
+        "required": [
+          "relations"
+        ],
+        "properties": {
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "redirects": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "relations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IdeaRelations"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "split": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Revise": {
+        "type": "object",
+        "description": "What an entry written against another revision does to it.",
+        "required": [
+          "kind",
+          "base"
+        ],
+        "properties": {
+          "ask": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IdeaAsk",
+                "description": "For an extend: what it was asked to add."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "base": {
+            "type": "string",
+            "description": "The revision it was written against: its idea's current one, as the\nwriter read it."
+          },
+          "dropped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dropped"
+            },
+            "description": "The base's checked claims it leaves out, by key, each with why."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RevisionKind"
+          },
+          "ops": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Op"
+            },
+            "description": "For a fix or an extend, what it does, block by block. The entry it\ncarries is the base with these applied; written against a revision\nsince replaced, they're applied to the current one when they touch\nno block that changed."
+          }
+        }
+      },
+      "RevisionKind": {
+        "type": "string",
+        "description": "What kind of revision it is.",
+        "enum": [
+          "fix",
+          "extend",
+          "rewrite"
+        ]
+      },
+      "Said": {
+        "type": "object",
+        "required": [
+          "who",
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "$ref": "#/components/schemas/String"
+          },
+          "who": {
+            "type": "string"
+          }
+        }
+      },
+      "SequenceMessage": {
+        "type": "object",
+        "description": "One arrow in a sequence: from one actor to another, by name.",
+        "required": [
+          "from",
+          "to",
+          "text",
+          "mark"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean",
+            "description": "The one that matters, in red."
+          },
+          "text": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        }
+      },
+      "Shown": {
+        "type": "string",
+        "description": "What showed it, strongest first.",
+        "enum": [
+          "cameBack",
+          "passed",
+          "stayed",
+          "changedBack",
+          "said",
+          "notHere",
+          "nothing"
+        ]
+      },
+      "Side": {
+        "type": "object",
+        "required": [
+          "title",
+          "points"
+        ],
+        "properties": {
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/String"
+            }
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "SignInCode": {
+        "type": "object",
+        "description": "What a person's kelve sends to sign in, once the graph has sent their\nbrowser back to it: the one-time code it came with, the PKCE verifier\nonly this kelve holds, and the address the code was sent to.",
+        "required": [
+          "code",
+          "code_verifier",
+          "redirect_uri"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "code_verifier": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          }
+        }
+      },
+      "SignedIn": {
+        "type": "object",
+        "description": "What it gets for the code: a key of its own, and the name what it adds\nis shown with, which the graph makes up.",
+        "required": [
+          "key",
+          "handle"
+        ],
+        "properties": {
+          "handle": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "Source": {
+        "type": "object",
+        "description": "A source an entry cites: a page kelve fetched from its publisher, or a\nsession it heard. Numbered as the margin shows them.",
+        "required": [
+          "n",
+          "title",
+          "publisher",
+          "preprint"
+        ],
+        "properties": {
+          "archived": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A copy at the Internet Archive, if kelve made one."
+          },
+          "n": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "preprint": {
+            "type": "boolean",
+            "description": "A preprint, not yet published."
+          },
+          "published": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "When it was published, as the page says: \"2024\"."
+          },
+          "publisher": {
+            "type": "string",
+            "description": "Who published it, or wrote it: \"Docker\", \"Panickssery, Bowman and Feng\"."
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Its address, from the publisher; none for a session kelve heard."
+          }
+        }
+      },
+      "SpectrumPoint": {
+        "type": "object",
+        "required": [
+          "label",
+          "at",
+          "mark"
+        ],
+        "properties": {
+          "at": {
+            "type": "number",
+            "format": "double",
+            "description": "From 0, the low end, to 100, the high end."
+          },
+          "label": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Square": {
+        "type": "object",
+        "required": [
+          "red",
+          "text"
+        ],
+        "properties": {
+          "red": {
+            "type": "boolean"
+          },
+          "text": {
+            "$ref": "#/components/schemas/String"
+          }
+        }
+      },
+      "Standing": {
+        "type": "string",
+        "description": "How far a lesson is confirmed, as the graph ranks it.",
+        "enum": [
+          "new",
+          "confirmed",
+          "doubted"
+        ]
+      },
+      "StepCard": {
+        "type": "object",
+        "description": "One stage of a walk-through.",
+        "required": [
+          "title",
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "$ref": "#/components/schemas/String"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "String": {
+        "type": "string"
+      },
+      "Terms": {
+        "type": "object",
+        "description": "What a person agrees to before anything they add goes into the graph.",
+        "required": [
+          "version",
+          "points",
+          "text"
+        ],
+        "properties": {
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What the screen says, a point at a time."
+          },
+          "text": {
+            "type": "string",
+            "description": "The terms in full, as markdown."
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "Timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "A UTC timestamp. It always serialises with milliseconds\n(`2026-09-30T12:40:00.000Z`), like JavaScript's `toISOString`, so two of\nthem compare the same as strings as they do as times."
+      },
+      "TokenAsk": {
+        "type": "object",
+        "description": "A batch of blinded tokens to sign, for the key with `id`.",
+        "required": [
+          "id",
+          "blinded"
+        ],
+        "properties": {
+          "blinded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Each blinded token, base64url: at most 100."
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "TokenGrant": {
+        "type": "object",
+        "description": "The batch signed: each in the order asked, the proof they were all\nsigned with the key shown, and how many more the account may have today.",
+        "required": [
+          "signed",
+          "proof",
+          "left"
+        ],
+        "properties": {
+          "left": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "proof": {
+            "type": "string"
+          },
+          "signed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TokenKey": {
+        "type": "object",
+        "description": "The key the graph signs tokens with, as it shows everyone: its ID, and\nthe public key a batch's proof is checked against.",
+        "required": [
+          "id",
+          "key"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The first eight bytes of the public key's SHA-256, in hex."
+          },
+          "key": {
+            "type": "string",
+            "description": "The public key, base64url."
+          }
+        }
+      },
+      "TreeBranch": {
+        "type": "object",
+        "description": "A branch of a tree: the question at the top has no parent.",
+        "required": [
+          "id",
+          "label",
+          "mark"
+        ],
+        "properties": {
+          "edge": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The words on the way down to it: \"yes\", \"under 10 people\"."
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean"
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The branch it comes from, earlier in the list."
+          }
+        }
+      },
+      "TrendSeries": {
+        "type": "object",
+        "required": [
+          "label",
+          "values",
+          "mark"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "mark": {
+            "type": "boolean"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "One for each of the trend's labels."
+          }
+        }
+      },
+      "Up": {
+        "type": "object",
+        "description": "What rests on an idea: how many, and the first of them, most read\nfirst. The rest come a page at a time (`Client::up`).",
+        "required": [
+          "count",
+          "first"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "first": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rel"
+            }
+          }
+        }
+      },
+      "UpPage": {
+        "type": "object",
+        "description": "A page of what rests on an idea: `next` asks for the page after.",
+        "required": [
+          "up"
+        ],
+        "properties": {
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "up": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rel"
+            }
+          }
+        }
+      },
+      "Version": {
+        "type": "object",
+        "description": "One side of a before and after: lines of the real thing kelve copied\nin (with `from`), or lines written to show the idea (without).",
+        "required": [
+          "label",
+          "lines"
+        ],
+        "properties": {
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "lang": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What it's written in: a language in `code::LANGUAGES`, or none."
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WrittenBy": {
+        "type": "object",
+        "description": "Who wrote what a changeset adds: the person's agent, its model, and its\nplan when the agent said.",
+        "required": [
+          "agent",
+          "model"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string",
+            "description": "The agent, as it names itself: `claude-code`."
+          },
+          "model": {
+            "type": "string",
+            "description": "The model it ran on, as it named it: `claude-opus-5-5`."
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "key": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "token": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "A reading token, spent once: `PrivateToken token=…`."
+      }
+    }
+  }
+}

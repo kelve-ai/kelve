@@ -1,0 +1,4 @@
+# The web app's types are generated from the server's Rust types: `cargo test`
+# writes them here, and CI fails if what's committed is out of date.
+[env]
+TS_RS_EXPORT_DIR = { value = "web/src/api/gen", relative = true }
