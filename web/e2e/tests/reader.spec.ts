@@ -243,7 +243,7 @@ test('what you asked for is ready for you once written, a count in the bar, unti
   await me().work()
   await expect(ready).toHaveAccessibleName('1 ready for you', { timeout: 15_000 })
   // Claude Code's list, from the bar, says the same.
-  await page.getByRole('button', { name: /^Claude Code’s list:/ }).click()
+  await page.getByRole('button', { name: /^Claude Code .*: its list,/ }).click()
   const list = page.getByRole('region', { name: 'Claude Code’s list' })
   await expect(list.getByRole('region', { name: 'Ready for you' })).toContainText(idea)
   await expect(list.getByRole('button', { name: 'Note for Claude Code' })).toBeVisible()
@@ -266,7 +266,7 @@ test('what you take off your agent’s list is gone, and stays off when it’s o
   const path = repo()
   const what = { what: 'change', path, title: 'Retries, taken off' }
   await open(page, what, { work: false })
-  await page.getByRole('button', { name: /^Claude Code’s list:/ }).click()
+  await page.getByRole('button', { name: /^Claude Code .*: its list,/ }).click()
   const next = page.getByRole('region', { name: 'Claude Code’s list' }).getByRole('region', { name: 'Next' })
   // Reading what's open: its files, and its pages, each a line.
   const reading = next.getByRole('listitem').filter({ hasText: /^(Reading|Pages|Folder pages)/ })
