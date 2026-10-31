@@ -34,14 +34,30 @@ pub async fn account(State(app): State<Shared>, _me: Me) -> Json<GraphAccount> {
 /// How long kelve waits to ask the graph whether the person agreed.
 const ASK: Duration = Duration::from_secs(3);
 
+/// The version of the terms the graph serves now, or the one this kelve was
+/// built with when it can't be asked. The graph decides which terms stand,
+/// so a kelve built before or after they changed agrees to the graph's.
+pub(crate) async fn terms_now(app: &Shared) -> String {
+    let served = match &app.graph {
+        Some(graph) => tokio::time::timeout(ASK, graph.terms())
+            .await
+            .ok()
+            .and_then(Result::ok),
+        None => None,
+    };
+    served.map_or_else(|| kelve_core::terms::VERSION.into(), |t| t.version)
+}
+
 async fn view(app: &Shared) -> GraphAccount {
     let held = app.graph_key();
     // Whether they agreed to the terms as they are now, as the graph says.
     let agreed = match app.graph_writer() {
-        Some(graph) => match tokio::time::timeout(ASK, graph.account()).await {
-            Ok(Ok(account)) => Some(account.agreed.as_deref() == Some(kelve_core::terms::VERSION)),
-            _ => None,
-        },
+        Some(graph) => {
+            match tokio::join!(tokio::time::timeout(ASK, graph.account()), terms_now(app)) {
+                (Ok(Ok(account)), now) => Some(account.agreed.as_deref() == Some(now.as_str())),
+                _ => None,
+            }
+        }
         None => None,
     };
     GraphAccount {
@@ -359,8 +375,10 @@ async fn signed_in(State(w): State<Arc<Waiting>>, Query(back): Query<Back>) -> R
                     Ok(()) => {
                         tracing::info!("signed in to the shared graph");
                         // Signing in is agreeing to the terms as they are
-                        // now, as the sign-in buttons say (Nathan, 29 October).
-                        if let Err(e) = agree_to(&w.app, kelve_core::terms::VERSION).await {
+                        // now, as the sign-in buttons say (Nathan, 29 October):
+                        // the graph's, which the buttons lead to.
+                        let now = terms_now(&w.app).await;
+                        if let Err(e) = agree_to(&w.app, &now).await {
                             tracing::warn!(error = %e.message, "couldn't agree to the terms on signing in");
                         }
                         Ok(format!(

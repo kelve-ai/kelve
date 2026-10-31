@@ -1352,24 +1352,57 @@ pub async fn send_kept(app: &Shared) -> Result<usize> {
     Ok(keys.len())
 }
 
+/// Why an entry the agent wrote stays here until it can go, as `kept_here`
+/// says it: what the graph turned away, or what seemed to hold a secret,
+/// says otherwise, and stays.
+const NOT_ADDING: &str = "Not added to the shared graph, since you don’t add to it.";
+const SIGN_IN: &str = "Not added to the shared graph: sign in to it in settings.";
+const AGREE: &str = "Not added to the shared graph: agree to its terms in settings.";
+const SIGN_IN_AGAIN: &str = "Not added to the shared graph: sign in to it again in settings.";
+
 /// Why an entry the agent wrote stays here: the person doesn't add to the
-/// graph, isn't signed in, or hasn't agreed to its terms. None when it can
-/// go.
+/// graph, isn't signed in, or hasn't agreed to its terms as the graph
+/// serves them now. None when it can go.
 async fn kept_here(app: &Shared) -> Option<&'static str> {
     if !app.settings().contribute {
-        return Some("Not added to the shared graph, since you don’t add to it.");
+        return Some(NOT_ADDING);
     }
     let Some(graph) = app.graph_writer() else {
-        return Some("Not added to the shared graph: sign in to it in settings.");
+        return Some(SIGN_IN);
     };
+    let now = crate::api::graph::terms_now(app).await;
     match graph.account().await {
-        Ok(account) if account.agreed.as_deref() == Some(kelve_core::terms::VERSION) => None,
-        Ok(_) => Some("Not added to the shared graph: agree to its terms in settings."),
-        Err(GraphError::SignIn) => {
-            Some("Not added to the shared graph: sign in to it again in settings.")
-        }
+        Ok(account) if account.agreed.as_deref() == Some(now.as_str()) => None,
+        Ok(_) => Some(AGREE),
+        Err(GraphError::SignIn) => Some(SIGN_IN_AGAIN),
         Err(_) => None,
     }
+}
+
+/// Sends what was kept here only until it could go, once it can: say,
+/// when the person agreed somewhere kelve didn't see, or kelve learned
+/// which terms the graph serves. The hourly sweep runs it.
+pub async fn send_held(app: &Shared) -> Result<usize> {
+    let mut held = Vec::new();
+    for key in {
+        let mut conn = app.db.acquire().await?;
+        kelve_store::entries::kept_here(&mut conn).await?
+    } {
+        if entry(app, &key)
+            .await?
+            .is_some_and(|r| [NOT_ADDING, SIGN_IN, AGREE, SIGN_IN_AGAIN].contains(&r.step.as_str()))
+        {
+            held.push(key);
+        }
+    }
+    if held.is_empty() || kept_here(app).await.is_some() {
+        return Ok(0);
+    }
+    for key in &held {
+        set(app, key, "checking", "Being sent to the shared graph").await?;
+        next(app, SEND, key).await?;
+    }
+    Ok(held.len())
 }
 
 /// Sends an entry the agent wrote to the shared graph, to be checked: its
@@ -1508,12 +1541,7 @@ pub async fn send(app: &Shared, key: &str) -> Result<Then> {
             return Ok(Then::Again(after(wait)));
         }
         Err(GraphError::SignIn) => {
-            turned_away(
-                app,
-                key,
-                "Not added to the shared graph: sign in to it again in settings.",
-            )
-            .await?;
+            turned_away(app, key, SIGN_IN_AGAIN).await?;
             return Ok(Then::Done);
         }
         Err(GraphError::Refused { said, .. }) => {

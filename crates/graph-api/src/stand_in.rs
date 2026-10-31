@@ -114,6 +114,9 @@ struct Held {
     keep: Option<PathBuf>,
     /// The terms the account agreed to, if it has.
     agreed: Option<String>,
+    /// The version of the terms it serves, when a test changed them: else
+    /// the ones kelve was built with.
+    terms: Option<String>,
     /// How each entry's check stands, by revision.
     checks: BTreeMap<String, Checking>,
     /// Entries held back while checks are held, by revision: the idea's ID
@@ -312,6 +315,12 @@ impl StandIn {
     /// The terms the account agreed to, if it has.
     pub fn agreed(&self) -> Option<String> {
         lock(&self.held).agreed.clone()
+    }
+
+    /// Serves the terms as another version, as the graph does once they
+    /// change, for tests about a kelve built with other terms.
+    pub fn serve_terms(&self, version: &str) {
+        lock(&self.held).terms = Some(version.to_string());
     }
 
     /// Gives it a page's text, so a claim's quote from that page is looked
@@ -860,9 +869,21 @@ async fn instructions(Path(name): Path<String>) -> Response {
     }
 }
 
-fn the_terms() -> Terms {
+impl Held {
+    /// The version of the terms it serves now.
+    fn terms_now(&self) -> &str {
+        self.terms.as_deref().unwrap_or(kelve_core::terms::VERSION)
+    }
+
+    /// Whether the account agreed to the terms it serves now.
+    fn agreed_now(&self) -> bool {
+        self.agreed.as_deref() == Some(self.terms_now())
+    }
+}
+
+fn the_terms(version: &str) -> Terms {
     Terms {
-        version: kelve_core::terms::VERSION.into(),
+        version: version.into(),
         points: kelve_core::terms::POINTS
             .iter()
             .map(|p| p.to_string())
@@ -871,21 +892,21 @@ fn the_terms() -> Terms {
     }
 }
 
-async fn terms() -> Json<Terms> {
-    Json(the_terms())
+async fn terms(State(held): Shared) -> Json<Terms> {
+    Json(the_terms(lock(&held).terms_now()))
 }
 
 async fn agree(State(held): Shared, headers: HeaderMap, Json(agree): Json<Agree>) -> Response {
     if !signed_in(&headers) {
         return problem(StatusCode::UNAUTHORIZED, "Sign in to agree to the terms.");
     }
-    if agree.version != kelve_core::terms::VERSION {
+    let mut held = lock(&held);
+    if agree.version != held.terms_now() {
         return problem(
             StatusCode::CONFLICT,
             "Those aren’t the terms now. Read them again, and agree to these.",
         );
     }
-    let mut held = lock(&held);
     held.agreed = Some(agree.version);
     Json(Account {
         handle: "contributor-one".into(),
@@ -1294,7 +1315,7 @@ async fn changeset(State(held): Shared, headers: HeaderMap, Json(cs): Json<Chang
     if !signed_in(&headers) {
         return problem(StatusCode::UNAUTHORIZED, "Sign in to add to the graph.");
     }
-    if lock(&held).agreed.as_deref() != Some(kelve_core::terms::VERSION) {
+    if !lock(&held).agreed_now() {
         return problem(
             StatusCode::FORBIDDEN,
             "Agree to the terms for adding to the graph first. kelve shows them in settings.",
@@ -1409,7 +1430,7 @@ async fn add_lesson(
     if !signed_in(&headers) {
         return problem(StatusCode::UNAUTHORIZED, "Sign in to add to the graph.");
     }
-    if lock(&held).agreed.as_deref() != Some(kelve_core::terms::VERSION) {
+    if !lock(&held).agreed_now() {
         return problem(
             StatusCode::FORBIDDEN,
             "Agree to the terms for adding to the graph first. kelve shows them in settings.",

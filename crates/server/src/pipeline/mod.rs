@@ -307,5 +307,13 @@ async fn sweep(app: &Shared) -> Result<Then> {
     kelve_store::asks::sweep(&mut conn).await?;
     kelve_store::sends::sweep(&mut conn).await?;
     kelve_store::lessons::sweep(&mut conn).await?;
+    drop(conn);
+    // What was kept only until it could go, such as entries written before
+    // the person agreed, goes once it can.
+    match entries::send_held(app).await {
+        Ok(n) if n > 0 => tracing::info!(entries = n, "sending what was kept until it could go"),
+        Ok(_) => {}
+        Err(e) => tracing::warn!(error = %e, "couldn't send what was kept until it could go"),
+    }
     Ok(Then::Again(Utc::now() + chrono::Duration::hours(1)))
 }

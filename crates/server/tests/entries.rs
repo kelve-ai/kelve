@@ -457,6 +457,33 @@ async fn an_entry_stays_here_when_the_person_doesnt_add_to_the_graph_or_hasnt_ag
 }
 
 #[tokio::test]
+async fn an_entry_kept_until_agreeing_goes_out_on_the_terms_the_graph_serves() {
+    let graph = StandIn::start().await.unwrap();
+    let served = "2026-10-27";
+    assert_ne!(served, kelve_core::terms::VERSION);
+    graph.serve_terms(served);
+    graph.unagree();
+    let app = kelve(Some(&graph)).await;
+    let idea = advisory_locks();
+    entries::want(&app, &idea).await.unwrap();
+    work(&app, agent).await;
+    let kept = row(&app, &idea.key).await;
+    assert!(kept.step.contains("agree to its terms"), "{}", kept.step);
+    // Agreed to the graph's terms where kelve didn't see it: what was kept
+    // goes at the next sweep.
+    app.graph_writer().unwrap().agree(served).await.unwrap();
+    assert_eq!(entries::send_held(&app).await.unwrap(), 1);
+    work(&app, agent).await;
+    let sent = row(&app, &idea.key).await;
+    assert!(sent.sent, "{}", sent.step);
+    let id = serde_json::from_str::<kelve_core::Entry>(sent.entry.as_deref().unwrap())
+        .unwrap()
+        .idea
+        .id;
+    assert_eq!(graph.revisions(&id).len(), 1);
+}
+
+#[tokio::test]
 async fn entries_are_written_only_when_their_idea_is_opened() {
     let graph = StandIn::start().await.unwrap();
     let app = kelve(Some(&graph)).await;
