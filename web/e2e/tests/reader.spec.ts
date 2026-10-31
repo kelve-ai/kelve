@@ -296,3 +296,24 @@ test('how far reading has got moves as your agent reads, with no reload', async 
   await me().work()
   await expect(page.getByText(/reading \d+ of \d+/)).toHaveCount(0, { timeout: 30_000 })
 })
+
+test('a tab out of sight lets its stream go, and catches up once it is back', async ({ page }) => {
+  const root = repo()
+  await open(page, { what: 'folder', path: root }, { work: false })
+  await expect(page.getByText(/reading \d+ of \d+/)).toBeVisible({ timeout: 15_000 })
+  // As the browser says a tab is in sight, or not.
+  const sight = (hidden: boolean) =>
+    page.evaluate((h) => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => h })
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (h ? 'hidden' : 'visible') })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }, hidden)
+  await sight(true)
+  await me().work()
+  // Out of sight, it hears nothing: it shows what it had.
+  await page.waitForTimeout(1_000)
+  await expect(page.getByText(/reading \d+ of \d+/)).toBeVisible()
+  // Back in sight, it listens again and fetches what it missed.
+  await sight(false)
+  await expect(page.getByText(/reading \d+ of \d+/)).toHaveCount(0, { timeout: 30_000 })
+})
