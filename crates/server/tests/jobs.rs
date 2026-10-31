@@ -86,3 +86,51 @@ async fn a_job_is_finished_and_let_go_when_whatever_ran_it_stops_waiting() {
     }
     panic!("the job was left taken");
 }
+
+#[tokio::test]
+async fn an_answers_own_work_runs_without_waiting_on_whatever_else_is_due() {
+    let (graph, _go) = stalled_graph().await;
+    let app = kelve(&graph).await;
+    // Due first: asking the graph how an idea relates, which it's slow to
+    // answer, as sends and traces are when there are many.
+    let idea = kelve_store::entries::Idea {
+        key: "kelve:i3k9xq2m7twa8".into(),
+        name: "Advisory locks".into(),
+        definition: "A lock a program names, and the database keeps.".into(),
+        kind: "concept".into(),
+        became: None,
+    };
+    {
+        let mut conn = app.db.acquire().await.unwrap();
+        kelve_store::entries::keep_idea(&mut conn, &idea)
+            .await
+            .unwrap();
+    }
+    relations::ensure(&app, &idea).await.unwrap();
+    // Then the work an answer was for: here, kelve's own tidying.
+    {
+        let mut conn = app.db.acquire().await.unwrap();
+        kelve_store::jobs::add(
+            &mut conn,
+            pipeline::SWEEP,
+            Some(pipeline::SWEEP),
+            &serde_json::json!({}),
+            chrono::Utc::now(),
+        )
+        .await
+        .unwrap();
+    }
+    let ran = tokio::time::timeout(
+        Duration::from_secs(2),
+        pipeline::run_key(&app, pipeline::SWEEP),
+    )
+    .await
+    .expect("it doesn't wait on the graph")
+    .unwrap();
+    assert_eq!(ran.as_deref(), Some(pipeline::SWEEP));
+    assert_eq!(
+        taken(&app).await,
+        0,
+        "what else was due is left for the workers"
+    );
+}

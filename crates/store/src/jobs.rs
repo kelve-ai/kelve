@@ -129,6 +129,26 @@ pub async fn add_by(
 }
 
 /// Claims the next job that's due, if any.
+/// Claims one job by its key, if it's due and no one has it: the work an
+/// agent's answer was for, run as the answer comes in.
+pub async fn claim_key(conn: &mut Conn, key: &str) -> Result<Option<Job>> {
+    let t = now();
+    let row = sqlx::query_as::<_, Row>(
+        "update jobs set locked_at = ?1, attempts = attempts + 1
+         where key = ?4 and run_at <= ?1
+           and (locked_at is null or locked_at < ?1 - ?2)
+           and attempts < ?3
+         returning id, kind, key, payload, attempts",
+    )
+    .bind(t)
+    .bind(LEASE_MS)
+    .bind(MAX_ATTEMPTS)
+    .bind(key)
+    .fetch_optional(&mut *conn)
+    .await?;
+    Ok(row.map(Job::from))
+}
+
 pub async fn claim(conn: &mut Conn) -> Result<Option<Job>> {
     let t = now();
     let row = sqlx::query_as::<_, Row>(

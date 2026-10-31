@@ -328,6 +328,11 @@ pub struct Answered {
 /// ask for something more.
 const LINGER: std::time::Duration = std::time::Duration::from_secs(5);
 
+/// The most time kelve spends on what's due, as an answer comes in,
+/// before it starts nothing more and replies: well inside the two minutes
+/// the command line waits for it (`kelve mcp`), however much is due.
+const SPEND: std::time::Duration = std::time::Duration::from_secs(15);
+
 /// The agent hands in its answer to a job.
 pub async fn answer(
     State(app): State<Shared>,
@@ -347,12 +352,22 @@ pub async fn answer(
     let next = match handed_in {
         HandedIn::Yes => {
             // The work the answer was for runs before the next job is
-            // given, so what it asks next is in the list.
-            for _ in 0..20 {
-                if crate::pipeline::run_once(&app)
+            // given, so what it asks next is in the list: its own job
+            // first, ahead of whatever else is due, then what follows from
+            // it. An agent waits for this reply and gives up after a
+            // while, so past `SPEND` the rest is the workers'.
+            let spent = std::time::Instant::now() + SPEND;
+            if let Some(key) = answered.as_ref().and_then(|a| a.resume_key.as_deref()) {
+                crate::pipeline::run_key(&app, key)
                     .await
-                    .map_err(ApiError::internal)?
-                    .is_none()
+                    .map_err(ApiError::internal)?;
+            }
+            for _ in 0..20 {
+                if std::time::Instant::now() >= spent
+                    || crate::pipeline::run_once(&app)
+                        .await
+                        .map_err(ApiError::internal)?
+                        .is_none()
                 {
                     break;
                 }
@@ -381,15 +396,14 @@ pub async fn answer(
                     break;
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-                for _ in 0..20 {
-                    if crate::pipeline::run_once(&app)
+                // What's due runs here while there's time, so what it asks
+                // comes now; past that, the workers have it.
+                while std::time::Instant::now() < until
+                    && crate::pipeline::run_once(&app)
                         .await
                         .map_err(ApiError::internal)?
-                        .is_none()
-                    {
-                        break;
-                    }
-                }
+                        .is_some()
+                {}
                 next = agent::next_after(&app, &given.caller, after).await?;
             }
             next

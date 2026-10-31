@@ -442,12 +442,17 @@ pub async fn hand_in(app: &Shared, caller: &Caller, job: i64, value: Value) -> A
             ApiError::conflict("That job isn't open any more. Take the next one with next_job.")
         })?;
     let material: Value = serde_json::from_str(&row.material).unwrap_or(Value::Null);
+    // Checking an entry takes a connection of its own: this one waits for
+    // it outside the pool, so agents handing in at once never hold every
+    // connection while each waits for another.
+    drop(conn);
     let shaped = match row.kind.as_str() {
         WRITE | FIX | EXTEND if value.is_object() => {
             pipeline::entries::shape(app, &row.kind, row.idea.as_deref(), &value).await
         }
         _ => shape(&row.kind, &material, &value),
     };
+    let mut conn = app.db.acquire().await?;
     if let Err(why) = shaped {
         let put_aside = asks::wrong(&mut conn, row.id, &why).await?;
         tracing::info!(kind = %row.kind, put_aside, "an agent's answer wasn't in the shape asked for");
