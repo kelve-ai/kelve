@@ -147,6 +147,11 @@ async fn signing_in_to_the_shared_graph_keeps_its_key_sealed_until_signing_out()
     config.endpoints.graph = graph.url.clone();
     let mut k = Kelve::with(config).await;
     k.sign_in().await;
+    // The graph's terms, not the ones this kelve was built with: signing in
+    // agrees to the graph's.
+    let served = "2026-10-27";
+    assert_ne!(served, kelve_core::terms::VERSION);
+    graph.serve_terms(served);
     // Not agreed yet: signing in agrees.
     graph.unagree();
     let account = k.json("GET", "/api/graph/account", None).await;
@@ -203,14 +208,10 @@ async fn signing_in_to_the_shared_graph_keeps_its_key_sealed_until_signing_out()
         account,
         json!({ "graph": true, "from": "app", "handle": "contributor-one", "waiting": false, "agreed": true })
     );
-    assert_eq!(
-        graph.agreed().as_deref(),
-        Some(kelve_core::terms::VERSION),
-        "signing in agreed"
-    );
+    assert_eq!(graph.agreed().as_deref(), Some(served), "signing in agreed");
     // The terms, and agreeing to them, go through to the graph.
     let terms = k.json("GET", "/api/graph/terms", None).await;
-    assert_eq!(terms["version"], kelve_core::terms::VERSION);
+    assert_eq!(terms["version"], served);
     graph.unagree();
     assert_eq!(
         k.json("GET", "/api/graph/account", None).await["agreed"],
@@ -234,11 +235,11 @@ async fn signing_in_to_the_shared_graph_keeps_its_key_sealed_until_signing_out()
         .json(
             "POST",
             "/api/graph/agree",
-            Some(json!({ "version": kelve_core::terms::VERSION })),
+            Some(json!({ "version": served })),
         )
         .await;
     assert_eq!(agreed["agreed"], true);
-    assert_eq!(graph.agreed().as_deref(), Some(kelve_core::terms::VERSION));
+    assert_eq!(graph.agreed().as_deref(), Some(served));
     assert!(k.app.graph_writer().unwrap().can_write());
     let mut conn = k.app.db.acquire().await.unwrap();
     let kept = kelve_store::settings::secret(&mut conn, "keys.graph")

@@ -536,10 +536,12 @@ function Order({ order, parts, overview, finding, reading, leftOff, here, read, 
   )
 }
 
-export function Side({ tab, setTab, files, loading, which, setWhich, change, here, look, go, notes, order, parts, finding, reading, leftOff, readPart, agentRead, agent, read, folders, folder, goFolder, changePage, goChange, overview, width, grip, foot }: {
+export function Side({ tab, setTab, files, loading, which, setWhich, change, here, look, go, notes, order, parts, finding, reading, leftOff, readPart, agentRead, agent, read, folders, folder, goFolder, changePage, goChange, overview, width, grip, foot, filesHint }: {
   tab: Tab
   /** The key, at its foot, below whatever the tab shows. */
   foot?: ReactNode
+  /** A hint under the Files tab, about what's in it, shown once. */
+  filesHint?: ReactNode
   /** Its width, when it's beside the work rather than over it. */
   width?: number
   /** Its right edge, to drag wider or narrower. */
@@ -618,6 +620,13 @@ export function Side({ tab, setTab, files, loading, which, setWhich, change, her
           <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'on' : undefined} onClick={() => setTab(t)}>{label}</button>
         ))}
       </div>
+      {filesHint && (
+        // Under the tabs, a place for each, so the hint points at Files: a
+        // tab list holds only tabs.
+        <div className="tabs tab-hints">
+          {tabs.map(([t]) => <span key={t}>{t === 'files' && filesHint}</span>)}
+        </div>
+      )}
       {tab !== 'order' && <label className="filter">
         <svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><circle cx="5.5" cy="5.5" r="4" fill="none" stroke="currentColor" strokeWidth="1.3" /><path d="m8.6 8.6 3 3" stroke="currentColor" strokeWidth="1.3" /></svg>
         <span className="sr-only">{placeholder}</span>

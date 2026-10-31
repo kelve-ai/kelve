@@ -268,6 +268,45 @@ async fn a_quote_too_short_to_check_is_handed_back_before_the_graph_sees_it() {
 }
 
 #[tokio::test]
+async fn what_the_graph_would_turn_away_is_handed_back_before_it_sees_it() {
+    let graph = StandIn::start().await.unwrap();
+    graph.page(PAGE, SAYS);
+    let app = kelve(Some(&graph)).await;
+    let idea = advisory_locks();
+    entries::want(&app, &idea).await.unwrap();
+    let job = loop {
+        common::jobs(&app).await;
+        let job = agent::next(&app, &common::caller()).await.unwrap().unwrap();
+        if job.kind == "write" {
+            break job;
+        }
+        let handed = agent::hand_in(&app, &common::caller(), job.job, agent(&job))
+            .await
+            .unwrap();
+        assert_eq!(handed, HandedIn::Yes);
+    };
+    // A web address in code, in a paragraph: each block's shape is sound,
+    // but the graph's check of the whole entry turns it away.
+    let mut answer = entry(TRUE);
+    answer["blocks"][0]["text"] = json!(
+        "A program can take a lock by a name it chooses, and the database keeps it^1, as `psql https://example.com/locks` would show. It rests on [[database transactions]]."
+    );
+    let handed = agent::hand_in(&app, &common::caller(), job.job, answer)
+        .await
+        .unwrap();
+    let HandedIn::No { why, put_aside } = handed else {
+        panic!("taken: {handed:?}");
+    };
+    assert!(!put_aside);
+    assert!(why.contains("a link or a web address in it"), "{why}");
+    assert!(graph.revisions(&idea.key).is_empty(), "never sent");
+    let handed = agent::hand_in(&app, &common::caller(), job.job, entry(TRUE))
+        .await
+        .unwrap();
+    assert_eq!(handed, HandedIn::Yes);
+}
+
+#[tokio::test]
 async fn a_claim_its_page_doesnt_support_is_fixed_once_then_the_entry_is_dropped() {
     let graph = StandIn::start().await.unwrap();
     graph.page(PAGE, SAYS);
@@ -454,6 +493,33 @@ async fn an_entry_stays_here_when_the_person_doesnt_add_to_the_graph_or_hasnt_ag
     assert!(!kept.sent);
     assert!(kept.step.contains("agree to its terms"), "{}", kept.step);
     assert!(graph.revisions(&idea.key).is_empty());
+}
+
+#[tokio::test]
+async fn an_entry_kept_until_agreeing_goes_out_on_the_terms_the_graph_serves() {
+    let graph = StandIn::start().await.unwrap();
+    let served = "2026-10-27";
+    assert_ne!(served, kelve_core::terms::VERSION);
+    graph.serve_terms(served);
+    graph.unagree();
+    let app = kelve(Some(&graph)).await;
+    let idea = advisory_locks();
+    entries::want(&app, &idea).await.unwrap();
+    work(&app, agent).await;
+    let kept = row(&app, &idea.key).await;
+    assert!(kept.step.contains("agree to its terms"), "{}", kept.step);
+    // Agreed to the graph's terms where kelve didn't see it: what was kept
+    // goes at the next sweep.
+    app.graph_writer().unwrap().agree(served).await.unwrap();
+    assert_eq!(entries::send_held(&app).await.unwrap(), 1);
+    work(&app, agent).await;
+    let sent = row(&app, &idea.key).await;
+    assert!(sent.sent, "{}", sent.step);
+    let id = serde_json::from_str::<kelve_core::Entry>(sent.entry.as_deref().unwrap())
+        .unwrap()
+        .idea
+        .id;
+    assert_eq!(graph.revisions(&id).len(), 1);
 }
 
 #[tokio::test]
