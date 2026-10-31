@@ -3501,3 +3501,57 @@ async fn an_agent_says_its_last_job_and_is_given_none_with_it() {
     );
     std::fs::remove_dir_all(&root).unwrap();
 }
+
+#[tokio::test]
+async fn a_reading_waits_for_the_days_reading_to_reset_without_counting_a_try() {
+    let g = kelve_graph_api::stand_in::StandIn::start()
+        .await
+        .expect("a graph");
+    // The account has read as much of the graph as it may today.
+    g.reads_used(true);
+    let mut config = test_config();
+    config.endpoints.graph = g.url.clone();
+    config.env.graph = Some(kelve_graph_api::stand_in::TOKEN.into());
+    let mut k = Kelve::with(config).await;
+    let root = folder(&[("src/text.rs", "fn fold() {}\n")]);
+    let id = signed_in(&mut k, &root).await;
+    k.get(&format!("/api/opened/{id}/folder")).await;
+    let mut given = Value::Null;
+    loop {
+        let job = take_next(&k, &mut given).await;
+        assert!(!job.is_null(), "the file's reading didn't come");
+        let answer = match job["kind"].as_str() {
+            Some("read") => json!({ "passages": [{
+                "passage": job["material"]["passages"][0]["id"],
+                "marks": [{
+                    "line": 1, "quote": "fn fold()", "name": "Normalization",
+                    "definition": "Making things comparable by a standard form.",
+                    "use": "Folds text to one form", "area": "text", "depth": "common",
+                }],
+            }] }),
+            Some("way") => stand_in_way(&job),
+            Some("folders") => json!({ "folders": [] }),
+            Some("path") => json!({ "parts": [] }),
+            other => panic!("a {other:?} job: {job}"),
+        };
+        let read = job["kind"] == "read";
+        let said = hand_in(&k, &job, answer).await;
+        assert_eq!(said["taken"], "yes", "{said}");
+        if read {
+            break;
+        }
+        given = said["next"].clone();
+    }
+    // Which ideas its marks are waits for the graph to be read again: put
+    // off until midnight UTC, the try not counted, so it doesn't run out of
+    // tries meanwhile.
+    let mut conn = k.app.db.acquire().await.unwrap();
+    let (attempts, run_at, error): (i64, i64, Option<String>) =
+        sqlx::query_as("select attempts, run_at, last_error from jobs where kind = 'read.file'")
+            .fetch_one(&mut *conn)
+            .await
+            .unwrap();
+    assert_eq!(attempts, 0);
+    assert!(error.is_none(), "{error:?}");
+    assert!(run_at > chrono::Utc::now().timestamp_millis(), "put off");
+}
