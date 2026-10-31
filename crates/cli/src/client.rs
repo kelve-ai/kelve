@@ -2,9 +2,11 @@
 //! with its command line. They never go through a proxy: kelve is local,
 //! and the secret stays on this computer.
 
+use std::sync::Mutex;
 use std::time::Duration;
 
 use anyhow::bail;
+use reqwest::header::{AUTHORIZATION, HeaderValue};
 use serde_json::Value;
 
 use crate::config;
@@ -26,7 +28,7 @@ pub fn http(within: Duration) -> anyhow::Result<reqwest::Client> {
 #[derive(Debug)]
 pub struct Kelve {
     pub url: String,
-    secret: String,
+    secret: Mutex<String>,
     http: reqwest::Client,
 }
 
@@ -41,8 +43,27 @@ impl Kelve {
         }
         Ok(Kelve {
             url,
-            secret: config::secret()?,
+            secret: Mutex::new(config::secret()?),
             http: http(within)?,
+        })
+    }
+
+    fn secret(&self) -> String {
+        self.secret
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .clone()
+    }
+
+    /// The secret, read again, when it isn't the one kept: kelve was
+    /// installed afresh, and made a new one, since this started, as an
+    /// agent's `kelve mcp` outlives a reinstall.
+    fn new_secret(&self) -> Option<String> {
+        let now = config::secret().ok()?;
+        let mut kept = self.secret.lock().unwrap_or_else(|p| p.into_inner());
+        (*kept != now).then(|| {
+            kept.clone_from(&now);
+            now
         })
     }
 
@@ -50,19 +71,32 @@ impl Kelve {
     pub fn post(&self, path: &str) -> reqwest::RequestBuilder {
         self.http
             .post(format!("{}{path}", self.url))
-            .bearer_auth(&self.secret)
+            .bearer_auth(self.secret())
     }
 
     /// A GET with the secret.
     pub fn get(&self, path: &str) -> reqwest::RequestBuilder {
         self.http
             .get(format!("{}{path}", self.url))
-            .bearer_auth(&self.secret)
+            .bearer_auth(self.secret())
     }
 
     /// Sends a request, and reads its JSON answer, or says what went wrong.
+    /// Turned away for its secret, it's sent once more with the secret read
+    /// again, if that's changed.
     pub async fn send(&self, request: reqwest::RequestBuilder) -> anyhow::Result<Value> {
-        let response = request.send().await.map_err(unreachable)?;
+        let request = request.build()?;
+        let again = request.try_clone();
+        let mut response = self.http.execute(request).await.map_err(unreachable)?;
+        if response.status() == reqwest::StatusCode::UNAUTHORIZED
+            && let Some(mut again) = again
+            && let Some(secret) = self.new_secret()
+        {
+            let mut bearer = HeaderValue::from_str(&format!("Bearer {secret}"))?;
+            bearer.set_sensitive(true);
+            again.headers_mut().insert(AUTHORIZATION, bearer);
+            response = self.http.execute(again).await.map_err(unreachable)?;
+        }
         let status = response.status();
         let text = response.text().await.unwrap_or_default();
         if !status.is_success() {

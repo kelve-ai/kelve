@@ -74,7 +74,25 @@ pub async fn serve(background: bool) -> anyhow::Result<()> {
 /// answers. Its log goes to `kelve.log` in its data folder.
 pub(crate) async fn started() -> anyhow::Result<()> {
     let me = std::env::current_exe().context("kelve couldn't tell where it's installed.")?;
-    started_from(&me).await
+    let path = std::env::var_os("PATH").unwrap_or_default();
+    let installed = installed(&me, std::env::split_paths(&path)).context(
+        "kelve isn't installed where it was when your agent started it. Install it again, then restart your agent.",
+    )?;
+    started_from(&installed).await
+}
+
+/// Where kelve is installed: this command, or, when it's been taken out
+/// since it started, as an agent's `kelve mcp` outlives a reinstall, the
+/// `kelve` first on the PATH.
+fn installed(
+    me: &std::path::Path,
+    path: impl Iterator<Item = std::path::PathBuf>,
+) -> Option<std::path::PathBuf> {
+    if me.is_file() {
+        return Some(me.to_path_buf());
+    }
+    let name = format!("kelve{}", std::env::consts::EXE_SUFFIX);
+    path.map(|dir| dir.join(&name)).find(|p| p.is_file())
 }
 
 /// Starts kelve from the binary at `me`, as `started` does: what `kelve
@@ -277,6 +295,27 @@ pub(crate) fn opened_line(o: &serde_json::Value) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn kelve_taken_out_since_it_started_is_started_from_where_it_is_now() {
+        let root = std::env::temp_dir().join(format!("kelve-installed-{}", std::process::id()));
+        let (old, new) = (root.join("old"), root.join("new"));
+        std::fs::create_dir_all(&old).unwrap();
+        std::fs::create_dir_all(&new).unwrap();
+        let name = format!("kelve{}", std::env::consts::EXE_SUFFIX);
+        let me = old.join(&name);
+        std::fs::write(&me, "").unwrap();
+        std::fs::write(new.join(&name), "").unwrap();
+        let path = || vec![root.join("elsewhere"), new.clone()].into_iter();
+        // Where it was, while it's there.
+        assert_eq!(installed(&me, path()), Some(me.clone()));
+        // Taken out: the one on the PATH.
+        std::fs::remove_file(&me).unwrap();
+        assert_eq!(installed(&me, path()), Some(new.join(&name)));
+        // Nowhere: none.
+        assert_eq!(installed(&me, std::iter::empty()), None);
+        let _ = std::fs::remove_dir_all(&root);
+    }
 
     #[test]
     fn the_agent_is_told_what_needs_reading_with_its_folders() {

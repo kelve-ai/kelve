@@ -12,6 +12,7 @@
 //! when the person asks it to, and lessons as it works. When a newer kelve
 //! is out, the end of one tool's answer says so, once for each version.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use anyhow::Context;
@@ -100,19 +101,46 @@ pub async fn serve() -> anyhow::Result<()> {
 }
 
 /// A tool's answer, with the line saying a newer kelve is out at its end,
-/// the first time kelve gives it for that version. Not on `update`'s own.
+/// the first time kelve gives it for that version, and the one saying these
+/// tools are an older kelve's. Not on `update`'s own.
 async fn with_news(kelve: &Kelve, params: &Value, mut answer: Value) -> Value {
     if params["name"] == "update" {
         return answer;
     }
-    let Ok(told) = kelve.send(kelve.post("/api/agent/update/tell")).await else {
-        return answer;
-    };
-    if let (Some(line), Some(text)) = (told["line"].as_str(), answer["content"][0]["text"].as_str())
-    {
-        answer["content"][0]["text"] = json!(format!("{text}\n\n{line}"));
+    let told = kelve
+        .send(kelve.post("/api/agent/update/tell"))
+        .await
+        .ok()
+        .and_then(|t| t["line"].as_str().map(str::to_string));
+    let lines: Vec<String> = [told, older(kelve).await].into_iter().flatten().collect();
+    if let (false, Some(text)) = (lines.is_empty(), answer["content"][0]["text"].as_str()) {
+        answer["content"][0]["text"] = json!(format!("{text}\n\n{}", lines.join("\n\n")));
     }
     answer
+}
+
+/// Whether these tools have said they're an older kelve's.
+static SAID_OLDER: AtomicBool = AtomicBool::new(false);
+
+/// The line saying kelve was updated since these tools started, so they're
+/// still the older version's, its instructions too: once, since only the
+/// agent restarting them, or the person reconnecting them, starts the new.
+async fn older(kelve: &Kelve) -> Option<String> {
+    if SAID_OLDER.load(Ordering::Relaxed) {
+        return None;
+    }
+    let running = kelve.send(kelve.get("/api/agent/update")).await.ok()?;
+    let line = older_line(running["version"].as_str()?, env!("CARGO_PKG_VERSION"))?;
+    SAID_OLDER.store(true, Ordering::Relaxed);
+    Some(line)
+}
+
+fn older_line(running: &str, ours: &str) -> Option<String> {
+    kelve_core::update::is_newer(running, ours).then(|| {
+        format!(
+            "kelve was updated to {running} since its tools here started, so they're still {ours}'s. Tell the person, in a sentence, to reconnect kelve's MCP server, or restart you, for the new ones."
+        )
+    })
 }
 
 /// Tells kelve which agent is calling.
@@ -666,6 +694,19 @@ async fn call(kelve: &Kelve, agent: &str, params: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tools_older_than_the_kelve_running_say_so() {
+        let line = older_line("0.1.4", "0.1.3").unwrap();
+        assert!(line.starts_with("kelve was updated to 0.1.4"), "{line}");
+        assert!(line.contains("still 0.1.3's") && line.contains("reconnect kelve's MCP server"));
+        assert_eq!(older_line("0.1.3", "0.1.3"), None);
+        assert_eq!(
+            older_line("0.1.2", "0.1.3"),
+            None,
+            "kelve going back isn't news"
+        );
+    }
 
     #[test]
     fn a_path_from_where_the_agent_works_is_made_whole() {
