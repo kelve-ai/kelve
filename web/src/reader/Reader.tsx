@@ -289,12 +289,10 @@ export function ReadyKey({ ready, entry }: {
  * your agent at work; Files and Notes, the ideas' squares, and what kelve
  * marks for you a click away.
  */
-function SideKey({ change, marks, hint, order, agent }: {
+function SideKey({ change, marks, order, agent }: {
   change: boolean
   /** Opens what kelve marks for you, beside the work. */
   marks: () => void
-  /** The hint about squares, shown once. */
-  hint?: ReactNode
   /** The In order tab is showing. */
   order: boolean
   /** Your agent, as people say it: "Claude Code". */
@@ -318,7 +316,6 @@ function SideKey({ change, marks, hint, order, agent }: {
           <button type="button" className="marked-for" onClick={marks}>What kelve marks</button>
         </>
       )}
-      {hint}
     </div>
   )
 }
@@ -733,14 +730,14 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
                       order={at.t === 'order' && (steps.length > 0 || finding)}
                       agent={agentName}
                       marks={() => go({ k: 'marks', n: null })}
-                      hint={
-                        squaresHint && (
-                          <Hint side="down" style={{ bottom: 'calc(100% + 12px)', left: 0 }} onDone={squaresSeen}>
-                            <b>Each square is an idea this work rests on.</b> {isChange ? 'Red ones are new in this change. ' : ''}Click one for what it is, how it works and why, then what it rests on. A filled square is still to read; it empties once you have.
-                          </Hint>
-                        )
-                      }
                     />
+                  }
+                  filesHint={
+                    squaresHint && (
+                      <Hint side="up" style={{ top: 'calc(100% + 12px)', left: 'calc(50% - 30px)' }} onDone={squaresSeen}>
+                        <b>Each square is an idea this work rests on.</b> {isChange ? 'Red ones are new in this change. ' : ''}Click one for what it is, how it works and why, then what it rests on. A filled square is still to read; it empties once you have.
+                      </Hint>
+                    )
                   }
                   width={narrow ? undefined : widths.side}
                   grip={narrow ? undefined : <Grip right width={widths.side} set={(w) => setWidth('side', w)} label="The width of the side" />}

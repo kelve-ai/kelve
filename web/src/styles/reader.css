@@ -91,6 +91,9 @@
 .tabs button:hover { color: var(--ink); }
 .tabs button.on { background: var(--well); color: var(--ink); font-weight: 500; }
 .tabs button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+/* A hint under a tab, in a row laid out as the tabs are, so it points at its tab. */
+.tab-hints { height: 0; }
+.tab-hints > span { position: relative; flex: 1; }
 .filter { display: flex; align-items: center; gap: 8px; height: 32px; margin: 10px 16px 12px 2px; padding: 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--rule); color: var(--placeholder); }
 .filter input { flex: 1; min-width: 0; border: 0; background: none; font: 13px var(--sans); color: var(--ink); outline: none; }
 .filter input::placeholder { color: var(--placeholder); }
