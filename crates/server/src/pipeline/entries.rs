@@ -509,6 +509,58 @@ async fn start_revision(app: &Shared, key: &str, id: &str, mut base: Base) -> Re
     .await
 }
 
+/// Asks for an entry the graph has to be written again, saying what's
+/// wrong with it, as the graph's own problems are said: for a review of
+/// what was written, by a person or their agent. The writer is given the
+/// entry and `wrong`, as when the graph finds an entry poor. Whether a
+/// rewrite was started: none for an entry not sent, or already changing.
+pub async fn rewrite(app: &Shared, key: &str, wrong: &[String]) -> Result<bool> {
+    let (Some(row), Some(idea)) = (entry(app, key).await?, idea(app, key).await?) else {
+        return Ok(false);
+    };
+    let (Some(revision), Some(shown)) = (
+        row.revision.clone(),
+        row.entry
+            .as_deref()
+            .and_then(|e| serde_json::from_str::<Entry>(e).ok()),
+    ) else {
+        return Ok(false);
+    };
+    if row.state != "ready" || app.graph_writer().is_none() {
+        return Ok(false);
+    }
+    // The graph's ID for the idea its revision is of: the one the entry
+    // names, as the graph gave it; else the key, or what a new idea became.
+    let id = if is_id(&shown.idea.id) {
+        shown.idea.id.clone()
+    } else if is_id(key) {
+        key.to_string()
+    } else if let Some(id) = &idea.became {
+        id.clone()
+    } else {
+        return Ok(false);
+    };
+    {
+        let mut conn = app.db.acquire().await?;
+        let wrong = serde_json::to_string(wrong).unwrap_or_default();
+        kelve_store::entries::checked(&mut conn, key, Some(&wrong)).await?;
+    }
+    let base = Base {
+        kind: RevisionKind::Rewrite,
+        revision,
+        // Its claims weren't found wrong: each is kept or dropped with why.
+        faulted: Vec::new(),
+        entry: shown,
+        claims: Vec::new(),
+        ask: None,
+    };
+    start_revision(app, key, &id, base).await?;
+    let mut conn = app.db.acquire().await?;
+    Ok(kelve_store::entries::get(&mut conn, key)
+        .await?
+        .is_some_and(|r| r.state == "writing"))
+}
+
 /// How an idea relates, a line each with why, for the writer.
 fn described(r: &kelve_graph_api::IdeaRelations) -> Vec<String> {
     let mut lines = Vec::new();

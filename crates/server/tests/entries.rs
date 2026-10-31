@@ -841,3 +841,40 @@ async fn once_the_days_limit_is_reached_every_send_waits_until_it_resets_and_rea
         .unwrap();
     assert_eq!((today.sent, today.checking), (2, 2));
 }
+
+#[tokio::test]
+async fn a_review_asks_for_an_entry_again_saying_whats_wrong() {
+    let graph = StandIn::start().await.unwrap();
+    graph.page(PAGE, SAYS);
+    let app = kelve(Some(&graph)).await;
+    let idea = advisory_locks();
+    entries::want(&app, &idea).await.unwrap();
+    work(&app, agent).await;
+    let sent = row(&app, &idea.key).await;
+    assert_eq!(sent.state, "ready", "{}", sent.step);
+    // A review finds it written around one language.
+    let wrong = vec!["It's written around Rust: write it for any language.".to_string()];
+    assert!(entries::rewrite(&app, &idea.key, &wrong).await.unwrap());
+    assert!(
+        !entries::rewrite(&app, &idea.key, &wrong).await.unwrap(),
+        "once: it's being written again"
+    );
+    let given = work(&app, agent).await;
+    let write = given
+        .iter()
+        .find(|j| j.kind == "write")
+        .expect("written again");
+    assert!(
+        write.material["replacing"]["found"]
+            .to_string()
+            .contains("any language"),
+        "the writer is told what's wrong: {}",
+        write.material
+    );
+    assert!(
+        !write.material["replacing"]["claims"]
+            .to_string()
+            .contains("found wrong"),
+        "its claims weren't found wrong"
+    );
+}
