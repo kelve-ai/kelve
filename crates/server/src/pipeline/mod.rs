@@ -107,6 +107,20 @@ pub async fn run_once(app: &Shared) -> Result<Option<String>> {
         let mut conn = app.db.acquire().await?;
         jobs::claim(&mut conn).await?
     };
+    run_claimed(app, job).await
+}
+
+/// Runs the job with this key, if it's due and no one has it: the work an
+/// agent's answer was for, and nothing else that's due.
+pub async fn run_key(app: &Shared, key: &str) -> Result<Option<String>> {
+    let job = {
+        let mut conn = app.db.acquire().await?;
+        jobs::claim_key(&mut conn, key).await?
+    };
+    run_claimed(app, job).await
+}
+
+async fn run_claimed(app: &Shared, job: Option<jobs::Job>) -> Result<Option<String>> {
     let Some(job) = job else {
         return Ok(None);
     };
