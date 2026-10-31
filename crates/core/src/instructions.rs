@@ -95,9 +95,9 @@ pub fn get(name: &str) -> Option<Instructions> {
         CHOOSE => (CHOOSE, 9, choose()),
         BUILT_ON => (BUILT_ON, 2, built_on()),
         RELATE => (RELATE, 2, relate()),
-        WRITE => (WRITE, 5, write()),
-        FIX => (FIX, 4, fix()),
-        EXTEND => (EXTEND, 2, extend()),
+        WRITE => (WRITE, 6, write()),
+        FIX => (FIX, 5, fix()),
+        EXTEND => (EXTEND, 3, extend()),
         LESSON => (LESSON, 5, lesson()),
         FOLDERS => {
             return Some(Instructions {
@@ -410,7 +410,7 @@ For each one:
 /// entries the graph turned away (23 October 2026).
 fn write() -> String {
     format!(
-        "Write one entry for kelve's shared knowledge graph: the page for one idea, like a page of Wikipedia, but written to make people understand, not to be encyclopaedic. Write for one reader: a working developer who has never met this idea. Don't define programming basics; define, in a clause, anything particular to the area.
+        "Write one entry for kelve's shared knowledge graph: the page for one idea, like a page of Wikipedia, but written to make people understand, not to be encyclopaedic. Write for one reader: a working developer who has never met this idea. {ANY_LANGUAGE} Don't define programming basics; define, in a clause, anything particular to the area.
 
 First, find what to write it from. Search the web and read the pages yourself, with your own tools: specifications, official documentation and well-known practitioners' writing, about the idea only, never about anyone. Use two to six pages, each at an https address you have read. List them in sources, numbered from 1, each with its address, its title, who published it, and its date when it gives one.
 
@@ -460,6 +460,10 @@ The shared graph checks every entry before anyone else reads it, and turns away 
 /// What makes a claim hold when the graph checks it against its quotes:
 /// what every job that writes claims is told. One claim that fails turns
 /// the whole entry away.
+/// An entry is for anyone who meets the idea, in whatever they work in:
+/// never framed around the language of the work it was first met in.
+const ANY_LANGUAGE: &str = "The reader may work in any language, or none. Explain the idea as it is everywhere it's used, and show code in pseudocode or in two or three widely used languages, never only the one you've lately been reading. Name one language, its syntax or its tools, only where the idea belongs to that language, or as one example among several. Cite pages about the idea, not about one language's take on it, unless that's the idea.";
+
 const HOLDS: &str = "A claim holds only if its quotes say all of it, and one claim that fails turns the whole entry away:
 - Say no more than the quotes do. Keep their scope, tense and time: a page that says something held \"as of April 2022\" supports a claim about April 2022, never one about now. Keep their conditions: if a page says to avoid something only in one case, the claim names that case. Use no term the quotes don't use: a claim that something is called its role needs a quote that calls it that.
 - Claim only what a page states, never what it asks, gives as an example, or says in an aside.
@@ -481,7 +485,7 @@ const REVISION_ANSWER: &str = "Answer with only what changes, in the same shape 
 /// with it, and says what makes a claim hold (`HOLDS`).
 fn fix() -> String {
     format!(
-        "The shared graph checked an entry and found claims its pages don't support, or other problems. Fix only those: every other block stays exactly as it is. {REVISING} What the checks found is given with it, with the ids of the blocks it's in: for each claim found wrong, its words, what it quotes from each page, and what the graph found, in the graph's words.
+        "The shared graph checked an entry and found claims its pages don't support, or other problems. Fix only those: every other block stays exactly as it is. What you write anew follows the entry's rule: {ANY_LANGUAGE} {REVISING} What the checks found is given with it, with the ids of the blocks it's in: for each claim found wrong, its words, what it quotes from each page, and what the graph found, in the graph's words.
 
 For each claim found wrong, read what the graph found, and fix that: narrow the claim to what its quotes say; or quote a page that says all of it, read by you now, with the whole sentence or two in quotes, copied exactly; or take out the claim and the sentence that makes it. Never cite a page for something it doesn't say, and never give a claim again as it was. For each block found wrong, give it again, with the same id, part and fold, changing only what fixes what was found. A block with nothing left to say goes in remove, by its id, with why. Never touch a block that wasn't found wrong, and never add one.
 
@@ -500,7 +504,7 @@ The same rules for writing, voice and links hold as when the entry was written. 
 /// Version 2 says what makes a claim it adds hold (`HOLDS`).
 fn extend() -> String {
     format!(
-        "Add to an entry in kelve's shared knowledge graph what its readers asked for, or what the graph found it lacks, and nothing else. The entry is sound: its claims were checked against their pages, so it grows only by what's added, and nothing there changes. {REVISING} What's asked is said with it, with the part it goes under when there is one.
+        "Add to an entry in kelve's shared knowledge graph what its readers asked for, or what the graph found it lacks, and nothing else. {ANY_LANGUAGE} The entry is sound: its claims were checked against their pages, so it grows only by what's added, and nothing there changes. {REVISING} What's asked is said with it, with the part it goes under when there is one.
 
 First read the pages you'll add from, with your own tools, as when an entry is written: specifications, official documentation and well-known practitioners' writing, each at an https address you have read.
 
