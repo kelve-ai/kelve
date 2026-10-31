@@ -181,33 +181,57 @@ export function watchPage() {
  * screen to fetch again. After the stream drops and comes back, everything
  * fetches again, since anything could have changed meanwhile; and if kelve
  * came back on another build, the page reloads, so it's never the old one.
+ *
+ * Only while the tab is in sight: a browser keeps at most six connections
+ * to one address, and every kelve tab's stream holds one, so with six tabs
+ * open a seventh never loads. A tab out of sight lets its stream go, and
+ * back in sight listens again, as after a drop.
  */
 export function listen() {
   if (example) return () => {}
-  const source = new EventSource('/api/stream')
+  let source: EventSource | undefined
   let dropped = false
   // The build this page came from: the first the stream names.
   let page: string | undefined
-  source.onmessage = (message) => {
-    let event: ServerEvent
-    try {
-      event = JSON.parse(message.data) as ServerEvent
-    } catch {
-      return // Not one kelve knows: nothing to fetch.
+  const open = () => {
+    const s = new EventSource('/api/stream')
+    s.onmessage = (message) => {
+      let event: ServerEvent
+      try {
+        event = JSON.parse(message.data) as ServerEvent
+      } catch {
+        return // Not one kelve knows: nothing to fetch.
+      }
+      if (event.type === 'page') {
+        if (page !== undefined && page !== event.build) window.location.reload()
+        page ??= event.build
+        return
+      }
+      told(event)
     }
-    if (event.type === 'page') {
-      if (page !== undefined && page !== event.build) window.location.reload()
-      page ??= event.build
-      return
+    s.onerror = () => {
+      dropped = true
     }
-    told(event)
+    s.onopen = () => {
+      if (dropped) changed()
+      dropped = false
+    }
+    source = s
   }
-  source.onerror = () => {
-    dropped = true
+  const sight = () => {
+    if (document.hidden) {
+      source?.close()
+      source = undefined
+      // What it misses meanwhile is fetched once it's back.
+      dropped = true
+    } else if (!source) {
+      open()
+    }
   }
-  source.onopen = () => {
-    if (dropped) changed()
-    dropped = false
+  sight()
+  document.addEventListener('visibilitychange', sight)
+  return () => {
+    document.removeEventListener('visibilitychange', sight)
+    source?.close()
   }
-  return () => source.close()
 }
