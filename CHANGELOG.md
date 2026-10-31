@@ -2,6 +2,17 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## 0.1.4, 31 October 2026
+
+- **Signing in agrees to the shared graph's terms as it serves them.** kelve went by the terms it was built with, so when the graph's differed, signing in didn't agree, and agreeing in settings still counted as not agreed: nothing you wrote was added. Now kelve goes by the graph's terms, and what it held until you agreed is sent once it can be.
+- **What the graph would turn away goes back to your agent first.** kelve checks a whole entry as the graph does when your agent hands it in, so a stray web address or an empty description is fixed then, not lost at the graph.
+- **Your agent hears back in time.** Handing in an answer runs its own work first, and kelve replies within 15 seconds however much else is waiting. Your agent no longer hears that kelve didn't answer, when it had.
+- **A day's reading of the graph, used, is said plainly.** kelve said to sign in; now it says the day's reading is used, waits for the reset at midnight UTC without asking the graph again meanwhile, and keeps the work waiting on it rather than giving up.
+- **A seventh kelve tab loads.** Each tab kept a connection open, and a browser keeps six to one address. A tab you can't see now lets its connection go, and catches up when you come back to it.
+- **Your agent's kelve tools outlive a reinstall.** Reinstalling kelve while your agent ran left its kelve tools turned away, or unable to start kelve, until you reconnected them. Now they read kelve's new secret and start the kelve that's installed, and say when they've outlived an update.
+- **Entries are written for anyone, in any language.** Your agent explains an idea as it is everywhere it's used, not only in the language of the work it met it in.
+- **The hint about squares points at the Files tab.**
+
 ## 0.1.3, 30 October 2026
 
 - **Setup's arrow keys work when the installer runs it.** On macOS, installed with `curl … | sh`, the keys came out as `^[[C` and setup fell back to typing. If keys can't be read, typing a choice now takes the choices' place.
