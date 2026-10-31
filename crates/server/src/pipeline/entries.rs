@@ -744,7 +744,31 @@ fn said(problems: &[kelve_core::entry::check::Problem]) -> String {
 fn whole_shape(value: &Value) -> std::result::Result<draft::Built, String> {
     let material = draft::sources_of(value).map_err(|p| p.to_string())?;
     let d = draft::parse(value).map_err(|p| p.to_string())?;
-    draft::build(&d, &material).map_err(|p| said(&p))
+    let built = draft::build(&d, &material).map_err(|p| said(&p))?;
+    sound(
+        &built.blocks,
+        &built.sources,
+        built.links.iter().map(|l| l.term.clone()),
+    )?;
+    Ok(built)
+}
+
+/// The check the graph runs on every entry it takes (`check::check`), run
+/// as the answer comes in: what it would turn away goes back to the agent
+/// to fix, rather than to the graph and then nowhere. Building an entry
+/// checks each block's shape; this checks the whole, as the graph does.
+fn sound(
+    blocks: &[kelve_core::Block],
+    sources: &[kelve_core::entry::Source],
+    terms: impl Iterator<Item = String>,
+) -> std::result::Result<(), String> {
+    let terms: Vec<String> = terms.collect();
+    let problems = kelve_core::entry::check::check(blocks, sources, &terms);
+    if problems.is_empty() {
+        Ok(())
+    } else {
+        Err(said(&problems))
+    }
 }
 
 /// Whether a write, fix or extend job's answer is in its shape: a whole
@@ -785,7 +809,16 @@ pub async fn shape(
         .ok_or("That entry isn't being changed any more. Take the next job.")?;
     let pages = draft::sources_of(value).map_err(|p| p.to_string())?;
     let d = draft::parse(value).map_err(|p| p.to_string())?;
-    draft::build_revision(kind, &d, &pages, &base, &claims, &faulted).map_err(|p| said(&p))?;
+    let revised =
+        draft::build_revision(kind, &d, &pages, &base, &claims, &faulted).map_err(|p| said(&p))?;
+    sound(
+        &revised.blocks,
+        &revised.sources,
+        base.links
+            .iter()
+            .map(|l| l.term.clone())
+            .chain(revised.links.iter().map(|l| l.term.clone())),
+    )?;
     let held: Vec<&str> = claims
         .iter()
         .enumerate()

@@ -268,6 +268,45 @@ async fn a_quote_too_short_to_check_is_handed_back_before_the_graph_sees_it() {
 }
 
 #[tokio::test]
+async fn what_the_graph_would_turn_away_is_handed_back_before_it_sees_it() {
+    let graph = StandIn::start().await.unwrap();
+    graph.page(PAGE, SAYS);
+    let app = kelve(Some(&graph)).await;
+    let idea = advisory_locks();
+    entries::want(&app, &idea).await.unwrap();
+    let job = loop {
+        common::jobs(&app).await;
+        let job = agent::next(&app, &common::caller()).await.unwrap().unwrap();
+        if job.kind == "write" {
+            break job;
+        }
+        let handed = agent::hand_in(&app, &common::caller(), job.job, agent(&job))
+            .await
+            .unwrap();
+        assert_eq!(handed, HandedIn::Yes);
+    };
+    // A web address in code, in a paragraph: each block's shape is sound,
+    // but the graph's check of the whole entry turns it away.
+    let mut answer = entry(TRUE);
+    answer["blocks"][0]["text"] = json!(
+        "A program can take a lock by a name it chooses, and the database keeps it^1, as `psql https://example.com/locks` would show. It rests on [[database transactions]]."
+    );
+    let handed = agent::hand_in(&app, &common::caller(), job.job, answer)
+        .await
+        .unwrap();
+    let HandedIn::No { why, put_aside } = handed else {
+        panic!("taken: {handed:?}");
+    };
+    assert!(!put_aside);
+    assert!(why.contains("a link or a web address in it"), "{why}");
+    assert!(graph.revisions(&idea.key).is_empty(), "never sent");
+    let handed = agent::hand_in(&app, &common::caller(), job.job, entry(TRUE))
+        .await
+        .unwrap();
+    assert_eq!(handed, HandedIn::Yes);
+}
+
+#[tokio::test]
 async fn a_claim_its_page_doesnt_support_is_fixed_once_then_the_entry_is_dropped() {
     let graph = StandIn::start().await.unwrap();
     graph.page(PAGE, SAYS);
