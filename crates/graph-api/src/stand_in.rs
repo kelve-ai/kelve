@@ -143,6 +143,9 @@ struct Held {
     /// ran out, `ideas`, `entries` or `relations`, as the graph's problem
     /// names it. Every changeset gets the graph's "Enough for today" then.
     enough: Option<String>,
+    /// The account read as much as it may today: no reading tokens until
+    /// midnight UTC, as the graph says.
+    reads_used: bool,
     /// How many changesets were turned away for the day's limit.
     over_limit: u32,
     /// Lessons, oldest first. The stand-in checks them in code only, and finds
@@ -354,6 +357,12 @@ impl StandIn {
     /// takes them again.
     pub fn enough(&self, what: Option<&str>) {
         lock(&self.held).enough = what.map(str::to_string);
+    }
+
+    /// Says the account has read as much as it may today, so no reading
+    /// tokens are signed until midnight UTC; or, with false, signs them again.
+    pub fn reads_used(&self, used: bool) {
+        lock(&self.held).reads_used = used;
     }
 
     /// How many changesets were turned away for the day's limit.
@@ -816,11 +825,20 @@ async fn token_key() -> Json<crate::tokens::TokenKey> {
 }
 
 /// Signs a batch of reading tokens, blind, for the account signed in.
-async fn tokens(headers: HeaderMap, Json(ask): Json<crate::tokens::TokenAsk>) -> Response {
+async fn tokens(
+    State(held): Shared,
+    headers: HeaderMap,
+    Json(ask): Json<crate::tokens::TokenAsk>,
+) -> Response {
     if !signed_in(&headers) {
         return problem(
             StatusCode::UNAUTHORIZED,
             "Sign in to kelve’s shared graph to read it and add to it.",
+        );
+    }
+    if lock(&held).reads_used {
+        return until_midnight(
+            "That’s as much of the graph as an account reads in a day. It starts again at midnight UTC.",
         );
     }
     match ISSUER.sign(&ask, 10_000) {
@@ -1362,13 +1380,18 @@ async fn changeset(State(held): Shared, headers: HeaderMap, Json(cs): Json<Chang
 /// The graph's answer once an account has added as many of `what` as a
 /// new account may today: its words, and the seconds to midnight UTC.
 fn enough_for_today(what: &str) -> Response {
+    until_midnight(&format!(
+        "You’ve added as many {what} as a new account can in a day. kelve will send the rest tomorrow; the limit rises once ten of your entries are accepted, or after a week."
+    ))
+}
+
+/// The graph's "Enough for today", saying `detail`, until midnight UTC.
+fn until_midnight(detail: &str) -> Response {
     let p = Problem {
         kind: "about:blank".into(),
         title: crate::ENOUGH_FOR_TODAY.into(),
         status: 429,
-        detail: format!(
-            "You’ve added as many {what} as a new account can in a day. kelve will send the rest tomorrow; the limit rises once ten of your entries are accepted, or after a week."
-        ),
+        detail: detail.into(),
     };
     let secs = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

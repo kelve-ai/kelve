@@ -60,6 +60,12 @@ pub enum Error {
     /// while: try again `after` this long.
     #[error("{said}")]
     Limited { said: String, after: Duration },
+    /// The account has read as much of the graph as it may today: every
+    /// read waits until the limit resets, `after` this long.
+    #[error(
+        "kelve has read as much of the shared graph as an account may in a day. It reads again once the limit resets, at midnight UTC."
+    )]
+    ReadsUsed { after: Duration },
     #[error("Sign in to kelve’s shared graph to read it and add to it.")]
     SignIn,
     #[error("The shared graph of ideas said no: {said}")]
@@ -170,6 +176,9 @@ type Buckets = Arc<Mutex<HashMap<String, (Instant, Arc<Bucket>)>>>;
 struct Pool {
     key: Option<(crate::tokens::TokenKey, Instant)>,
     tokens: Vec<String>,
+    /// Until when the graph gives this account no more today: it read as
+    /// much as it may in a day. Another account, signed in since, may read.
+    used_until: Option<(String, Instant)>,
 }
 
 // Never the keys: only where, and whether it writes or reads as someone.
@@ -540,8 +549,14 @@ impl Client {
             .json(&ask)
             .send()
             .await
-            .ok()
-            .filter(|r| r.status().is_success())?;
+            .ok()?;
+        // The day's reading, used: none until it resets, asked for no more.
+        if res.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
+            let after = retry_after(&res).unwrap_or_else(to_midnight);
+            pool.used_until = Some((account.clone(), Instant::now() + after));
+            return None;
+        }
+        let res = Some(res).filter(|r| r.status().is_success())?;
         let grant: crate::tokens::TokenGrant =
             serde_json::from_slice(&capped(res).await.ok()?).ok()?;
         match crate::tokens::finish(pending, &grant) {
@@ -553,10 +568,26 @@ impl Client {
         pool.tokens.pop()
     }
 
+    /// How long until the account may read again, while it has read as
+    /// much as it may today. None when it may read.
+    pub async fn reads_used(&self) -> Option<Duration> {
+        let account = self.reading_as.as_ref().or(self.token.as_ref())?;
+        let pool = self.tokens.lock().await;
+        pool.used_until
+            .as_ref()
+            .filter(|(whose, _)| whose == account)
+            .and_then(|(_, until)| until.checked_duration_since(Instant::now()))
+            .filter(|left| !left.is_zero())
+    }
+
     /// Forgets the tokens on hand and their key, when the graph turned one
     /// away: its key changed.
     async fn forget_tokens(&self) {
-        *self.tokens.lock().await = Pool::default();
+        let mut pool = self.tokens.lock().await;
+        *pool = Pool {
+            used_until: pool.used_until.take(),
+            ..Pool::default()
+        };
     }
 
     /// Where to send the person's browser to sign in. The graph sends it on
@@ -777,6 +808,16 @@ impl Client {
         build: impl Fn() -> reqwest::RequestBuilder,
         reading: bool,
     ) -> Result<Option<T>> {
+        // A read, once the day's reading is used: it waits for the limit to
+        // reset, rather than asking the graph again and again meanwhile.
+        if reading
+            && let Some(after) = self.reads_used().await
+            && build()
+                .build()
+                .is_ok_and(|r| !r.headers().contains_key(reqwest::header::AUTHORIZATION))
+        {
+            return Err(Error::ReadsUsed { after });
+        }
         let mut wait = FIRST_WAIT;
         let mut tokens_again = false;
         for attempt in 1..=ATTEMPTS {
@@ -839,6 +880,10 @@ impl Client {
                 continue;
             }
             if status == reqwest::StatusCode::UNAUTHORIZED {
+                // Read without a token, since the graph gives no more today.
+                if reading && let Some(after) = self.reads_used().await {
+                    return Err(Error::ReadsUsed { after });
+                }
                 // A token turned away, its key changed since: new ones, once.
                 if !tokens_again && (self.reading_as.is_some() || self.token.is_some()) {
                     tokens_again = true;
@@ -1181,6 +1226,73 @@ mod tests {
     async fn an_unreachable_graph_says_to_check_the_connection() {
         let g = Client::new("http://127.0.0.1:9", None).unwrap();
         assert_eq!(g.manifest().await.unwrap_err(), Error::Unreachable);
+    }
+
+    #[tokio::test]
+    async fn once_the_days_reading_is_used_reads_wait_for_the_reset_and_writing_goes_on() {
+        let issuer = Arc::new(crate::tokens::Issuer::from_seed(&[2u8; 32]).unwrap());
+        let reads = Arc::new(AtomicU32::new(0));
+        let counted = reads.clone();
+        let g = serve(
+            Router::new()
+                .route(
+                    "/v1",
+                    get(move || {
+                        counted.fetch_add(1, Ordering::SeqCst);
+                        // No token, as the graph gave none: it won't be read.
+                        async { StatusCode::UNAUTHORIZED }
+                    }),
+                )
+                .route(
+                    "/v1/tokens/key",
+                    get(move || {
+                        let key = issuer.key().clone();
+                        async move { axum::Json(key) }
+                    }),
+                )
+                .route(
+                    "/v1/account/tokens",
+                    axum::routing::post(|| async {
+                        (
+                            StatusCode::TOO_MANY_REQUESTS,
+                            [("retry-after", "3600"), ("content-type", "application/problem+json")],
+                            r#"{"type":"about:blank","title":"Enough for today","status":429,"detail":"That’s as much of the graph as an account reads in a day."}"#,
+                        )
+                    }),
+                )
+                .route(
+                    "/v1/account",
+                    get(|| async { r#"{"handle":"kelve-seed","agreed":null}"# }),
+                ),
+        )
+        .await;
+        let seeding = g.with_token(Some("seeding".into()));
+        match seeding.manifest().await.unwrap_err() {
+            Error::ReadsUsed { after } => {
+                assert!(after > Duration::from_secs(3500), "{after:?}");
+            }
+            other => panic!("{other:?}"),
+        }
+        assert!(seeding.reads_used().await.is_some());
+        assert!(
+            seeding
+                .manifest()
+                .await
+                .unwrap_err()
+                .to_string()
+                .contains("midnight UTC"),
+            "said plainly"
+        );
+        assert_eq!(reads.load(Ordering::SeqCst), 1, "not asked again meanwhile");
+        // What carries the account's key goes on.
+        assert_eq!(seeding.account().await.unwrap().handle, "kelve-seed");
+        // Another account, signed in since, may read.
+        assert!(
+            g.with_token(Some("other".into()))
+                .reads_used()
+                .await
+                .is_none()
+        );
     }
 
     #[tokio::test]

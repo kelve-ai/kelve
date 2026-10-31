@@ -166,10 +166,25 @@ async fn run(app: &Shared, job: jobs::Job) {
         .catch_unwind()
         .await
         .unwrap_or_else(|_| Err(Failed::Other("It stopped part way.".into())));
+    // The day's reading of the shared graph used: what failed waits for it
+    // to reset, without counting a try, rather than failing again and again
+    // until it gives up.
+    let used = match (&result, app.graph_reader()) {
+        (Err(_), Some(graph)) => graph.reads_used().await,
+        _ => None,
+    };
     let Ok(mut conn) = app.db.acquire().await else {
         // The lease runs out and the job is taken again.
         return;
     };
+    if let Some(after) = used {
+        let at = Utc::now() + chrono::Duration::from_std(after).unwrap_or_default();
+        if let Err(e) = jobs::later(&mut conn, job.id, at).await {
+            tracing::warn!(job = %job.kind, error = %e, "couldn't put a job off");
+        }
+        tracing::info!(job = %job.kind, "kelve has read as much of the shared graph as it may today; this waits until it resets");
+        return;
+    }
     // Claiming a job counts as a try, so more than one means it failed before.
     let changed = !matches!(result, Ok(Then::Done)) || job.attempts > 1;
     let saved = match result {
