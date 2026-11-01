@@ -680,6 +680,40 @@ async fn a_reader_asks_for_an_example_and_the_next_readers_agent_adds_one_touchi
 }
 
 #[tokio::test]
+async fn an_entry_for_an_idea_merged_since_is_followed_to_the_idea_it_became() {
+    let graph = StandIn::start().await.unwrap();
+    graph.page(PAGE, SAYS);
+    let kind = kelve_core::ideas::IdeaKind::Concept;
+    let id = graph.add("Advisory locks", "A lock a program names.", kind);
+    let into = graph.add("Advisory lock", "A lock a program names.", kind);
+    let writer = kelve(Some(&graph)).await;
+    let idea = Idea {
+        key: id.clone(),
+        ..advisory_locks()
+    };
+    entries::want(&writer, &idea).await.unwrap();
+    // The graph's judge merges it into another while the agent writes: the
+    // graph takes the entry under that one, and kelve follows it there.
+    work(&writer, |job| {
+        if job.kind == "write" {
+            graph.merge(&id, &into);
+        }
+        agent(job)
+    })
+    .await;
+    let done = row(&writer, &id).await;
+    assert_eq!(done.state, "ready", "{}", done.step);
+    assert!(
+        done.step.is_empty(),
+        "not said to be turned away: {}",
+        done.step
+    );
+    let taken = graph.revisions(&into);
+    assert_eq!(taken.len(), 1, "taken under the one it became");
+    assert_eq!(done.revision, Some(taken[0].revision.clone()));
+}
+
+#[tokio::test]
 async fn an_entry_found_wrong_in_one_block_is_fixed_in_that_block_alone() {
     let graph = StandIn::start().await.unwrap();
     let (_, id) = written(&graph).await;

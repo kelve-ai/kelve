@@ -1669,7 +1669,22 @@ pub async fn send(app: &Shared, key: &str) -> Result<Then> {
     for skipped in &applied.skipped {
         tracing::info!(skipped, "the shared graph left something out");
     }
-    let Some(revision) = applied.entries.get(&written.idea.id).cloned() else {
+    // A changeset sends one entry, and the graph takes it under the idea
+    // it's in now: another, when the graph's judge has merged this one
+    // into it since.
+    let taken = applied
+        .entries
+        .get_key_value(&written.idea.id)
+        .or_else(|| (applied.entries.len() == 1).then(|| applied.entries.iter().next())?)
+        .map(|(id, revision)| (id.clone(), revision.clone()));
+    if let Some((id, _)) = &taken
+        && *id != written.idea.id
+    {
+        let mut conn = app.db.acquire().await?;
+        kelve_store::entries::became(&mut conn, key, id).await?;
+        written.idea.id = id.clone();
+    }
+    let Some((_, revision)) = taken else {
         // Turned away at once, for what code could see: said in `skipped`.
         let why = applied
             .skipped
