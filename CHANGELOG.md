@@ -2,6 +2,10 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## 0.1.6, 1 November 2026
+
+- **An entry for an idea the graph has merged is followed, not lost.** The shared graph merges an idea it finds is the same as another, and takes your agent's entry under the one that stays. kelve looked for it under the old one and said the graph hadn't taken it. Now it follows the entry to the idea it's under.
+
 ## 0.1.5, 1 November 2026
 
 - **Fixing an entry no longer stalls on what was already checked.** A fix must keep each claim the shared graph already checked word for word, with its quotes, but kelve gave your agent those claims without their quotes. Your agent had to guess them, and a fix could close before it was taken. Each claim now comes with its quotes.
