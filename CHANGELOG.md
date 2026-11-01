@@ -2,6 +2,11 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## 0.1.5, 1 November 2026
+
+- **Fixing an entry no longer stalls on what was already checked.** A fix must keep each claim the shared graph already checked word for word, with its quotes, but kelve gave your agent those claims without their quotes. Your agent had to guess them, and a fix could close before it was taken. Each claim now comes with its quotes.
+- **Your agent's claims hold more often.** It keeps a page's "usually" and "by default", names a person or organisation only when the quoted sentence does, and starts a quote where its sentence starts, not at the heading beside it.
+
 ## 0.1.4, 31 October 2026
 
 - **Signing in agrees to the shared graph's terms as it serves them.** kelve went by the terms it was built with, so when the graph's differed, signing in didn't agree, and agreeing in settings still counted as not agreed: nothing you wrote was added. Now kelve goes by the graph's terms, and what it held until you agreed is sent once it can be.
