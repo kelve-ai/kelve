@@ -678,8 +678,9 @@ fn idea_said(idea: &Idea) -> String {
     )
 }
 
-/// An entry's claims, numbered, each with the block that makes it, and
-/// whether the checks since found it wrong.
+/// An entry's claims, numbered, each with the block that makes it, whether
+/// the checks since found it wrong, and its quotes, so a writer can give a
+/// checked claim again word for word, as a revision must.
 fn numbered(claims: &[kelve_graph_api::Claim]) -> String {
     claims
         .iter()
@@ -697,8 +698,13 @@ fn numbered(claims: &[kelve_graph_api::Claim]) -> String {
                         .join(" ")
                 )
             };
+            let quotes: String = c
+                .quotes
+                .iter()
+                .map(|q| format!("\n   Quotes ^{}: “{}”", q.source, q.text))
+                .collect();
             format!(
-                "{}. [{}] {} ({cites}){}",
+                "{}. [{}] {} ({cites}){}{quotes}",
                 i + 1,
                 if c.block.is_empty() {
                     "a figure"
@@ -1986,6 +1992,38 @@ mod tests {
                 "Claim 2: A node's role says what kind of thing it is.\nIt quotes source 1: “What kind of thing is it? For example, is it a button?”\nWhat the graph found: Claim 2 isn't supported by the pages it cites: they don't show that the page calls this property the 'role'.",
                 "Claim 3: An HTTP request names a URL and a method.\nIt quotes source 1: “A method that defines the required action.”\nWhat the graph found: Claim 3 isn't supported by the pages it cites.",
             ]
+        );
+    }
+
+    #[test]
+    fn a_revision_is_given_each_claims_quotes_to_keep_it_word_for_word() {
+        let claim = |text: &str, quote: &str, faulted: bool| kelve_graph_api::Claim {
+            text: text.into(),
+            sources: vec![1],
+            quotes: vec![kelve_graph_api::Quote {
+                source: 1,
+                text: quote.into(),
+            }],
+            block: "b2".into(),
+            key: String::new(),
+            faulted,
+        };
+        let listed = numbered(&[
+            claim(
+                "Volumes outlive containers.",
+                "Volumes persist after the container is removed.",
+                false,
+            ),
+            claim(
+                "A method names the action.",
+                "A method that defines the required action.",
+                true,
+            ),
+        ]);
+        assert_eq!(
+            listed,
+            "1. [b2] Volumes outlive containers. (cites ^1)\n   Quotes ^1: “Volumes persist after the container is removed.”\n\
+             2. [b2] A method names the action. (cites ^1) — found wrong\n   Quotes ^1: “A method that defines the required action.”"
         );
     }
 }
