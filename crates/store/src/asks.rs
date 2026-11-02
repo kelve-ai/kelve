@@ -28,6 +28,12 @@ const KEEP_MS: i64 = 24 * 60 * 60 * 1000;
 /// again doesn't put it back: a month.
 const KEEP_OFF_MS: i64 = 30 * KEEP_MS;
 
+/// How long a lesson job waits for the agent it was named for, before it's
+/// let go: six hours, a working session, so an agent busy finishing what
+/// the person asked still comes back to it. Only that agent knows what it
+/// learned, and after that it no longer remembers, or has gone.
+pub const LESSON_MS: i64 = 6 * 60 * 60 * 1000;
+
 /// A job for the agent, as it's added.
 #[derive(Debug, Clone, PartialEq)]
 pub struct New {
@@ -172,7 +178,8 @@ pub async fn get(conn: &mut Conn, id: i64) -> Result<Option<Ask>> {
 
 /// Takes the next job for the agent: the most wanted, oldest first, a job
 /// that finishes another where that one was, and never reading that's
-/// paused. A job held too long without an answer is offered again.
+/// paused, nor a lesson, which only the agent it's named for takes
+/// (`take_lesson`). A job held too long without an answer is offered again.
 pub async fn take(conn: &mut Conn, agent: &str) -> Result<Option<Ask>> {
     take_for(conn, agent, None, None, After::default()).await
 }
@@ -214,6 +221,7 @@ pub async fn take_for(
     Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "update asks set state = 'taken', taken_at = ?1, agent = ?2
           where id = (select id from asks where state = 'waiting' and not ({PAUSED})
+                         and kind != 'lesson'
                          and (?3 is null or kind != 'note' or substr(key, 1, length(?3)) = ?3)
                          and (?6 is null or opened = ?6 or kind = 'note')
                        order by {order} limit 1)
@@ -225,6 +233,24 @@ pub async fn take_for(
     .bind(after.resume_key.and_then(file_of))
     .bind(after.idea)
     .bind(only)
+    .fetch_optional(&mut *conn)
+    .await?)
+}
+
+/// Takes the lesson job under a key, for the agent that had what it's about:
+/// kelve named it to that agent alone, as its turn ended. Again, if that
+/// agent took it already and lost it. Never one older than `LESSON_MS`.
+pub async fn take_lesson(conn: &mut Conn, key: &str, agent: &str) -> Result<Option<Ask>> {
+    let now = now();
+    Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "update asks set state = 'taken', taken_at = ?1, agent = ?2
+          where key = ?3 and kind = 'lesson' and state in ('waiting', 'taken') and created_at >= ?4
+          returning {COLUMNS}"
+    )))
+    .bind(now)
+    .bind(agent)
+    .bind(key)
+    .bind(now - LESSON_MS)
     .fetch_optional(&mut *conn)
     .await?)
 }
@@ -760,10 +786,11 @@ pub async fn taken_about(conn: &mut Conn, kind: &str, opened: i64, about: &str) 
     .await?)
 }
 
-/// How many jobs wait for the agent to take them, but reading that's paused.
+/// How many jobs wait for the agent to take them, but reading that's paused
+/// and lessons, which wait for the agent each is named for.
 pub async fn waiting(conn: &mut Conn) -> Result<i64> {
     Ok(sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
-        "select count(*) from asks where state = 'waiting' and not ({PAUSED})"
+        "select count(*) from asks where state = 'waiting' and kind != 'lesson' and not ({PAUSED})"
     )))
     .fetch_one(&mut *conn)
     .await?)
@@ -839,8 +866,18 @@ pub async fn paused(conn: &mut Conn) -> Result<Vec<Paused>> {
 }
 
 /// Forgets answers taken up long enough ago, and jobs put aside: those
-/// the person took off the list after a month.
+/// the person took off the list after a month. And lets go of lessons the
+/// agent they were named for didn't take in time: no other knows what it
+/// learned.
 pub async fn sweep(conn: &mut Conn) -> Result<()> {
+    sqlx::query(
+        "delete from asks where kind = 'lesson' and created_at < ?1
+            and (state = 'waiting' or (state = 'taken' and taken_at < ?2))",
+    )
+    .bind(now() - LESSON_MS)
+    .bind(now() - LEASE_MS)
+    .execute(&mut *conn)
+    .await?;
     sqlx::query(
         "delete from asks where state in ('answered', 'dropped')
             and (case when taken_off_at is null then coalesce(answered_at, created_at) < ?1
@@ -1895,5 +1932,53 @@ mod tests {
                 .unwrap()
                 .is_empty()
         );
+    }
+
+    #[tokio::test]
+    async fn a_lesson_goes_only_to_the_agent_it_was_named_for_and_is_let_go_after_six_hours() {
+        let pool = crate::memory().await.unwrap();
+        let mut conn = pool.acquire().await.unwrap();
+        let lesson = New {
+            kind: "lesson".into(),
+            opened: None,
+            priority: 0,
+            resume_kind: "lesson.write".into(),
+            resume_key: Some("lesson.write:17".into()),
+            ..new("lesson.write:17", 0)
+        };
+        add(&mut conn, &lesson).await.unwrap();
+        // No agent's next job, for anything or one thing, and none counted.
+        assert_eq!(take(&mut conn, "another").await.unwrap(), None);
+        let only = take_for(&mut conn, "another", None, None, After::default());
+        assert_eq!(only.await.unwrap(), None);
+        assert_eq!(waiting(&mut conn).await.unwrap(), 0);
+        // By its key, it's taken; again too, by the agent that lost it.
+        for _ in 0..2 {
+            let got = take_lesson(&mut conn, "lesson.write:17", "mine")
+                .await
+                .unwrap();
+            assert_eq!(got.map(|a| a.state), Some("taken".to_string()));
+        }
+        assert_eq!(
+            take_lesson(&mut conn, "read.file:12:a.rs", "mine")
+                .await
+                .unwrap(),
+            None,
+            "only a lesson"
+        );
+        // Six hours on, untaken, it's let go: no agent knows what was learned.
+        sqlx::query("update asks set state = 'waiting', created_at = ?1")
+            .bind(now() - LESSON_MS - 1)
+            .execute(&mut *conn)
+            .await
+            .unwrap();
+        assert_eq!(
+            take_lesson(&mut conn, "lesson.write:17", "mine")
+                .await
+                .unwrap(),
+            None
+        );
+        sweep(&mut conn).await.unwrap();
+        assert_eq!(by_key(&mut conn, "lesson.write:17").await.unwrap(), None);
     }
 }

@@ -379,14 +379,22 @@ pub async fn next_after(
     else {
         return Ok(None);
     };
-    let waiting = asks::waiting(&mut conn).await?;
     drop(conn);
+    Ok(Some(job_of(app, row).await?))
+}
+
+/// A job taken, as the agent is given it.
+async fn job_of(app: &Shared, row: asks::Ask) -> ApiResult<Job> {
+    let waiting = {
+        let mut conn = app.db.acquire().await?;
+        asks::waiting(&mut conn).await?
+    };
     app.publish(ServerEvent::Asks);
     let instructions = instructions(app, &row.kind).await.ok_or_else(|| {
         ApiError::internal(format!("no instructions for a job of kind {}", row.kind))
     })?;
     let kind = row.kind;
-    Ok(Some(Job {
+    Ok(Job {
         job: row.id,
         kind: kind.clone(),
         about: row.about,
@@ -398,7 +406,51 @@ pub async fn next_after(
         ),
         answer_shape: serde_json::from_str(&row.schema).unwrap_or(Value::Null),
         waiting,
-    }))
+    })
+}
+
+/// The most kelve waits for a lesson job named to the agent to be ready:
+/// the work that asks for it runs as the agent's turn ends, and has
+/// usually run by the time the agent asks.
+const LESSON_WAIT: Duration = Duration::from_secs(20);
+
+/// The lesson job kelve named to the agent, by the name it gave: only that
+/// agent knows what it learned, so no other is given it (`asks::take_lesson`).
+/// The work that asks for it runs now, if it hasn't yet.
+pub async fn lesson(app: &Shared, caller: &Caller, name: &str) -> ApiResult<Job> {
+    hello(app, caller).await?;
+    let key = format!("{}:{}", crate::lessons::WRITE, name.trim());
+    let until = Instant::now() + LESSON_WAIT;
+    loop {
+        let (row, due) = {
+            let mut conn = app.db.acquire().await?;
+            (
+                asks::take_lesson(&mut conn, &key, &caller.name()).await?,
+                kelve_store::jobs::due(&mut conn, &key).await?,
+            )
+        };
+        if let Some(row) = row {
+            return job_of(app, row).await;
+        }
+        let Some(due) = due else {
+            return Err(ApiError::not_found(
+                "That lesson job isn't waiting any more: it was handed in, or let go because it wasn't taken within six hours. There's nothing more to do for it.",
+            ));
+        };
+        if Instant::now() >= until || due > Utc::now() {
+            return Err(ApiError::conflict(format!(
+                "kelve is still getting that lesson job ready: call next_job again in a minute, giving lesson: \"{}\".",
+                name.trim()
+            )));
+        }
+        if pipeline::run_key(app, &key)
+            .await
+            .map_err(ApiError::internal)?
+            .is_none()
+        {
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        }
+    }
 }
 
 /// The next job, as `next_after` gives it. When none is ready, kelve waits

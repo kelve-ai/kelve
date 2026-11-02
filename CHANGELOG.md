@@ -2,6 +2,10 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **Your agent writes what it learned.** After a stretch of failures it got past, kelve asked your agent to take "kelve's next job", which handed it whatever came first on the list, so no lesson was ever written. Now kelve names the lesson's job, your agent takes that one straight away, while it remembers, and no other agent can take it. One not taken within six hours is let go, since a later agent can't know what was learned.
+
 ## 0.1.8, 2 November 2026
 
 - **A part read plainly shows its ideas beside its code and its text.** Show the code and Show the text named each idea under its lines, inside the text column, which made the code harder to read. Now they're drawn as the file is, each idea in the margin beside its lines, across the page's whole width; on a phone, under them, as before. What your agent said leaves the bar: it's on the change's own page.

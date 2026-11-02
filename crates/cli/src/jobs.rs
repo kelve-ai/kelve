@@ -11,13 +11,19 @@ use crate::client::Kelve;
 
 /// `kelve job`: prints the next job as JSON, or nothing when there's none;
 /// with `--for`, the next for that one thing opened, or nothing while kelve
-/// is still preparing its next part.
-pub async fn next(agent: &str, model: Option<&str>, only: Option<i64>) -> anyhow::Result<()> {
+/// is still preparing its next part; with `--lesson`, the lesson job kelve
+/// named for the agent.
+pub async fn next(
+    agent: &str,
+    model: Option<&str>,
+    only: Option<i64>,
+    lesson: Option<&str>,
+) -> anyhow::Result<()> {
     crate::open::started().await?;
     let kelve = Kelve::new(Duration::from_secs(120))?;
     let job = kelve
         .send(kelve.post("/api/agent/next").json(
-            &json!({ "agent": agent, "model": model, "path": crate::notes::here(), "for": only, "saysPreparing": true }),
+            &json!({ "agent": agent, "model": model, "path": crate::notes::here(), "for": only, "saysPreparing": true, "lesson": lesson }),
         ))
         .await?;
     if job["preparing"] == true {

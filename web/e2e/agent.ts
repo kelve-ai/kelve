@@ -239,9 +239,11 @@ export type Agent = {
   open: (what: Record<string, unknown>) => Promise<{ id: number; title: string; files: number; folders: number; toRead: number; shown: boolean }>
   /**
    * Does kelve's work until there's none left: the jobs it was given. With
-   * `until`, it stops at the first job of that kind, having taken it.
+   * `until`, it stops at the first job of that kind, having taken it. With
+   * `lesson`, the lesson job kelve named to it comes first, as next_job
+   * takes it given that name.
    */
-  work: (opts?: { quote?: string; until?: string }) => Promise<Job[]>
+  work: (opts?: { quote?: string; until?: string; lesson?: string }) => Promise<Job[]>
   /** Finds the way in, kelve's first job for anything opened with files in it, and takes no other. */
   findWay: () => Promise<void>
   /** The notes waiting for it in the project at `path`, as the notes tool reads them. */
@@ -290,13 +292,13 @@ export function agent(base: string, key: string, name = 'claude-code', answering
     setMarks: async (spec) => {
       await call('/api/agent/marks', { spec })
     },
-    work: async ({ quote, until } = {}) => {
+    work: async ({ quote, until, lesson } = {}) => {
       const given: Job[] = []
       // Some work is scheduled a moment ahead, like following the graph's
       // check: kelve is asked again until it's been quiet for a while.
       let quiet = 0
       // An answer taken comes back with the next job, already the agent's.
-      let next: Job | null = null
+      let next: Job | null = lesson ? await call<Job>('/api/agent/next', { ...caller, lesson }) : null
       while (quiet < 6) {
         if (given.length > 400) throw new Error('kelve’s work never stopped')
         const job: Job | null = next ?? (await call<Job | null>('/api/agent/next', caller))

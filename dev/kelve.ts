@@ -180,13 +180,15 @@ function moment(event: Record<string, unknown>, session = 'example-session'): st
   }
 }
 
-/** The example's agent at work on its change: what it meets, as the hook gives it, then what kelve asks of it. */
+/** The example's agent at work on its change: what it meets, as the hook gives it, then what kelve asks of it: the lesson job it names, first. */
 async function story(live: boolean) {
+  let lesson: string | undefined
   for (const event of LESSONS.story) {
     const said = moment(event)
+    lesson = /giving lesson: "([^"]+)"/.exec(said)?.[1] ?? lesson
     if (live) say(`  ${event.hook_event_name}${event.tool_name ? ` ${event.tool_name}` : ""} → ${said ? said.split('\n')[0] : 'nothing'}`)
   }
-  return work(live)
+  return work(live, lesson)
 }
 
 async function startKelve() {
@@ -418,9 +420,9 @@ async function agentCall<T>(path: string, body: unknown): Promise<T> {
 const caller = { agent: 'claude-code', model: 'example', plan: 'pro' }
 
 /** Does kelve's work until it's been quiet a while. */
-async function work(live: boolean) {
+async function work(live: boolean, lesson?: string) {
   let quiet = 0
-  let next: Job | null = null
+  let next: Job | null = lesson ? await agentCall<Job>('/api/agent/next', { ...caller, lesson }) : null
   let done = 0
   while (quiet < 8) {
     const job: Job | null = next ?? (await agentCall<Job | null>('/api/agent/next', caller))

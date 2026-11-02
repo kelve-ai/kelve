@@ -76,7 +76,7 @@ Each answer taken comes back with the next job. `open` says the number of what i
 
 ## Lessons, alone
 
-Lessons need other people's agents, so the sandbox brings them: `bun dev/kelve.ts agent` puts what other agents learned using the example's ideas into the stand-in graph, then works on the change as an agent with kelve's hook would. It reads and edits files, runs the tests, fails and passes, and meets lessons as it goes; as its turn ends, kelve asks what it learned. Open the change in the reader to see which it was given, which held, and what it learned, waiting to leave. Or be the agent yourself, one of Claude Code's hook events at a time, a turn's end too:
+Lessons need other people's agents, so the sandbox brings them: `bun dev/kelve.ts agent` puts what other agents learned using the example's ideas into the stand-in graph, then works on the change as an agent with kelve's hook would. It reads and edits files, runs the tests, fails and passes, and meets lessons as it goes; as its turn ends, kelve asks what it learned, and it takes the lesson job kelve names for it. Open the change in the reader to see which it was given, which held, and what it learned, waiting to leave. Or be the agent yourself, one of Claude Code's hook events at a time, a turn's end too:
 
 ```bash
 bun dev/kelve.ts moment '{"hook_event_name":"PostToolUse","tool_name":"Read","tool_input":{"file_path":"src/retry.rs"}}'

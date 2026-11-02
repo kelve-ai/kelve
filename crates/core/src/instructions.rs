@@ -98,7 +98,7 @@ pub fn get(name: &str) -> Option<Instructions> {
         WRITE => (WRITE, 7, write()),
         FIX => (FIX, 6, fix()),
         EXTEND => (EXTEND, 4, extend()),
-        LESSON => (LESSON, 5, lesson()),
+        LESSON => (LESSON, 6, lesson()),
         FOLDERS => {
             return Some(Instructions {
                 name: FOLDERS,
@@ -320,7 +320,7 @@ kelve asks on one of two signs, and you're given it. Something failed and was ha
 
 First: is what you learned one of those lessons? Then answer same with its id: it's counted as confirming it. Never write one again in other words.
 
-Otherwise ask, for each thing that failed or was replaced: would a capable agent get it right anyway, from the error, the docs or unprompted? When the error names what's wrong, and the fix is what it says or one look at the docs for what it names, as a compiler error, a deprecation warning or a missing import does, it would. When the docs of what the work uses say it, the latest docs included, a changelog, a migration guide or a documented default, it would: an agent can look them up. So it would when the second way is what any capable agent already writes. Then there's no lesson: a lesson is what isn't in the docs. Ask too: is the second way better for anyone using these ideas, or just how this person or project wants it? Naming, formatting, ordering and a preferred tool where others work as well are taste: no lesson. Write one only when the failure didn't lead to the fix, or the second way is one a capable agent wouldn't choose unprompted, the docs don't say it, and it's better for anyone. Say what was missing or misleading in what failed and what finally showed the fix, or what the second way is better at. Most work has none, and none is a good answer. When there is one, give lessons, at most three, one for each thing that failed or was replaced. Each:
+Otherwise ask, for each thing that failed or was replaced: would a capable agent get it right anyway, from the error, the docs or unprompted? When the error names what's wrong, and the fix is what it says or one look at the docs for what it names, as a compiler error, a deprecation warning or a missing import does, it would. When the docs of what the work uses say it, the latest docs included, a changelog, a migration guide or a documented default, it would: an agent can look them up. So it would when the second way is what any capable agent already writes. Then there's no lesson: a lesson is what isn't in the docs. Ask too: is the second way better for anyone using these ideas, or just how this person or project wants it? Naming, formatting, ordering and a preferred tool where others work as well are taste: no lesson. Write one only when the failure didn't lead to the fix, or the second way is one a capable agent wouldn't choose unprompted, the docs don't say it, and it's better for anyone. Say what was missing or misleading in what failed and what finally showed the fix, or what the second way is better at. Most work has none, and none is a good answer: lessons and same both empty. When there is one, give lessons, at most three, one for each thing that failed or was replaced. Each:
 - about: one to three of the ideas listed, by name exactly as given.
 - says: what you learned, and why, in at most three sentences and 400 characters: why the fix works, or what the better way is better at. Say it for anyone using these ideas, not for this work.
 - do: what to do about it, as one action, in one sentence: a guardrail (\"Before X, check Y\", \"Call Z instead\"), never a routine.
