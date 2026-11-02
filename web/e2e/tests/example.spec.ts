@@ -70,7 +70,7 @@ test('the example change, read down to a first principle', async ({ page, browse
     const backoff = pane(page, 'Exponential backoff')
     // Under its first line, where it came from (Value-2).
     await expect(backoff.locator('.ep-from')).toHaveText(/^From the shared graph · checked against \d+ sources? · read (once|[\d,]+ times)$/)
-    const worked = 'Say the base wait is 1 second and the ceiling is 30.'
+    const worked = 'Take a first wait of 1 second, a multiplier of 2 and a cap of 32 seconds.'
     await expect(backoff.getByText('A worked example', { exact: true })).toBeVisible()
     await expect(backoff.getByText(worked, { exact: false })).toBeHidden()
     await backoff.getByText('A worked example', { exact: true }).click()
@@ -88,7 +88,7 @@ test('the example change, read down to a first principle', async ({ page, browse
     const entry = pane(page, 'Jitter')
     await expect(entry.locator('.wline')).toContainText('Claude Code')
     await me.work()
-    await expect(entry).toContainText('If every client waits the same time before retrying', { timeout: 15_000 })
+    await expect(entry).toContainText('Jitter is randomness added to the wait before a retry', { timeout: 15_000 })
     await expect(entry.getByRole('region', { name: 'How it relates' })).toContainText('Randomness', { timeout: 20_000 })
 
     // Down to a first principle: the ground everything above it stands on.

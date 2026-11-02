@@ -6,14 +6,14 @@
     "name": "claude-code",
     "model": "example",
     "plan": "pro",
-    "lastSeenAt": "2026-10-27T17:58:46.579Z"
+    "lastSeenAt": "2026-11-02T14:09:19.130Z"
    },
    "agents": [
     {
      "name": "claude-code",
      "model": "example",
      "plan": "pro",
-     "lastSeenAt": "2026-10-27T17:58:46.579Z"
+     "lastSeenAt": "2026-11-02T14:09:19.130Z"
     }
    ],
    "found": []
@@ -45,7 +45,7 @@
    "path": null,
    "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
    "title": "Retries that back off with jitter",
-   "openedAt": "2026-10-27T17:58:21.329Z",
+   "openedAt": "2026-11-02T14:08:57.562Z",
    "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
    "agent": "claude-code",
    "only": null,
@@ -80,6 +80,7 @@
       "why": "The same, written for people."
      }
     ],
+    "parts": [],
     "folders": [
      {
       "path": "docs",
@@ -109,7 +110,11 @@
       "path": "tests",
       "line": "What it promises, checked."
      }
-    ]
+    ],
+    "finding": false,
+    "reading": [],
+    "leftOff": 0,
+    "readSteps": []
    },
    "ready": null
   },
@@ -121,7 +126,7 @@
     "path": null,
     "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
     "title": "Retries that back off with jitter",
-    "openedAt": "2026-10-27T17:58:21.329Z",
+    "openedAt": "2026-11-02T14:08:57.562Z",
     "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
     "agent": "claude-code",
     "only": null,
@@ -319,7 +324,7 @@
     "of": 16,
     "checking": 0,
     "marking": "done",
-    "pages": 0,
+    "pages": 9,
     "pagesLeft": 0
    }
   },
@@ -331,7 +336,7 @@
     "path": null,
     "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
     "title": "Retries that back off with jitter",
-    "openedAt": "2026-10-27T17:58:21.329Z",
+    "openedAt": "2026-11-02T14:08:57.562Z",
     "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
     "agent": "claude-code",
     "only": null,
@@ -501,10 +506,10 @@
    "builtOn": [],
    "reading": {
     "read": 9,
-    "of": 28,
+    "of": 16,
     "checking": 0,
     "marking": "marking",
-    "pages": 0,
+    "pages": 9,
     "pagesLeft": 0
    }
   },
@@ -533,7 +538,7 @@
    "text": "# Adding to kelve's shared graph\n\nVersion 2026-10-30.\n\n- What's added is knowledge: entries about ideas, how ideas relate, and the lessons your agent learns as it works, with whether the lessons it was given held. Never your code, file names, paths or notes.\n- What you add is public domain, under CC0: anyone may read, copy, change and use it, for anything, without asking or naming anyone.\n- Your agent writes it with your model. You confirm you may share it.\n- It stays free for good: CC0 can’t be taken back, by kelve or anyone.\n- It’s credited to a name the graph makes up for you, never your own name.\n\n## What you add\n\nWhat your agent writes for the graph: entries about ideas, with their sources; how ideas relate; and lessons, what your agent learned as it worked, so the next agent doesn't have to learn it again. kelve holds each lesson a day before it goes, so you can stop it. What came of the lessons your agent was given goes too: whether each held, with nothing from your work. So do the reports you make about an entry.\n\n## The dedication you make\n\nYou dedicate what you add to the public domain under Creative Commons CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/). You give up copyright, database right and any similar rights in it, everywhere, as far as the law allows; where it doesn't, CC0's fallback licence applies. That includes anything you're treated as the author or owner of, such as a computer-generated work. You waive your moral rights in it too, as far as the law allows.\n\nkelve does the same for the graph as a whole: everything in it, the graph as a database included, is CC0.\n\n## What kelve may do\n\nBecause it's CC0, anyone may use what's in the graph, kelve included, and businesses and AI companies too. kelve may charge for the service around it, such as faster or bigger access, or access beyond the app. It can't charge for, or take back, the content itself. You won't be paid for what you add, now or later, even if kelve charges others for the service.\n\nIf you delete your account, what you added stays, under a made-up name that no longer leads to you.\n\n## What you promise\n\nYou may add what you add. Your agent wrote it on your own plan or key, within its terms. It holds nothing from your own work beyond what a general entry or lesson about an idea needs.\n\nWhat you add is credited to kelve's contributors, under the name the graph made up for you, though CC0 asks no one to credit anyone.\n\n## The rest\n\nThis is part of kelve's terms for the shared graph and kelve.ai, in full at https://kelve.ai/terms. How the shared graph handles what it keeps about you, and your rights, is at https://kelve.ai/privacy.\n"
   },
   "/api/counts": {
-   "thisWeek": "{\n  \"week\": \"2026-10-26\",\n  \"install\": \"\",\n  \"agent\": \"kelve/0.1.0\",\n  \"version\": \"0.1.0\",\n  \"platform\": \"macos\",\n  \"weeksIn\": 0,\n  \"days\": 1,\n  \"deepDays\": 0,\n  \"contributing\": true,\n  \"counts\": {\n    \"agent.connected\": 1,\n    \"entries.graph\": 21,\n    \"entries.read\": 22,\n    \"jobs.done\": 33,\n    \"lessons.given\": 2,\n    \"lessons.held\": 1,\n    \"lessons.written\": 1,\n    \"opened.change\": 1\n  },\n  \"byDay\": {\n    \"2026-10-27\": {\n      \"agent.connected\": 1,\n      \"entries.graph\": 21,\n      \"entries.read\": 22,\n      \"jobs.done\": 33,\n      \"lessons.given\": 2,\n      \"lessons.held\": 1,\n      \"lessons.written\": 1,\n      \"opened.change\": 1\n    }\n  }\n}",
+   "thisWeek": "{\n  \"week\": \"2026-11-02\",\n  \"install\": \"\",\n  \"agent\": \"kelve/0.1.7\",\n  \"version\": \"0.1.7\",\n  \"platform\": \"macos\",\n  \"weeksIn\": 0,\n  \"days\": 1,\n  \"deepDays\": 0,\n  \"contributing\": true,\n  \"counts\": {\n    \"agent.connected\": 1,\n    \"entries.graph\": 21,\n    \"entries.read\": 22,\n    \"jobs.done\": 35,\n    \"lessons.given\": 2,\n    \"lessons.held\": 1,\n    \"lessons.written\": 1,\n    \"opened.change\": 1\n  },\n  \"byDay\": {\n    \"2026-11-02\": {\n      \"agent.connected\": 1,\n      \"entries.graph\": 21,\n      \"entries.read\": 22,\n      \"jobs.done\": 35,\n      \"lessons.given\": 2,\n      \"lessons.held\": 1,\n      \"lessons.written\": 1,\n      \"opened.change\": 1\n    }\n  }\n}",
    "sent": []
   },
   "/api/opened": [
@@ -544,7 +549,7 @@
     "path": null,
     "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
     "title": "Retries that back off with jitter",
-    "openedAt": "2026-10-27T17:58:21.329Z",
+    "openedAt": "2026-11-02T14:08:57.562Z",
     "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
     "agent": "claude-code",
     "only": null,
@@ -4182,7 +4187,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4219,7 +4224,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4227,6 +4232,62 @@
     }
    ],
    "here": [
+    {
+     "id": "kelve:l000000000006",
+     "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+     "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+     "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+     "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000002",
+       "name": "Transient errors"
+      },
+      {
+       "id": "kelve:i000000000023",
+       "name": "Database transactions"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 11,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 11 projects",
+     "used": [],
+     "instead": "current transaction is aborted, commands ignored until end of transaction block",
+     "another": []
+    },
+    {
+     "id": "kelve:l000000000004",
+     "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+     "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+     "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+     "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 7,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 7 projects",
+     "used": [],
+     "instead": "StdRng::seed_from_u64(SystemTime::now()",
+     "another": []
+    },
     {
      "id": "kelve:l000000000003",
      "says": "When `ON CONFLICT DO NOTHING RETURNING` gives no row, a `SELECT` of the key in a second statement finds the stored row, even one another transaction was still writing: the insert waits for that transaction, and at read committed the next statement sees what it committed. Nothing is written again on a retry.",
@@ -4254,6 +4315,30 @@
      "used": [],
      "instead": null,
      "another": []
+    },
+    {
+     "id": "kelve:l000000000005",
+     "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+     "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+     "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+     "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 4,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 4 projects",
+     "used": [],
+     "instead": "attempt to multiply with overflow",
+     "another": []
     }
    ],
    "more": 0,
@@ -4274,7 +4359,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4319,7 +4404,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4358,10 +4443,38 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
+     "another": []
+    },
+    {
+     "id": "kelve:l000000000004",
+     "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+     "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+     "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+     "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 7,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 7 projects",
+     "used": [],
+     "instead": "StdRng::seed_from_u64(SystemTime::now()",
      "another": []
     },
     {
@@ -4391,6 +4504,30 @@
      "used": [],
      "instead": null,
      "another": []
+    },
+    {
+     "id": "kelve:l000000000005",
+     "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+     "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+     "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+     "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 4,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 4 projects",
+     "used": [],
+     "instead": "attempt to multiply with overflow",
+     "another": []
     }
    ],
    "more": 0,
@@ -4411,7 +4548,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4456,7 +4593,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4495,7 +4632,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4548,7 +4685,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4593,7 +4730,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4630,7 +4767,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4685,7 +4822,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4730,7 +4867,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4769,7 +4906,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4822,7 +4959,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4867,7 +5004,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4906,7 +5043,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4959,7 +5096,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5004,14 +5141,95 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
      "another": []
     }
    ],
-   "here": [],
+   "here": [
+    {
+     "id": "kelve:l000000000006",
+     "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+     "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+     "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+     "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000002",
+       "name": "Transient errors"
+      },
+      {
+       "id": "kelve:i000000000023",
+       "name": "Database transactions"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 11,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 11 projects",
+     "used": [],
+     "instead": "current transaction is aborted, commands ignored until end of transaction block",
+     "another": []
+    },
+    {
+     "id": "kelve:l000000000004",
+     "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+     "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+     "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+     "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 7,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 7 projects",
+     "used": [],
+     "instead": "StdRng::seed_from_u64(SystemTime::now()",
+     "another": []
+    },
+    {
+     "id": "kelve:l000000000005",
+     "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+     "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+     "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+     "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 4,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 4 projects",
+     "used": [],
+     "instead": "attempt to multiply with overflow",
+     "another": []
+    }
+   ],
    "more": 0,
    "learned": [
     {
@@ -5030,7 +5248,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5075,7 +5293,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -5101,7 +5319,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5131,7 +5349,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-10-28T17:58:29.832Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5173,7 +5391,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -5210,7 +5428,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -5251,7 +5469,7 @@
      "line": "held: the error didn't come back, and the next run passed",
      "path": "src/api/v1/charges.rs",
      "moment": "failed",
-     "at": "2026-10-27T17:58:29.749Z"
+     "at": "2026-11-02T14:09:01.748Z"
     }
    ],
    "instead": null,
@@ -5288,7 +5506,7 @@
      "line": "given to Claude Code; nothing showed yet whether it held",
      "path": "src/api/v1/charges.rs",
      "moment": "wrote",
-     "at": "2026-10-27T17:58:29.730Z"
+     "at": "2026-11-02T14:09:01.729Z"
     }
    ],
    "instead": "ON CONFLICT (key) DO NOTHING",
@@ -5300,6 +5518,62 @@
      "basis": "held for 5 projects"
     }
    ]
+  },
+  "/api/lessons/kelve%3Al000000000006": {
+   "id": "kelve:l000000000006",
+   "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+   "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+   "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+   "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+   "backedBy": null,
+   "about": [
+    {
+     "id": "kelve:i000000000002",
+     "name": "Transient errors"
+    },
+    {
+     "id": "kelve:i000000000023",
+     "name": "Database transactions"
+    }
+   ],
+   "standing": "confirmed",
+   "record": {
+    "held": 11,
+    "didnt": 0,
+    "backed": false
+   },
+   "basis": "held for 11 projects",
+   "used": [],
+   "instead": "current transaction is aborted, commands ignored until end of transaction block",
+   "another": []
+  },
+  "/api/lessons/kelve%3Al000000000004": {
+   "id": "kelve:l000000000004",
+   "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+   "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+   "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+   "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+   "backedBy": null,
+   "about": [
+    {
+     "id": "kelve:i000000000016",
+     "name": "Jitter"
+    },
+    {
+     "id": "kelve:i000000000031",
+     "name": "Randomness"
+    }
+   ],
+   "standing": "confirmed",
+   "record": {
+    "held": 7,
+    "didnt": 0,
+    "backed": false
+   },
+   "basis": "held for 7 projects",
+   "used": [],
+   "instead": "StdRng::seed_from_u64(SystemTime::now()",
+   "another": []
   },
   "/api/lessons/kelve%3Al000000000003": {
    "id": "kelve:l000000000003",
@@ -5336,6 +5610,30 @@
     }
    ]
   },
+  "/api/lessons/kelve%3Al000000000005": {
+   "id": "kelve:l000000000005",
+   "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+   "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+   "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+   "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+   "backedBy": null,
+   "about": [
+    {
+     "id": "kelve:i000000000014",
+     "name": "Exponential backoff"
+    }
+   ],
+   "standing": "confirmed",
+   "record": {
+    "held": 4,
+    "didnt": 0,
+    "backed": false
+   },
+   "basis": "held for 4 projects",
+   "used": [],
+   "instead": "attempt to multiply with overflow",
+   "another": []
+  },
   "/api/learned/1": {
    "id": 1,
    "says": "One timeout around a whole retry loop lets a slow first try use up all the time, so the retries it was there for never run. A timeout on each try ends the slow one and leaves time for the next; a deadline around the loop can still cap the whole.",
@@ -5352,7 +5650,7 @@
     }
    ],
    "state": "waiting",
-   "leavesAt": "2026-10-28T17:58:29.832Z",
+   "leavesAt": "2026-11-03T14:09:01.851Z",
    "why": null,
    "lesson": null,
    "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5370,7 +5668,7 @@
   ],
   "/api/list": {
    "working": true,
-   "workingUntil": 1793124053773,
+   "workingUntil": 1793628686080,
    "by": "claude-code",
    "open": 1,
    "now": [],
@@ -5405,53 +5703,89 @@
     },
     "title": "Exponential backoff",
     "question": "How long should a client wait before trying again?",
-    "minutes": 3,
-    "madeAt": "2026-10-20T20:04:33.675Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:34.838Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**Exponential backoff makes each wait before a retry longer than the last, usually twice as long, so a service that is struggling gets less load the longer it struggles.**",
+       "text": "Exponential backoff is a rule for how long to wait before retrying something that failed. After each failure the wait is multiplied, usually doubled: 1 second, then 2, then 4. Early retries come quickly, while a service that stays down gets fewer and fewer requests from each client.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "A storage service is overloaded and starts returning errors: it has [[network congestion]], more arriving than it can handle. A thousand clients each retry at once, then again, so it gets more traffic than before the trouble began. When failures come from overload, retries that add load can make matters much worse, and can delay recovery by keeping load high after the cause has gone^1. Retrying immediately or with very short delays can lead to cascading failures^2.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "A client that fails waits a short base time, then twice that, then four times, up to a ceiling. It is feedback: each failure lowers the rate at which the client tries, until it finds a rate that works^1.",
+       "text": "Backoff is a kind of [[retry pattern]] with three parts: a first wait, a multiplier and a cap. Instead of retrying at once, the client waits between tries, and the wait grows exponentially after every attempt^1. That [[exponential growth]] gets long fast, so implementations usually cap the wait at a maximum, which AWS calls capped exponential backoff^1. Google's guidance describes the same scheme: exponentially increasing waits between requests, up to a maximum backoff time^2.",
        "quiet": false
       }
      },
      {
       "id": "b4",
       "part": "how",
-      "fold": "example",
       "body": {
        "type": "paragraph",
-       "text": "Say the base wait is 1 second and the ceiling is 30. After the first failure the client waits 1 second, then 2, 4, 8 and 16. The sixth wait would be 32 seconds, so it waits 30, and every wait after that is 30 too.",
+       "text": "A fourth part, [[jitter]], fixes a flaw. If every client that failed at the same moment backs off by the same amount, they all retry together and cause the overload again^1, a form of the [[thundering herd problem]]. Jitter adds randomness to each wait to spread the retries out in time^1, and Google advises generally using exponential backoff with jitter for requests that meet its response and idempotency criteria^2. A [[timeout]] decides when an attempt counts as failed; backoff decides when to try again.",
        "quiet": false
       }
      },
      {
       "id": "b5",
       "part": "how",
-      "fold": "rule",
+      "fold": "example",
       "body": {
        "type": "paragraph",
-       "text": "The wait after the nth failure is the base times the multiplier to the power n, held at the ceiling. A multiplier of 2 is the usual choice, but any multiplier above 1 makes the waits grow exponentially.",
+       "text": "Take a first wait of 1 second, a multiplier of 2 and a cap of 32 seconds. The waits run 1, 2, 4, 8, 16, 32, then 32 seconds again. After six failures a client has waited 63 seconds in all, and from then on sends one request every 32 seconds instead of one a second. If each wait is instead a random time between zero and that figure, the sixth wait might be 11 seconds for one client and 27 for another, so they no longer arrive together.",
        "quiet": false
       }
      },
      {
-      "id": "b3",
+      "id": "b6",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "Retrying after a fixed delay, constant backoff, looks similar in code but never eases off: a client keeps sending one request every interval however long the outage lasts. Backoff is only exponential if the wait is multiplied after each failure.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "The principle is that retries are selfish: a client that retries spends more of the server's time to raise its own chance of success^1. That's fine when failures are rare, but in a distributed system there's almost no way for all the clients to agree on the right number of retries^1. Doubling waits let each client halve its own load after every failure with no coordination at all, so total load falls fastest exactly when the service is most stressed.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
       "part": "limits",
       "body": {
        "type": "paragraph",
-       "text": "On its own it isn’t enough. Clients that failed together back off for the same times, so they come back together and collide again^1. That is why backoff is used with jitter, which picks a random wait below the ceiling.",
+       "text": "A capped backoff leaves every client retrying steadily at the cap, so AWS also limits the number of retries and handles the failure earlier^1. Retries in layers multiply: five layers each retrying three times can raise the load on a database 243-fold^1. Backoff only helps with errors that might pass: errors such as invalid requests are persistent, and retrying them without fixing the cause won't succeed^2. And every retry repeats the request, so it must be safe to repeat, which is what [[idempotence]] guarantees.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "A [[circuit breaker]] stops calls to a downstream service entirely once errors pass a threshold; choose it when a service is down for long. AWS notes it can make systems harder to test and add significant time to recovery^1. When the server knows when it will be ready, a Retry-After header tells the client how long to wait before trying again, and with a 503 response says how long the service expects to be unavailable^3. A fixed delay suits only brief, rare failures that retries can't make worse.",
        "quiet": false
       }
      }
@@ -5459,15 +5793,98 @@
     "sources": [
      {
       "n": 1,
-      "title": "Exponential backoff",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Exponential_backoff",
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Builders' Library (AWS)",
+      "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter",
       "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Retry strategy | Cloud Storage",
+      "publisher": "Google Cloud",
+      "url": "https://cloud.google.com/storage/docs/retry-strategy",
+      "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 3,
+      "title": "RFC 9110: HTTP Semantics",
+      "publisher": "IETF (R. Fielding, M. Nottingham, J. Reschke)",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110.txt",
+      "published": "June 2022",
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "network congestion",
+      "idea": {
+       "id": "kelve:i000000000015",
+       "name": "Network congestion"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "retry pattern",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential growth",
+      "idea": {
+       "id": "kelve:i000000000006",
+       "name": "Exponential growth"
+      },
+      "kind": "restsOn"
+     },
+     {
+      "term": "jitter",
+      "idea": {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "thundering herd problem",
+      "idea": {
+       "id": "kelve:i000000000034",
+       "name": "Thundering herd problem"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "timeout",
+      "idea": {
+       "id": "kelve:i000000000005",
+       "name": "Timeouts"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "idempotence",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "circuit breaker",
+      "idea": {
+       "id": "kelve:i000000000004",
+       "name": "Circuit breakers"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -5480,10 +5897,35 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000005",
+     "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+     "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+     "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+     "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 4,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 4 projects",
+     "used": [],
+     "instead": "attempt to multiply with overflow",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1241
   },
   "/api/ideas/kelve%3Ai000000000014?followed=true": {
    "key": "kelve:i000000000014",
@@ -5497,53 +5939,89 @@
     },
     "title": "Exponential backoff",
     "question": "How long should a client wait before trying again?",
-    "minutes": 3,
-    "madeAt": "2026-10-20T20:04:33.675Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:34.838Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**Exponential backoff makes each wait before a retry longer than the last, usually twice as long, so a service that is struggling gets less load the longer it struggles.**",
+       "text": "Exponential backoff is a rule for how long to wait before retrying something that failed. After each failure the wait is multiplied, usually doubled: 1 second, then 2, then 4. Early retries come quickly, while a service that stays down gets fewer and fewer requests from each client.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "A storage service is overloaded and starts returning errors: it has [[network congestion]], more arriving than it can handle. A thousand clients each retry at once, then again, so it gets more traffic than before the trouble began. When failures come from overload, retries that add load can make matters much worse, and can delay recovery by keeping load high after the cause has gone^1. Retrying immediately or with very short delays can lead to cascading failures^2.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "A client that fails waits a short base time, then twice that, then four times, up to a ceiling. It is feedback: each failure lowers the rate at which the client tries, until it finds a rate that works^1.",
+       "text": "Backoff is a kind of [[retry pattern]] with three parts: a first wait, a multiplier and a cap. Instead of retrying at once, the client waits between tries, and the wait grows exponentially after every attempt^1. That [[exponential growth]] gets long fast, so implementations usually cap the wait at a maximum, which AWS calls capped exponential backoff^1. Google's guidance describes the same scheme: exponentially increasing waits between requests, up to a maximum backoff time^2.",
        "quiet": false
       }
      },
      {
       "id": "b4",
       "part": "how",
-      "fold": "example",
       "body": {
        "type": "paragraph",
-       "text": "Say the base wait is 1 second and the ceiling is 30. After the first failure the client waits 1 second, then 2, 4, 8 and 16. The sixth wait would be 32 seconds, so it waits 30, and every wait after that is 30 too.",
+       "text": "A fourth part, [[jitter]], fixes a flaw. If every client that failed at the same moment backs off by the same amount, they all retry together and cause the overload again^1, a form of the [[thundering herd problem]]. Jitter adds randomness to each wait to spread the retries out in time^1, and Google advises generally using exponential backoff with jitter for requests that meet its response and idempotency criteria^2. A [[timeout]] decides when an attempt counts as failed; backoff decides when to try again.",
        "quiet": false
       }
      },
      {
       "id": "b5",
       "part": "how",
-      "fold": "rule",
+      "fold": "example",
       "body": {
        "type": "paragraph",
-       "text": "The wait after the nth failure is the base times the multiplier to the power n, held at the ceiling. A multiplier of 2 is the usual choice, but any multiplier above 1 makes the waits grow exponentially.",
+       "text": "Take a first wait of 1 second, a multiplier of 2 and a cap of 32 seconds. The waits run 1, 2, 4, 8, 16, 32, then 32 seconds again. After six failures a client has waited 63 seconds in all, and from then on sends one request every 32 seconds instead of one a second. If each wait is instead a random time between zero and that figure, the sixth wait might be 11 seconds for one client and 27 for another, so they no longer arrive together.",
        "quiet": false
       }
      },
      {
-      "id": "b3",
+      "id": "b6",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "Retrying after a fixed delay, constant backoff, looks similar in code but never eases off: a client keeps sending one request every interval however long the outage lasts. Backoff is only exponential if the wait is multiplied after each failure.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "The principle is that retries are selfish: a client that retries spends more of the server's time to raise its own chance of success^1. That's fine when failures are rare, but in a distributed system there's almost no way for all the clients to agree on the right number of retries^1. Doubling waits let each client halve its own load after every failure with no coordination at all, so total load falls fastest exactly when the service is most stressed.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
       "part": "limits",
       "body": {
        "type": "paragraph",
-       "text": "On its own it isn’t enough. Clients that failed together back off for the same times, so they come back together and collide again^1. That is why backoff is used with jitter, which picks a random wait below the ceiling.",
+       "text": "A capped backoff leaves every client retrying steadily at the cap, so AWS also limits the number of retries and handles the failure earlier^1. Retries in layers multiply: five layers each retrying three times can raise the load on a database 243-fold^1. Backoff only helps with errors that might pass: errors such as invalid requests are persistent, and retrying them without fixing the cause won't succeed^2. And every retry repeats the request, so it must be safe to repeat, which is what [[idempotence]] guarantees.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "A [[circuit breaker]] stops calls to a downstream service entirely once errors pass a threshold; choose it when a service is down for long. AWS notes it can make systems harder to test and add significant time to recovery^1. When the server knows when it will be ready, a Retry-After header tells the client how long to wait before trying again, and with a 503 response says how long the service expects to be unavailable^3. A fixed delay suits only brief, rare failures that retries can't make worse.",
        "quiet": false
       }
      }
@@ -5551,15 +6029,98 @@
     "sources": [
      {
       "n": 1,
-      "title": "Exponential backoff",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Exponential_backoff",
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Builders' Library (AWS)",
+      "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter",
       "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Retry strategy | Cloud Storage",
+      "publisher": "Google Cloud",
+      "url": "https://cloud.google.com/storage/docs/retry-strategy",
+      "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 3,
+      "title": "RFC 9110: HTTP Semantics",
+      "publisher": "IETF (R. Fielding, M. Nottingham, J. Reschke)",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110.txt",
+      "published": "June 2022",
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "network congestion",
+      "idea": {
+       "id": "kelve:i000000000015",
+       "name": "Network congestion"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "retry pattern",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential growth",
+      "idea": {
+       "id": "kelve:i000000000006",
+       "name": "Exponential growth"
+      },
+      "kind": "restsOn"
+     },
+     {
+      "term": "jitter",
+      "idea": {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "thundering herd problem",
+      "idea": {
+       "id": "kelve:i000000000034",
+       "name": "Thundering herd problem"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "timeout",
+      "idea": {
+       "id": "kelve:i000000000005",
+       "name": "Timeouts"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "idempotence",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "circuit breaker",
+      "idea": {
+       "id": "kelve:i000000000004",
+       "name": "Circuit breakers"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -5572,10 +6133,35 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000005",
+     "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+     "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+     "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+     "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 4,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 4 projects",
+     "used": [],
+     "instead": "attempt to multiply with overflow",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1241
   },
   "/api/ideas/kelve%3Ai000000000014/outline": {
    "key": "kelve:i000000000014",
@@ -5715,6 +6301,32 @@
    "proposing": false
   },
   "/api/ideas/kelve%3Ai000000000014/notes": [],
+  "/api/lessons/all?idea=kelve%3Ai000000000014": [
+   {
+    "id": "kelve:l000000000005",
+    "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+    "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+    "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+    "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+    "backedBy": null,
+    "about": [
+     {
+      "id": "kelve:i000000000014",
+      "name": "Exponential backoff"
+     }
+    ],
+    "standing": "confirmed",
+    "record": {
+     "held": 4,
+     "didnt": 0,
+     "backed": false
+    },
+    "basis": "held for 4 projects",
+    "used": [],
+    "instead": "attempt to multiply with overflow",
+    "another": []
+   }
+  ],
   "/api/ideas/kelve%3Ai000000000016": {
    "key": "kelve:i000000000016",
    "name": "Jitter",
@@ -5727,24 +6339,24 @@
     },
     "title": "Jitter",
     "question": "Why add randomness to when clients retry?",
-    "minutes": 3,
-    "madeAt": "2026-10-27T17:58:33.366Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:09:05.685Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**If every client waits the same time before retrying, they all come back at once and fail together again. A random wait spreads them out.**",
+       "text": "Jitter is randomness added to the wait before a retry, so that clients which failed together do not all retry together. Instead of every client waiting exactly 4 seconds, each waits a random time up to 4 seconds. It refines a [[retry strategy]] by spreading the retries around in time.^1",
        "quiet": false
       }
      },
      {
       "id": "b2",
-      "part": "how",
+      "part": "why",
       "body": {
        "type": "paragraph",
-       "text": "Adding randomness to make a system faster sounds backwards^1. But clients that failed at the same moment, backing off by the same rule, stay in step: their retries arrive in spikes. Jitter breaks the step. With full jitter, each wait is a random time between nothing and the current backoff ceiling, and the spikes spread into a steady rate^1.",
+       "text": "A database stalls for a second and 1,000 clients fail at once. With [[exponential backoff]], each waits 1 second, then 2, then 4, but all 1,000 wait the same amounts. If all the failed calls back off to the same time, they cause contention or overload again when they retry.^1 This is the [[thundering herd problem]]: backoff makes calls less frequent, but there are still clusters of calls.^2",
        "quiet": false
       }
      },
@@ -5753,7 +6365,155 @@
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "In AWS’s simulation of many clients competing for one resource, plain exponential backoff without jitter did worst of the approaches tried^1. Jitter spreads retries out in time; it doesn’t make fewer of them. For that, there are retry budgets and circuit breakers.",
+       "text": "Jitter has three parts: a backoff schedule, a cap and a random draw. Capped exponential backoff multiplies the wait by a constant after each attempt, up to some maximum.^2 Jitter then replaces that computed wait with a random one. In the variant Marc Brooker calls Full Jitter, each client sleeps a random time between zero and the computed wait.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "The figure shows one round of it: 100 clients that failed together, each about to wait up to 8 seconds before trying again.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b12",
+      "part": "how",
+      "body": {
+       "type": "trend",
+       "labels": [
+        "0.5 s",
+        "1 s",
+        "1.5 s",
+        "2 s",
+        "2.5 s",
+        "3 s",
+        "3.5 s",
+        "4 s",
+        "4.5 s",
+        "5 s",
+        "5.5 s",
+        "6 s",
+        "6.5 s",
+        "7 s",
+        "7.5 s",
+        "8 s"
+       ],
+       "series": [
+        {
+         "label": "Without jitter",
+         "values": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          100
+         ],
+         "mark": false
+        },
+        {
+         "label": "With full jitter",
+         "values": [
+          6,
+          6,
+          5,
+          5,
+          6,
+          4,
+          6,
+          5,
+          5,
+          9,
+          7,
+          5,
+          4,
+          10,
+          9,
+          8
+         ],
+         "mark": true
+        }
+       ],
+       "unit": null,
+       "describe": "Retries arriving in each half second from 100 clients that failed at the same moment, each waiting up to 8 seconds. Without jitter, all 100 arrive together at 8 seconds. With full jitter, in one run, they arrive spread across the 8 seconds, never more than 10 in any half second."
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Two other variants keep more of the schedule. Equal Jitter always keeps some of the backoff and adds a smaller random amount, and Decorrelated Jitter raises the maximum based on the last random value.^2 In Brooker's simulation, Equal Jitter did slightly more work than Full Jitter and took much longer.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "Take 4 clients that failed at the same moment, on their third retry with a base wait of 1 second. Plain backoff gives each a wait of 4 seconds, so all 4 retry at once. Full Jitter gives each a random wait between 0 and 4 seconds, say 0.7, 1.9, 2.6 and 3.8, and the server sees them one at a time. In Brooker's simulation with 100 contending clients, adding jitter cut the number of calls by more than half and shortened the time to finish.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "The belief: exponential backoff on its own prevents retry storms. Why it's wrong: in Brooker's simulation, backoff helped only a small amount and did not solve the problem.^2 What's true: the answer is not to remove backoff but to add jitter to it.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "The problem is correlation: clients that failed from one cause share one schedule. [[Randomness]] breaks that link. With jitter the gaps disappear, and after the first spike the calls arrive at an approximately constant rate, which a server copes with far better.^2 Brooker admits it can seem counter-intuitive to improve performance by adding randomness, but concludes that jittered backoff should be a standard approach for remote clients.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "whyThisWay",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "Network jitter, the variation in how long packets take to arrive, shares the name but is something a system suffers, not something it adds. Retry jitter is chosen on purpose.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Jitter changes when retries happen, not how many. Retries themselves multiply load: with a database at the end of five layers of calls, each retrying three times, the load on the database can rise 243 times.^1 And every retried request must be safe to repeat, the property called [[idempotence]]. For scheduled work, AWS avoids purely random jitter, using a value that stays the same on each host, so that problems recur in a pattern people can spot.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "A token bucket on the client lets calls retry while tokens remain, then only at a fixed rate,^1 which bounds how many retries go out at all. [[Rate limiting]] on the server caps load however clients time their retries. A [[circuit breaker]] stops calling a failing service for a while, though it brings modal behaviour that can be hard to test.^1",
        "quiet": false
       }
      }
@@ -5761,15 +6521,81 @@
     "sources": [
      {
       "n": 1,
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Builders' Library (Marc Brooker)",
+      "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter",
+      "published": "5 December 2019",
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
       "title": "Exponential Backoff And Jitter",
-      "publisher": "AWS Architecture Blog",
+      "publisher": "AWS Architecture Blog (Marc Brooker)",
       "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
-      "published": "2015-03-04",
+      "published": "4 March 2015",
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "retry strategy",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "thundering herd problem",
+      "idea": {
+       "id": "kelve:i000000000034",
+       "name": "Thundering herd problem"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "Randomness",
+      "idea": {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      },
+      "kind": "restsOn"
+     },
+     {
+      "term": "idempotence",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "Rate limiting",
+      "idea": {
+       "id": "kelve:i000000000035",
+       "name": "Rate limiting"
+      },
+      "kind": "alternative"
+     },
+     {
+      "term": "circuit breaker",
+      "idea": {
+       "id": "kelve:i000000000004",
+       "name": "Circuit breakers"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -5785,33 +6611,158 @@
     "claims": [
      {
       "n": 1,
-      "text": "Adding randomness to improve performance can seem counter-intuitive.",
-      "state": "held",
-      "found": "",
-      "block": "b2",
-      "words": "Adding randomness to make a system faster sounds backwards"
-     },
-     {
-      "n": 2,
-      "text": "Jitter spreads spikes of retries out to an approximately constant rate.",
-      "state": "held",
-      "found": "",
-      "block": "b2",
-      "words": "the spikes spread into a steady rate"
-     },
-     {
-      "n": 3,
-      "text": "Exponential backoff without jitter did worst in the simulation.",
+      "text": "Capped exponential backoff multiplies the backoff by a constant after each attempt, up to a maximum.",
       "state": "held",
       "found": "",
       "block": "b3",
-      "words": "plain exponential backoff without jitter did worst of the approaches tried"
+      "words": "Capped exponential backoff multiplies the wait by a constant after each attempt, up to some maximum"
+     },
+     {
+      "n": 2,
+      "text": "Equal Jitter keeps some backoff and jitters by a smaller amount; Decorrelated Jitter raises the maximum based on the last random value.",
+      "state": "held",
+      "found": "",
+      "block": "b4",
+      "words": "Equal Jitter always keeps some of the backoff and adds a smaller random amount, and Decorrelated Jitter raises the maximum based on the last random value"
+     },
+     {
+      "n": 3,
+      "text": "Equal Jitter did slightly more work than Full Jitter and took much longer.",
+      "state": "held",
+      "found": "",
+      "block": "b4",
+      "words": "Equal Jitter did slightly more work than Full Jitter and took much longer"
+     },
+     {
+      "n": 4,
+      "text": "With 100 contending clients, jitter cut the call count by more than half and improved time to completion over un-jittered backoff.",
+      "state": "held",
+      "found": "",
+      "block": "b5",
+      "words": "adding jitter cut the number of calls by more than half and shortened the time to finish"
+     },
+     {
+      "n": 5,
+      "text": "Backoff alone helped only a small amount in the simulation.",
+      "state": "held",
+      "found": "",
+      "block": "b6",
+      "words": "backoff helped only a small amount and did not solve the problem"
+     },
+     {
+      "n": 6,
+      "text": "The solution is not to remove backoff but to add jitter.",
+      "state": "held",
+      "found": "",
+      "block": "b6",
+      "words": "the answer is not to remove backoff but to add jitter to it"
+     },
+     {
+      "n": 7,
+      "text": "With jitter the gaps disappear and calls arrive at an approximately constant rate after the initial spike.",
+      "state": "held",
+      "found": "",
+      "block": "b7",
+      "words": "With jitter the gaps disappear, and after the first spike the calls arrive at an approximately constant rate"
+     },
+     {
+      "n": 8,
+      "text": "Jitter can seem counter-intuitive, but jittered backoff should be a standard approach for remote clients.",
+      "state": "held",
+      "found": "",
+      "block": "b7",
+      "words": "Brooker admits it can seem counter-intuitive to improve performance by adding randomness, but concludes that jittered backoff should be a standard approach for remote clients"
+     },
+     {
+      "n": 9,
+      "text": "A token bucket lets calls retry while tokens remain, then at a fixed rate.",
+      "state": "held",
+      "found": "",
+      "block": "b10",
+      "words": "A token bucket on the client lets calls retry while tokens remain, then only at a fixed rate"
+     },
+     {
+      "n": 10,
+      "text": "Circuit breakers introduce modal behaviour that can be difficult to test.",
+      "state": "held",
+      "found": "",
+      "block": "b10",
+      "words": "though it brings modal behaviour that can be hard to test"
+     },
+     {
+      "n": 11,
+      "text": "Jitter adds randomness to the backoff to spread retries around in time.",
+      "state": "held",
+      "found": "",
+      "block": "b1",
+      "words": "It refines a retry strategy by spreading the retries around in time"
+     },
+     {
+      "n": 12,
+      "text": "If all failed calls back off to the same time, they cause contention or overload again when retried.",
+      "state": "held",
+      "found": "",
+      "block": "b2",
+      "words": "If all the failed calls back off to the same time, they cause contention or overload again when they retry"
+     },
+     {
+      "n": 13,
+      "text": "With exponential backoff, calls happen less often but still in clusters.",
+      "state": "held",
+      "found": "",
+      "block": "b2",
+      "words": "backoff makes calls less frequent, but there are still clusters of calls"
+     },
+     {
+      "n": 14,
+      "text": "With five layers each retrying three times, database load can increase 243 times.",
+      "state": "held",
+      "found": "",
+      "block": "b9",
+      "words": "with a database at the end of five layers of calls, each retrying three times, the load on the database can rise 243 times"
+     },
+     {
+      "n": 15,
+      "text": "For scheduled work, jitter on each host is not chosen randomly but by a consistent method giving the same number every time on the same host, so an overload or race condition happens the same way in a pattern.",
+      "state": "held",
+      "found": "",
+      "block": "b9",
+      "words": "For scheduled work, AWS avoids purely random jitter, using a value that stays the same on each host, so that problems recur in a pattern people can spot"
      }
     ]
    },
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000004",
+     "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+     "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+     "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+     "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 7,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 7 projects",
+     "used": [],
+     "instead": "StdRng::seed_from_u64(SystemTime::now()",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": false,
    "reads": 0
   },
@@ -5827,24 +6778,24 @@
     },
     "title": "Jitter",
     "question": "Why add randomness to when clients retry?",
-    "minutes": 3,
-    "madeAt": "2026-10-27T17:58:33.366Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:09:05.685Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**If every client waits the same time before retrying, they all come back at once and fail together again. A random wait spreads them out.**",
+       "text": "Jitter is randomness added to the wait before a retry, so that clients which failed together do not all retry together. Instead of every client waiting exactly 4 seconds, each waits a random time up to 4 seconds. It refines a [[retry strategy]] by spreading the retries around in time.^1",
        "quiet": false
       }
      },
      {
       "id": "b2",
-      "part": "how",
+      "part": "why",
       "body": {
        "type": "paragraph",
-       "text": "Adding randomness to make a system faster sounds backwards^1. But clients that failed at the same moment, backing off by the same rule, stay in step: their retries arrive in spikes. Jitter breaks the step. With full jitter, each wait is a random time between nothing and the current backoff ceiling, and the spikes spread into a steady rate^1.",
+       "text": "A database stalls for a second and 1,000 clients fail at once. With [[exponential backoff]], each waits 1 second, then 2, then 4, but all 1,000 wait the same amounts. If all the failed calls back off to the same time, they cause contention or overload again when they retry.^1 This is the [[thundering herd problem]]: backoff makes calls less frequent, but there are still clusters of calls.^2",
        "quiet": false
       }
      },
@@ -5853,7 +6804,155 @@
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "In AWS’s simulation of many clients competing for one resource, plain exponential backoff without jitter did worst of the approaches tried^1. Jitter spreads retries out in time; it doesn’t make fewer of them. For that, there are retry budgets and circuit breakers.",
+       "text": "Jitter has three parts: a backoff schedule, a cap and a random draw. Capped exponential backoff multiplies the wait by a constant after each attempt, up to some maximum.^2 Jitter then replaces that computed wait with a random one. In the variant Marc Brooker calls Full Jitter, each client sleeps a random time between zero and the computed wait.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "The figure shows one round of it: 100 clients that failed together, each about to wait up to 8 seconds before trying again.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b12",
+      "part": "how",
+      "body": {
+       "type": "trend",
+       "labels": [
+        "0.5 s",
+        "1 s",
+        "1.5 s",
+        "2 s",
+        "2.5 s",
+        "3 s",
+        "3.5 s",
+        "4 s",
+        "4.5 s",
+        "5 s",
+        "5.5 s",
+        "6 s",
+        "6.5 s",
+        "7 s",
+        "7.5 s",
+        "8 s"
+       ],
+       "series": [
+        {
+         "label": "Without jitter",
+         "values": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          100
+         ],
+         "mark": false
+        },
+        {
+         "label": "With full jitter",
+         "values": [
+          6,
+          6,
+          5,
+          5,
+          6,
+          4,
+          6,
+          5,
+          5,
+          9,
+          7,
+          5,
+          4,
+          10,
+          9,
+          8
+         ],
+         "mark": true
+        }
+       ],
+       "unit": null,
+       "describe": "Retries arriving in each half second from 100 clients that failed at the same moment, each waiting up to 8 seconds. Without jitter, all 100 arrive together at 8 seconds. With full jitter, in one run, they arrive spread across the 8 seconds, never more than 10 in any half second."
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Two other variants keep more of the schedule. Equal Jitter always keeps some of the backoff and adds a smaller random amount, and Decorrelated Jitter raises the maximum based on the last random value.^2 In Brooker's simulation, Equal Jitter did slightly more work than Full Jitter and took much longer.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "Take 4 clients that failed at the same moment, on their third retry with a base wait of 1 second. Plain backoff gives each a wait of 4 seconds, so all 4 retry at once. Full Jitter gives each a random wait between 0 and 4 seconds, say 0.7, 1.9, 2.6 and 3.8, and the server sees them one at a time. In Brooker's simulation with 100 contending clients, adding jitter cut the number of calls by more than half and shortened the time to finish.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "The belief: exponential backoff on its own prevents retry storms. Why it's wrong: in Brooker's simulation, backoff helped only a small amount and did not solve the problem.^2 What's true: the answer is not to remove backoff but to add jitter to it.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "The problem is correlation: clients that failed from one cause share one schedule. [[Randomness]] breaks that link. With jitter the gaps disappear, and after the first spike the calls arrive at an approximately constant rate, which a server copes with far better.^2 Brooker admits it can seem counter-intuitive to improve performance by adding randomness, but concludes that jittered backoff should be a standard approach for remote clients.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "whyThisWay",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "Network jitter, the variation in how long packets take to arrive, shares the name but is something a system suffers, not something it adds. Retry jitter is chosen on purpose.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Jitter changes when retries happen, not how many. Retries themselves multiply load: with a database at the end of five layers of calls, each retrying three times, the load on the database can rise 243 times.^1 And every retried request must be safe to repeat, the property called [[idempotence]]. For scheduled work, AWS avoids purely random jitter, using a value that stays the same on each host, so that problems recur in a pattern people can spot.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "A token bucket on the client lets calls retry while tokens remain, then only at a fixed rate,^1 which bounds how many retries go out at all. [[Rate limiting]] on the server caps load however clients time their retries. A [[circuit breaker]] stops calling a failing service for a while, though it brings modal behaviour that can be hard to test.^1",
        "quiet": false
       }
      }
@@ -5861,15 +6960,81 @@
     "sources": [
      {
       "n": 1,
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Builders' Library (Marc Brooker)",
+      "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter",
+      "published": "5 December 2019",
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
       "title": "Exponential Backoff And Jitter",
-      "publisher": "AWS Architecture Blog",
+      "publisher": "AWS Architecture Blog (Marc Brooker)",
       "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
-      "published": "2015-03-04",
+      "published": "4 March 2015",
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "retry strategy",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "thundering herd problem",
+      "idea": {
+       "id": "kelve:i000000000034",
+       "name": "Thundering herd problem"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "Randomness",
+      "idea": {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      },
+      "kind": "restsOn"
+     },
+     {
+      "term": "idempotence",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "Rate limiting",
+      "idea": {
+       "id": "kelve:i000000000035",
+       "name": "Rate limiting"
+      },
+      "kind": "alternative"
+     },
+     {
+      "term": "circuit breaker",
+      "idea": {
+       "id": "kelve:i000000000004",
+       "name": "Circuit breakers"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -5885,33 +7050,158 @@
     "claims": [
      {
       "n": 1,
-      "text": "Adding randomness to improve performance can seem counter-intuitive.",
-      "state": "held",
-      "found": "",
-      "block": "b2",
-      "words": "Adding randomness to make a system faster sounds backwards"
-     },
-     {
-      "n": 2,
-      "text": "Jitter spreads spikes of retries out to an approximately constant rate.",
-      "state": "held",
-      "found": "",
-      "block": "b2",
-      "words": "the spikes spread into a steady rate"
-     },
-     {
-      "n": 3,
-      "text": "Exponential backoff without jitter did worst in the simulation.",
+      "text": "Capped exponential backoff multiplies the backoff by a constant after each attempt, up to a maximum.",
       "state": "held",
       "found": "",
       "block": "b3",
-      "words": "plain exponential backoff without jitter did worst of the approaches tried"
+      "words": "Capped exponential backoff multiplies the wait by a constant after each attempt, up to some maximum"
+     },
+     {
+      "n": 2,
+      "text": "Equal Jitter keeps some backoff and jitters by a smaller amount; Decorrelated Jitter raises the maximum based on the last random value.",
+      "state": "held",
+      "found": "",
+      "block": "b4",
+      "words": "Equal Jitter always keeps some of the backoff and adds a smaller random amount, and Decorrelated Jitter raises the maximum based on the last random value"
+     },
+     {
+      "n": 3,
+      "text": "Equal Jitter did slightly more work than Full Jitter and took much longer.",
+      "state": "held",
+      "found": "",
+      "block": "b4",
+      "words": "Equal Jitter did slightly more work than Full Jitter and took much longer"
+     },
+     {
+      "n": 4,
+      "text": "With 100 contending clients, jitter cut the call count by more than half and improved time to completion over un-jittered backoff.",
+      "state": "held",
+      "found": "",
+      "block": "b5",
+      "words": "adding jitter cut the number of calls by more than half and shortened the time to finish"
+     },
+     {
+      "n": 5,
+      "text": "Backoff alone helped only a small amount in the simulation.",
+      "state": "held",
+      "found": "",
+      "block": "b6",
+      "words": "backoff helped only a small amount and did not solve the problem"
+     },
+     {
+      "n": 6,
+      "text": "The solution is not to remove backoff but to add jitter.",
+      "state": "held",
+      "found": "",
+      "block": "b6",
+      "words": "the answer is not to remove backoff but to add jitter to it"
+     },
+     {
+      "n": 7,
+      "text": "With jitter the gaps disappear and calls arrive at an approximately constant rate after the initial spike.",
+      "state": "held",
+      "found": "",
+      "block": "b7",
+      "words": "With jitter the gaps disappear, and after the first spike the calls arrive at an approximately constant rate"
+     },
+     {
+      "n": 8,
+      "text": "Jitter can seem counter-intuitive, but jittered backoff should be a standard approach for remote clients.",
+      "state": "held",
+      "found": "",
+      "block": "b7",
+      "words": "Brooker admits it can seem counter-intuitive to improve performance by adding randomness, but concludes that jittered backoff should be a standard approach for remote clients"
+     },
+     {
+      "n": 9,
+      "text": "A token bucket lets calls retry while tokens remain, then at a fixed rate.",
+      "state": "held",
+      "found": "",
+      "block": "b10",
+      "words": "A token bucket on the client lets calls retry while tokens remain, then only at a fixed rate"
+     },
+     {
+      "n": 10,
+      "text": "Circuit breakers introduce modal behaviour that can be difficult to test.",
+      "state": "held",
+      "found": "",
+      "block": "b10",
+      "words": "though it brings modal behaviour that can be hard to test"
+     },
+     {
+      "n": 11,
+      "text": "Jitter adds randomness to the backoff to spread retries around in time.",
+      "state": "held",
+      "found": "",
+      "block": "b1",
+      "words": "It refines a retry strategy by spreading the retries around in time"
+     },
+     {
+      "n": 12,
+      "text": "If all failed calls back off to the same time, they cause contention or overload again when retried.",
+      "state": "held",
+      "found": "",
+      "block": "b2",
+      "words": "If all the failed calls back off to the same time, they cause contention or overload again when they retry"
+     },
+     {
+      "n": 13,
+      "text": "With exponential backoff, calls happen less often but still in clusters.",
+      "state": "held",
+      "found": "",
+      "block": "b2",
+      "words": "backoff makes calls less frequent, but there are still clusters of calls"
+     },
+     {
+      "n": 14,
+      "text": "With five layers each retrying three times, database load can increase 243 times.",
+      "state": "held",
+      "found": "",
+      "block": "b9",
+      "words": "with a database at the end of five layers of calls, each retrying three times, the load on the database can rise 243 times"
+     },
+     {
+      "n": 15,
+      "text": "For scheduled work, jitter on each host is not chosen randomly but by a consistent method giving the same number every time on the same host, so an overload or race condition happens the same way in a pattern.",
+      "state": "held",
+      "found": "",
+      "block": "b9",
+      "words": "For scheduled work, AWS avoids purely random jitter, using a value that stays the same on each host, so that problems recur in a pattern people can spot"
      }
     ]
    },
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000004",
+     "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+     "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+     "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+     "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 7,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 7 projects",
+     "used": [],
+     "instead": "StdRng::seed_from_u64(SystemTime::now()",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": false,
    "reads": 0
   },
@@ -5985,6 +7275,36 @@
    "proposing": false
   },
   "/api/ideas/kelve%3Ai000000000016/notes": [],
+  "/api/lessons/all?idea=kelve%3Ai000000000016": [
+   {
+    "id": "kelve:l000000000004",
+    "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+    "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+    "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+    "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+    "backedBy": null,
+    "about": [
+     {
+      "id": "kelve:i000000000016",
+      "name": "Jitter"
+     },
+     {
+      "id": "kelve:i000000000031",
+      "name": "Randomness"
+     }
+    ],
+    "standing": "confirmed",
+    "record": {
+     "held": 7,
+     "didnt": 0,
+     "backed": false
+    },
+    "basis": "held for 7 projects",
+    "used": [],
+    "instead": "StdRng::seed_from_u64(SystemTime::now()",
+    "another": []
+   }
+  ],
   "/api/ideas/kelve%3Ai000000000017": {
    "key": "kelve:i000000000017",
    "name": "Idempotency keys",
@@ -5997,40 +7317,206 @@
     },
     "title": "Idempotency keys",
     "question": "How can a request sent twice be carried out once?",
-    "minutes": 2,
-    "madeAt": "2026-10-20T20:04:33.680Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:34.695Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**An idempotency key is a value sent with a request so that, however many times the same request arrives, the work is done once.**",
+       "text": "An idempotency key is a unique value a client sends with a request, such as a payment, so that the server can recognise the same request if it arrives again. The server does the work the first time, saves its answer under the key, and sends that saved answer back for any repeat. So a client that is unsure whether a request got through can safely send it again.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "Your app sends a request to create a £20 payment, and the connection drops before any reply. A client in that position cannot tell whether the payment was created, or whether the server even finished the request.^1 Sending it again risks a duplicate side effect, £40 charged in all; not sending it risks losing the sale. HTTP's own rules leave this to the API for creating things: GET, PUT and DELETE are [[idempotent]], but POST and PATCH are not.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "In HTTP, GET, PUT and DELETE are meant to be idempotent, but POST is not^1. A payment is usually a POST: sent twice, it charges twice. So the client makes a key once, sends it with every try, and the server remembers the keys it has answered. A repeat with a known key gets the first answer back instead of a second charge.",
+       "text": "Three parts make it work. First, the client generates the key, a unique identifier for this one intended action; the IETF draft on the subject recommends a UUID or a similar random identifier.^1 Stripe also warns against using sensitive data, such as email addresses, as keys.^2 Second, the client sends the key with the request, in the `Idempotency-Key` header, and the server uses it to recognise later retries of the same request.^1 Every [[retry]] carries the same key.",
        "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Third, the server remembers keys it has seen. For a key it has not seen, it should process the request normally.^1 For a retry that arrives after the original finished, it should answer as if the request had been completed as the user intended.^1 In Stripe's version 1 API, that means saving the status code and body of the first request with a key and returning that saved response to retries, even a 500 error.^2 The figure shows a lost reply.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "body": {
+       "type": "sequence",
+       "actors": [
+        "Client",
+        "Server",
+        "Key store"
+       ],
+       "messages": [
+        {
+         "from": "Client",
+         "to": "Server",
+         "text": "create payment, key 8e03",
+         "mark": false
+        },
+        {
+         "from": "Server",
+         "to": "Key store",
+         "text": "save result under 8e03",
+         "mark": false
+        },
+        {
+         "from": "Server",
+         "to": "Client",
+         "text": "reply lost on the way",
+         "mark": false
+        },
+        {
+         "from": "Client",
+         "to": "Server",
+         "text": "same request, key 8e03",
+         "mark": false
+        },
+        {
+         "from": "Server",
+         "to": "Client",
+         "text": "saved result, no second charge",
+         "mark": true
+        }
+       ],
+       "describe": "The client asks the server to create a payment with key 8e03. The server charges, saves the result under that key, and replies, but the reply is lost. The client retries with the same key, and the server returns the saved result without charging again."
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "A checkout sends a request to create a payment of `2000` pence with `Idempotency-Key: 8e03978e-40d5-43e8-bc93-6894a57f9324`. The server charges the card, stores its reply, `201 Created` with payment `pay_1`, under that key, and sends it. The reply is lost. Two seconds later the client sends the identical request. The server finds the key, skips the charge and returns the stored `201` with `pay_1`. The customer pays £20 once, and the client learns the payment exists.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "Had the retry arrived while the first charge was still running, the server should have answered `409 Conflict`.^1 The client would then wait, with [[exponential backoff]], and send the same request and key again.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "A request ID is not an idempotency key. Many APIs tag each request with an ID for logs and support, and a retry gets a new one. An idempotency key belongs to the intended action, the one payment, and stays the same across every attempt to make it.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "Over a network, a lost reply looks just like a lost request, so a client can never be sure something did not happen. The only way not to lose work is to retry, which gives at-least-once delivery. The key makes those repeats harmless by moving the memory of what was done to the server, which can see it. It names the intent rather than the contents, so the server can tell a retry from a genuine second payment of the same amount.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "The server must store each key and its result, so keys expire after a time to live. In Stripe's version 1 API, keys can be removed once they are at least 24 hours old, and a key reused after that starts a new request.^2 The IETF draft leaves expiry to each service, which should publish its policy.^1 Keys also help only where the server honours them: without knowing the server, a client cannot assume it will.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "limits",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "The belief: a fresh key for every attempt is safest. It is the opposite: a new key makes a retry look like a new request, and the server does the work again. Make the key once, when the user decides to pay, and keep it for every retry of that payment. Nor may one key be reused for a different request: Stripe returns an error if the parameters differ from the original,^2 and the draft says a service should answer 422 then.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b12",
+      "part": "alternatives",
+      "body": {
+       "type": "list",
+       "items": [
+        "Naturally idempotent operations: design the call so a repeat is harmless, such as setting a value rather than adding to it. Stripe says not to send keys with its GET and DELETE requests, which are idempotent by definition.^2 Pick this whenever the action can be phrased as setting state.",
+        "A conditional request carries the version the client last saw, such as an ETag, and is applied only if the resource still matches. A repeat finds the version changed and is refused. Pick it for updates to an existing resource, where it also catches conflicting edits."
+       ]
       }
      }
     ],
     "sources": [
      {
       "n": 1,
-      "title": "Idempotence",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Idempotence",
+      "title": "The Idempotency-Key HTTP Header Field",
+      "publisher": "IETF HTTPAPI Working Group (J. Jena, S. Dalal)",
+      "url": "https://datatracker.ietf.org/doc/html/draft-ietf-httpapi-idempotency-key-header",
+      "published": "22 October 2026",
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Idempotent requests | Stripe API Reference",
+      "publisher": "Stripe",
+      "url": "https://docs.stripe.com/api/idempotent_requests",
       "published": null,
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "idempotent",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "restsOn"
+     },
+     {
+      "term": "retry",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -6075,7 +7561,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -6140,7 +7626,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -6149,7 +7635,7 @@
    ],
    "lessonsAll": 3,
    "fromGraph": true,
-   "reads": 1
+   "reads": 2317
   },
   "/api/ideas/kelve%3Ai000000000017?followed=true": {
    "key": "kelve:i000000000017",
@@ -6163,40 +7649,206 @@
     },
     "title": "Idempotency keys",
     "question": "How can a request sent twice be carried out once?",
-    "minutes": 2,
-    "madeAt": "2026-10-20T20:04:33.680Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:34.695Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**An idempotency key is a value sent with a request so that, however many times the same request arrives, the work is done once.**",
+       "text": "An idempotency key is a unique value a client sends with a request, such as a payment, so that the server can recognise the same request if it arrives again. The server does the work the first time, saves its answer under the key, and sends that saved answer back for any repeat. So a client that is unsure whether a request got through can safely send it again.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "Your app sends a request to create a £20 payment, and the connection drops before any reply. A client in that position cannot tell whether the payment was created, or whether the server even finished the request.^1 Sending it again risks a duplicate side effect, £40 charged in all; not sending it risks losing the sale. HTTP's own rules leave this to the API for creating things: GET, PUT and DELETE are [[idempotent]], but POST and PATCH are not.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "In HTTP, GET, PUT and DELETE are meant to be idempotent, but POST is not^1. A payment is usually a POST: sent twice, it charges twice. So the client makes a key once, sends it with every try, and the server remembers the keys it has answered. A repeat with a known key gets the first answer back instead of a second charge.",
+       "text": "Three parts make it work. First, the client generates the key, a unique identifier for this one intended action; the IETF draft on the subject recommends a UUID or a similar random identifier.^1 Stripe also warns against using sensitive data, such as email addresses, as keys.^2 Second, the client sends the key with the request, in the `Idempotency-Key` header, and the server uses it to recognise later retries of the same request.^1 Every [[retry]] carries the same key.",
        "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Third, the server remembers keys it has seen. For a key it has not seen, it should process the request normally.^1 For a retry that arrives after the original finished, it should answer as if the request had been completed as the user intended.^1 In Stripe's version 1 API, that means saving the status code and body of the first request with a key and returning that saved response to retries, even a 500 error.^2 The figure shows a lost reply.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "body": {
+       "type": "sequence",
+       "actors": [
+        "Client",
+        "Server",
+        "Key store"
+       ],
+       "messages": [
+        {
+         "from": "Client",
+         "to": "Server",
+         "text": "create payment, key 8e03",
+         "mark": false
+        },
+        {
+         "from": "Server",
+         "to": "Key store",
+         "text": "save result under 8e03",
+         "mark": false
+        },
+        {
+         "from": "Server",
+         "to": "Client",
+         "text": "reply lost on the way",
+         "mark": false
+        },
+        {
+         "from": "Client",
+         "to": "Server",
+         "text": "same request, key 8e03",
+         "mark": false
+        },
+        {
+         "from": "Server",
+         "to": "Client",
+         "text": "saved result, no second charge",
+         "mark": true
+        }
+       ],
+       "describe": "The client asks the server to create a payment with key 8e03. The server charges, saves the result under that key, and replies, but the reply is lost. The client retries with the same key, and the server returns the saved result without charging again."
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "A checkout sends a request to create a payment of `2000` pence with `Idempotency-Key: 8e03978e-40d5-43e8-bc93-6894a57f9324`. The server charges the card, stores its reply, `201 Created` with payment `pay_1`, under that key, and sends it. The reply is lost. Two seconds later the client sends the identical request. The server finds the key, skips the charge and returns the stored `201` with `pay_1`. The customer pays £20 once, and the client learns the payment exists.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "Had the retry arrived while the first charge was still running, the server should have answered `409 Conflict`.^1 The client would then wait, with [[exponential backoff]], and send the same request and key again.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "A request ID is not an idempotency key. Many APIs tag each request with an ID for logs and support, and a retry gets a new one. An idempotency key belongs to the intended action, the one payment, and stays the same across every attempt to make it.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "Over a network, a lost reply looks just like a lost request, so a client can never be sure something did not happen. The only way not to lose work is to retry, which gives at-least-once delivery. The key makes those repeats harmless by moving the memory of what was done to the server, which can see it. It names the intent rather than the contents, so the server can tell a retry from a genuine second payment of the same amount.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "The server must store each key and its result, so keys expire after a time to live. In Stripe's version 1 API, keys can be removed once they are at least 24 hours old, and a key reused after that starts a new request.^2 The IETF draft leaves expiry to each service, which should publish its policy.^1 Keys also help only where the server honours them: without knowing the server, a client cannot assume it will.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "limits",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "The belief: a fresh key for every attempt is safest. It is the opposite: a new key makes a retry look like a new request, and the server does the work again. Make the key once, when the user decides to pay, and keep it for every retry of that payment. Nor may one key be reused for a different request: Stripe returns an error if the parameters differ from the original,^2 and the draft says a service should answer 422 then.^1",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b12",
+      "part": "alternatives",
+      "body": {
+       "type": "list",
+       "items": [
+        "Naturally idempotent operations: design the call so a repeat is harmless, such as setting a value rather than adding to it. Stripe says not to send keys with its GET and DELETE requests, which are idempotent by definition.^2 Pick this whenever the action can be phrased as setting state.",
+        "A conditional request carries the version the client last saw, such as an ETag, and is applied only if the resource still matches. A repeat finds the version changed and is refused. Pick it for updates to an existing resource, where it also catches conflicting edits."
+       ]
       }
      }
     ],
     "sources": [
      {
       "n": 1,
-      "title": "Idempotence",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Idempotence",
+      "title": "The Idempotency-Key HTTP Header Field",
+      "publisher": "IETF HTTPAPI Working Group (J. Jena, S. Dalal)",
+      "url": "https://datatracker.ietf.org/doc/html/draft-ietf-httpapi-idempotency-key-header",
+      "published": "22 October 2026",
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Idempotent requests | Stripe API Reference",
+      "publisher": "Stripe",
+      "url": "https://docs.stripe.com/api/idempotent_requests",
       "published": null,
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "idempotent",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "restsOn"
+     },
+     {
+      "term": "retry",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -6241,7 +7893,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -6306,7 +7958,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -6315,7 +7967,7 @@
    ],
    "lessonsAll": 3,
    "fromGraph": true,
-   "reads": 1
+   "reads": 2317
   },
   "/api/ideas/kelve%3Ai000000000017/outline": {
    "key": "kelve:i000000000017",
@@ -6446,7 +8098,7 @@
       "line": "given to Claude Code; nothing showed yet whether it held",
       "path": "src/api/v1/charges.rs",
       "moment": "wrote",
-      "at": "2026-10-27T17:58:29.730Z"
+      "at": "2026-11-02T14:09:01.729Z"
      }
     ],
     "instead": "ON CONFLICT (key) DO NOTHING",
@@ -6511,7 +8163,7 @@
       "line": "held: the error didn't come back, and the next run passed",
       "path": "src/api/v1/charges.rs",
       "moment": "failed",
-      "at": "2026-10-27T17:58:29.749Z"
+      "at": "2026-11-02T14:09:01.748Z"
      }
     ],
     "instead": null,
@@ -6588,7 +8240,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1513
   },
   "/api/ideas/kelve%3Ai000000000005?followed=true": {
    "key": "kelve:i000000000005",
@@ -6660,7 +8312,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1513
   },
   "/api/ideas/kelve%3Ai000000000005/outline": {
    "key": "kelve:i000000000005",
@@ -6829,7 +8481,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -6894,7 +8546,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -6903,7 +8555,7 @@
    ],
    "lessonsAll": 3,
    "fromGraph": true,
-   "reads": 1
+   "reads": 389
   },
   "/api/ideas/kelve%3Ai000000000018?followed=true": {
    "key": "kelve:i000000000018",
@@ -6995,7 +8647,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-10-27T17:58:29.730Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -7060,7 +8712,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-10-27T17:58:29.749Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -7069,7 +8721,7 @@
    ],
    "lessonsAll": 3,
    "fromGraph": true,
-   "reads": 1
+   "reads": 389
   },
   "/api/ideas/kelve%3Ai000000000018/outline": {
    "key": "kelve:i000000000018",
@@ -7153,7 +8805,7 @@
       "line": "given to Claude Code; nothing showed yet whether it held",
       "path": "src/api/v1/charges.rs",
       "moment": "wrote",
-      "at": "2026-10-27T17:58:29.730Z"
+      "at": "2026-11-02T14:09:01.729Z"
      }
     ],
     "instead": "ON CONFLICT (key) DO NOTHING",
@@ -7218,7 +8870,7 @@
       "line": "held: the error didn't come back, and the next run passed",
       "path": "src/api/v1/charges.rs",
       "moment": "failed",
-      "at": "2026-10-27T17:58:29.749Z"
+      "at": "2026-11-02T14:09:01.748Z"
      }
     ],
     "instead": null,
@@ -7304,7 +8956,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1874
   },
   "/api/ideas/kelve%3Ai000000000001?followed=true": {
    "key": "kelve:i000000000001",
@@ -7385,7 +9037,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1874
   },
   "/api/ideas/kelve%3Ai000000000001/outline": {
    "key": "kelve:i000000000001",
@@ -7565,7 +9217,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 98
   },
   "/api/ideas/kelve%3Ai000000000020?followed=true": {
    "key": "kelve:i000000000020",
@@ -7628,7 +9280,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 98
   },
   "/api/ideas/kelve%3Ai000000000020/outline": {
    "key": "kelve:i000000000020",
@@ -7733,24 +9385,144 @@
     },
     "title": "Transient errors",
     "question": "Which failures pass on their own?",
-    "minutes": 1,
-    "madeAt": "2026-10-20T20:04:33.709Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:34.782Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**A transient error is a failure that passes on its own: try the same thing a moment later and it may work.**",
+       "text": "A transient fault is a fault that lasts only a moment and clears by itself: a dropped connection, a service briefly unavailable, a timeout while a server is busy. Trying the same operation again a little later usually works. The hard part is telling these apart from failures that will happen every time, however often you retry.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "An online shop calls a payment service for each order. Every so often a call times out during a brief network blip, and the next call a moment later goes through. Failing the customer's order for that would lose a sale for nothing. But if the card was declined or the request was malformed, calling again will fail the same way, and only adds load. The shop needs to know which kind of failure it has.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "Faults differ in how long they last: some are permanent, some transient^1. A declined card will be declined again; a timeout or a dropped connection may not happen twice. Code that retries has to tell the two apart, and try again only on the kind that passes.",
+       "text": "Handling them has three parts: recognise the fault as transient, wait, and try again, within a limit. Microsoft's guidance lists transient faults as the momentary loss of network connectivity, the temporary unavailability of a service, and timeouts when a service is busy; they typically resolve without intervention, so the action is likely to succeed if retried after a suitable delay^1. They are most common in a distributed system, where every call crosses a network to a shared service.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Recognising them comes first: an application must detect faults and decide whether each is transient, long-lasting or terminal^1. Error responses usually say: a busy or temporarily unavailable service often returns a specific error code, while bad input or a refused permission does not change on a second try. Services can help by returning errors that tell clients whether to retry and how long to wait^1. Then comes the [[retry pattern]], with waits that grow by [[exponential backoff]]: the application waits a short time before the first retry, then increases the wait exponentially before each one after^1. Jitter, a small random delay added to each wait, stops many clients from retrying in step^1.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "body": {
+       "type": "bars",
+       "rows": [
+        {
+         "label": "Layer 1",
+         "value": 1,
+         "display": "3 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Layer 2",
+         "value": 4,
+         "display": "9 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Layer 3",
+         "value": 11,
+         "display": "27 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Layer 4",
+         "value": 33,
+         "display": "81 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Database, layer 5",
+         "value": 100,
+         "display": "243 tries",
+         "mark": true,
+         "quiet": false
+        }
+       ],
+       "caption": "Five layers of services, each trying three times, turn one failing request into 243 attempts on the database."
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "A call fails with a timeout. The client waits 100 milliseconds and tries again, then 200, then 400, then 800, giving up after four retries and about 1.5 seconds of waiting. With jitter, each wait is a random time up to that limit, so a thousand clients that failed together don't all return at the same instant. If the blip lasted 250 milliseconds, the first retry at 100 milliseconds fails and the second, at about 300, succeeds. If all four fail, the fault probably isn't transient, and the client reports an error instead of waiting longer.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "An intermittent fault also comes and goes, so it can look transient. The difference is cause. A transient fault comes from passing conditions, such as a brief network drop; an intermittent fault keeps coming back from a real defect, such as a loose cable or a race condition. Retrying hides an intermittent fault without fixing it. The test is the pattern: if the same failure keeps returning, look for the defect instead of adding retries.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "In a system made of many networked parts, something is always briefly failing, so treating every hiccup as fatal makes the whole system fragile. Retrying absorbs these hiccups cheaply. But retries add load just when a service is struggling, which is why they come with waits, randomness and limits. Microsoft recommends a retry budget, which limits the total retry load so many requests each retrying a few times don't together overwhelm a struggling service^1.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Retrying is only safe for operations that can be repeated, a property called [[idempotence]]. If an operation that increments a value runs twice, it gives a wrong result, so operations that aren't idempotent can leave data inconsistent when retried^1. Retries also add delay for the user, and a fault that turns out to be long-lasting turns every request into a slow failure.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "limits",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "The belief: if retrying helps, retry at every layer. Retries multiply. AWS describes a five-deep stack of service calls ending in a database, with three retries at each layer: if each layer retries on its own, the load on the database rises 243 times, making it unlikely ever to recover^2. What is true: for low-cost control-plane and data-plane operations, AWS's best practice is to retry at a single point in the stack^2, and let the other layers fail fast.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "Treat a failure as a permanent fault and fail fast when trying again can't help, as with invalid input or a missing permission. When a service keeps failing, a [[circuit breaker pattern]] stops calling it for a while, so callers get a quick error instead of waiting through retries, and the service gets room to recover. Most systems combine all three: retries for transient faults, fast failure for permanent ones, and a circuit breaker for faults that last.",
        "quiet": false
       }
      }
@@ -7758,15 +9530,57 @@
     "sources": [
      {
       "n": 1,
-      "title": "Fault tolerance",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Fault_tolerance",
+      "title": "Transient fault handling",
+      "publisher": "Microsoft Learn (Azure Architecture Center)",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/transient-faults",
+      "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Web Services (Builders' Library)",
+      "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
       "published": null,
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "retry pattern",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "idempotence",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "circuit breaker pattern",
+      "idea": {
+       "id": "kelve:i000000000004",
+       "name": "Circuit breakers"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -7779,10 +9593,39 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000006",
+     "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+     "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+     "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+     "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000002",
+       "name": "Transient errors"
+      },
+      {
+       "id": "kelve:i000000000023",
+       "name": "Database transactions"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 11,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 11 projects",
+     "used": [],
+     "instead": "current transaction is aborted, commands ignored until end of transaction block",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 685
   },
   "/api/ideas/kelve%3Ai000000000002?followed=true": {
    "key": "kelve:i000000000002",
@@ -7796,24 +9639,144 @@
     },
     "title": "Transient errors",
     "question": "Which failures pass on their own?",
-    "minutes": 1,
-    "madeAt": "2026-10-20T20:04:33.709Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:34.782Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**A transient error is a failure that passes on its own: try the same thing a moment later and it may work.**",
+       "text": "A transient fault is a fault that lasts only a moment and clears by itself: a dropped connection, a service briefly unavailable, a timeout while a server is busy. Trying the same operation again a little later usually works. The hard part is telling these apart from failures that will happen every time, however often you retry.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "An online shop calls a payment service for each order. Every so often a call times out during a brief network blip, and the next call a moment later goes through. Failing the customer's order for that would lose a sale for nothing. But if the card was declined or the request was malformed, calling again will fail the same way, and only adds load. The shop needs to know which kind of failure it has.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "Faults differ in how long they last: some are permanent, some transient^1. A declined card will be declined again; a timeout or a dropped connection may not happen twice. Code that retries has to tell the two apart, and try again only on the kind that passes.",
+       "text": "Handling them has three parts: recognise the fault as transient, wait, and try again, within a limit. Microsoft's guidance lists transient faults as the momentary loss of network connectivity, the temporary unavailability of a service, and timeouts when a service is busy; they typically resolve without intervention, so the action is likely to succeed if retried after a suitable delay^1. They are most common in a distributed system, where every call crosses a network to a shared service.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Recognising them comes first: an application must detect faults and decide whether each is transient, long-lasting or terminal^1. Error responses usually say: a busy or temporarily unavailable service often returns a specific error code, while bad input or a refused permission does not change on a second try. Services can help by returning errors that tell clients whether to retry and how long to wait^1. Then comes the [[retry pattern]], with waits that grow by [[exponential backoff]]: the application waits a short time before the first retry, then increases the wait exponentially before each one after^1. Jitter, a small random delay added to each wait, stops many clients from retrying in step^1.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "body": {
+       "type": "bars",
+       "rows": [
+        {
+         "label": "Layer 1",
+         "value": 1,
+         "display": "3 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Layer 2",
+         "value": 4,
+         "display": "9 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Layer 3",
+         "value": 11,
+         "display": "27 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Layer 4",
+         "value": 33,
+         "display": "81 tries",
+         "mark": false,
+         "quiet": true
+        },
+        {
+         "label": "Database, layer 5",
+         "value": 100,
+         "display": "243 tries",
+         "mark": true,
+         "quiet": false
+        }
+       ],
+       "caption": "Five layers of services, each trying three times, turn one failing request into 243 attempts on the database."
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "A call fails with a timeout. The client waits 100 milliseconds and tries again, then 200, then 400, then 800, giving up after four retries and about 1.5 seconds of waiting. With jitter, each wait is a random time up to that limit, so a thousand clients that failed together don't all return at the same instant. If the blip lasted 250 milliseconds, the first retry at 100 milliseconds fails and the second, at about 300, succeeds. If all four fail, the fault probably isn't transient, and the client reports an error instead of waiting longer.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "An intermittent fault also comes and goes, so it can look transient. The difference is cause. A transient fault comes from passing conditions, such as a brief network drop; an intermittent fault keeps coming back from a real defect, such as a loose cable or a race condition. Retrying hides an intermittent fault without fixing it. The test is the pattern: if the same failure keeps returning, look for the defect instead of adding retries.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "In a system made of many networked parts, something is always briefly failing, so treating every hiccup as fatal makes the whole system fragile. Retrying absorbs these hiccups cheaply. But retries add load just when a service is struggling, which is why they come with waits, randomness and limits. Microsoft recommends a retry budget, which limits the total retry load so many requests each retrying a few times don't together overwhelm a struggling service^1.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Retrying is only safe for operations that can be repeated, a property called [[idempotence]]. If an operation that increments a value runs twice, it gives a wrong result, so operations that aren't idempotent can leave data inconsistent when retried^1. Retries also add delay for the user, and a fault that turns out to be long-lasting turns every request into a slow failure.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "limits",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "The belief: if retrying helps, retry at every layer. Retries multiply. AWS describes a five-deep stack of service calls ending in a database, with three retries at each layer: if each layer retries on its own, the load on the database rises 243 times, making it unlikely ever to recover^2. What is true: for low-cost control-plane and data-plane operations, AWS's best practice is to retry at a single point in the stack^2, and let the other layers fail fast.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "Treat a failure as a permanent fault and fail fast when trying again can't help, as with invalid input or a missing permission. When a service keeps failing, a [[circuit breaker pattern]] stops calling it for a while, so callers get a quick error instead of waiting through retries, and the service gets room to recover. Most systems combine all three: retries for transient faults, fast failure for permanent ones, and a circuit breaker for faults that last.",
        "quiet": false
       }
      }
@@ -7821,15 +9784,57 @@
     "sources": [
      {
       "n": 1,
-      "title": "Fault tolerance",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Fault_tolerance",
+      "title": "Transient fault handling",
+      "publisher": "Microsoft Learn (Azure Architecture Center)",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/transient-faults",
+      "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Web Services (Builders' Library)",
+      "url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
       "published": null,
       "preprint": false,
       "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "retry pattern",
+      "idea": {
+       "id": "kelve:i000000000001",
+       "name": "Retries"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "idempotence",
+      "idea": {
+       "id": "kelve:i000000000003",
+       "name": "Idempotence"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "circuit breaker pattern",
+      "idea": {
+       "id": "kelve:i000000000004",
+       "name": "Circuit breakers"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -7842,10 +9847,39 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000006",
+     "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+     "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+     "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+     "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000002",
+       "name": "Transient errors"
+      },
+      {
+       "id": "kelve:i000000000023",
+       "name": "Database transactions"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 11,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 11 projects",
+     "used": [],
+     "instead": "current transaction is aborted, commands ignored until end of transaction block",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 685
   },
   "/api/ideas/kelve%3Ai000000000002/outline": {
    "key": "kelve:i000000000002",
@@ -7897,6 +9931,36 @@
    "proposing": false
   },
   "/api/ideas/kelve%3Ai000000000002/notes": [],
+  "/api/lessons/all?idea=kelve%3Ai000000000002": [
+   {
+    "id": "kelve:l000000000006",
+    "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+    "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+    "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+    "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+    "backedBy": null,
+    "about": [
+     {
+      "id": "kelve:i000000000002",
+      "name": "Transient errors"
+     },
+     {
+      "id": "kelve:i000000000023",
+      "name": "Database transactions"
+     }
+    ],
+    "standing": "confirmed",
+    "record": {
+     "held": 11,
+     "didnt": 0,
+     "backed": false
+    },
+    "basis": "held for 11 projects",
+    "used": [],
+    "instead": "current transaction is aborted, commands ignored until end of transaction block",
+    "another": []
+   }
+  ],
   "/api/ideas/kelve%3Ai000000000006": {
    "key": "kelve:i000000000006",
    "name": "Exponential growth",
@@ -7958,7 +10022,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 265
   },
   "/api/ideas/kelve%3Ai000000000006?followed=true": {
    "key": "kelve:i000000000006",
@@ -8021,7 +10085,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 265
   },
   "/api/ideas/kelve%3Ai000000000006/outline": {
    "key": "kelve:i000000000006",
@@ -8134,7 +10198,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 2046
   },
   "/api/ideas/kelve%3Ai000000000003?followed=true": {
    "key": "kelve:i000000000003",
@@ -8197,7 +10261,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 2046
   },
   "/api/ideas/kelve%3Ai000000000003/outline": {
    "key": "kelve:i000000000003",
@@ -8434,7 +10498,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 342
   },
   "/api/ideas/kelve%3Ai000000000015?followed=true": {
    "key": "kelve:i000000000015",
@@ -8497,7 +10561,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 342
   },
   "/api/ideas/kelve%3Ai000000000015/outline": {
    "key": "kelve:i000000000015",
@@ -8619,7 +10683,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1107
   },
   "/api/ideas/kelve%3Ai000000000004?followed=true": {
    "key": "kelve:i000000000004",
@@ -8682,7 +10746,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1107
   },
   "/api/ideas/kelve%3Ai000000000004/outline": {
    "key": "kelve:i000000000004",
@@ -8813,7 +10877,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 153
   },
   "/api/ideas/kelve%3Ai000000000008?followed=true": {
    "key": "kelve:i000000000008",
@@ -8876,7 +10940,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 153
   },
   "/api/ideas/kelve%3Ai000000000008/outline": {
    "key": "kelve:i000000000008",
@@ -9197,7 +11261,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 277
   },
   "/api/ideas/kelve%3Ai000000000021?followed=true": {
    "key": "kelve:i000000000021",
@@ -9260,7 +11324,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 277
   },
   "/api/ideas/kelve%3Ai000000000021/outline": {
    "key": "kelve:i000000000021",
@@ -9396,7 +11460,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 591
   },
   "/api/ideas/kelve%3Ai000000000010?followed=true": {
    "key": "kelve:i000000000010",
@@ -9459,7 +11523,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 591
   },
   "/api/ideas/kelve%3Ai000000000010/outline": {
    "key": "kelve:i000000000010",
@@ -9602,7 +11666,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 119
   },
   "/api/ideas/kelve%3Ai000000000013?followed=true": {
    "key": "kelve:i000000000013",
@@ -9665,7 +11729,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 119
   },
   "/api/ideas/kelve%3Ai000000000013/outline": {
    "key": "kelve:i000000000013",
@@ -9809,24 +11873,89 @@
     },
     "title": "Randomness",
     "question": "",
-    "minutes": 1,
-    "madeAt": "2026-10-20T20:04:37.129Z",
+    "minutes": 3,
+    "madeAt": "2026-11-02T14:08:38.603Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**Something is random when it has no pattern anyone can use to predict it.**",
+       "text": "Something is random when nothing known beforehand can predict it. One toss of a fair coin can’t be called, yet over many tosses about half come up heads. Programs use random choices so that many machines, each choosing on its own, don’t all choose the same thing.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "Two hundred servers restart together after an update, and each checks for work every 60 seconds. Their timers start in the same second, so every check lands in the same second, every minute. Nothing the servers share can tell them apart. A delay each picks at random, from nothing they share, is the cheapest way to break the tie.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "A single random event can’t be predicted, though over many trials the share of each outcome can be, when its probability is known^1. Computers usually make numbers that only look random, from a rule^2.",
+       "text": "Randomness belongs to how a value is chosen, not to the value itself. A single random event can’t be predicted, but when the probability of each outcome is known, how often each turns up over many trials can be.^1 A uniform choice gives every outcome in a range the same chance. So many uniform choices, made apart, fill the range evenly on average, with no outcome favoured.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Computers follow their instructions exactly, so most of their random numbers are pseudorandom: a rule turns a starting value, the seed, into numbers that look random. Whoever knows the seed and the rule can work out every number.^1 Python’s generator is the Mersenne Twister, one of the most thoroughly tested there is.^2 Reuse its seed and the same sequence comes back from run to run, as long as several threads aren’t running.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "The 200 servers each pick a start delay at random, uniformly between 0 and 60 seconds. On average 10 land in each 3-second stretch of the minute. One run might put 5 in one stretch and 16 in another, because random choices clump by chance. No stretch gets anything like all 200, and that is the point: the checks spread across the minute instead of landing in one second.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "Looking random isn’t the same as being unpredictable. A pseudorandom sequence can pass every test of how random it looks, yet it comes from a rule. The Mersenne Twister, being completely deterministic, is completely unsuitable for cryptographic purposes.^2 For spreading out timers that doesn’t matter, since nobody gains by guessing the next delay. For a password-reset token, it does.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "A random choice is useful because it carries no information. Two servers that each pick a delay at random land together only by chance, and nobody had to agree on anything to make that so. Any rule they all follow, such as starting on the minute, lines them all up instead.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Random isn’t even: choices made at random clump by chance, so a spread that must be exactly even needs a rule, not a draw. And a value someone gains by guessing needs a secure source. The pseudo-random generators of Python’s `random` module shouldn’t be used for security purposes.^2 Its `secrets` module is the one for passwords, account authentication and security tokens.^3",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "Where machines must spread out the same way every time, give each a delay from something it already has, such as a hash of its name. For scheduled work, one practice is a consistent method that gives each host the same number every time, so an overload or a race condition happens the same way, in a pattern.^4 Pick randomness when there is no such value, or when the spread should differ from run to run.",
        "quiet": false
       }
      }
@@ -9843,10 +11972,28 @@
      },
      {
       "n": 2,
-      "title": "Pseudorandomness",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Pseudorandomness",
+      "title": "random — Generate pseudo-random numbers",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3/library/random.html",
       "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 3,
+      "title": "secrets — Generate secure random numbers for managing secrets",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3/library/secrets.html",
+      "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 4,
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Builders’ Library (Marc Brooker)",
+      "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter",
+      "published": "5 December 2019",
       "preprint": false,
       "archived": null
      }
@@ -9864,10 +12011,39 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000004",
+     "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+     "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+     "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+     "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 7,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 7 projects",
+     "used": [],
+     "instead": "StdRng::seed_from_u64(SystemTime::now()",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 432
   },
   "/api/ideas/kelve%3Ai000000000031?followed=true": {
    "key": "kelve:i000000000031",
@@ -9881,24 +12057,89 @@
     },
     "title": "Randomness",
     "question": "",
-    "minutes": 1,
-    "madeAt": "2026-10-20T20:04:37.129Z",
+    "minutes": 3,
+    "madeAt": "2026-11-02T14:08:38.603Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**Something is random when it has no pattern anyone can use to predict it.**",
+       "text": "Something is random when nothing known beforehand can predict it. One toss of a fair coin can’t be called, yet over many tosses about half come up heads. Programs use random choices so that many machines, each choosing on its own, don’t all choose the same thing.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "Two hundred servers restart together after an update, and each checks for work every 60 seconds. Their timers start in the same second, so every check lands in the same second, every minute. Nothing the servers share can tell them apart. A delay each picks at random, from nothing they share, is the cheapest way to break the tie.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "A single random event can’t be predicted, though over many trials the share of each outcome can be, when its probability is known^1. Computers usually make numbers that only look random, from a rule^2.",
+       "text": "Randomness belongs to how a value is chosen, not to the value itself. A single random event can’t be predicted, but when the probability of each outcome is known, how often each turns up over many trials can be.^1 A uniform choice gives every outcome in a range the same chance. So many uniform choices, made apart, fill the range evenly on average, with no outcome favoured.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Computers follow their instructions exactly, so most of their random numbers are pseudorandom: a rule turns a starting value, the seed, into numbers that look random. Whoever knows the seed and the rule can work out every number.^1 Python’s generator is the Mersenne Twister, one of the most thoroughly tested there is.^2 Reuse its seed and the same sequence comes back from run to run, as long as several threads aren’t running.^2",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "The 200 servers each pick a start delay at random, uniformly between 0 and 60 seconds. On average 10 land in each 3-second stretch of the minute. One run might put 5 in one stretch and 16 in another, because random choices clump by chance. No stretch gets anything like all 200, and that is the point: the checks spread across the minute instead of landing in one second.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "Looking random isn’t the same as being unpredictable. A pseudorandom sequence can pass every test of how random it looks, yet it comes from a rule. The Mersenne Twister, being completely deterministic, is completely unsuitable for cryptographic purposes.^2 For spreading out timers that doesn’t matter, since nobody gains by guessing the next delay. For a password-reset token, it does.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "A random choice is useful because it carries no information. Two servers that each pick a delay at random land together only by chance, and nobody had to agree on anything to make that so. Any rule they all follow, such as starting on the minute, lines them all up instead.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Random isn’t even: choices made at random clump by chance, so a spread that must be exactly even needs a rule, not a draw. And a value someone gains by guessing needs a secure source. The pseudo-random generators of Python’s `random` module shouldn’t be used for security purposes.^2 Its `secrets` module is the one for passwords, account authentication and security tokens.^3",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "Where machines must spread out the same way every time, give each a delay from something it already has, such as a hash of its name. For scheduled work, one practice is a consistent method that gives each host the same number every time, so an overload or a race condition happens the same way, in a pattern.^4 Pick randomness when there is no such value, or when the spread should differ from run to run.",
        "quiet": false
       }
      }
@@ -9915,10 +12156,28 @@
      },
      {
       "n": 2,
-      "title": "Pseudorandomness",
-      "publisher": "Wikipedia",
-      "url": "https://en.wikipedia.org/wiki/Pseudorandomness",
+      "title": "random — Generate pseudo-random numbers",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3/library/random.html",
       "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 3,
+      "title": "secrets — Generate secure random numbers for managing secrets",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3/library/secrets.html",
+      "published": null,
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 4,
+      "title": "Timeouts, retries, and backoff with jitter",
+      "publisher": "Amazon Builders’ Library (Marc Brooker)",
+      "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter",
+      "published": "5 December 2019",
       "preprint": false,
       "archived": null
      }
@@ -9936,10 +12195,39 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000004",
+     "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+     "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+     "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+     "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      {
+       "id": "kelve:i000000000031",
+       "name": "Randomness"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 7,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 7 projects",
+     "used": [],
+     "instead": "StdRng::seed_from_u64(SystemTime::now()",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 432
   },
   "/api/ideas/kelve%3Ai000000000031/outline": {
    "key": "kelve:i000000000031",
@@ -9968,6 +12256,36 @@
    "proposing": false
   },
   "/api/ideas/kelve%3Ai000000000031/notes": [],
+  "/api/lessons/all?idea=kelve%3Ai000000000031": [
+   {
+    "id": "kelve:l000000000004",
+    "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+    "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+    "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+    "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+    "backedBy": null,
+    "about": [
+     {
+      "id": "kelve:i000000000016",
+      "name": "Jitter"
+     },
+     {
+      "id": "kelve:i000000000031",
+      "name": "Randomness"
+     }
+    ],
+    "standing": "confirmed",
+    "record": {
+     "held": 7,
+     "didnt": 0,
+     "backed": false
+    },
+    "basis": "held for 7 projects",
+    "used": [],
+    "instead": "StdRng::seed_from_u64(SystemTime::now()",
+    "another": []
+   }
+  ],
   "/api/ideas/kelve%3Ai000000000034": {
    "key": "kelve:i000000000034",
    "name": "Thundering herd problem",
@@ -9980,24 +12298,108 @@
     },
     "title": "Thundering herd problem",
     "question": "What goes wrong when many waiting processes wake at once?",
-    "minutes": 1,
-    "madeAt": "2026-10-20T20:04:37.154Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:38.564Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**A thundering herd is many waiting processes woken at once for something only one of them can have.**",
+       "text": "The thundering herd problem happens when a large number of waiting processes or threads are woken at the same moment, often by one event, but only one of them can use what they were waiting for^1. The rest fail and go back to waiting, and the needless waking burns CPU and other resources^1. The same pattern swamps services when many clients retry in step.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "A service comes back after a 30-second outage. Ten thousand clients that failed during it all retry on the same fixed schedule and arrive in the same instant. The service falls over again under the spike, and the cycle repeats. Or 64 worker threads wait on one socket; a single connection arrives, all 64 wake, and one wins.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "They all wake, one wins, and the rest fail and go back to sleep, having used the machine for nothing^1. Clients retrying on the same schedule after a failure make the same herd against a service.",
+       "text": "Three things combine: many waiters on one event, an event that releases them all together through synchronization, and a resource that only one or a few can use at a time, which creates contention. When the event fires, only one waiter can respond, so most fail and go back to sleep^1. The shared resource becomes the performance bottleneck at exactly that moment.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Between machines it appears as retries in lockstep. Clients that back off on the same schedule stay together: even with [[exponential backoff]], there are still clusters of calls^2. In caches it is a cache stampede: when a popular cached page expires under very heavy load, many servers may try to rebuild it at once^3, none knowing the others are doing the same^3.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "The cures break the synchrony. Wake one waiter, not all: Linux added the `EPOLLEXCLUSIVE` flag to epoll in kernel version 4.5 so that only one of several waiting sets is woken^1. Or add randomness: [[jitter]] in the waits between retries breaks the synchronisation across clients^1, spreading the spikes towards a roughly constant rate^2. For caches, let one caller refresh an entry while the others use the old value or wait.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "Say 10,000 clients fail together and retry after exactly 1, 2, 4 and 8 seconds. Each retry wave puts all 10,000 requests into the same few milliseconds. If each client instead waits a random time between zero and its backoff, the 10,000 retries of the 8-second round spread across 8 seconds, about 1,250 a second. The server sees a steady stream instead of a wall.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "how",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "It's easy to think exponential backoff alone prevents a herd. Backoff does make calls less and less frequent^2, but clients that failed together still retry together, leaving clusters of calls^2. Backoff needs jitter to scatter the clients as well as slow them down.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "The cost lies in the timing, not the amount of work. A server that handles 1,000 requests a second copes with 10,000 spread over ten seconds, not 10,000 in one. Anything that makes clients act in step, such as a shared timer, a single wake-up or one expiry time, turns average load into peak load. Marc Brooker of AWS argues that jittered backoff repays its small cost so well that it should be a standard approach for remote clients^2.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Jitter spreads work but doesn't remove it: none of the jittered approaches changes the fundamental way work grows with contention, though they cut it substantially at reasonable levels^2. Waking only one waiter can leave capacity idle if that one is slow. And randomised timing makes behaviour harder to reproduce in tests.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "Where the herd can't be scattered at its source, the resource can protect itself. A queue in front of it admits work at the rate it can handle; [[rate limiting]] caps how fast each client may call; and load shedding refuses excess requests quickly instead of letting them pile up.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "alternatives",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "A surge of real users, such as the opening minute of a ticket sale, also swamps a service. But those users arrive because of something outside the system, not because the system put them in step. A thundering herd is synchrony the system creates, so scattering the timing fixes it; a genuine surge needs more capacity or a queue.",
        "quiet": false
       }
      }
@@ -10011,9 +12413,52 @@
       "published": null,
       "preprint": false,
       "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Exponential Backoff And Jitter",
+      "publisher": "AWS Architecture Blog, Marc Brooker",
+      "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
+      "published": "4 March 2015",
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 3,
+      "title": "Cache stampede",
+      "publisher": "Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Cache_stampede",
+      "published": null,
+      "preprint": false,
+      "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "jitter",
+      "idea": {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "rate limiting",
+      "idea": {
+       "id": "kelve:i000000000035",
+       "name": "Rate limiting"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -10029,7 +12474,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 913
   },
   "/api/ideas/kelve%3Ai000000000034?followed=true": {
    "key": "kelve:i000000000034",
@@ -10043,24 +12488,108 @@
     },
     "title": "Thundering herd problem",
     "question": "What goes wrong when many waiting processes wake at once?",
-    "minutes": 1,
-    "madeAt": "2026-10-20T20:04:37.154Z",
+    "minutes": 4,
+    "madeAt": "2026-11-02T14:08:38.564Z",
     "blocks": [
      {
       "id": "b1",
       "part": "lead",
       "body": {
        "type": "paragraph",
-       "text": "**A thundering herd is many waiting processes woken at once for something only one of them can have.**",
+       "text": "The thundering herd problem happens when a large number of waiting processes or threads are woken at the same moment, often by one event, but only one of them can use what they were waiting for^1. The rest fail and go back to waiting, and the needless waking burns CPU and other resources^1. The same pattern swamps services when many clients retry in step.",
        "quiet": false
       }
      },
      {
       "id": "b2",
+      "part": "why",
+      "body": {
+       "type": "paragraph",
+       "text": "A service comes back after a 30-second outage. Ten thousand clients that failed during it all retry on the same fixed schedule and arrive in the same instant. The service falls over again under the spike, and the cycle repeats. Or 64 worker threads wait on one socket; a single connection arrives, all 64 wake, and one wins.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b3",
       "part": "how",
       "body": {
        "type": "paragraph",
-       "text": "They all wake, one wins, and the rest fail and go back to sleep, having used the machine for nothing^1. Clients retrying on the same schedule after a failure make the same herd against a service.",
+       "text": "Three things combine: many waiters on one event, an event that releases them all together through synchronization, and a resource that only one or a few can use at a time, which creates contention. When the event fires, only one waiter can respond, so most fail and go back to sleep^1. The shared resource becomes the performance bottleneck at exactly that moment.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b4",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "Between machines it appears as retries in lockstep. Clients that back off on the same schedule stay together: even with [[exponential backoff]], there are still clusters of calls^2. In caches it is a cache stampede: when a popular cached page expires under very heavy load, many servers may try to rebuild it at once^3, none knowing the others are doing the same^3.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b5",
+      "part": "how",
+      "body": {
+       "type": "paragraph",
+       "text": "The cures break the synchrony. Wake one waiter, not all: Linux added the `EPOLLEXCLUSIVE` flag to epoll in kernel version 4.5 so that only one of several waiting sets is woken^1. Or add randomness: [[jitter]] in the waits between retries breaks the synchronisation across clients^1, spreading the spikes towards a roughly constant rate^2. For caches, let one caller refresh an entry while the others use the old value or wait.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b6",
+      "part": "how",
+      "fold": "example",
+      "body": {
+       "type": "paragraph",
+       "text": "Say 10,000 clients fail together and retry after exactly 1, 2, 4 and 8 seconds. Each retry wave puts all 10,000 requests into the same few milliseconds. If each client instead waits a random time between zero and its backoff, the 10,000 retries of the 8-second round spread across 8 seconds, about 1,250 a second. The server sees a steady stream instead of a wall.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b7",
+      "part": "how",
+      "fold": "mistake",
+      "body": {
+       "type": "paragraph",
+       "text": "It's easy to think exponential backoff alone prevents a herd. Backoff does make calls less and less frequent^2, but clients that failed together still retry together, leaving clusters of calls^2. Backoff needs jitter to scatter the clients as well as slow them down.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b8",
+      "part": "whyThisWay",
+      "body": {
+       "type": "paragraph",
+       "text": "The cost lies in the timing, not the amount of work. A server that handles 1,000 requests a second copes with 10,000 spread over ten seconds, not 10,000 in one. Anything that makes clients act in step, such as a shared timer, a single wake-up or one expiry time, turns average load into peak load. Marc Brooker of AWS argues that jittered backoff repays its small cost so well that it should be a standard approach for remote clients^2.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b9",
+      "part": "limits",
+      "body": {
+       "type": "paragraph",
+       "text": "Jitter spreads work but doesn't remove it: none of the jittered approaches changes the fundamental way work grows with contention, though they cut it substantially at reasonable levels^2. Waking only one waiter can leave capacity idle if that one is slow. And randomised timing makes behaviour harder to reproduce in tests.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b10",
+      "part": "alternatives",
+      "body": {
+       "type": "paragraph",
+       "text": "Where the herd can't be scattered at its source, the resource can protect itself. A queue in front of it admits work at the rate it can handle; [[rate limiting]] caps how fast each client may call; and load shedding refuses excess requests quickly instead of letting them pile up.",
+       "quiet": false
+      }
+     },
+     {
+      "id": "b11",
+      "part": "alternatives",
+      "fold": "lookAlike",
+      "body": {
+       "type": "paragraph",
+       "text": "A surge of real users, such as the opening minute of a ticket sale, also swamps a service. But those users arrive because of something outside the system, not because the system put them in step. A thundering herd is synchrony the system creates, so scattering the timing fixes it; a genuine surge needs more capacity or a queue.",
        "quiet": false
       }
      }
@@ -10074,9 +12603,52 @@
       "published": null,
       "preprint": false,
       "archived": null
+     },
+     {
+      "n": 2,
+      "title": "Exponential Backoff And Jitter",
+      "publisher": "AWS Architecture Blog, Marc Brooker",
+      "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/",
+      "published": "4 March 2015",
+      "preprint": false,
+      "archived": null
+     },
+     {
+      "n": 3,
+      "title": "Cache stampede",
+      "publisher": "Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Cache_stampede",
+      "published": null,
+      "preprint": false,
+      "archived": null
      }
     ],
-    "links": []
+    "links": [
+     {
+      "term": "exponential backoff",
+      "idea": {
+       "id": "kelve:i000000000014",
+       "name": "Exponential backoff"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "jitter",
+      "idea": {
+       "id": "kelve:i000000000016",
+       "name": "Jitter"
+      },
+      "kind": "related"
+     },
+     {
+      "term": "rate limiting",
+      "idea": {
+       "id": "kelve:i000000000035",
+       "name": "Rate limiting"
+      },
+      "kind": "alternative"
+     }
+    ]
    },
    "state": "ready",
    "step": "",
@@ -10092,7 +12664,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 913
   },
   "/api/ideas/kelve%3Ai000000000034/outline": {
    "key": "kelve:i000000000034",
@@ -10208,7 +12780,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1332
   },
   "/api/ideas/kelve%3Ai000000000035?followed=true": {
    "key": "kelve:i000000000035",
@@ -10271,7 +12843,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 1332
   },
   "/api/ideas/kelve%3Ai000000000035/outline": {
    "key": "kelve:i000000000035",
@@ -10465,10 +13037,39 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000006",
+     "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+     "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+     "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+     "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000002",
+       "name": "Transient errors"
+      },
+      {
+       "id": "kelve:i000000000023",
+       "name": "Database transactions"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 11,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 11 projects",
+     "used": [],
+     "instead": "current transaction is aborted, commands ignored until end of transaction block",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 804
   },
   "/api/ideas/kelve%3Ai000000000023?followed=true": {
    "key": "kelve:i000000000023",
@@ -10528,10 +13129,39 @@
    "agent": "claude-code",
    "checking": null,
    "keptHere": false,
-   "lessons": [],
-   "lessonsAll": 0,
+   "lessons": [
+    {
+     "id": "kelve:l000000000006",
+     "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+     "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+     "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+     "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+     "backedBy": null,
+     "about": [
+      {
+       "id": "kelve:i000000000002",
+       "name": "Transient errors"
+      },
+      {
+       "id": "kelve:i000000000023",
+       "name": "Database transactions"
+      }
+     ],
+     "standing": "confirmed",
+     "record": {
+      "held": 11,
+      "didnt": 0,
+      "backed": false
+     },
+     "basis": "held for 11 projects",
+     "used": [],
+     "instead": "current transaction is aborted, commands ignored until end of transaction block",
+     "another": []
+    }
+   ],
+   "lessonsAll": 1,
    "fromGraph": true,
-   "reads": 1
+   "reads": 804
   },
   "/api/ideas/kelve%3Ai000000000023/outline": {
    "key": "kelve:i000000000023",
@@ -10605,6 +13235,36 @@
    "proposing": false
   },
   "/api/ideas/kelve%3Ai000000000023/notes": [],
+  "/api/lessons/all?idea=kelve%3Ai000000000023": [
+   {
+    "id": "kelve:l000000000006",
+    "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+    "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+    "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+    "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+    "backedBy": null,
+    "about": [
+     {
+      "id": "kelve:i000000000002",
+      "name": "Transient errors"
+     },
+     {
+      "id": "kelve:i000000000023",
+      "name": "Database transactions"
+     }
+    ],
+    "standing": "confirmed",
+    "record": {
+     "held": 11,
+     "didnt": 0,
+     "backed": false
+    },
+    "basis": "held for 11 projects",
+    "used": [],
+    "instead": "current transaction is aborted, commands ignored until end of transaction block",
+    "another": []
+   }
+  ],
   "/api/ideas/kelve%3Ai000000000011": {
    "key": "kelve:i000000000011",
    "name": "Atomicity",
@@ -10666,7 +13326,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 468
   },
   "/api/ideas/kelve%3Ai000000000011?followed=true": {
    "key": "kelve:i000000000011",
@@ -10729,7 +13389,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 468
   },
   "/api/ideas/kelve%3Ai000000000011/outline": {
    "key": "kelve:i000000000011",
@@ -10851,7 +13511,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 144
   },
   "/api/ideas/kelve%3Ai000000000024?followed=true": {
    "key": "kelve:i000000000024",
@@ -10914,7 +13574,7 @@
    "lessons": [],
    "lessonsAll": 0,
    "fromGraph": true,
-   "reads": 1
+   "reads": 144
   },
   "/api/ideas/kelve%3Ai000000000024/outline": {
    "key": "kelve:i000000000024",
@@ -11009,7 +13669,7 @@
     "title": "Mutual exclusion",
     "question": "",
     "minutes": 1,
-    "madeAt": "2026-10-27T17:58:43.504Z",
+    "madeAt": "2026-11-02T14:09:16.284Z",
     "blocks": [
      {
       "id": "b1",
@@ -11092,7 +13752,7 @@
     "title": "Mutual exclusion",
     "question": "",
     "minutes": 1,
-    "madeAt": "2026-10-27T17:58:43.504Z",
+    "madeAt": "2026-11-02T14:09:16.284Z",
     "blocks": [
      {
       "id": "b1",
