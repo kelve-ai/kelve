@@ -1,8 +1,9 @@
 //! The hook that tells the person's coding agent what kelve has for it, at the
 //! moment it helps: the notes they left it, as they send a message; lessons
 //! from the shared graph, as it reads or edits a file and as something fails;
-//! and, when it hands work over that it hasn't shown the person (a commit, a
-//! push, a pull request), to show it in kelve. One command, `kelve moment`, naming the agent and the event, on each
+//! and work it hasn't shown the person, to show in kelve: as its turn ends,
+//! if it's done and worth showing, and as it commits, pushes or opens a pull
+//! request. One command, `kelve moment`, naming the agent and the event, on each
 //! agent's own events: installed and taken out together, only with the person's
 //! yes. kelve adds only its own entries, and takes out only those, leaving
 //! everything else in the file as it was.
@@ -185,7 +186,8 @@ impl Agent {
                     Some("Read|Edit|Write|MultiEdit|NotebookEdit|Bash"),
                 ),
                 ("PostToolUseFailure", None),
-                // A turn ends: what a hard stretch taught, asked once.
+                // A turn ends: what a hard stretch taught, asked once, and
+                // work to show, if it's done.
                 ("Stop", None),
             ],
             Agent::Qwen => vec![

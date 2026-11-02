@@ -22,7 +22,7 @@ Ask your agent:
 Install kelve from kelve.ai/install.sh
 ```
 
-Then your agent shows you its work when it commits, pushes or opens a pull request. Or ask it:
+Then your agent shows you its work when it's finished it. Or ask it:
 
 ```
 Show me what you did in kelve.

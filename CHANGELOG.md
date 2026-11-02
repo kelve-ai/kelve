@@ -2,6 +2,12 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **Your agent shows you its work when it's finished it, committed or not.** It waited for a commit, a push or a pull request, so work left uncommitted wasn't shown. Now, as your agent's turn ends having changed files you haven't seen in kelve, kelve's hook asks it to show them, if the work's done and worth showing.
+- **The same work is one thing in kelve, kept up to date.** Your agent shows its work as its branch, committed or not, so showing it again brings it up to date rather than adding another. In a folder that isn't in a git repository, it shows the files it changed, as they are now, and showing them again does the same. Committing, pushing or opening a pull request for work you've seen since it last changed opens nothing more.
+- **Reading the graph quickly is no longer taken for a day's reading used.** The shared graph asks anyone reading a lot at once to wait a second, and kelve took that for the day's limit: it said the day's reading was used and stopped reading until midnight UTC. Now it waits as asked and reads on.
+
 ## 0.1.6, 1 November 2026
 
 - **An entry for an idea the graph has merged is followed, not lost.** The shared graph merges an idea it finds is the same as another, and takes your agent's entry under the one that stays. kelve looked for it under the old one and said the graph hadn't taken it. Now it follows the entry to the idea it's under.

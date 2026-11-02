@@ -436,18 +436,33 @@ pub async fn touch(
     path: &str,
     edited: bool,
 ) -> Result<()> {
+    let at = now();
     sqlx::query(
-        "insert into touched (session, root, path, edited, at) values (?, ?, ?, ?, ?)
-         on conflict (session, root, path) do update set at = excluded.at, edited = max(edited, excluded.edited)",
+        "insert into touched (session, root, path, edited, at, edited_at) values (?, ?, ?, ?, ?, ?)
+         on conflict (session, root, path) do update set at = excluded.at,
+           edited = max(edited, excluded.edited),
+           edited_at = coalesce(excluded.edited_at, edited_at)",
     )
     .bind(session)
     .bind(root)
     .bind(path)
     .bind(edited)
-    .bind(now())
+    .bind(at)
+    .bind(edited.then_some(at))
     .execute(&mut *conn)
     .await?;
     Ok(())
+}
+
+/// When the agent last edited a file in a session, and in which folder.
+pub async fn last_edit(conn: &mut Conn, session: &str) -> Result<Option<(String, i64)>> {
+    Ok(sqlx::query_as(
+        "select root, edited_at from touched where session = ? and edited_at is not null
+          order by edited_at desc limit 1",
+    )
+    .bind(session)
+    .fetch_optional(&mut *conn)
+    .await?)
 }
 
 /// The files the agent touched in a session, in the folder it touched last,

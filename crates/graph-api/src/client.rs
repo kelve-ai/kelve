@@ -522,50 +522,81 @@ impl Client {
     /// A reading token to spend: one on hand, or one of a new batch, signed
     /// blind with the account's key, so the graph can't tell whose it is
     /// when it's read with. None for someone not signed in, or when the
-    /// graph won't give more today.
-    async fn reading_token(&self) -> Option<String> {
-        let account = self.reading_as.as_ref().or(self.token.as_ref())?;
+    /// graph won't give more today. Busy when the graph is asked too much
+    /// at once, to be waited out as any busy answer is.
+    async fn reading_token(&self) -> Result<Option<String>> {
+        let Some(account) = self.reading_as.as_ref().or(self.token.as_ref()) else {
+            return Ok(None);
+        };
         let mut pool = self.tokens.lock().await;
         if let Some(t) = pool.tokens.pop() {
-            return Some(t);
+            return Ok(Some(t));
         }
         let key = match &pool.key {
             Some((key, at)) if at.elapsed() < TOKEN_KEY_KEPT => key.clone(),
             _ => {
                 // Asked with no account, so the key can't be one for this
                 // account alone.
-                let res = self.http.get(self.url("/tokens/key")).send().await.ok()?;
-                let key: crate::tokens::TokenKey =
-                    serde_json::from_slice(&capped(res).await.ok()?).ok()?;
+                let Ok(res) = self.http.get(self.url("/tokens/key")).send().await else {
+                    return Ok(None);
+                };
+                let Some(key) = capped(res)
+                    .await
+                    .ok()
+                    .and_then(|b| serde_json::from_slice::<crate::tokens::TokenKey>(&b).ok())
+                else {
+                    return Ok(None);
+                };
                 pool.key = Some((key.clone(), Instant::now()));
                 key
             }
         };
-        let (pending, ask) = crate::tokens::blind(&key, TOKENS_AT_ONCE).ok()?;
-        let res = self
+        let Ok((pending, ask)) = crate::tokens::blind(&key, TOKENS_AT_ONCE) else {
+            return Ok(None);
+        };
+        let Ok(res) = self
             .http
             .post(self.url("/account/tokens"))
             .bearer_auth(account)
             .json(&ask)
             .send()
             .await
-            .ok()?;
-        // The day's reading, used: none until it resets, asked for no more.
+        else {
+            return Ok(None);
+        };
         if res.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
-            let after = retry_after(&res).unwrap_or_else(to_midnight);
-            pool.used_until = Some((account.clone(), Instant::now() + after));
-            return None;
+            let asked = retry_after(&res);
+            // The day's reading, used: none until it resets, asked for no
+            // more. Told by its title, as the graph names it: near midnight
+            // its wait is as short as a busy one's.
+            if problem(res)
+                .await
+                .is_some_and(|p| p.title == crate::ENOUGH_FOR_TODAY)
+            {
+                let after = asked.unwrap_or_else(to_midnight);
+                pool.used_until = Some((account.clone(), Instant::now() + after));
+                return Ok(None);
+            }
+            // Anything else is too many asks at once: busy for a moment.
+            return Err(Error::Busy { after: asked });
         }
-        let res = Some(res).filter(|r| r.status().is_success())?;
-        let grant: crate::tokens::TokenGrant =
-            serde_json::from_slice(&capped(res).await.ok()?).ok()?;
+        if !res.status().is_success() {
+            return Ok(None);
+        }
+        let Some(grant) = capped(res)
+            .await
+            .ok()
+            .and_then(|b| serde_json::from_slice::<crate::tokens::TokenGrant>(&b).ok())
+        else {
+            return Ok(None);
+        };
         match crate::tokens::finish(pending, &grant) {
             Ok(tokens) => pool.tokens = tokens,
             // Signed with a key the graph doesn't show everyone: none of
             // them, and the key is asked for again.
             Err(_) => pool.key = None,
         }
-        pool.tokens.pop()
+        Ok(pool.tokens.pop())
     }
 
     /// How long until the account may read again, while it has read as
@@ -823,13 +854,23 @@ impl Client {
         for attempt in 1..=ATTEMPTS {
             let last = attempt == ATTEMPTS;
             let res = match self.execute(build(), reading).await {
-                Ok(res) => res,
-                Err(e) if !last && (e.is_connect() || e.is_timeout() || e.is_request()) => {
+                Ok(Ok(res)) => res,
+                Ok(Err(e)) if !last && (e.is_connect() || e.is_timeout() || e.is_request()) => {
                     tokio::time::sleep(jittered(wait)).await;
                     wait *= 2;
                     continue;
                 }
-                Err(_) => return Err(Error::Unreachable),
+                Ok(Err(_)) => return Err(Error::Unreachable),
+                // Asked for reading tokens too often at once: waited out as
+                // a busy answer is, then asked again.
+                Err(Error::Busy { after: asked })
+                    if !last && asked.is_none_or(|a| a <= LONGEST_WAIT) =>
+                {
+                    tokio::time::sleep(asked.unwrap_or_else(|| jittered(wait))).await;
+                    wait *= 2;
+                    continue;
+                }
+                Err(e) => return Err(e),
             };
             let status = res.status();
             if status.is_success() {
@@ -902,19 +943,23 @@ impl Client {
 
     /// Sends a request. One that doesn't carry the account's key, a read,
     /// spends a reading token: the graph is read only by someone signed in,
-    /// and never knows who.
+    /// and never knows who. Busy, before anything is sent, when the graph
+    /// is asked for tokens too often at once.
     async fn execute(
         &self,
         req: reqwest::RequestBuilder,
         reading: bool,
-    ) -> reqwest::Result<reqwest::Response> {
+    ) -> Result<reqwest::Result<reqwest::Response>> {
         use reqwest::header::{AUTHORIZATION, LOCATION};
-        let mut req = req.build()?;
+        let mut req = match req.build() {
+            Ok(req) => req,
+            Err(e) => return Ok(Err(e)),
+        };
         let mut hops = 0;
         loop {
             let read = reading && !req.headers().contains_key(AUTHORIZATION);
             if read
-                && let Some(token) = self.reading_token().await
+                && let Some(token) = self.reading_token().await?
                 && let Ok(mut bearer) = reqwest::header::HeaderValue::from_str(&format!(
                     "{} token={token}",
                     crate::tokens::SCHEME
@@ -926,7 +971,10 @@ impl Client {
             let again = (req.method() == reqwest::Method::GET)
                 .then(|| req.try_clone())
                 .flatten();
-            let res = self.http.execute(req).await?;
+            let res = match self.http.execute(req).await {
+                Ok(res) => res,
+                Err(e) => return Ok(Err(e)),
+            };
             let to = res
                 .headers()
                 .get(LOCATION)
@@ -943,7 +991,7 @@ impl Client {
                     *next.url_mut() = to;
                     req = next;
                 }
-                _ => return Ok(res),
+                _ => return Ok(Ok(res)),
             }
         }
     }
@@ -1296,6 +1344,57 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn asking_for_reading_tokens_too_often_waits_as_asked_then_reads() {
+        use crate::tokens::{Issuer, TokenAsk};
+        use axum::response::IntoResponse;
+        let issuer = Arc::new(Issuer::from_seed(&[3u8; 32]).unwrap());
+        let asks = Arc::new(AtomicU32::new(0));
+        let (key, sign, counted) = (issuer.clone(), issuer.clone(), asks.clone());
+        let g = serve(
+            Router::new()
+                .route("/v1", get(|| async { manifest() }))
+                .route(
+                    "/v1/tokens/key",
+                    get(move || {
+                        let key = key.key().clone();
+                        async move { axum::Json(key) }
+                    }),
+                )
+                .route(
+                    "/v1/account/tokens",
+                    axum::routing::post(move |axum::Json(ask): axum::Json<TokenAsk>| {
+                        let (sign, counted) = (sign.clone(), counted.clone());
+                        async move {
+                            // The graph's limit on each address, not the day's.
+                            if counted.fetch_add(1, Ordering::SeqCst) == 0 {
+                                return (
+                                    StatusCode::TOO_MANY_REQUESTS,
+                                    [("retry-after", "1"), ("content-type", "application/problem+json")],
+                                    r#"{"type":"about:blank","title":"Too many requests","status":429,"detail":"That’s more than the shared graph takes at once. kelve will try again shortly."}"#.to_string(),
+                                )
+                                    .into_response();
+                            }
+                            axum::Json(sign.sign(&ask, 900).unwrap()).into_response()
+                        }
+                    }),
+                ),
+        )
+        .await;
+        let seeding = g.with_token(Some("seeding".into()));
+        let started = Instant::now();
+        assert_eq!(seeding.manifest().await.unwrap().name, "test");
+        assert!(
+            started.elapsed() >= Duration::from_secs(1),
+            "waited as asked"
+        );
+        assert_eq!(asks.load(Ordering::SeqCst), 2, "asked again once");
+        assert!(
+            seeding.reads_used().await.is_none(),
+            "not the day's reading"
+        );
+    }
+
+    #[tokio::test]
     async fn writing_needs_an_account_and_each_read_spends_a_token_never_the_account() {
         use crate::tokens::{Issuer, TokenAsk, from_header};
         let issuer = Arc::new(Issuer::from_seed(&[1u8; 32]).unwrap());
@@ -1363,6 +1462,7 @@ mod tests {
                 .unwrap()
                 .reading_token()
                 .await
+                .unwrap()
                 .is_none()
         );
         let cs = Changeset {
