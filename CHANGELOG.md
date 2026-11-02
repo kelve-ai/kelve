@@ -5,7 +5,7 @@ What changes in each release of kelve, for the people who run it. Versions follo
 ## Unreleased
 
 - **Your agent is asked to show only its own work.** Working in a worktree inside your project, as agents' apps make them, it was asked to show work another agent had done elsewhere in the project. kelve took the whole project for the folder it worked in. Now a worktree is its own folder.
-- **From the graph says what it counts.** It said your agent wrote entries for a change, and that the rest had none, when it was counting the entries kelve holds. Now it says how many ideas have an entry, how many kelve took from the shared graph and how many your agent wrote, in that work or before, and how many of those the graph has now. The rest get one when they're opened.
+- **From the graph says what the shared graph gave.** It counted the entries kelve holds, wherever they came from, and named your agent by its product. Now it says only how many of the ideas in a change already had an entry in the shared graph, and calls your agent your agent.
 
 ## 0.1.7, 2 November 2026
 

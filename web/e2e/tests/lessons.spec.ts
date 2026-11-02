@@ -78,7 +78,7 @@ test('lessons reach the agent as it works, and the person sees which held, and s
 
     await page.goto(`${k.base}/#/o/1`)
     // At the top: what the graph gave, and that one was put to the test and held.
-    await expect(page.locator('.pl p.chg.gv')).toContainText(/Claude Code was given \w+ lessons from the shared graph; one was put to the test, and held\./, { timeout: 15_000 })
+    await expect(page.locator('.pl p.chg.gv')).toContainText(/Your agent was given \w+ lessons from the shared graph; one was put to the test, and held\./, { timeout: 15_000 })
     // On the part the fix went into: which, and what showed it held.
     const how = page.getByRole('region', { name: 'How it works now' })
     const part = how.getByRole('region', { name: 'A charge sent twice, charged once' })
