@@ -105,7 +105,7 @@ export function ChangePage({ opened, files, agent, open, idea, lesson, lessonOn 
           <WaitingLine page={`change:${opened.id}`} where={plainWhere(list, v.waiting, opened.id)} working={!!list?.working} agent={Agent} writing={!!v.waiting?.writing} />
         </div>
         {/* What the graph gave and what the agent learned don't wait for the reading: what it learned may leave first. */}
-        <GaveLine lessons={lessons?.used ?? []} agent={agent} origins={origins} />
+        <GaveLine lessons={lessons?.used ?? []} origins={origins} />
         <FileList name="Its files" paths={files.filter((f) => !tools.has(f.path)).map((f) => f.path)} files={files} open={open} />
         <LearnedList learned={lessons?.learned ?? []} agent={agent} open={lesson} />
       </>
@@ -118,7 +118,7 @@ export function ChangePage({ opened, files, agent, open, idea, lesson, lessonOn 
         {said}
         {v.fits && <p className="used">Where it fits: <Woven text={v.fits} ideas={v.ideas} idea={idea} /></p>}
         {v.kind && <KindLine kind={v.kind}>{v.change && <Woven text={v.change} ideas={v.ideas} idea={idea} />}</KindLine>}
-        <GaveLine lessons={lessons?.used ?? []} agent={agent} origins={origins} />
+        <GaveLine lessons={lessons?.used ?? []} origins={origins} />
         {v.parts.length > 0 && (
           <section aria-label="How it works now">
             <GroupHead name="How it works now" count={`${count(v.parts.length, 'part', 'parts')}, by purpose`} />
