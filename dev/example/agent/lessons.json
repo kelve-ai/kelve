@@ -1,5 +1,5 @@
 {
-  "about": "Lessons for the ledger example. Each is one a capable agent wouldn't get right from the error, the docs or unprompted, checked against the docs on 27 October 2026. `theirs`: what other people's agents learned using the ideas the change rests on, each with what came of it for other projects, seeded into the stand-in graph in this order, each with the card the real graph would make for it from its words: what it's matched by; `contradicts` names an earlier one by its place in this list, from 0: another good way, linked both ways. `story`: what the example's agent meets as it works on the change, as Claude Code's hook gives it to `kelve moment`: files it reads and edits, the usual way written where another agent found a better one, a test that fails with an error that points the wrong way and then passes, and work of its own it replaces with a better way. `learned`: what it writes, when kelve asks.",
+  "about": "Lessons for the ledger example. Each is one a capable agent wouldn't get right from the error, the docs or unprompted, checked against the docs on 27 October 2026 (the last three on 2 November 2026). `theirs`: what other people's agents learned using the ideas the change rests on, each with what came of it for other projects, seeded into the stand-in graph in this order, each with the card the real graph would make for it from its words: what it's matched by; `contradicts` names an earlier one by its place in this list, from 0: another good way, linked both ways. `story`: what the example's agent meets as it works on the change, as Claude Code's hook gives it to `kelve moment`: files it reads and edits, the usual way written where another agent found a better one, a test that fails with an error that points the wrong way and then passes, and work of its own it replaces with a better way. `learned`: what it writes, when kelve asks.",
   "theirs": [
     {
       "about": [
@@ -73,6 +73,82 @@
           "DO NOTHING RETURNING"
         ],
         "codes": []
+      }
+    },
+    {
+      "about": [
+        "Jitter",
+        "Randomness"
+      ],
+      "says": "Jitter from a generator seeded the same way in every copy of a client gives every copy the same waits, so copies that failed together still retry together. Seeding from the clock in seconds does it to copies started in the same second. Go's `math/rand` did it by default before Go 1.20, starting every process from the same seed unless it was seeded.",
+      "do": "Draw jitter from a generator the operating system seeds, such as Rust's `rand::thread_rng()` or Go's top-level `math/rand` from 1.20, never one seeded from the clock.",
+      "example": "// Rust: seeded from the OS, separately in every process and thread\nlet wait = rand::thread_rng().gen_range(Duration::ZERO..=ceiling);",
+      "holdsWhen": "Many copies of one client, deployed or restarted together, each picking its own jitter.",
+      "seenAs": "StdRng::seed_from_u64(SystemTime::now()",
+      "record": {
+        "held": 7,
+        "didnt": 0
+      },
+      "card": {
+        "cues": [
+          "seed_from_u64",
+          "rand.Seed(time.Now",
+          "srand(time"
+        ],
+        "codes": []
+      }
+    },
+    {
+      "about": [
+        "Exponential backoff"
+      ],
+      "says": "`base * 2u32.pow(attempt)` overflows on the 33rd try, before `.min(ceiling)` can cap it. A debug build panics with `attempt to multiply with overflow`; a release build wraps the power to 0, so the wait drops to nothing and the client retries in a tight loop against the service it was backing off from.",
+      "do": "Keep the power from overflowing before the ceiling applies: cap the exponent, or use `saturating_pow` and `saturating_mul`.",
+      "example": "BASE.saturating_mul(2u32.saturating_pow(attempt)).min(MAX_WAIT)",
+      "holdsWhen": "Rust, a retry loop with no limit on tries, or one past 32, that works out each wait as a power of two.",
+      "seenAs": "attempt to multiply with overflow",
+      "record": {
+        "held": 4,
+        "didnt": 0
+      },
+      "card": {
+        "cues": [
+          "attempt to multiply with overflow"
+        ],
+        "codes": [],
+        "variants": [
+          "thread <str> panicked at <str>:\nattempt to multiply with overflow"
+        ]
+      }
+    },
+    {
+      "about": [
+        "Transient errors",
+        "Database transactions"
+      ],
+      "says": "A serialization failure (40001) or a deadlock (40P01) in Postgres passes if tried again, but only as the whole transaction. After any error in a transaction, every later statement fails with `current transaction is aborted, commands ignored until end of transaction block`, so retrying just the statement that failed never works.",
+      "do": "On 40001 or 40P01, roll back and run the whole transaction again from its first statement, with the retry loop around the transaction.",
+      "example": "with_retries(|_| async {\n    let mut tx = pool.begin().await?;\n    debit(&mut tx, amount).await?;\n    credit(&mut tx, amount).await?;\n    tx.commit().await\n})",
+      "holdsWhen": "Postgres, at repeatable read or serializable, or wherever two transactions lock the same rows in different orders.",
+      "seenAs": "current transaction is aborted, commands ignored until end of transaction block",
+      "record": {
+        "held": 11,
+        "didnt": 0
+      },
+      "card": {
+        "cues": [
+          "current transaction is aborted",
+          "could not serialize access",
+          "deadlock detected"
+        ],
+        "codes": [
+          "25P02",
+          "40001",
+          "40P01"
+        ],
+        "variants": [
+          "ERROR:  current transaction is aborted, commands ignored until end of transaction block"
+        ]
       }
     }
   ],

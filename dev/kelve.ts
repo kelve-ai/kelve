@@ -31,7 +31,7 @@ import { type ChildProcess, spawn, spawnSync } from 'node:child_process'
 import { cpSync, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { join, resolve } from 'node:path'
-import { answer, LESSONS, LIVE, lessonSeeds, pages, WRITTEN, type Job } from './example/agent'
+import { answer, LESSONS, LIVE, lessonSeeds, pages, READS, WRITTEN, type Job } from './example/agent'
 import { exampleChange, git, makeLedger } from './example/make'
 
 const repo = resolve(import.meta.dirname, '..')
@@ -128,16 +128,32 @@ async function startGraph(from: string | null) {
   // The pages the example's entries quote, as the real graph would fetch them.
   for (const page of pages()) await stand({ page })
   await seedLessons()
+  if (from) await seedReads()
   return graph
 }
 
-/** What other people's agents learned using the example's ideas, in the stand-in graph, once. */
-async function seedLessons() {
+/** The example graph's ideas' IDs, by name. */
+function exampleIds(): Map<string, string> {
   const ids = new Map<string, string>()
   for (const line of readFileSync(join(example, 'graph/ideas.jsonl'), 'utf8').split('\n').filter(Boolean)) {
     const i = JSON.parse(line) as { id: string; name: string }
     ids.set(i.name, i.id)
   }
+  return ids
+}
+
+/** How often everyone's readers have read each entry the example's graph has, as a graph many people use would say. */
+async function seedReads() {
+  const ids = exampleIds()
+  for (const [name, times] of READS) {
+    const id = ids.get(name)
+    if (id) await stand({ reads: [id, times] })
+  }
+}
+
+/** What other people's agents learned using the example's ideas, in the stand-in graph, once. */
+async function seedLessons() {
+  const ids = exampleIds()
   const there = (await (await fetch(`${graphUrl}/v1/lessons?ids=${[...ids.values()].join(',')}`, { headers: { authorization: 'Bearer stand-in' } })).json()) as { lessons: unknown[] }
   if (there.lessons.length) return
   for (const seed of lessonSeeds(ids)) await stand(seed)

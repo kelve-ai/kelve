@@ -283,13 +283,14 @@ export function Example() {
         const jitter = fixture.answers[`/api/ideas/${encodeURIComponent(JITTER.key)}`] as IdeaPage | undefined
         if (jitter) Object.assign(jitter, { state: 'writing', stage: 'checking', step: 'Waiting to go to the shared graph until today’s limit resets.', checking: null, keptHere: false })
       }
-      // Just written by your agent, its claims being checked, two of three done.
+      // Just written by your agent, its claims being checked, two in three done.
       if (as === 'checking') {
         for (const [path, page] of Object.entries(fixture.answers)) {
           if (!path.startsWith(`/api/ideas/${encodeURIComponent(JITTER.key)}`) || path.includes('/outline')) continue
           const p = page as IdeaPage
           if (!p.checking) continue
-          p.checking = { status: 'pending', claims: p.checking.claims.map((c, i) => ({ ...c, state: i < 2 ? 'held' : 'waiting' })) }
+          const done = Math.round((p.checking.claims.length * 2) / 3)
+          p.checking = { status: 'pending', claims: p.checking.claims.map((c, i) => ({ ...c, state: i < done ? 'held' : 'waiting' })) }
           Object.assign(p, { state: 'writing', stage: 'checking', canFlag: false })
         }
       }

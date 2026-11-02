@@ -359,6 +359,12 @@ impl StandIn {
         lock(&self.held).enough = what.map(str::to_string);
     }
 
+    /// Says an idea's entry was read `times` before, as by the readers of a
+    /// graph many people use, so how often it's read starts there.
+    pub fn read_before(&self, id: &str, times: u32) {
+        lock(&self.held).served.insert(id.into(), times);
+    }
+
     /// Says the account has read as much as it may today, so no reading
     /// tokens are signed until midnight UTC; or, with false, signs them again.
     pub fn reads_used(&self, used: bool) {
@@ -487,6 +493,8 @@ struct Control {
     enough: Option<String>,
     /// A lesson another account wrote, live, with what came of it.
     lesson: Option<Seed>,
+    /// An idea's ID, and how many times its entry was read before.
+    reads: Option<(String, u32)>,
 }
 
 /// A lesson another account wrote, for a test or the sandbox to give the
@@ -525,6 +533,9 @@ async fn control(State(held): Shared, Json(c): Json<Control>) -> Response {
     }
     if let Some(what) = &c.enough {
         stand_in.enough(Some(what.as_str()).filter(|w| !w.is_empty()));
+    }
+    if let Some((id, times)) = &c.reads {
+        stand_in.read_before(id, *times);
     }
     if let Some(Seed {
         lesson,

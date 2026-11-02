@@ -381,7 +381,8 @@ async fn an_entry_the_graph_has_is_taken_not_written() {
     assert!(given.iter().all(|j| j.kind != "write"), "nothing written");
 
     // A third reads it too, and is told how often it's been read, with
-    // nothing about who.
+    // nothing about who: by everyone else's readers as well.
+    graph.read_before(&theirs.key, 1_240);
     let third = kelve(Some(&graph)).await;
     entries::want(&third, &theirs).await.unwrap();
     let mut conn = third.db.acquire().await.unwrap();
@@ -389,7 +390,7 @@ async fn an_entry_the_graph_has_is_taken_not_written() {
         kelve_store::entries::reads(&mut conn, &theirs.key)
             .await
             .unwrap()
-            >= 1,
+            >= 1_240,
         "the reads before it"
     );
 }
