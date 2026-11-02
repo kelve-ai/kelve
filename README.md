@@ -15,11 +15,6 @@
   <a href="https://kelve.ai/docs/">Docs</a>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/story-dark.gif">
-  <img src=".github/assets/story-light.gif" width="898" alt="kelve on a change an agent made: what it does in a sentence, then its files in order, a file in plain words, its code, and an idea’s entry opened beside it.">
-</picture>
-
 Ask your agent:
 
 ```
@@ -30,7 +25,7 @@ Works with Claude Code, Codex, Cursor and other agents.
 
 ---
 
-**212 lines. You didn’t write them. You’re about to merge them.**
+**1,194 lines. You didn’t write them. You’re about to merge them.**
 
 The diff shows you every line. It doesn’t show you what they do, or why. Here’s one change, the way kelve shows it.
 
@@ -40,7 +35,7 @@ One sentence for the whole change, before any files. Then what it did before, an
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
-  <img src=".github/assets/change-light.png" width="720" alt="A change’s own page: calls to the bank now wait longer each time, at a random point, and a charge sent twice is taken once; what it fixes, and how many of its ideas the shared graph had.">
+  <img src=".github/assets/change-light.png" width="880" alt="kelve open on a change’s own page: in a sentence, calls to the bank now wait longer each time, at a random point, and stop while the bank is down; a charge sent twice is taken once, and one left hanging is finished. Then what Claude Code said, where it fits, what it fixes, that 16 of its 18 ideas already had an entry in the shared graph, and How it works now, the first of its seven parts with a line on what it does. The way in is beside it.">
 </picture>
 
 ## Then the way in.
@@ -49,7 +44,7 @@ The files in the order that makes sense, each building on the last. Start at onc
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/way-in-dark.png">
-  <img src=".github/assets/way-in-light.png" width="720" alt="The way in: what this change does, then src/retry.rs, then the migration that makes trying again safe, each with a line on why to read it now.">
+  <img src=".github/assets/way-in-light.png" width="880" alt="The way in, beside the change’s page: what this change does, then src/retry.rs, then the migration that makes trying again safe, then the rest of its 21 files, each with a line on what it’s for.">
 </picture>
 
 ## Each file in plain words. Or the code. Or both.
@@ -58,7 +53,12 @@ What it’s for, then each part, in the order things happen. Switch to the code,
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/plainly-dark.png">
-  <img src=".github/assets/plainly-light.png" width="720" alt="src/retry.rs read plainly: what it’s for, then each part by its goal, with the code of one part shown in place under it.">
+  <img src=".github/assets/plainly-light.png" width="880" alt="src/retry.rs read plainly: what it does in a sentence, what uses it and what it fixes, then How it works, its four parts in the order they happen, each with a line on what it does, the lines it’s in, and Show the code.">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/code-dark.png">
+  <img src=".github/assets/code-light.png" width="880" alt="src/retry.rs as code: what the change added and took out, with squares beside the lines that use Exponential backoff and Jitter, and a line on each idea in the margin.">
 </picture>
 
 ## The ideas behind it, marked for you.
@@ -67,7 +67,7 @@ Each idea the work rests on gets a square, beside the lines that use it. Set how
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/marks-dark.png">
-  <img src=".github/assets/marks-light.png" width="720" alt="The code, with squares beside the lines that use Exponential backoff and Jitter, and what kelve marks: Learning overall, Rust at Learning, distributed systems at New.">
+  <img src=".github/assets/marks-light.png" width="880" alt="The code, with squares beside the lines that use Exponential backoff and Jitter, and what kelve marks beside it: Working overall, rust at Deep, distributed systems at New, postgresql and sql at Learning.">
 </picture>
 
 ## Go as deep as you like.
@@ -76,7 +76,7 @@ Click an idea and it opens beside the work. Click what it rests on, and that ope
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/deeper-dark.png">
-  <img src=".github/assets/deeper-light.png" width="720" alt="Jitter’s entry beside the code, written by Claude Code and being checked, with a chart of 100 retries arriving together without jitter and spread out with it; then Randomness, which it rests on, open beside it.">
+  <img src=".github/assets/deeper-light.png" width="880" alt="Jitter’s entry, on why to add randomness to when clients retry, with Randomness, which it rests on, open beside it: from the shared graph, checked against 4 sources.">
 </picture>
 
 ## Leave a note, for you or your agent.
@@ -85,7 +85,7 @@ Select lines and write. Keep it just for you, or with the work, for anyone who o
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/note-dark.png">
-  <img src=".github/assets/note-light.png" width="720" alt="A note on three lines of code, for Claude Code: refunds shouldn’t wait 30 seconds, cap them at 10.">
+  <img src=".github/assets/note-light.png" width="880" alt="A note under lines 31 to 33 of the code, for Claude Code, first on its list: refunds shouldn’t wait 30 seconds, cap them at 10.">
 </picture>
 
 ## Its list is your queue.
@@ -94,16 +94,16 @@ Everything you’ve asked of your agent, in order. Add to it while it works. Mov
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/list-dark.png">
-  <img src=".github/assets/list-light.png" width="720" alt="Claude Code’s list: reading the change’s files, 5 of 8; next, the note about refunds and an entry; ready for you, Jitter’s entry.">
+  <img src=".github/assets/list-light.png" width="880" alt="Claude Code’s list beside a file, while it works: now, reading the way in, 2 of 21, and folder pages for the way in; next, folder pages for the rest, and a note for Claude Code; ready for you, Jitter’s entry.">
 </picture>
 
 ## See what it learned.
 
-Agents write down what they learn the hard way, for the next one. kelve shows the lessons yours was given, whether they held, and what it learned itself.
+When an agent learns something the hard way, it writes it down in the shared graph. Your agent is given those lessons as it works. kelve shows you which ones it got, whether they worked and what it learned itself.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/lesson-dark.png">
-  <img src=".github/assets/lesson-light.png" width="720" alt="A part of the change with the two lessons Claude Code was given: one, to claim a charge’s key with an insert before charging, held. Below it, what Claude Code learned itself: give each try its own timeout.">
+  <img src=".github/assets/lesson-light.png" width="880" alt="A part of the change with the two lessons from the graph Claude Code was given, opened: one, to claim a charge’s key with an insert before charging, held; the other wasn’t put to the test. Below it, the parts that stop calling a bank that’s down and space calls out.">
 </picture>
 
 ## Not only changes.
@@ -116,7 +116,7 @@ Show me this repo in kelve.
 
 ## Most ideas are already written.
 
-Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once.
+Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once. It also holds the lessons other agents learned along the way too which are given to yours as it works.
 
 - **Never your work.** Your code, files and notes stay with you.
 - **What your agent writes and learns is added,** without your name. Your reads never say who you are.
