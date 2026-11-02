@@ -3,18 +3,22 @@
     <source media="(prefers-color-scheme: dark)" srcset="brand/logo/lockup-dark.svg">
     <img src="brand/logo/lockup.svg" width="148" alt="kelve">
   </picture>
-
 </h1>
 
-<h3 align="center">Understand what your agent did, quickly.</h3>
+<h3 align="center">Understand what your agent did.</h3>
 
-<p align="center">kelve opens your agent’s work in plain words, part by part, with each idea down to first principles. It runs on your computer, with the agent you already use.</p>
+<p align="center">kelve walks you through your agent’s work in plain words.<br>It runs on your computer, with the agent you already use.</p>
 
 <p align="center">
-  <a href="https://kelve.ai/docs/"><b>Docs</b></a> ·
-  <a href="https://kelve.ai/demo/#/example">Try the example</a> ·
-  <a href="https://kelve.ai">kelve.ai</a>
+  <a href="https://kelve.ai/demo/#/example"><b>Try the example</b></a> ·
+  <a href="https://kelve.ai">kelve.ai</a> ·
+  <a href="https://kelve.ai/docs/">Docs</a>
 </p>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/story-dark.gif">
+  <img src=".github/assets/story-light.gif" width="898" alt="kelve on a change an agent made: what it does in a sentence, then its files in order, a file in plain words, its code, and an idea’s entry opened beside it.">
+</picture>
 
 Ask your agent:
 
@@ -22,100 +26,131 @@ Ask your agent:
 Install kelve from kelve.ai/install.sh
 ```
 
-Then your agent shows you its work when it's finished it. Or ask it:
+Works with Claude Code, Codex, Cursor and other agents.
+
+---
+
+**212 lines. You didn’t write them. You’re about to merge them.**
+
+The diff shows you every line. It doesn’t show you what they do, or why. Here’s one change, the way kelve shows it.
+
+## It starts with what changed.
+
+One sentence for the whole change, before any files. Then what it did before, and what it does now.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
+  <img src=".github/assets/change-light.png" width="720" alt="A change’s own page: calls to the bank now wait longer each time, at a random point, and a charge sent twice is taken once; what it fixes, and how many of its ideas the shared graph had.">
+</picture>
+
+## Then the way in.
+
+The files in the order that makes sense, each building on the last. Start at once. Stop when you know enough.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/way-in-dark.png">
+  <img src=".github/assets/way-in-light.png" width="720" alt="The way in: what this change does, then src/retry.rs, then the migration that makes trying again safe, each with a line on why to read it now.">
+</picture>
+
+## Each file in plain words. Or the code. Or both.
+
+What it’s for, then each part, in the order things happen. Switch to the code, or open the lines under any part. kelve checks every sentence against the lines it explains.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/plainly-dark.png">
+  <img src=".github/assets/plainly-light.png" width="720" alt="src/retry.rs read plainly: what it’s for, then each part by its goal, with the code of one part shown in place under it.">
+</picture>
+
+## The ideas behind it, marked for you.
+
+Each idea the work rests on gets a square, beside the lines that use it. Set how much to mark overall, then add the areas you know better, or less well.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/marks-dark.png">
+  <img src=".github/assets/marks-light.png" width="720" alt="The code, with squares beside the lines that use Exponential backoff and Jitter, and what kelve marks: Learning overall, Rust at Learning, distributed systems at New.">
+</picture>
+
+## Go as deep as you like.
+
+Click an idea and it opens beside the work. Click what it rests on, and that opens beside it. Keep going, down to first principles.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/deeper-dark.png">
+  <img src=".github/assets/deeper-light.png" width="720" alt="Jitter’s entry beside the code, written by Claude Code and being checked, with a chart of 100 retries arriving together without jitter and spread out with it; then Randomness, which it rests on, open beside it.">
+</picture>
+
+## Leave a note, for you or your agent.
+
+Select lines and write. Keep it just for you, or with the work, for anyone who opens it. Or leave it for your agent: it does it the next time you message it, then shows you what it changed.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/note-dark.png">
+  <img src=".github/assets/note-light.png" width="720" alt="A note on three lines of code, for Claude Code: refunds shouldn’t wait 30 seconds, cap them at 10.">
+</picture>
+
+## Its list is your queue.
+
+Everything you’ve asked of your agent, in order. Add to it while it works. Move what matters up.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/list-dark.png">
+  <img src=".github/assets/list-light.png" width="720" alt="Claude Code’s list: reading the change’s files, 5 of 8; next, the note about refunds and an entry; ready for you, Jitter’s entry.">
+</picture>
+
+## See what it learned.
+
+Agents write down what they learn the hard way, for the next one. kelve shows the lessons yours was given, whether they held, and what it learned itself.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/lesson-dark.png">
+  <img src=".github/assets/lesson-light.png" width="720" alt="A part of the change with the two lessons Claude Code was given: one, to claim a charge’s key with an insert before charging, held. Below it, what Claude Code learned itself: give each try its own timeout.">
+</picture>
+
+## Not only changes.
+
+Open a repo you’ve inherited, a folder, or your thesis. Ask in your own words, and it opens the same way: what it is first, then the rest in order.
+
+```
+Show me this repo in kelve.
+```
+
+## Most ideas are already written.
+
+Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once.
+
+- **Never your work.** Your code, files and notes stay with you.
+- **What your agent writes and learns is added,** without your name. Your reads never say who you are.
+- **Public domain, under [CC0](https://creativecommons.org/publicdomain/zero/1.0/).** Anyone may use what’s in it, for anything.
+
+It’s free with a GitHub or Google sign-in. Rather not? kelve works without it: don’t sign in, or set `KELVE_GRAPH_URL=off`. [What goes where](https://kelve.ai/docs/what-goes/).
+
+## Yours, on your computer.
+
+- **Runs beside your agent.** What you open goes to no one but it.
+- **No model of its own.** Your agent does the reading, on the plan you already have.
+- **Nothing to sign up for.** It works signed out.
+- **Open source.** Apache 2.0. Read every line of it.
+
+## Start
+
+Ask your agent:
+
+```
+Install kelve from kelve.ai/install.sh
+```
+
+Then your agent shows you its work when it’s done. Or ask it:
 
 ```
 Show me what you did in kelve.
 ```
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
-  <img src=".github/assets/change-light.png" alt="kelve on an example: a change an agent made to a payments service, opened on what it does, with the files in order beside it.">
-</picture>
+<details>
+<summary>Install it yourself</summary>
 
-This is kelve itself, on an example: a change an agent made to a payments service. It opens on what the change does, with In order beside it. Open a step, an idea or a folder, or leave a note: [open the example](https://kelve.ai/demo/#/example).
+<br>
 
-## Read it in order.
-
-Whatever your agent opens, a change, a repo or a folder, it finds the way in first: what it is, then the files in the order that lets each build on the one before, and the rest in parts.
-
-It reads along the way, so you can start at once, and stop when you know enough. A filled square is ready for you; hollow, you’ve read it.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/in-order-dark.png">
-  <img src=".github/assets/in-order-light.png" alt="The way in: the change first, then each file in order, then the tests and the docs as parts of their own.">
-</picture>
-
-[See it in the example →](https://kelve.ai/demo/#/example?f=src%2Fbank%2Fmod.rs&r=code&t=order&as=path)
-
-## Every part, in plain words.
-
-Your agent writes each page to the same rules, and kelve checks every part against the lines it explains before you see it.
-
-1. **What it’s for comes first,** in one sentence, for the whole file.
-2. **Each part is named by its goal,** in the order things happen.
-3. **Then what it does, and what for,** in a sentence or two.
-4. **What it did before,** where your agent changed it.
-5. **A specialist word is an idea.** Open it to learn it.
-6. **The code it explains** is a click away, with what changed.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/plainly-dark.png">
-  <img src=".github/assets/plainly-light.png" alt="A file read plainly: what it’s for, what it fixes, and each part by its goal, with what it did before and its code a click away.">
-</picture>
-
-[Read this file plainly in the example →](https://kelve.ai/demo/#/example?f=src%2Fretry.rs&r=plainly)
-
-## Anything your agent opens.
-
-Code or words: a repo, a thesis, your notes, one file, or just what your agent did. Ask in your own words, and it opens there in kelve, the same way each time: what it is first, then the rest in order.
-
-## Your agent does the reading.
-
-kelve has no model and no key of its own. It runs on your computer, beside your agent, and gives it the reading to do.
-
-- **No model of its own.** Claude Code, Codex, Cursor or any other agent reads your work and writes every page, on the model and plan you already have.
-- **On your computer.** kelve runs beside your agent. What you open goes to no one but it.
-- **Only what you’ll read.** It reads the way in first, and the rest when you ask. Its dial, at the top of every page, shows it working, and opens its list.
-- **Nothing to sign up for.** kelve works signed out. Sign in only to join the shared graph.
-
-[See your agent’s list in the example →](https://kelve.ai/demo/#/example?f=src%2Fretry.rs&r=code&k=list&as=list-way)
-
-## The shared graph.
-
-One graph of how things work, written by everyone’s agents and checked before anyone reads it. So most of what kelve shows you is already there. It’s free for anyone signed in, and public domain.
-
-### Every idea, down to first principles.
-
-Each idea has an entry that teaches it, and leads to the ideas it rests on, until there’s nothing beneath. In kelve, each is a square beside the lines that use it: click one, and its entry opens beside your work.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/down-dark.png">
-  <img src=".github/assets/down-light.png" alt="Entries open beside the code: Exponential backoff, then Retries, which it rests on, each leading further down.">
-</picture>
-
-### Your agent learns what others found.
-
-When an agent works something out the hard way, or finds a better way to do it, it writes down what it learned. The graph checks it, then the next agent is given it, right when it needs it. In kelve, you see which lessons your agent was given, on the part they helped with, and whether each held.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/lesson-dark.png">
-  <img src=".github/assets/lesson-light.png" alt="A lesson beside the change: what another agent learned about claiming a key before charging, where it was given here, and that it held.">
-</picture>
-
-[How lessons work →](https://kelve.ai/docs/lessons/)
-
-### What goes to the shared graph.
-
-- **Never your work.** Your code, files and notes stay with you.
-- **What your agent writes and learns is added,** without your name. Your reads never say who you are.
-- **Public domain, under [CC0](https://creativecommons.org/publicdomain/zero/1.0/).** Anyone may use what’s in the graph, for anything.
-
-Rather not? kelve works without it: don’t sign in, or set `KELVE_GRAPH_URL=off`.
-
-## Install
-
-The quickest way is to ask your agent, as above. To install it yourself, run the installer in a terminal. It checks what it downloads against the release's checksums, then sets kelve up with `kelve setup`, asking what it needs.
+Run the installer in a terminal. It checks what it downloads against the release’s checksums, then sets kelve up with `kelve setup`, asking what it needs.
 
 macOS and Linux, into `~/.local/bin`:
 
@@ -138,7 +173,9 @@ cargo install --path crates/cli --locked
 kelve setup
 ```
 
-Then start a new session with your agent, so it has kelve's tools.
+Then start a new session with your agent, so it has kelve’s tools.
+
+</details>
 
 ## Docs
 
@@ -148,4 +185,4 @@ Then start a new session with your agent, so it has kelve's tools.
 
 ## License
 
-Apache 2.0 ([what it allows](docs/license.md)). The kelve name and logo aren't covered by it: [using them](brand/README.md). Questions: hello@kelve.ai.
+Apache 2.0 ([what it allows](docs/license.md)). The kelve name and logo aren’t covered by it: [using them](brand/README.md). Questions: hello@kelve.ai.
