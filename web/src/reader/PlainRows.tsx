@@ -70,7 +70,8 @@ export function KindLine({ kind, word, children }: { kind?: ChangeKind | null; w
   const [said, cls] = kind ? KINDS[kind] : [word ?? 'In this change', 'chg']
   return (
     <p className="chg">
-      <span className={`mkt ${cls}`}>{said}</span>
+      {/* The space is for its text, read or copied: the line's gap is the layout's. */}
+      <span className={`mkt ${cls}`}>{said} </span>
       <span>{children}</span>
     </p>
   )
