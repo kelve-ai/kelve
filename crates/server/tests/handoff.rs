@@ -274,3 +274,75 @@ async fn work_outside_a_repository_is_shown_as_its_files_one_thing_each_time() {
 
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[tokio::test]
+async fn what_another_agent_writes_around_a_worktree_isnt_this_ones_work() {
+    use axum::Json;
+    use axum::extract::State;
+    use kelve_server::auth::Agent;
+    use kelve_server::lessons::{self, MomentIn};
+
+    let main = common::folder(&[("README.md", "# Ledger\n")]);
+    let main = std::fs::canonicalize(&main).unwrap();
+    git(&main, &["init", "-q", "-b", "main"], None);
+    git(&main, &["add", "."], None);
+    git(&main, &["commit", "-q", "-m", "Start"], None);
+    // A worktree inside the project, as agents' apps make them.
+    git(
+        &main,
+        &[
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            "fix",
+            ".claude/worktrees/fix",
+        ],
+        None,
+    );
+    let wt = main.join(".claude/worktrees/fix");
+    let (main_s, wt_s) = (main.display().to_string(), wt.display().to_string());
+    let app = common::kelve(None).await;
+    {
+        // The person opened the whole project, and kelve read its README.
+        let mut conn = app.db.acquire().await.unwrap();
+        kelve_store::reader::read_file(&mut conn, &main_s, "README.md", "[]", "h")
+            .await
+            .unwrap();
+    }
+    let say = |what: &str, command: &str| {
+        let m = MomentIn {
+            what: what.into(),
+            session: "w".into(),
+            cwd: wt_s.clone(),
+            command: Some(command.into()),
+            ..MomentIn::default()
+        };
+        let app = app.clone();
+        async move {
+            lessons::moment(State(app), Agent, Json(m))
+                .await
+                .unwrap()
+                .0
+                .text
+        }
+    };
+    let pause = || tokio::time::sleep(std::time::Duration::from_millis(20));
+
+    // Another agent edits the project's README while this one, in the
+    // worktree, runs a command: it isn't this agent's, so nothing to show.
+    say("prompt", "").await;
+    pause().await;
+    std::fs::write(main.join("README.md"), "# Ledger\n\nRetries.\n").unwrap();
+    say("ran", "cargo test").await;
+    assert_eq!(say("end", "").await, "");
+
+    // What it writes in its own worktree is.
+    pause().await;
+    std::fs::write(wt.join("README.md"), "# Ledger\n\nWaits between tries.\n").unwrap();
+    say("ran", "cat > README.md <<'EOF'").await;
+    let said = say("end", "").await;
+    assert!(said.contains("show them it in kelve"), "{said}");
+
+    let _ = std::fs::remove_dir_all(&main);
+}

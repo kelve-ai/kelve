@@ -9,7 +9,7 @@
 //! never the problem, the command, the file or anything else from the work.
 
 use std::collections::{BTreeMap, HashMap};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 use std::time::Instant;
@@ -472,12 +472,16 @@ pub async fn moment(
         .unwrap_or_else(|| m.cwd.clone());
     // The folder the agent works in, as kelve knows it: one the person
     // opened, else one walked for what its files import, else one walked
-    // now, in the background, the first time the hook meets it.
+    // now, in the background, the first time the hook meets it. Never one
+    // around the repository it's in, as a worktree inside the project is:
+    // what other agents write there isn't this one's work.
+    let repo = kelve_engine::git::root_of(Path::new(&cwd));
+    let own = |known: Option<String>| known.filter(|k| !holds_another(k, repo.as_deref()));
     let read_root = {
         let mut conn = app.db.acquire().await?;
-        match kelve_store::reader::root_of(&mut conn, &cwd).await? {
+        match own(kelve_store::reader::root_of(&mut conn, &cwd).await?) {
             Some(root) => Some(root),
-            None => match store::walked_root_of(&mut conn, &cwd).await? {
+            None => match own(store::walked_root_of(&mut conn, &cwd).await?) {
                 Some(root) => Some(root),
                 None => match walk_folder(&cwd) {
                     Some(folder) => {
@@ -590,6 +594,17 @@ pub async fn moment(
 async fn given_so_far(app: &Shared, session: &str) -> ApiResult<Vec<store::Given>> {
     let mut conn = app.db.acquire().await?;
     Ok(store::given_in(&mut conn, session).await?)
+}
+
+/// Whether `known`, a folder kelve knows, holds `repo`, a repository of its
+/// own, rather than being it or in it.
+fn holds_another(known: &str, repo: Option<&Path>) -> bool {
+    let Some(repo) = repo else {
+        return false;
+    };
+    let known = std::fs::canonicalize(known).unwrap_or_else(|_| PathBuf::from(known));
+    let repo = std::fs::canonicalize(repo).unwrap_or_else(|_| repo.to_path_buf());
+    repo != known && repo.starts_with(&known)
 }
 
 /// The most files a walk for imports looks through.
