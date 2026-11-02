@@ -62,6 +62,9 @@ const FIXES: u32 = 1;
 /// asking: it asks again when the idea is next opened.
 const FOLLOW_FOR_MS: i64 = 2 * 24 * 60 * 60 * 1000;
 
+/// How soon kelve asks about an entry's check while someone has it open.
+const WATCHED: Duration = Duration::from_secs(5);
+
 /// What kelve keeps with an entry while it's written and checked.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
@@ -237,10 +240,15 @@ pub async fn want(app: &Shared, wanted: &Idea) -> Result<()> {
     Ok(())
 }
 
+/// How long an idea the graph had no entry for isn't asked about again
+/// ahead: opened, it's asked about at once.
+const NONE_AHEAD: Duration = Duration::from_secs(10 * 60);
+
 /// Takes an idea's entry ahead, before anyone asks, for an idea the person
 /// is likely to open next, when the shared graph has one: that costs
 /// nothing, and opening it is then at once. One the graph hasn't got is
-/// written only when someone opens its idea.
+/// written only when someone opens its idea, and isn't asked about ahead
+/// again for a while: every file opened would ask again.
 pub async fn take_ahead(app: &Shared, idea: &Idea) -> Result<()> {
     {
         let mut conn = app.db.acquire().await?;
@@ -252,7 +260,16 @@ pub async fn take_ahead(app: &Shared, idea: &Idea) -> Result<()> {
         }
         kelve_store::entries::keep_idea(&mut conn, idea).await?;
     }
-    from_graph(app, idea).await?;
+    let lately = app.none_ahead.lock().is_ok_and(|mut none| {
+        none.retain(|_, at| at.elapsed() < NONE_AHEAD);
+        none.contains_key(&idea.key)
+    });
+    if !lately
+        && !from_graph(app, idea).await?
+        && let Ok(mut none) = app.none_ahead.lock()
+    {
+        none.insert(idea.key.clone(), std::time::Instant::now());
+    }
     Ok(())
 }
 
@@ -1884,15 +1901,40 @@ fn findings(checking: &kelve_graph_api::Checking, claims: &[Claim]) -> Vec<Strin
         .collect()
 }
 
-/// When to ask about a check again: often at first, then less, and not at
-/// all after two days.
+/// When to ask about a check again: often at first, then half as long
+/// again as it's been waiting, up to ten minutes, and not at all after two
+/// days. The graph takes ten reads a second from one address, and every
+/// entry being checked shares them with what the person opens, so a
+/// check nobody has open is asked about seldom (`watched`).
 fn again(since: i64) -> Then {
     let waited = kelve_store::now() - since;
     if waited > FOLLOW_FOR_MS {
         return Then::Done;
     }
-    let wait = (waited / 10).clamp(2_000, 120_000);
-    Then::Again(Utc::now() + chrono::Duration::milliseconds(wait))
+    Then::Again(Utc::now() + chrono::Duration::milliseconds(wait_after(waited)))
+}
+
+/// How long to wait to ask about a check that's been waiting `waited` ms.
+fn wait_after(waited: i64) -> i64 {
+    (waited / 2).clamp(3_000, 10 * 60 * 1000)
+}
+
+/// Asks the graph about an entry's check within a few seconds, since
+/// someone has it open and sees its claims as they're checked; and asks
+/// again, once, about one it had stopped following.
+pub async fn watched(app: &Shared, key: &str) -> Result<()> {
+    let mut conn = app.db.acquire().await?;
+    kelve_store::jobs::add_by(
+        &mut conn,
+        FOLLOW,
+        &format!("{FOLLOW}:{key}"),
+        &json!({ "idea": key }),
+        after(WATCHED),
+    )
+    .await?;
+    drop(conn);
+    app.wake.notify_one();
+    Ok(())
 }
 
 /// Has the agent fix what the graph's checks found, then sends it again.
@@ -1953,6 +1995,13 @@ pub async fn fix(app: &Shared, key: &str) -> Result<Then> {
 mod tests {
     use super::*;
     use kelve_graph_api::{Checking, ClaimChecked};
+
+    #[test]
+    fn a_check_is_asked_about_soon_at_first_then_seldom() {
+        assert_eq!(wait_after(0), 3_000);
+        assert_eq!(wait_after(60_000), 30_000);
+        assert_eq!(wait_after(24 * 60 * 60 * 1000), 10 * 60 * 1000);
+    }
 
     #[test]
     fn a_fix_is_told_each_failed_claim_its_quotes_and_what_the_graph_found() {

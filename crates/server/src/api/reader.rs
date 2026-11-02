@@ -556,11 +556,15 @@ pub async fn file(
             .await
             .map_err(ApiError::internal)?;
         // The ideas in the file being read are what's opened next: their
-        // entries are written ahead.
+        // entries are taken ahead, behind, so the file doesn't wait for the
+        // shared graph, one idea at a time.
         let keys: Vec<String> = marks.iter().map(reader::key_of).collect();
-        reader::take_ahead(&app, keys.iter().map(String::as_str))
-            .await
-            .map_err(ApiError::internal)?;
+        let behind = app.clone();
+        tokio::spawn(async move {
+            if let Err(e) = reader::take_ahead(&behind, keys.iter().map(String::as_str)).await {
+                tracing::info!(error = %e, "couldn't take a file's entries ahead");
+            }
+        });
     }
     if !whole && !at.ahead {
         reader::ask(
@@ -895,6 +899,16 @@ pub async fn idea(
         )
         .await
         .map_err(ApiError::internal)?;
+    }
+    // Open while the graph checks it: asked about soon, so its claims show
+    // as they're checked.
+    if let Some(r) = &row
+        && r.state == "checking"
+        && r.sent
+    {
+        entries::watched(&app, &key)
+            .await
+            .map_err(ApiError::internal)?;
     }
     let row = {
         let mut conn = app.db.acquire().await?;

@@ -809,7 +809,7 @@ async fn used_by(open: &Open, path: &str) -> Vec<String> {
         .map(|(d, _)| d.to_string())
         .unwrap_or_default();
     let root = open.root.clone();
-    let found = tokio::task::spawn_blocking(move || crate::way::parts_of(&root, &dir))
+    let found = tokio::task::spawn_blocking(move || crate::way::parts_lately(&root, &dir))
         .await
         .unwrap_or_default();
     let Some(at) = found.parts.iter().position(|(p, _)| p == path) else {
