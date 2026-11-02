@@ -179,6 +179,9 @@ struct Pool {
     /// Until when the graph gives this account no more today: it read as
     /// much as it may in a day. Another account, signed in since, may read.
     used_until: Option<(String, Instant)>,
+    /// The graph was asked for tokens too often at once, and asked to be
+    /// left this long, if it said: taken by the read that asked.
+    busy: Option<Option<Duration>>,
 }
 
 // Never the keys: only where, and whether it writes or reads as someone.
@@ -522,48 +525,35 @@ impl Client {
     /// A reading token to spend: one on hand, or one of a new batch, signed
     /// blind with the account's key, so the graph can't tell whose it is
     /// when it's read with. None for someone not signed in, or when the
-    /// graph won't give more today. Busy when the graph is asked too much
-    /// at once, to be waited out as any busy answer is.
-    async fn reading_token(&self) -> Result<Option<String>> {
-        let Some(account) = self.reading_as.as_ref().or(self.token.as_ref()) else {
-            return Ok(None);
-        };
+    /// graph won't give more today; or, with `busy` kept, when it's asked
+    /// too often at once.
+    async fn reading_token(&self) -> Option<String> {
+        let account = self.reading_as.as_ref().or(self.token.as_ref())?;
         let mut pool = self.tokens.lock().await;
         if let Some(t) = pool.tokens.pop() {
-            return Ok(Some(t));
+            return Some(t);
         }
         let key = match &pool.key {
             Some((key, at)) if at.elapsed() < TOKEN_KEY_KEPT => key.clone(),
             _ => {
                 // Asked with no account, so the key can't be one for this
                 // account alone.
-                let Ok(res) = self.http.get(self.url("/tokens/key")).send().await else {
-                    return Ok(None);
-                };
-                let Some(key) = capped(res)
-                    .await
-                    .ok()
-                    .and_then(|b| serde_json::from_slice::<crate::tokens::TokenKey>(&b).ok())
-                else {
-                    return Ok(None);
-                };
+                let res = self.http.get(self.url("/tokens/key")).send().await.ok()?;
+                let key: crate::tokens::TokenKey =
+                    serde_json::from_slice(&capped(res).await.ok()?).ok()?;
                 pool.key = Some((key.clone(), Instant::now()));
                 key
             }
         };
-        let Ok((pending, ask)) = crate::tokens::blind(&key, TOKENS_AT_ONCE) else {
-            return Ok(None);
-        };
-        let Ok(res) = self
+        let (pending, ask) = crate::tokens::blind(&key, TOKENS_AT_ONCE).ok()?;
+        let res = self
             .http
             .post(self.url("/account/tokens"))
             .bearer_auth(account)
             .json(&ask)
             .send()
             .await
-        else {
-            return Ok(None);
-        };
+            .ok()?;
         if res.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
             let asked = retry_after(&res);
             // The day's reading, used: none until it resets, asked for no
@@ -575,28 +565,22 @@ impl Client {
             {
                 let after = asked.unwrap_or_else(to_midnight);
                 pool.used_until = Some((account.clone(), Instant::now() + after));
-                return Ok(None);
+                return None;
             }
             // Anything else is too many asks at once: busy for a moment.
-            return Err(Error::Busy { after: asked });
+            pool.busy = Some(asked);
+            return None;
         }
-        if !res.status().is_success() {
-            return Ok(None);
-        }
-        let Some(grant) = capped(res)
-            .await
-            .ok()
-            .and_then(|b| serde_json::from_slice::<crate::tokens::TokenGrant>(&b).ok())
-        else {
-            return Ok(None);
-        };
+        let res = Some(res).filter(|r| r.status().is_success())?;
+        let grant: crate::tokens::TokenGrant =
+            serde_json::from_slice(&capped(res).await.ok()?).ok()?;
         match crate::tokens::finish(pending, &grant) {
             Ok(tokens) => pool.tokens = tokens,
             // Signed with a key the graph doesn't show everyone: none of
             // them, and the key is asked for again.
             Err(_) => pool.key = None,
         }
-        Ok(pool.tokens.pop())
+        pool.tokens.pop()
     }
 
     /// How long until the account may read again, while it has read as
@@ -958,8 +942,18 @@ impl Client {
         let mut hops = 0;
         loop {
             let read = reading && !req.headers().contains_key(AUTHORIZATION);
+            let token = if read {
+                self.reading_token().await
+            } else {
+                None
+            };
             if read
-                && let Some(token) = self.reading_token().await?
+                && token.is_none()
+                && let Some(after) = self.tokens.lock().await.busy.take()
+            {
+                return Err(Error::Busy { after });
+            }
+            if let Some(token) = token
                 && let Ok(mut bearer) = reqwest::header::HeaderValue::from_str(&format!(
                     "{} token={token}",
                     crate::tokens::SCHEME
@@ -1462,7 +1456,6 @@ mod tests {
                 .unwrap()
                 .reading_token()
                 .await
-                .unwrap()
                 .is_none()
         );
         let cs = Changeset {
