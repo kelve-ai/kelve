@@ -2,6 +2,10 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **From the graph says what it counts.** It said your agent wrote entries for a change, and that the rest had none, when it was counting the entries kelve holds. Now it says how many ideas have an entry, how many kelve took from the shared graph and how many your agent wrote, in that work or before, and how many of those the graph has now. The rest get one when they're opened.
+
 ## 0.1.7, 2 November 2026
 
 - **Your agent shows you its work when it's finished it, committed or not.** It waited for a commit, a push or a pull request, so work left uncommitted wasn't shown. Now, as your agent's turn ends having changed files you haven't seen in kelve, kelve's hook asks it to show them, if the work's done and worth showing.

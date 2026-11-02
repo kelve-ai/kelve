@@ -103,7 +103,7 @@ test('the example change, read down to a first principle', async ({ page, browse
     // Back on the change's own page, what the shared graph gave it: each
     // count says what it counts, and the label reads apart from the sentence.
     await page.goto(`${k.base}/#/o/1`)
-    await expect(page.locator('.pl p.chg.gv')).toContainText(/^From the graph Of the \d+ ideas here, \d+ (was|were) already in the shared graph and Claude Code wrote 1\./, { timeout: 15_000 })
+    await expect(page.locator('.pl p.chg.gv')).toContainText(/^From the graph (All \d+ ideas here have|Of the \d+ ideas here, \d+ (has|have)) an entry: kelve took \d+ from the shared graph, and Claude Code wrote 1, in this work or before/, { timeout: 15_000 })
   } finally {
     k.stop()
     g.stop()

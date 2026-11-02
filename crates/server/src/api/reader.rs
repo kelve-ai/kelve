@@ -1158,12 +1158,23 @@ pub async fn origins(
         ideas: keys.len() as u32,
         from_graph: 0,
         by_agent: 0,
+        in_graph: 0,
     };
     let mut conn = app.db.acquire().await?;
     for key in &keys {
         match kelve_store::entries::get(&mut conn, key).await? {
             Some(e) if e.from_graph => origins.from_graph += 1,
-            Some(e) if e.entry.is_some() => origins.by_agent += 1,
+            Some(e) if e.entry.is_some() => {
+                origins.by_agent += 1;
+                // Accepted by the graph's check: everyone reads it now.
+                if e.checking
+                    .as_deref()
+                    .and_then(|c| serde_json::from_str::<kelve_graph_api::Checking>(c).ok())
+                    .is_some_and(|c| c.status == kelve_graph_api::CheckStatus::Accepted)
+                {
+                    origins.in_graph += 1;
+                }
+            }
             _ => {}
         }
     }

@@ -1247,8 +1247,9 @@ pub struct NoteRef {
 }
 
 /// Where the entries for what's open came from: how many ideas it has,
-/// how many entries the shared graph had, and how many the person's agent
-/// wrote.
+/// how many entries kelve took from the shared graph, how many the
+/// person's agent wrote, here or before, and how many of those the graph
+/// has accepted since.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -1256,6 +1257,7 @@ pub struct Origins {
     pub ideas: u32,
     pub from_graph: u32,
     pub by_agent: u32,
+    pub in_graph: u32,
 }
 
 /// What the person's account added to the shared graph, and how many

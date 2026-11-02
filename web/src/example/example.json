@@ -511,7 +511,8 @@
   "/api/opened/1/origins": {
    "ideas": 8,
    "fromGraph": 7,
-   "byAgent": 1
+   "byAgent": 1,
+   "inGraph": 0
   },
   "/api/graph/account": {
    "graph": true,
