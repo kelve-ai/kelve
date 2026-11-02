@@ -1,13 +1,15 @@
 use axum::Json;
+use axum::body::Bytes;
 use axum::extract::State;
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, StatusCode};
 use serde::{Deserialize, Serialize};
 
 use crate::App;
 use crate::bank::Payment;
 use crate::error::Error;
+use crate::idempotency::{self, Answer, Claim};
 use crate::ledger::Minor;
-use crate::reserve;
+use crate::{reconcile, reserve};
 
 #[derive(Deserialize)]
 pub struct Charge {
@@ -25,34 +27,64 @@ pub struct Charged {
 
 /// Charges a card: holds the money, asks the bank, then settles or lets go.
 /// A charge sent twice with the same key is charged once: the second gets
-/// the first one's receipt.
-pub async fn create(State(app): State<App>, headers: HeaderMap, Json(c): Json<Charge>) -> Result<Json<Charged>, Error> {
-    let key = headers.get("Idempotency-Key").and_then(|v| v.to_str().ok()).ok_or(Error::Config("Idempotency-Key"))?;
-    if let Some(receipt) = seen(&app, key).await? {
-        return Ok(Json(Charged { receipt }));
+/// the first one's answer, or is told the first is still going.
+pub async fn create(State(app): State<App>, headers: HeaderMap, body: Bytes) -> Result<(StatusCode, Json<serde_json::Value>), Error> {
+    let key = headers.get("Idempotency-Key").and_then(|v| v.to_str().ok()).ok_or(Error::BadKey("Idempotency-Key is missing"))?;
+    match idempotency::claim(&app.db, key, &body).await? {
+        Claim::Answered(answer) => return Ok(replay(answer)),
+        Claim::InFlight => return Err(Error::InFlight),
+        Claim::Fresh => {}
     }
-    reserve::hold(&app.db, &c.customer, c.amount, &c.currency).await?;
-    let receipt = app.bank.pay(key, &Payment { card: &c.card, amount: c.amount, currency: &c.currency }).await?;
+    let c: Charge = match serde_json::from_slice(&body) {
+        Ok(c) => c,
+        Err(e) => {
+            idempotency::let_go(&app.db, key).await?;
+            return Err(Error::BadRequest(e.to_string()));
+        }
+    };
+    let answer = match charge(&app, key, &c).await {
+        Ok(receipt) => Answer { status: 201, body: serde_json::json!(Charged { receipt }) },
+        Err(Error::Declined(reason)) => Answer { status: 402, body: serde_json::json!({ "declined": reason }) },
+        // Nothing was charged: the caller may try again with the same key.
+        Err(e @ (Error::BankDown { .. } | Error::Database(_))) => {
+            idempotency::let_go(&app.db, key).await?;
+            return Err(e);
+        }
+        // The bank may have taken it: the key stays claimed until the
+        // reconciler finds out, so a retry can't charge again meanwhile.
+        Err(e) => return Err(e),
+    };
+    idempotency::answer(&app.db, key, &answer).await?;
+    Ok(replay(answer))
+}
+
+/// The charge itself, once its key is claimed. The money is held, and the
+/// call written down as pending before the bank is asked, so a call that
+/// never comes back is found and finished by the reconciler.
+async fn charge(app: &App, key: &str, c: &Charge) -> Result<String, Error> {
+    let held = reserve::hold(&app.db, &c.customer, c.amount, &c.currency).await?;
+    reconcile::pending(&app.db, key, held, &c.customer, &c.merchant, c.amount, &c.currency).await?;
+    let receipt = match app.bank.pay(key, &Payment { card: &c.card, amount: c.amount, currency: &c.currency }).await {
+        Ok(receipt) => receipt,
+        Err(e @ Error::BankDown { .. }) => {
+            // The breaker stopped the call before it went: nothing was taken.
+            reserve::release(&app.db, &c.customer, c.amount, &c.currency).await?;
+            reconcile::done(&app.db, key).await?;
+            return Err(e);
+        }
+        Err(e) => return Err(e),
+    };
     if !receipt.approved {
         reserve::release(&app.db, &c.customer, c.amount, &c.currency).await?;
+        reconcile::done(&app.db, key).await?;
         return Err(Error::Declined(receipt.reason.unwrap_or_default()));
     }
     reserve::settle(&app.db, &c.merchant, c.amount, &c.currency).await?;
-    remember(&app, key, &receipt.id).await?;
-    Ok(Json(Charged { receipt: receipt.id }))
+    reconcile::done(&app.db, key).await?;
+    Ok(receipt.id)
 }
 
-/// The receipt for a request already answered.
-async fn seen(app: &App, key: &str) -> Result<Option<String>, Error> {
-    let row: Option<(String,)> = sqlx::query_as("SELECT receipt FROM requests WHERE key = $1").bind(key).fetch_optional(&app.db).await?;
-    Ok(row.map(|(r,)| r))
-}
-
-async fn remember(app: &App, key: &str, receipt: &str) -> Result<(), Error> {
-    sqlx::query("INSERT INTO requests (key, receipt) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING")
-        .bind(key)
-        .bind(receipt)
-        .execute(&app.db)
-        .await?;
-    Ok(())
+/// An answer, as it was given the first time.
+fn replay(answer: Answer) -> (StatusCode, Json<serde_json::Value>) {
+    (StatusCode::from_u16(answer.status).unwrap_or(StatusCode::OK), Json(answer.body))
 }

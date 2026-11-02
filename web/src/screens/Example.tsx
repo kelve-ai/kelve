@@ -98,13 +98,20 @@ export function Example() {
         for (const f of change.files) if (paths.includes(f.path)) f.ideas = null
       }
       const opened = fixture.answers[`/api/opened/${fixture.opened}`] as { way: Way }
-      if (as === 'reading' || as === 'stopped' || as === 'path') unread(['tests/retry.rs', 'docs/retries.md'].concat(as === 'path' ? [] : ['src/bank/mod.rs']))
+      // Reading, your agent is part way down the way in: what's after the
+      // first eight is unread. On the path, the tests and docs are.
+      const later = opened.way.order.slice(8).map((s) => s.path)
+      const testsAndDocs = opened.way.order.filter((s) => /^(tests|docs)\//.test(s.path)).map((s) => s.path)
+      if (as === 'reading' || as === 'stopped') unread(later)
+      if (as === 'path') unread(testsAndDocs)
       // Your agent finding a way in (Read-1).
       if (as === 'finding') opened.way = { order: [], parts: [], folders: opened.way.folders, finding: true, reading: [], readSteps: [], leftOff: 0 }
       // The rest of the path, in parts, after the way in (Read-4): one you
       // asked for, its first file being read, and one waiting for you.
       if (as === 'path') {
-        const [inWay, tests, docs] = [opened.way.order.slice(0, 5), opened.way.order.slice(5, 6), opened.way.order.slice(6)]
+        const inWay = opened.way.order.filter((s) => !testsAndDocs.includes(s.path))
+        const tests = opened.way.order.filter((s) => s.path.startsWith('tests/'))
+        const docs = opened.way.order.filter((s) => s.path.startsWith('docs/'))
         const bare = (steps: typeof tests) => steps.map((s) => ({ ...s, why: '' }))
         opened.way = {
           ...opened.way,
@@ -119,9 +126,9 @@ export function Example() {
       }
       if (as === 'reading' || as === 'stopped') {
         const change = fixture.answers[`/api/opened/${fixture.opened}/change`] as { reading: Reading }
-        change.reading = { read: 3, of: 7, checking: 1, marking: 'marking', pages: 0, pagesLeft: 0 }
+        change.reading = { read: 8, of: 21, checking: 1, marking: 'marking', pages: 0, pagesLeft: 0 }
         list.working = as === 'reading'
-        list.next = [{ key: `read:${fixture.opened}`, kind: 'reading', title: 'Reading its files', sub: null, opened: fixture.opened, idea: null, note: null, left: 4, askedIn: null, asks: [], hand: [] }]
+        list.next = [{ key: `read:${fixture.opened}`, kind: 'reading', title: 'Reading its files', sub: null, opened: fixture.opened, idea: null, note: null, left: 13, askedIn: null, asks: [], hand: [] }]
       }
       // Opened after other things (boards J-1 to J-3): the change is read
       // first, a file asked for plainly in the folder still comes, and what was
@@ -129,11 +136,11 @@ export function Example() {
       // was open until a moment ago.
       if (as === 'paused' || as === 'paused-just') {
         const change = fixture.answers[`/api/opened/${fixture.opened}/change`] as { reading: Reading }
-        change.reading = { read: 3, of: 7, checking: 0, marking: 'marking', pages: 0, pagesLeft: 0 }
+        change.reading = { read: 8, of: 21, checking: 0, marking: 'marking', pages: 0, pagesLeft: 0 }
         const ago = (ms: number) => new Date(Date.now() - ms).toISOString()
         const hour = 60 * 60 * 1000
         list.working = true
-        list.now = [{ key: `read:${fixture.opened}`, kind: 'reading', title: 'Reading its files', sub: null, opened: fixture.opened, idea: null, note: null, left: 4, askedIn: null, asks: [], hand: [] }]
+        list.now = [{ key: `read:${fixture.opened}`, kind: 'reading', title: 'Reading its files', sub: null, opened: fixture.opened, idea: null, note: null, left: 13, askedIn: null, asks: [], hand: [] }]
         list.next = []
         list.elsewhere = [
           { key: 'plainly:2:src/ledger.rs', kind: 'plainly', title: 'src/ledger.rs', sub: null, opened: 2, idea: null, note: null, left: null, askedIn: 'ledger', asks: [], hand: [] },
@@ -149,7 +156,7 @@ export function Example() {
       if (as === 'next') {
         list.working = false
         list.next = [
-          { key: `read:${fixture.opened}`, kind: 'reading', title: 'Reading its files', sub: null, opened: fixture.opened, idea: null, note: null, left: 4, askedIn: null, asks: [11, 12, 13, 14], hand: [] },
+          { key: `read:${fixture.opened}`, kind: 'reading', title: 'Reading its files', sub: null, opened: fixture.opened, idea: null, note: null, left: 13, askedIn: null, asks: [11, 12, 13, 14], hand: [] },
           { key: 'idea:kelve:unique-keys', kind: 'entry', title: 'Unique keys', sub: null, opened: fixture.opened, idea: 'kelve:unique-keys', note: null, left: null, askedIn: null, asks: [15], hand: [] },
           { key: 'note:agent/say-what-a-retry-costs.md', kind: 'note', title: 'Say what a retry costs the bank', sub: 'On src/retry.rs 12–28', opened: fixture.opened, idea: null, note: 'agent/say-what-a-retry-costs.md', left: null, askedIn: null, asks: [16], hand: [] },
         ]
@@ -164,9 +171,9 @@ export function Example() {
         list.working = true
         list.next = []
         if (as === 'list-way') {
-          change.reading = { read: 3, of: 10, checking: 2, marking: 'marking', pages: 3, pagesLeft: 2 }
+          change.reading = { read: 3, of: 24, checking: 2, marking: 'marking', pages: 3, pagesLeft: 2 }
           list.now = [
-            line('read', 'reading', 'Reading the way in', null, 4, [
+            line('read', 'reading', 'Reading the way in', null, 18, [
               { path: 'src/api/v1/charges.rs', stage: 'writing' },
               { path: 'src/api/v1/refunds.rs', stage: 'checking' },
               { path: 'src/bank/mod.rs', stage: 'reading' },
@@ -175,7 +182,7 @@ export function Example() {
           ]
           list.next = [line('rest', 'pages', 'Folder pages for the rest', rest, 9, [], 9)]
         } else {
-          change.reading = { read: 10, of: 10, checking: 0, marking: 'done', pages: 3, pagesLeft: 0 }
+          change.reading = { read: 24, of: 24, checking: 0, marking: 'done', pages: 3, pagesLeft: 0 }
           list.now = [line('rest', 'pages', 'Folder pages for the rest', rest, 6, [
             { path: 'src/api', stage: 'writing' },
             { path: 'docs', stage: 'writing' },

@@ -2,6 +2,36 @@
   "about": "What the example's agent marks in each file of the ledger example, the most important first, as kelve keeps only a few a passage: by the exact words on a line, or from one line's words through another's. `use` is the margin's line: how this work uses the idea.",
   "marks": [
     {
+      "file": "docs/failures.md",
+      "words": "Retries handle a bank that fails for a moment",
+      "idea": "Retries",
+      "use": "Trying again handles a short failure; this page is about longer ones."
+    },
+    {
+      "file": "docs/failures.md",
+      "words": "ledger stops calling it for 30 seconds",
+      "idea": "Circuit breakers",
+      "use": "Calls stop while the bank is down, then one tests it."
+    },
+    {
+      "file": "docs/failures.md",
+      "words": "at most 20 times a second",
+      "idea": "Rate limiting",
+      "use": "A cap on calls to the bank, so retries don’t pile up."
+    },
+    {
+      "file": "docs/failures.md",
+      "words": "reaching the bank all at once",
+      "idea": "Thundering herd problem",
+      "use": "Many retries arriving together would knock the bank over again."
+    },
+    {
+      "file": "docs/failures.md",
+      "words": "a call times out after the bank took the money",
+      "idea": "Partial failure",
+      "use": "We can’t tell from a timeout whether the bank acted."
+    },
+    {
       "file": "docs/retries.md",
       "words": "may be twice as long, up to 30 seconds",
       "idea": "Exponential backoff",
@@ -38,6 +68,12 @@
       "use": "Each key once, so a request sent twice is answered once."
     },
     {
+      "file": "migrations/0003_pending_calls.sql",
+      "words": "id TEXT PRIMARY KEY,",
+      "idea": "Idempotence",
+      "use": "Each bank event kept once, by its own ID."
+    },
+    {
       "file": "src/api/v1/charges.rs",
       "words": "reserve::hold(",
       "idea": "Authorisation holds",
@@ -68,6 +104,42 @@
       "use": "Checked in the same time whatever it holds, so the check can't be timed."
     },
     {
+      "file": "src/api/v1/webhooks.rs",
+      "words": "ON CONFLICT (id) DO UPDATE SET id = excluded.id",
+      "idea": "Idempotence",
+      "use": "An event acted on once, however many times the bank sends it."
+    },
+    {
+      "file": "src/bank/breaker.rs",
+      "words": "State::Open { until } if now < until",
+      "idea": "Circuit breakers",
+      "use": "Open, the breaker turns calls away until the bank has had time to recover."
+    },
+    {
+      "file": "src/bank/breaker.rs",
+      "words": "fn counts(error: &Error) -> bool",
+      "idea": "Transient errors",
+      "use": "Only failures that say the bank is in trouble open the breaker."
+    },
+    {
+      "file": "src/bank/breaker.rs",
+      "words": "pub enum State {",
+      "idea": "State",
+      "use": "Closed, open or half open: what the breaker remembers between calls."
+    },
+    {
+      "file": "src/bank/limit.rs",
+      "words": "if bucket.tokens >= 1.0 {",
+      "idea": "Rate limiting",
+      "use": "A call goes only when there’s a token, so calls never outrun the rate."
+    },
+    {
+      "file": "src/bank/limit.rs",
+      "words": "pub async fn wait(&self) {",
+      "idea": "Thundering herd problem",
+      "use": "Calls that wait together are let through one token apart, not all at once."
+    },
+    {
       "file": "src/bank/mod.rs",
       "words": ".header(\"Idempotency-Key\", request)",
       "idea": "Idempotency keys",
@@ -86,6 +158,24 @@
       "use": "Which failures pass, and are worth another try."
     },
     {
+      "file": "src/idempotency.rs",
+      "words": "ON CONFLICT (key) DO UPDATE SET key = excluded.key",
+      "idea": "Unique keys",
+      "use": "The key can be stored once, so only one copy of a request claims it."
+    },
+    {
+      "file": "src/idempotency.rs",
+      "words": "pub async fn claim(db: &PgPool, key: &str, body: &[u8])",
+      "idea": "Idempotency keys",
+      "use": "The same key gets the same answer, however many times it’s sent."
+    },
+    {
+      "file": "src/idempotency.rs",
+      "words": "let hash = Sha256::digest(body);",
+      "idea": "Hash function",
+      "use": "A short fingerprint of the body, to tell a retry from a different request."
+    },
+    {
       "file": "src/ledger.rs",
       "words": "($1, $2, $3, $4, $5), ($1, $6, $7, $4, $5)",
       "idea": "Double-entry bookkeeping",
@@ -96,6 +186,24 @@
       "words": "let mut tx = db.begin().await?;",
       "idea": "Database transactions",
       "use": "Both entries are written together, or neither is."
+    },
+    {
+      "file": "src/reconcile.rs",
+      "words": "pg_try_advisory_lock($1)",
+      "idea": "Advisory locks",
+      "use": "Only one ledger at a time reconciles, so no charge is finished twice."
+    },
+    {
+      "file": "src/reconcile.rs",
+      "words": "const HANGING_AFTER: &str = \"3 minutes\";",
+      "idea": "Partial failure",
+      "use": "A call can fail after the bank acted on it; we can’t tell which without asking."
+    },
+    {
+      "file": "src/reconcile.rs",
+      "words": "reserve::settle(&app.db, &call.merchant, call.amount, &call.currency)",
+      "idea": "Authorisation holds",
+      "use": "Held money is taken once the bank says it took the payment."
     },
     {
       "file": "src/reserve.rs",

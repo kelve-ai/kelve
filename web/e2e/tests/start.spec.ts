@@ -25,7 +25,7 @@ test('connect your agent, with the example beside it; then what to say to it', a
     await page.getByRole('radio', { name: 'Claude Code' }).click()
     // The example, beside it, to click around in: answered with no server.
     const example = page.frameLocator('iframe[title="An example of kelve"]')
-    await expect(example.getByRole('heading', { level: 1, name: 'Retries that back off with jitter' })).toBeVisible()
+    await expect(example.getByRole('heading', { level: 1, name: 'Calls to the bank that are safe to retry' })).toBeVisible()
 
     // Your agent says hello: the page moves on by itself, to what's set up.
     const me = agent(fresh.base, secret(fresh))

@@ -1,5 +1,5 @@
 {
-  "commit": "Retries that back off with jitter",
-  "title": "Retries that back off with jitter",
-  "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice."
+  "commit": "Calls to the bank that are safe to retry",
+  "title": "Calls to the bank that are safe to retry",
+  "said": "Retries now wait longer, by a random amount, and stop while the bank is down. Every payment carries a key, so a retry can't charge twice, and lost charges get settled."
 }
