@@ -296,6 +296,38 @@ pub async fn busy(conn: &mut Conn) -> Result<bool> {
         > 0)
 }
 
+/// Whether any of the work for something opened, by its number, is still
+/// to run, now or later, or running: reading it isn't finished.
+pub async fn pending_for(conn: &mut Conn, opened: i64) -> Result<bool> {
+    Ok(sqlx::query_scalar(
+        "select exists(select 1 from jobs
+          where json_extract(payload, '$.opened') = ?1 and attempts < ?2)",
+    )
+    .bind(opened)
+    .bind(MAX_ATTEMPTS)
+    .fetch_one(&mut *conn)
+    .await?)
+}
+
+/// Whether any of the work for something opened, by its number, is running
+/// now, or due and not yet taken: what may ask the agent for its next part
+/// in a moment. Not what waits for later, nor what a kelve that stopped
+/// was running, past its lease.
+pub async fn busy_for(conn: &mut Conn, opened: i64) -> Result<bool> {
+    let t = now();
+    Ok(sqlx::query_scalar(
+        "select exists(select 1 from jobs
+          where json_extract(payload, '$.opened') = ?1 and attempts < ?2
+            and (locked_at > ?3 - ?4 or (locked_at is null and run_at <= ?3)))",
+    )
+    .bind(opened)
+    .bind(MAX_ATTEMPTS)
+    .bind(t)
+    .bind(LEASE_MS)
+    .fetch_one(&mut *conn)
+    .await?)
+}
+
 pub async fn release_all(conn: &mut Conn) -> Result<()> {
     sqlx::query(
         "update jobs set locked_at = null, run_at = min(run_at, ?), again_at = null,
@@ -404,6 +436,35 @@ mod tests {
         let job = claim(&mut conn).await.expect("claimed").expect("due now");
         assert_eq!(job.key.as_deref(), Some("folder:1:src"));
         assert!(claim(&mut conn).await.expect("claimed").is_none());
+    }
+
+    #[tokio::test]
+    async fn work_for_something_opened_is_pending_until_done_and_busy_only_when_due() {
+        let pool = memory().await.expect("a store");
+        let mut conn = pool.acquire().await.expect("a connection");
+        let later = Utc::now() + chrono::Duration::minutes(2);
+        let mine = serde_json::json!({ "opened": 7, "path": "src" });
+        add(&mut conn, "folder", Some("folder:7:src"), &mine, later)
+            .await
+            .expect("added");
+        // Waiting on its files: its reading isn't finished, but nothing
+        // will ask the agent for anything in a moment.
+        assert!(pending_for(&mut conn, 7).await.expect("asked"));
+        assert!(!busy_for(&mut conn, 7).await.expect("asked"));
+        assert!(
+            !pending_for(&mut conn, 8).await.expect("asked"),
+            "only its own"
+        );
+        // Due, and while it runs.
+        due_now_at(&mut conn, "folder:7:src").await.expect("due");
+        assert!(busy_for(&mut conn, 7).await.expect("asked"));
+        let job = claim(&mut conn).await.expect("claimed").expect("due now");
+        assert!(busy_for(&mut conn, 7).await.expect("asked"));
+        assert!(!busy_for(&mut conn, 8).await.expect("asked"));
+        // Done: nothing of its is left.
+        done(&mut conn, job.id).await.expect("done");
+        assert!(!pending_for(&mut conn, 7).await.expect("asked"));
+        assert!(!busy_for(&mut conn, 7).await.expect("asked"));
     }
 
     #[tokio::test]

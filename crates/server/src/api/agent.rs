@@ -330,13 +330,45 @@ pub async fn hello(
     Ok(Json(serde_json::json!({ "connected": true })))
 }
 
-/// The next job for the agent, or none.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NextIn {
+    #[serde(flatten)]
+    pub caller: Caller,
+    /// The caller can say kelve is still preparing the next part
+    /// (`Next::Preparing`). An older `kelve mcp`, which can't, is given
+    /// none then, as before.
+    #[serde(default)]
+    pub says_preparing: bool,
+}
+
+/// The next job, or, for one thing opened, that kelve is still preparing
+/// its next part: the agent asks again.
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum Next {
+    Job(Box<Job>),
+    Preparing { preparing: bool },
+}
+
+/// The next job for the agent, or none. Asked for one thing opened, by its
+/// number, kelve waits a while for its next part, while it's prepared.
 pub async fn next(
     State(app): State<Shared>,
     _agent: Agent,
-    Json(caller): Json<Caller>,
-) -> ApiResult<Json<Option<Job>>> {
-    Ok(Json(agent::next(&app, &caller).await?))
+    Json(asked): Json<NextIn>,
+) -> ApiResult<Json<Option<Next>>> {
+    let wait = match asked.caller.only {
+        Some(_) => PREPARING,
+        None => std::time::Duration::ZERO,
+    };
+    let (job, preparing) =
+        agent::next_waiting(&app, &asked.caller, Default::default(), wait).await?;
+    Ok(Json(match job {
+        Some(job) => Some(Next::Job(Box::new(job))),
+        None if preparing && asked.says_preparing => Some(Next::Preparing { preparing }),
+        None => None,
+    }))
 }
 
 #[derive(Debug, Deserialize)]
@@ -366,11 +398,22 @@ pub struct Answered {
     /// How many jobs are left, when the agent said it took its last.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub left: Option<i64>,
+    /// No next job came in time, but kelve is still preparing the next part
+    /// of what the agent asked for by its number: it asks again.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub preparing: bool,
 }
 
 /// The most kelve waits, as an answer comes in, for work running then to
 /// ask for something more.
 const LINGER: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// The most kelve waits for the next part of one thing opened, asked for by
+/// its number, while its own work runs: the next part of its way in, or a
+/// folder's page once its files are read, comes a little after the answer
+/// before it. Inside the two minutes the command line waits for a reply
+/// (`kelve mcp`), with `SPEND` before it.
+const PREPARING: std::time::Duration = std::time::Duration::from_secs(45);
 
 /// The most time kelve spends on what's due, as an answer comes in,
 /// before it starts nothing more and replies: well inside the two minutes
@@ -393,7 +436,7 @@ pub async fn answer(
         idea: answered.as_ref().and_then(|a| a.idea.as_deref()),
     };
     let handed_in = agent::hand_in(&app, &given.caller, given.job, given.answer).await?;
-    let next = match handed_in {
+    let (next, preparing) = match handed_in {
         HandedIn::Yes => {
             // The work the answer was for runs before the next job is
             // given, so what it asks next is in the list: its own job
@@ -423,41 +466,28 @@ pub async fn answer(
                     handed_in,
                     next: None,
                     left: Some(left),
+                    preparing: false,
                 }));
             }
-            let mut next = agent::next_after(&app, &given.caller, after).await?;
             // Work running in the background as the answer came, such as
             // a folder's reading that waited on this file, may ask for
-            // something in a moment: wait a little for it, rather than
-            // telling the agent there's nothing more, so it stops.
-            let until = std::time::Instant::now() + LINGER;
-            while next.is_none() && std::time::Instant::now() < until {
-                let busy = {
-                    let mut conn = app.db.acquire().await?;
-                    kelve_store::jobs::busy(&mut conn).await?
-                };
-                if !busy {
-                    break;
-                }
-                tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-                // What's due runs here while there's time, so what it asks
-                // comes now; past that, the workers have it.
-                while std::time::Instant::now() < until
-                    && crate::pipeline::run_once(&app)
-                        .await
-                        .map_err(ApiError::internal)?
-                        .is_some()
-                {}
-                next = agent::next_after(&app, &given.caller, after).await?;
-            }
-            next
+            // something in a moment: wait for it, rather than telling the
+            // agent there's nothing more, so it stops. A little, for any
+            // job; for one thing's, asked for by its number, while that
+            // thing's next part is prepared.
+            let wait = match given.caller.only {
+                Some(_) => PREPARING,
+                None => LINGER,
+            };
+            agent::next_waiting(&app, &given.caller, after, wait).await?
         }
-        HandedIn::No { .. } => None,
+        HandedIn::No { .. } => (None, false),
     };
     Ok(Json(Answered {
         handed_in,
         next,
         left: None,
+        preparing,
     }))
 }
 

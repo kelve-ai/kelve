@@ -4,6 +4,8 @@ What changes in each release of kelve, for the people who run it. Versions follo
 
 ## Unreleased
 
+- **What your agent opens gets read, the way in first.** An agent could open its work in kelve and move on without reading it, and once something else was opened, what it left waited until you opened it again. Now, as its turn ends, kelve's hook asks it to finish reading what it opened, unless you asked it not to. kelve's hook adds kelve's open tool to what it watches, and brings itself up to date when kelve starts.
+- **Your agent isn't told there's no more while kelve is still getting the next part ready.** After an answer, kelve waited five seconds for what came next, so the next part of the way in, or a folder's page waiting on its files, could come after your agent had stopped. Now, working on one thing, it waits for that thing's own work, and if it's still running, tells your agent to ask again.
 - **Your agent is asked to show only its own work.** Working in a worktree inside your project, as agents' apps make them, it was asked to show work another agent had done elsewhere in the project. kelve took the whole project for the folder it worked in. Now a worktree is its own folder.
 - **From the graph says what the shared graph gave.** It counted the entries kelve holds, wherever they came from, and named your agent by its product. Now it says only how many of the ideas in a change already had an entry in the shared graph, and calls your agent your agent.
 

@@ -465,6 +465,31 @@ pub async fn last_edit(conn: &mut Conn, session: &str) -> Result<Option<(String,
     .await?)
 }
 
+/// Keeps that the agent opened something in kelve in a session, now.
+pub async fn keep_opened(conn: &mut Conn, session: &str, opened: i64) -> Result<()> {
+    sqlx::query(
+        "insert into opened_in (session, opened, at) values (?, ?, ?)
+         on conflict (session, opened) do update set at = excluded.at",
+    )
+    .bind(session)
+    .bind(opened)
+    .bind(now())
+    .execute(&mut *conn)
+    .await?;
+    Ok(())
+}
+
+/// What the agent opened in kelve in a session, each with when it last
+/// opened it, the earliest first.
+pub async fn opened_in(conn: &mut Conn, session: &str) -> Result<Vec<(i64, i64)>> {
+    Ok(
+        sqlx::query_as("select opened, at from opened_in where session = ? order by at, opened")
+            .bind(session)
+            .fetch_all(&mut *conn)
+            .await?,
+    )
+}
+
 /// The files the agent touched in a session, in the folder it touched last,
 /// oldest first; and the one it edited last.
 pub async fn touched(
@@ -511,6 +536,10 @@ pub async fn sweep(conn: &mut Conn) -> Result<()> {
     const DAY: i64 = 24 * 60 * 60 * 1000;
     let at = now();
     sqlx::query("delete from touched where at < ?")
+        .bind(at - DAY)
+        .execute(&mut *conn)
+        .await?;
+    sqlx::query("delete from opened_in where at < ?")
         .bind(at - DAY)
         .execute(&mut *conn)
         .await?;

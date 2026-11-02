@@ -10,15 +10,23 @@ use serde_json::{Value, json};
 use crate::client::Kelve;
 
 /// `kelve job`: prints the next job as JSON, or nothing when there's none;
-/// with `--for`, the next for that one thing opened.
+/// with `--for`, the next for that one thing opened, or nothing while kelve
+/// is still preparing its next part.
 pub async fn next(agent: &str, model: Option<&str>, only: Option<i64>) -> anyhow::Result<()> {
     crate::open::started().await?;
-    let kelve = Kelve::new(Duration::from_secs(60))?;
+    let kelve = Kelve::new(Duration::from_secs(120))?;
     let job = kelve
         .send(kelve.post("/api/agent/next").json(
-            &json!({ "agent": agent, "model": model, "path": crate::notes::here(), "for": only }),
+            &json!({ "agent": agent, "model": model, "path": crate::notes::here(), "for": only, "saysPreparing": true }),
         ))
         .await?;
+    if job["preparing"] == true {
+        anstream::eprintln!(
+            "kelve is still preparing the next part of that: run kelve job --for {} again.",
+            only.unwrap_or_default()
+        );
+        return Ok(());
+    }
     if job.is_null() {
         anstream::eprintln!("There's no more of kelve's work.");
         return Ok(());
