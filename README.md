@@ -49,11 +49,11 @@ What it’s for, then each part in the order things happen, with what it did bef
 
 ## Go as deep as you like.
 
-Click an idea and its entry opens beside the work, from a shared graph checked against its sources. Click what it rests on, and keep going, down to first principles.
+Click an idea and its entry opens beside the work, from a shared graph checked against its sources. Each entry shows how the idea connects to others: what it rests on, what problem it answers, what it’s used with and what could replace it. Click any of them and keep going, down to first principles.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/entry-dark.png">
-  <img src=".github/assets/entry-light.png" width="880" alt="src/retry.rs read plainly, with the entry for Exponential backoff open beside it: from the shared graph, checked against 3 sources, with how it works in plain words.">
+  <img src=".github/assets/entry-light.png" width="880" alt="src/retry.rs read plainly, with the entry for Jitter open beside it, down at how it connects to other ideas: it rests on Randomness, answers the thundering herd problem, is used with exponential backoff, and rate limiting could replace it. Under them, what an agent learned about it.">
 </picture>
 
 ## Leave notes. Your agent picks them up.
