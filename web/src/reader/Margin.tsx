@@ -64,6 +64,8 @@ export function Margin({ wants, lit, open, drop = 0 }: {
       n.style.top = `${top}px`
       floor = top + n.offsetHeight + 10
     })
+    // Its last note's room is kept, below code too short for them all, as a part's is.
+    el.style.minHeight = notes.length ? `${floor - 10}px` : ''
   })
   return (
     <div className="margin" ref={host}>

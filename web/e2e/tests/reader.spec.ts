@@ -12,13 +12,6 @@ test('a change reads whole, with each idea beside its lines, and its entry opens
   const root = repo()
   await open(page, { what: 'change', path: root, title: 'Retries that back off', said: 'Each retry now waits twice as long as the last.' })
   await expect(page.getByRole('heading', { level: 1, name: 'Retries that back off' })).toBeVisible()
-  // The agent's line is a click away in the bar, so the work keeps the height.
-  const said = page.locator('.said-key').getByText('Each retry now waits twice as long as the last.')
-  await expect(said).toBeHidden()
-  await page.getByRole('button', { name: 'What your agent said' }).click()
-  await expect(said).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(said).toBeHidden()
   // What's new shows on the file that has it, in the side's tree.
   const side = page.getByRole('complementary', { name: 'What’s open' })
   await toFiles(page)

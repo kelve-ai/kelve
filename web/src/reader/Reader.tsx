@@ -1,6 +1,6 @@
 // The reader (boards X-1 to X-6, M-2 to M-4, H-5 to H-7): one way to read
-// anything opened. One bar: the title, what your agent said, what's ready for
-// you, and your agent's line with how far reading has got; then the side panel,
+// anything opened. One bar: the title, what's ready for you, and your
+// agent's line with how far reading has got; then the side panel,
 // with what the squares mean and What kelve marks at its foot; the file, with
 // each idea in the margin beside its lines, or a folder's page, or a change's
 // own page, which a change opens on, each read plainly; and entries, opened as
@@ -316,25 +316,6 @@ function SideKey({ change, marks, order, agent }: {
           <button type="button" className="marked-for" onClick={marks}>What kelve marks</button>
         </>
       )}
-    </div>
-  )
-}
-
-/** What your agent said about what's open, a click away, beside its title in the bar. */
-function Said({ said }: { said: string }) {
-  const [open, setOpen] = useState(false)
-  const here = useRef<HTMLDivElement>(null)
-  const close = useCallback(() => setOpen(false), [])
-  useDismiss(open, here, close)
-  return (
-    <div className="said-key" ref={here}>
-      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        What your agent said
-        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" style={{ transform: open ? 'rotate(180deg)' : undefined }}>
-          <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
-        </svg>
-      </button>
-      {open && <p className="lede">{said}</p>}
     </div>
   )
 }
@@ -717,7 +698,6 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
               </span>
             ))}
           </nav>
-          {opened.said && !at.p.length && <Said said={opened.said} />}
         </Top>
         <div className="frame">
           <main className="work" aria-label={title}>

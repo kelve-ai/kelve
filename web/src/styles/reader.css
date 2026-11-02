@@ -57,12 +57,6 @@
 .topbar .path .title button { max-width: 420px; color: var(--ink); font-weight: 600; }
 .topbar .path > span:last-child { flex-shrink: 1; }
 .topbar .sp { min-width: 8px; }
-/* What your agent said about it: a click away, beside the title. */
-.said-key { position: relative; flex: none; }
-.said-key > button { all: unset; cursor: pointer; display: inline-flex; white-space: nowrap; align-items: center; gap: 6px; font-size: 13px; color: var(--quiet); }
-.said-key > button:hover, .said-key > button[aria-expanded='true'] { color: var(--ink); }
-.said-key > button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
-.said-key .lede { position: absolute; z-index: 30; top: 30px; left: -12px; width: max-content; max-width: min(560px, calc(100vw - 48px)); margin: 0; padding: 12px 16px; border-radius: 10px; background: var(--page); box-shadow: 0 0 0 1px var(--rule), 0 10px 30px rgba(var(--shadow), 0.12); font-size: 14.5px; line-height: 22px; color: var(--ink-2); text-wrap: pretty; }
 /* Ready for you: a count that opens what's ready. */
 .ready-key { position: relative; flex: none; }
 .ready-key > button { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; height: 30px; padding: 0 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink); white-space: nowrap; }
@@ -445,7 +439,7 @@ body.resizing { cursor: col-resize; user-select: none; }
      Settings and the theme are in search's commands. */
   .reader .topbar { flex-wrap: wrap; height: auto; row-gap: 0; padding-top: 10px; padding-bottom: 6px; }
   .reader .topbar .path { order: 10; flex: 1 0 100%; min-height: 30px; margin-left: -6px; }
-  .reader .settings-key, .reader .theme-switch, .said-key, .agent-line .an, .agent-line em, .ready-key .long { display: none; }
+  .reader .settings-key, .reader .theme-switch, .agent-line .an, .agent-line em, .ready-key .long { display: none; }
   .topbar .agent-line .short { display: inline; }
   .topbar .path .title { font-size: 14px; }
   .view { margin-top: 4px; }
@@ -573,18 +567,19 @@ body.resizing { cursor: col-resize; user-select: none; }
 .pp .also { margin-top: 6px; font-size: 13px; line-height: 20px; color: var(--quiet); }
 .pp .showc { display: block; margin-top: 7px; font-size: 12.5px; }
 .pp .pln { padding-top: 5px; text-align: right; font: 11.5px/20px var(--mono); color: var(--sq-grey); }
-/* Its code, lined up with the file's: the gutter where the file view's is. */
-.pp .pcode { margin: 10px -78px 4px -136px; padding: 2px 0; }
-.unmarked .pp .pcode { margin-left: -44px; }
+/* Its code, lined up with the file's: the gutter where the file view's is, the page's whole width, its ideas beside it. */
+.fv-in.plain { container-type: inline-size; }
+.pp .pcode { width: 100cqw; margin: 10px 0 4px -136px; padding: 2px 0; }
+.unmarked .pp .pcode { width: calc(100cqw - 44px); margin-left: -44px; }
 .pcode .cm-editor .cm-gutters { background: transparent; }
 .pcode .cm-line.cm-around, .pcode .cm-line.cm-around span { color: var(--dim); }
 .pcode .cm-gutterElement.cm-around { color: var(--mute); }
 .pp .ptext { margin: 10px 0 2px; padding: 2px 0 2px 16px; border-left: 2px solid var(--rule); font-size: 14.5px; line-height: 23px; color: var(--ink-2); }
 .pp .ptext > * + * { margin-top: 10px; }
 .pp .ptext h2, .pp .ptext h3, .pp .ptext h4 { margin-top: 0; font-size: 15px; line-height: 23px; }
-/* A section's words as the reader draws text: the squares in the part's own gutter, each idea's line and the notes under its block. */
-.pp .ptext.pv-part { margin: 10px 0 2px -56px; padding: 2px 0; border-left: 0; }
-.unmarked .pp .ptext.pv-part { margin-left: -44px; }
+/* A section's words as the reader draws text: the squares in the part's own gutter, the page's whole width, each idea beside its block and the notes under it. */
+.pp .ptext.pv-part { width: calc(100cqw - 80px); margin: 10px 0 2px -56px; padding: 2px 0; border-left: 0; }
+.unmarked .pp .ptext.pv-part { width: calc(100cqw - 44px); margin-left: -44px; }
 .pv-part .pv { padding-top: 0; }
 .pv-part .prow { margin-bottom: 10px; }
 .pv-part .prow:last-child { margin-bottom: 0; }
@@ -627,8 +622,8 @@ body.resizing { cursor: col-resize; user-select: none; }
   .pp .mkc:empty, .pp .pln:empty { display: none; }
   .pp > div { grid-column: 1 / -1; }
   .pp .pln { grid-column: 2; grid-row: 1; padding-top: 0; }
-  .pp .pcode, .unmarked .pp .pcode { margin: 10px -14px 4px -16px; }
-  .pp .ptext.pv-part, .unmarked .pp .ptext.pv-part { margin-left: -30px; }
+  .pp .pcode, .unmarked .pp .pcode { width: auto; margin: 10px -14px 4px -16px; }
+  .pp .ptext.pv-part, .unmarked .pp .ptext.pv-part { width: auto; margin-left: -30px; }
   .pl .fold3 { margin-left: 0; width: auto; }
   .prt { grid-template-columns: minmax(0, 1fr); }
   .prt.counted { grid-template-columns: minmax(0, 1fr) auto; }

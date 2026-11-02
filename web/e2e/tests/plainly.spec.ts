@@ -54,8 +54,8 @@ test('a code file reads plainly, a part at a time, its code a click away', async
   await expect(part.locator('.cm-diff .added:visible')).toHaveCount(6)
   await expect(part.locator('.cm-line.cm-around')).toHaveCount(2)
   await expect(part.locator('.cm-line.cm-around').last()).toContainText('Read plainly in')
-  // Each idea in it is named under its lines, as in the file.
-  await expect(part.locator('.mnote.under')).toContainText('Exponential backoff')
+  // Each idea in it is named in the margin beside its lines, as in the file.
+  await expect(part.locator('.margin .mnote')).toContainText('Exponential backoff')
   // An idea, woven into its sentence, opens its entry beside it, and its part is tinted.
   await part.getByRole('button', { name: /Exponential backoff/ }).first().click()
   await me().work()
