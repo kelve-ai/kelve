@@ -25,7 +25,7 @@ import { type Seen, squareLabel, useSeen } from './Square'
 import { useSeenPlainly } from './seen'
 
 /** Below this width, the margin's notes go under their lines. */
-const MARGIN_FROM = 720
+export const MARGIN_FROM = 720
 
 /** A file as the reader draws it: its lines, and what each one is. */
 export type Doc = {

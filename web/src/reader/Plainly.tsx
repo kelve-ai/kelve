@@ -7,14 +7,14 @@
 // reads; until then, where it is on your agent's list, with the code or text
 // meanwhile.
 
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { plainWhere, useList } from '../agentList'
 import type { Marked, MarksSpec, NoteRef, Opened, PlainPart, PlainlyView, ReadAs } from '../api/types'
 import { Loader } from '../Loader'
 import { READ_AS } from '../screens/Marks'
 import { Choice } from '../ui/ui'
 import { useLoad } from '../useLoad'
-import { Code, type Doc } from './FileView'
+import { Code, type Doc, MARGIN_FROM } from './FileView'
 import { WaitingLine } from './ListPane'
 import { useNotes } from './NoteParts'
 import { useSeenPlainly } from './seen'
@@ -98,7 +98,7 @@ export function Plainly({ opened, doc, name, lit, open, lesson, openPath, next, 
   return (
     <div className="fv">
       <div className="fv-scroll" tabIndex={-1}>
-        <div className="fv-in">
+        <div className="fv-in plain">
           {name}
           {body}
           {v?.parts && next}
@@ -232,13 +232,33 @@ function sliceOf(doc: Doc, from: number, to: number) {
 const unplaced = () => {}
 
 /**
+ * The width of the scroller a part is in, as the file view measures its own:
+ * a part's ideas go beside it where the file's would.
+ */
+function useScrollerWidth(box: React.RefObject<HTMLDivElement | null>) {
+  const [width, setWidth] = useState(0)
+  useLayoutEffect(() => {
+    const el = box.current?.closest<HTMLElement>('.fv-scroll')
+    if (!el) return
+    const size = new ResizeObserver(() => setWidth(el.clientWidth))
+    size.observe(el)
+    setWidth(el.clientWidth)
+    return () => size.disconnect()
+  }, [box])
+  return width
+}
+
+/**
  * A part's code, as the file view draws code: read only, numbered, quietly
- * coloured, with the ideas' squares and each idea's name and line under
- * its lines, a change's + and − and the lines it took out, the notes on
- * its lines, and lines chosen to note; the lines around it quieter.
+ * coloured, the page's whole width, with the ideas' squares and each idea's
+ * name and line in the margin beside its lines, or under them where there's
+ * no room, a change's + and − and the lines it took out, the notes on its
+ * lines, and lines chosen to note; the lines around it quieter.
  */
 function PartCode({ doc, notes, from, to, lit, open }: { doc: Doc; notes: NoteRef[]; from: number; to: number; lit?: string; open: (key: string) => void }) {
   const none = useRef<HTMLDivElement>(null)
+  const box = useRef<HTMLDivElement>(null)
+  const width = useScrollerWidth(box)
   const { part, quiet } = useMemo(() => {
     const slice = sliceOf(doc, from, to)
     const part: Doc = {
@@ -258,19 +278,22 @@ function PartCode({ doc, notes, from, to, lit, open }: { doc: Doc; notes: NoteRe
   }, [doc, from, to])
   const opening = (m: Marked) => open(m.key)
   return (
-    <div className="pcode">
-      <Code doc={part} wide={false} width={0} lit={lit} open={opening} scroller={none} placed={unplaced} notes={notes} whole quiet={quiet} />
+    <div className="pcode" ref={box}>
+      <Code doc={part} wide={width >= MARGIN_FROM} width={width} lit={lit} open={opening} scroller={none} placed={unplaced} notes={notes} whole quiet={quiet} />
     </div>
   )
 }
 
 /**
- * A section's own words, as the reader draws text: the ideas' squares and
- * each idea's name and line under its block, the notes on its lines, and
+ * A section's own words, as the reader draws text: the page's whole width,
+ * with the ideas' squares and each idea's name and line in the margin beside
+ * its block, or under it where there's no room, the notes on its lines, and
  * lines chosen to note.
  */
 function PartText({ doc, notes, from, to, lit, open }: { doc: Doc; notes: NoteRef[]; from: number; to: number; lit?: string; open: (key: string) => void }) {
   const none = useRef<HTMLDivElement>(null)
+  const box = useRef<HTMLDivElement>(null)
+  const width = useScrollerWidth(box)
   const part = useMemo<Doc>(() => {
     // The file as the change left it: its lines, without those taken out,
     // with blank lines before the section's own, so each of its blocks
@@ -282,8 +305,8 @@ function PartText({ doc, notes, from, to, lit, open }: { doc: Doc; notes: NoteRe
   }, [doc, from, to])
   const opening = (m: Marked) => open(m.key)
   return (
-    <div className="ptext pv-part">
-      <Prose doc={part} wide={false} lit={lit} open={opening} scroller={none} placed={unplaced} notes={notes} />
+    <div className="ptext pv-part" ref={box}>
+      <Prose doc={part} wide={width >= MARGIN_FROM} lit={lit} open={opening} scroller={none} placed={unplaced} notes={notes} />
     </div>
   )
 }
