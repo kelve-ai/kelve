@@ -2,10 +2,12 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
-## Unreleased
+## 0.1.9, 2 November 2026
 
 - **Your agent writes what it learned.** After a stretch of failures it got past, kelve asked your agent to take "kelve's next job", which handed it whatever came first on the list, so no lesson was ever written. Now kelve names the lesson's job, your agent takes that one straight away, while it remembers, and no other agent can take it. One not taken within six hours is let go, since a later agent can't know what was learned.
 - **Your agent's work is read as what it changed, not everything since your main.** kelve read a branch from where it left your local `main`, which agents rarely update, so a change showed every file merged since and had to be opened again. Now, when your local `main` is behind the remote's, kelve reads from where the work left the remote's. It still fetches nothing.
+- **One tab for each thing kelve shows.** Each time your agent showed its work again, kelve opened another tab, so you ended up with several of the same thing at different stages. Now the new tab takes the old one's place, where you were in it, and the old tab closes. One you've moved around in can't close, so it says it's open in a newer tab; one holding a note you haven't kept stays as it is.
+- **The example is a change big enough to need kelve.** It was about 120 lines over 7 files. It's now 1,194 lines over 21 files, in seven parts, from retries with jitter to a reconciler.
 
 ## 0.1.8, 2 November 2026
 
