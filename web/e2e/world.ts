@@ -154,6 +154,10 @@ export async function openFile(page: Page, path: string) {
  */
 export async function selectLines(page: Page, first: string, last: string) {
   const line = (text: string) => page.locator('.cm-line').filter({ hasText: text }).first()
+  // Both drawn first: the editor draws the file a little after it's shown,
+  // and draws it again as it settles.
+  await expect(line(first)).toBeVisible()
+  await expect(line(last)).toBeVisible()
   const from = await line(first).boundingBox()
   const to = await line(last).boundingBox()
   if (!from || !to) throw new Error(`The lines from ${first} to ${last} aren’t shown.`)
