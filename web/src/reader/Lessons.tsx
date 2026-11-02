@@ -58,15 +58,16 @@ function heldLine(l: LessonView): string {
 /**
  * At the top of a change or a file: what the shared graph gave this work, in
  * the kind line's shape (board Value-1). On a change, first the ideas: of
- * those kelve marks in it, how many have an entry, taken from the shared
- * graph or written by your agent, and how many of your agent's the graph
- * has now; then the lessons. Its label ends in a space, as the kind line's does, so its text
- * reads as words when it's read out or copied.
+ * those kelve marks in it, how many already had an entry in the shared
+ * graph; then the lessons. Your agent is said as "your agent", never by its
+ * product's name, so it can't read as anyone else's. Its label ends in a
+ * space, as the kind line's does, so its text reads as words when it's read
+ * out or copied.
  */
-export function GaveLine({ lessons, agent, origins }: { lessons: LessonView[]; agent: string; origins?: Origins }) {
-  const Agent = agent.charAt(0).toUpperCase() + agent.slice(1)
+export function GaveLine({ lessons, origins }: { lessons: LessonView[]; origins?: Origins }) {
+  const Agent = 'Your agent'
   const o = origins && origins.fromGraph > 0 ? origins : undefined
-  const ideas = o ? ideasLine(o, Agent) : ''
+  const ideas = o ? ideasLine(o) : ''
   if (!lessons.length) {
     if (!ideas) return null
     return (
@@ -100,25 +101,14 @@ export function GaveLine({ lessons, agent, origins }: { lessons: LessonView[]; a
 }
 
 /**
- * Where the entries for a change's ideas came from, as a sentence: "Of the
- * 237 ideas here, 176 have an entry: kelve took 41 from the shared graph,
- * and Claude Code wrote 135, in this work or before, 120 of them now in the
- * graph too. kelve gets an entry for each of the other 61 when it’s
- * opened." It counts the entries kelve has: an idea has none until it's
- * opened, or taken ahead, so the graph may have some of the rest.
+ * What the shared graph already had for a change's ideas, as a sentence:
+ * "41 of the 237 ideas here already had an entry in the shared graph." Only
+ * that: what the graph gave, ready to read, with nothing written for it.
  */
-export function ideasLine(o: Origins, Agent: string): string {
-  if (o.ideas === 1) return 'Its one idea’s entry came from the shared graph.'
-  const have = o.fromGraph + o.byAgent
-  const rest = Math.max(o.ideas - have, 0)
-  const head = rest === 0 ? `All ${o.ideas} ideas here have an entry` : `Of the ${o.ideas} ideas here, ${have} ${have === 1 ? 'has' : 'have'} an entry`
-  const added =
-    o.inGraph === 0 ? '.'
-    : o.inGraph === o.byAgent ? (o.byAgent === 1 ? ', now in the graph too.' : ', all now in the graph too.')
-    : `, ${o.inGraph} of them now in the graph too.`
-  const from = o.byAgent === 0 ? ', from the shared graph.' : `: kelve took ${o.fromGraph} from the shared graph, and ${Agent} wrote ${o.byAgent}, in this work or before${added}`
-  const none = rest === 0 ? '' : rest === 1 ? ' kelve gets an entry for the other one when it’s opened.' : ` kelve gets an entry for each of the other ${rest} when it’s opened.`
-  return head + from + none
+export function ideasLine(o: Origins): string {
+  if (o.ideas === 1) return 'Its one idea already had an entry in the shared graph.'
+  if (o.fromGraph >= o.ideas) return `All ${o.ideas} ideas here already had an entry in the shared graph.`
+  return `${o.fromGraph} of the ${o.ideas} ideas here already had an entry in the shared graph.`
 }
 
 /** How a lesson went here, for its row: what showed it held or didn't, or when it was given. */
