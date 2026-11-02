@@ -215,8 +215,13 @@ async fn a_lesson_reaches_the_agent_holds_and_what_it_learns_waits_then_leaves()
         m.command = Some("cargo check".into());
     })
     .await;
+    // Only the work it edited, to show if it's done: once, for its last edit.
     let text = moment(&app, "end", |m| m.cwd = root_s.clone()).await;
-    assert_eq!(text, "", "one failure that one edit fixed");
+    assert!(
+        !text.contains("write it as a lesson"),
+        "one failure that one edit fixed"
+    );
+    assert!(text.contains("show them it in kelve"), "{text}");
     // It fails twice, with two errors, the second run piped: a turn that
     // ends still failing isn't asked, and waits for the one that gets past.
     for problem in [
@@ -958,7 +963,11 @@ async fn shell_writes_in(repository: bool) {
     say(at("ran", "f", "black format.py")).await;
     pause().await;
     assert_eq!(say(at("ran", "f", "python3 -m unittest")).await, "");
-    assert_eq!(say(at("prompt", "f", "")).await, "", "nothing was replaced");
+    let said = say(at("prompt", "f", "")).await;
+    assert!(
+        !said.contains("you replaced"),
+        "nothing was replaced: {said}"
+    );
 
     // A file the agent made through its shell, that kelve has never read,
     // then replaced through it: asked for too.

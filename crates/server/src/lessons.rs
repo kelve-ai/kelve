@@ -540,8 +540,16 @@ pub async fn moment(
             None => String::new(),
         },
         // The turn ends, or, for an agent that can't say so, the person
-        // writes again: what the stretch taught, asked once.
-        "end" | "prompt" => ask_stretch(&app, session).await?,
+        // writes again: what the stretch taught, asked once; and work it
+        // did, to show if it's done.
+        "end" | "prompt" => [
+            ask_stretch(&app, session).await?,
+            crate::handoff::done(&app, session).await?,
+        ]
+        .into_iter()
+        .filter(|t| !t.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n"),
         "failed" => {
             let command = m.command.clone().unwrap_or_default();
             let problem = lesson::seen_as(m.problem.as_deref().unwrap_or_default());
@@ -563,7 +571,7 @@ pub async fn moment(
     };
     // Work handed over: shown in kelve, if it hasn't been.
     let text = match &m.handover {
-        Some(h) => [text, crate::handoff::after(&app, h).await?]
+        Some(h) => [text, crate::handoff::after(&app, session, h).await?]
             .into_iter()
             .filter(|t| !t.is_empty())
             .collect::<Vec<_>>()

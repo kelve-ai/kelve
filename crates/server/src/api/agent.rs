@@ -113,6 +113,7 @@ pub async fn open(
         What::Folder | What::File => (path.to_string(), None, None),
         What::Files => {
             let (root, rels) = files_in_folder(&asked.paths)?;
+            let (root, rels) = in_known_folder(&app, root, rels).await?;
             (root.display().to_string(), None, Some(rels))
         }
     };
@@ -195,6 +196,49 @@ fn files_in_folder(paths: &[String]) -> ApiResult<(PathBuf, Vec<String>)> {
         })
         .collect();
     Ok((root, rels))
+}
+
+/// Files outside a repository, in the folder kelve knows them in, read or
+/// walked, when it holds them: the same folder whichever of them are shown,
+/// so showing them again is the same thing in kelve, brought up to date.
+async fn in_known_folder(
+    app: &Shared,
+    root: PathBuf,
+    rels: Vec<String>,
+) -> ApiResult<(PathBuf, Vec<String>)> {
+    if kelve_engine::git::root_of(&root).is_some() {
+        return Ok((root, rels));
+    }
+    let at = root.display().to_string();
+    let known = {
+        let mut conn = app.db.acquire().await?;
+        match kelve_store::reader::root_of(&mut conn, &at).await? {
+            Some(known) => Some(known),
+            None => kelve_store::lessons::walked_root_of(&mut conn, &at).await?,
+        }
+    };
+    let Some(known) = known.map(PathBuf::from) else {
+        return Ok((root, rels));
+    };
+    let Ok(under) = root.strip_prefix(&known) else {
+        return Ok((root, rels));
+    };
+    let under: Vec<String> = under
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy().into_owned())
+        .collect();
+    let rels = rels
+        .into_iter()
+        .map(|r| {
+            under
+                .iter()
+                .cloned()
+                .chain([r])
+                .collect::<Vec<_>>()
+                .join("/")
+        })
+        .collect();
+    Ok((known, rels))
 }
 
 /// How many files what's open has, how many of them and of its pages need
