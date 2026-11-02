@@ -45,110 +45,129 @@
       ]
     },
     "src/bank/mod.rs": {
-      "what": "The ledger’s only way to the bank: it asks the bank to take a payment or give one back, each call with a key and a time limit.",
-      "change": "Calls to the bank had no key and no time limit. Now each carries the caller’s key and gives up after 15 seconds.",
+      "what": "The ledger’s only way to the bank: it asks the bank to take a payment, give one back, or say what became of one, each call with a key and a time limit.",
+      "change": "Calls had no key, no time limit and nothing to stop them. Now each carries the caller’s key, gives up after 15 seconds, and asks the breaker and the limit first.",
       "parts": [
         {
-          "from": 42,
-          "to": 61,
+          "from": 72,
+          "to": 76,
           "goal": "Asks the bank to pay",
-          "says": "Sends a payment with the caller’s key and a time limit, tried again by `with_retries`, so the bank takes it once however often it’s asked: [[Idempotency keys]].",
+          "says": "Sends a payment through one call, tried again by `with_retries`, so the bank takes it once however often it’s asked.",
           "before": "Sent the payment with no key and no time limit."
         },
         {
-          "from": 63,
+          "from": 78,
           "to": 83,
           "goal": "Asks the bank to refund",
           "says": "Sends a refund the same way, with its own key, so a refund tried again is given once.",
           "before": "Sent the refund with no key."
         },
         {
-          "from": 12,
-          "to": 14,
-          "goal": "Sets the time limit",
-          "says": "One call may take 15 seconds; then it’s dropped, so the retry around it can start."
+          "from": 96,
+          "to": 124,
+          "goal": "Makes one call to the bank",
+          "says": "Asks the breaker first, so a bank that’s down isn’t called. Then it waits its turn, sends the call with the caller’s key and a 15-second limit, and tells the breaker how it went.",
+          "before": "Each call went straight to the bank, with no key and no limit."
         },
         {
-          "from": 37,
-          "to": 40,
+          "from": 85,
+          "to": 94,
+          "goal": "Asks what became of a payment",
+          "says": "Asks the bank, by the request’s key, whether it took a payment we never heard back about; the reconciler uses it. Also says where the breaker is, for the health check."
+        },
+        {
+          "from": 47,
+          "to": 59,
+          "goal": "What became of a request",
+          "says": "Taken, with a receipt; declined, with a reason; never received, so nothing was taken; or still pending."
+        },
+        {
+          "from": 61,
+          "to": 70,
           "goal": "Makes a client",
-          "says": "A client for the bank, from the settings: where the bank is, and the key to call it with."
+          "says": "A client for the bank from the settings, with its own breaker and limit, shared by every copy of the client."
         },
         {
-          "from": 16,
-          "to": 35,
+          "from": 20,
+          "to": 45,
           "goal": "What goes to the bank",
-          "says": "The client, a payment as the bank takes it, and the receipt it sends back: approved or not, and why not."
+          "says": "The 15-second limit, the client, a payment as the bank takes it, and the receipt it sends back."
         },
         {
           "from": 1,
-          "to": 10,
+          "to": 18,
           "goal": "Brings in what it needs",
-          "says": "Says what the file is for, and brings in time, settings, errors, amounts and retries.",
+          "says": "Says what the file is for, and brings in the breaker, the limit, settings, errors and retries.",
           "also": true
         }
       ]
     },
     "src/api/v1/charges.rs": {
-      "what": "Takes a shop’s request to charge a card, and charges it once however many times the request is sent.",
-      "change": "It used to charge every request it was sent. Now a request sent again with the same key gets the first receipt.",
+      "what": "Takes a shop’s request to charge a card, and charges it once however many times the request is sent, even two copies at once.",
+      "change": "It used to charge every request it was sent. Now a key is claimed first, so a copy gets the first answer and none is charged twice.",
       "parts": [
         {
-          "from": 26,
-          "to": 43,
+          "from": 28,
+          "to": 59,
           "goal": "Charges a card, once",
-          "says": "Holds the money, asks the bank, then settles it or lets it go. A request whose key was answered before gets that receipt instead: [[Idempotency keys]].",
+          "says": "Claims the request’s key first: a key answered before gets that answer, and one still going is told so: [[Idempotency keys]]. A fresh key is charged, and its answer kept.",
           "before": "Charged every request it was sent, with no key."
         },
         {
-          "from": 45,
-          "to": 49,
-          "goal": "Finds an answered request",
-          "says": "Looks up the receipt kept for a key, if a request with it was answered before."
+          "from": 61,
+          "to": 85,
+          "goal": "Holds, asks, then settles",
+          "says": "Holds the money and writes the charge down as pending, then asks the bank: [[Authorisation holds]]. Approved, it’s settled; declined, or stopped by the breaker, it’s let go."
         },
         {
-          "from": 51,
-          "to": 58,
-          "goal": "Remembers the answer",
-          "says": "Keeps the receipt under its key; a key kept already is left as it was."
+          "from": 87,
+          "to": 90,
+          "goal": "Gives an answer again",
+          "says": "Sends a kept answer back exactly as it was first given."
         },
         {
-          "from": 12,
-          "to": 24,
+          "from": 14,
+          "to": 26,
           "goal": "What a charge is",
           "says": "What a shop sends to charge a card, and the receipt it gets back."
         },
         {
           "from": 1,
-          "to": 10,
+          "to": 12,
           "goal": "Brings in what it needs",
-          "says": "The web framework, the bank, errors, amounts and holds.",
+          "says": "The web framework, the bank, keys, errors, amounts, holds and the reconciler.",
           "also": true
         }
       ]
     },
     "src/api/v1/refunds.rs": {
       "what": "Takes a shop’s request to give a payment back, and gives it back once however many times the request is sent.",
-      "change": "Refunds went to the bank with no key. Now the caller’s key goes with each one.",
+      "change": "Refunds went to the bank with no key. Now the key is claimed here first and goes to the bank with the refund.",
       "parts": [
         {
-          "from": 24,
-          "to": 31,
-          "goal": "Gives money back",
-          "says": "Asks the bank to refund the payment with the caller’s key, then books the money from the merchant back to the customer: [[Idempotency keys]].",
+          "from": 26,
+          "to": 55,
+          "goal": "Gives money back, once",
+          "says": "Claims the key, asks the bank to refund with it, then books the money from the merchant back to the customer and keeps the answer: [[Idempotency keys]].",
           "before": "Asked the bank with no key."
         },
         {
-          "from": 10,
-          "to": 22,
+          "from": 57,
+          "to": 60,
+          "goal": "Gives an answer again",
+          "says": "Sends a kept answer back exactly as it was first given."
+        },
+        {
+          "from": 12,
+          "to": 24,
           "goal": "What a refund is",
           "says": "What a shop sends to give a payment back, and the receipt it gets."
         },
         {
           "from": 1,
-          "to": 8,
+          "to": 10,
           "goal": "Brings in what it needs",
-          "says": "The web framework, errors and the ledger.",
+          "says": "The web framework, keys, errors and the ledger.",
           "also": true
         }
       ]
@@ -184,13 +203,19 @@
       ]
     },
     "migrations/0002_request_keys.sql": {
-      "what": "Adds the table that remembers each request answered, so a request sent again isn’t charged twice.",
+      "what": "Adds the table that remembers each request claimed and answered, so a request sent again isn’t charged twice.",
       "parts": [
         {
           "from": 3,
-          "to": 7,
-          "goal": "Keeps answered requests",
-          "says": "A table of the requests answered, by their key, with the receipt each got and when; a key can be in it only once: [[Unique keys]]."
+          "to": 15,
+          "goal": "Keeps claimed requests",
+          "says": "Each request by its key, which can be in it only once: [[Unique keys]]. With its body’s hash, whether it’s started or answered, and the answer."
+        },
+        {
+          "from": 17,
+          "to": 18,
+          "goal": "Finds old answers fast",
+          "says": "An index on when each was answered, so answers older than a day are found to forget."
         },
         {
           "from": 1,
@@ -237,25 +262,27 @@
       ]
     },
     "src/main.rs": {
-      "what": "Where the service starts: it reads its settings, connects to the database and the bank, and serves the shops’ routes.",
+      "what": "Where the service starts: it reads its settings, connects to the database and the bank, starts the background work, and serves the shops’ routes.",
+      "change": "Now also starts the reconciler, and forgets answers older than a day once an hour.",
       "parts": [
         {
-          "from": 18,
-          "to": 27,
+          "from": 20,
+          "to": 43,
           "goal": "Starts the service",
-          "says": "Reads the settings, connects to the database, makes the bank’s client, then serves the routes under `/v1` until it stops."
+          "says": "Reads the settings, connects to the database and makes the bank’s client. Starts the reconciler and an hourly clean-up, then serves the routes under `/v1`.",
+          "before": "Served the routes, with nothing running in the background."
         },
         {
-          "from": 12,
-          "to": 16,
+          "from": 14,
+          "to": 18,
           "goal": "What every request shares",
           "says": "The database and the bank’s client, handed to every route."
         },
         {
           "from": 1,
-          "to": 10,
+          "to": 12,
           "goal": "Names its parts",
-          "says": "Its modules, and the web framework and database it runs on.",
+          "says": "Its modules, now with keys and the reconciler, and the web framework and database it runs on.",
           "also": true
         }
       ]
@@ -327,49 +354,65 @@
       ]
     },
     "src/error.rs": {
-      "what": "The ways a call can fail, and which of them are worth trying again.",
+      "what": "The ways a call can fail, which are worth trying again, and what a shop is told for each.",
+      "change": "Adds a bank that’s down, a timeout, a bad key and a request still going, and tells shops when to try again.",
       "parts": [
         {
-          "from": 19,
-          "to": 29,
+          "from": 34,
+          "to": 45,
           "goal": "Says what’s worth retrying",
           "says": "A bank that timed out, couldn’t be reached or failed on its side, or a busy database, may work next time; a declined card never will: [[Transient errors]]."
         },
         {
-          "from": 3,
-          "to": 17,
+          "from": 47,
+          "to": 67,
+          "goal": "Tells a shop what failed",
+          "says": "Each failure as an HTTP status. A bank that’s down, or a copy of a request still going, comes with when to try again, so shops’ retries don’t add to the load."
+        },
+        {
+          "from": 8,
+          "to": 32,
           "goal": "The ways it fails",
-          "says": "The database, the bank, a declined card, a missing setting, an unsigned webhook, or serving itself."
+          "says": "The database, the bank, a declined card, a bank that’s down, a timeout, a missing setting, an unsigned webhook, a bad key or request, or a request still going.",
+          "before": "No bank down, timeout, bad key or request still going."
         },
         {
           "from": 1,
-          "to": 1,
-          "goal": "Brings in errors",
-          "says": "A way to describe errors.",
+          "to": 6,
+          "goal": "Brings in what it needs",
+          "says": "Time, HTTP responses and a way to describe errors.",
           "also": true
         }
       ]
     },
     "src/config.rs": {
       "what": "The service’s settings, read from the environment when it starts.",
+      "change": "Adds settings for the breaker, the limit on calls to the bank, and how often hanging charges are looked for.",
       "parts": [
         {
-          "from": 11,
-          "to": 22,
+          "from": 23,
+          "to": 39,
           "goal": "Reads the settings",
-          "says": "Reads each from the environment; one that’s missing stops the service, except where to listen, which defaults to port 8080 on this machine."
+          "says": "Reads each from the environment. A missing required one stops the service; the new ones have defaults: five failures, 30 seconds, 20 calls a second in bursts of 40, every minute."
         },
         {
-          "from": 3,
-          "to": 9,
+          "from": 41,
+          "to": 49,
+          "goal": "Reads a number",
+          "says": "A number, or its default when it isn’t set; one that isn’t a number stops the service rather than being ignored."
+        },
+        {
+          "from": 5,
+          "to": 21,
           "goal": "What it needs",
-          "says": "Where to listen, the database, the bank and its key, and the secret webhooks are signed with."
+          "says": "Where to listen, the database, the bank and its key, the webhook secret, and the breaker, limit and reconciler settings.",
+          "before": "Only where to listen, the database, the bank and the webhook secret."
         },
         {
           "from": 1,
-          "to": 1,
-          "goal": "Brings in errors",
-          "says": "The error for a missing setting.",
+          "to": 3,
+          "goal": "Brings in what it needs",
+          "says": "Time, and the error for a missing setting.",
           "also": true
         }
       ]
@@ -389,7 +432,8 @@
           "goal": "What it’s built with",
           "says": "The libraries it uses: a web server, a Postgres client, random numbers, and signing to check the bank’s webhooks."
         }
-      ]
+      ],
+      "change": "Adds a library for reading and writing JSON, and moves the version on."
     },
     "README.md": {
       "what": "Says what ledger is, the four things it promises, and how to run it.",
@@ -461,25 +505,39 @@
       ]
     },
     "src/api/v1/webhooks.rs": {
-      "what": "Takes what the bank says happened, once it’s sure the bank sent it.",
+      "what": "Takes what the bank says happened, once it’s sure the bank sent it, and acts on each event once.",
+      "change": "Webhooks were checked, then ignored. Now each event is acted on once, by its ID, and can finish a hanging charge.",
       "parts": [
         {
-          "from": 10,
-          "to": 21,
-          "goal": "Checks the bank sent it",
-          "says": "Signs the body with the secret it shares with the bank, and checks that matches the bank’s signature: [[HMAC]]. The two are compared in [[Constant-time comparison]], so the check can’t be timed."
+          "from": 24,
+          "to": 45,
+          "goal": "Checks, then acts once",
+          "says": "Checks the bank signed it, in [[Constant-time comparison]] so the check can’t be timed. An event seen before is only acknowledged; a new one about a hanging charge finishes it.",
+          "before": "Checked the signature, then did nothing with the event."
         },
         {
-          "from": 23,
-          "to": 25,
+          "from": 47,
+          "to": 56,
+          "goal": "Takes each event once",
+          "says": "Writes the event down by the bank’s own ID, and says whether this is the first time: [[Idempotence]]."
+        },
+        {
+          "from": 58,
+          "to": 63,
           "goal": "Reads the signature",
-          "says": "Turns the signature’s hex text into bytes; text that isn’t hex is turned away."
+          "says": "Turns the signature’s hex text into bytes; text that isn’t hex, or is an odd length, is turned away."
+        },
+        {
+          "from": 12,
+          "to": 22,
+          "goal": "What an event is",
+          "says": "The bank’s ID for it, what kind it is, the request it’s about, and what became of that request."
         },
         {
           "from": 1,
-          "to": 8,
+          "to": 10,
           "goal": "Brings in what it needs",
-          "says": "Signing, a request’s headers and body, and the ways it can fail.",
+          "says": "Signing, a request’s headers and body, the bank’s outcomes and the ways it can fail.",
           "also": true
         }
       ]
@@ -501,35 +559,357 @@
           "also": true
         }
       ]
+    },
+    "src/bank/breaker.rs": {
+      "what": "A circuit breaker for the bank: after five failures in a row it stops calls for a while, then lets one through to see if the bank is back.",
+      "change": "New: calls to a bank that’s down used to go out anyway, and wait to fail.",
+      "parts": [
+        {
+          "from": 45,
+          "to": 63,
+          "goal": "Lets a call through, or not",
+          "says": "Closed, every call goes. Open, a call is turned away at once with how long to wait. Once it has cooled off, one call goes to test the bank: [[Circuit breakers]]."
+        },
+        {
+          "from": 65,
+          "to": 84,
+          "goal": "Hears how a call went",
+          "says": "A call that worked closes the breaker. Five failures in a row open it; a failed test opens it again. A declined card doesn’t count."
+        },
+        {
+          "from": 86,
+          "to": 93,
+          "goal": "Frees the test for another",
+          "says": "A test call that failed for its own reasons, such as a declined card, says nothing about the bank, so the next call tests it instead."
+        },
+        {
+          "from": 100,
+          "to": 108,
+          "goal": "Says which failures count",
+          "says": "A timeout, a bank that can’t be reached, or an error on its side counts; anything else is the bank working as it should."
+        },
+        {
+          "from": 10,
+          "to": 34,
+          "goal": "Its three states",
+          "says": "Closed counts failures in a row; open turns calls away until a time; half open lets one call through. The breaker keeps the state, and how many failures and how long a wait. [[State]]"
+        },
+        {
+          "from": 36,
+          "to": 43,
+          "goal": "Makes a breaker",
+          "says": "From the settings, or from numbers given straight, as the tests do. It starts closed."
+        },
+        {
+          "from": 1,
+          "to": 8,
+          "goal": "Says what it’s for",
+          "says": "What a breaker does, and the time, settings and errors it uses.",
+          "also": true
+        }
+      ]
+    },
+    "src/bank/limit.rs": {
+      "what": "A limit on how fast ledger calls the bank: a bucket of tokens that fills at a steady rate, one token for each call.",
+      "change": "New: calls used to go to the bank as fast as they came, retries included.",
+      "parts": [
+        {
+          "from": 32,
+          "to": 42,
+          "goal": "Takes a token for a call",
+          "says": "Fills the bucket for the time since it was last filled, then takes a token, or says how long until there’s one: [[Rate limiting]]."
+        },
+        {
+          "from": 44,
+          "to": 53,
+          "goal": "Waits its turn",
+          "says": "Sleeps until a token is due, then takes it, so calls that wait together are let through one at a time: [[Thundering herd problem]]."
+        },
+        {
+          "from": 56,
+          "to": 63,
+          "goal": "Fills the bucket",
+          "says": "Adds the tokens earned since it was last filled, never more than the burst."
+        },
+        {
+          "from": 65,
+          "to": 90,
+          "goal": "Checks the limit",
+          "says": "A burst of three goes at once, the fourth waits 100 milliseconds, and an hour idle still allows only three.",
+          "also": true
+        },
+        {
+          "from": 10,
+          "to": 30,
+          "goal": "A bucket, and how it fills",
+          "says": "How many tokens it has and when it was last filled, the rate it fills at, and the most it holds. It starts full."
+        },
+        {
+          "from": 1,
+          "to": 8,
+          "goal": "Says what it’s for",
+          "says": "How the limit works, and the time and settings it uses.",
+          "also": true
+        }
+      ]
+    },
+    "src/idempotency.rs": {
+      "what": "Answers each request once: a key is claimed before anything is charged, and the same key gets the same answer, however many times it’s sent.",
+      "change": "New: a request’s key used to be looked up after the charge, so two copies arriving together could both be charged.",
+      "parts": [
+        {
+          "from": 36,
+          "to": 69,
+          "goal": "Claims a request’s key",
+          "says": "**The key is claimed with an insert before anything is charged, and the stored row comes back in the same statement.** A new key goes ahead; a key answered before gets its answer; one still going is told so: [[Idempotency keys]]."
+        },
+        {
+          "from": 71,
+          "to": 80,
+          "goal": "Keeps the answer",
+          "says": "Keeps the status and body a request was answered with, under its key, so the next copy gets the same."
+        },
+        {
+          "from": 82,
+          "to": 87,
+          "goal": "Lets a claim go",
+          "says": "Frees a key whose request failed before anything was charged, so the caller can send it again and have it go ahead."
+        },
+        {
+          "from": 89,
+          "to": 98,
+          "goal": "Takes over a stuck claim",
+          "says": "A claim left five minutes with no answer, because ledger stopped, is taken over by one copy of the request: the one that moves its time."
+        },
+        {
+          "from": 100,
+          "to": 105,
+          "goal": "Fingerprints a request",
+          "says": "A hash of the request’s body, so the same key sent with a different request is turned away, not answered: [[Hash function]]."
+        },
+        {
+          "from": 107,
+          "to": 113,
+          "goal": "Forgets old answers",
+          "says": "Deletes answers older than a day; no shop retries a request that late."
+        },
+        {
+          "from": 14,
+          "to": 34,
+          "goal": "What a claim finds",
+          "says": "How long a claim lasts, and what claiming finds: a fresh key, an answer kept from before, or a copy still going."
+        },
+        {
+          "from": 1,
+          "to": 12,
+          "goal": "Says what it’s for",
+          "says": "How keys are claimed, and the hashing and database it uses.",
+          "also": true
+        }
+      ]
+    },
+    "src/reconcile.rs": {
+      "what": "Finishes charges left hanging: it asks the bank what became of each charge it never heard back about, then settles it or gives the money back.",
+      "change": "New: a charge whose call timed out used to leave the money held, with no one checking what the bank did.",
+      "parts": [
+        {
+          "from": 42,
+          "to": 60,
+          "goal": "Writes a charge down",
+          "says": "A charge is written down as pending before the bank is asked, and taken off once the bank answers."
+        },
+        {
+          "from": 90,
+          "to": 127,
+          "goal": "Finds charges left hanging",
+          "says": "Takes a lock so only one ledger reconciles at a time: [[Advisory locks]]. Then asks the bank about each charge pending more than three minutes, 50 a round, and stops if the bank is down."
+        },
+        {
+          "from": 129,
+          "to": 159,
+          "goal": "Finishes one charge",
+          "says": "Taken, the money goes to the merchant. Declined or never received, it goes back to the customer. Still pending, it waits, for a day at most: [[Authorisation holds]]."
+        },
+        {
+          "from": 62,
+          "to": 75,
+          "goal": "Hears from the bank",
+          "says": "When the bank says, unasked, what became of a charge still hanging, it’s finished then."
+        },
+        {
+          "from": 77,
+          "to": 88,
+          "goal": "Runs in the background",
+          "says": "A round every minute, for as long as ledger runs, saying how many it finished."
+        },
+        {
+          "from": 18,
+          "to": 40,
+          "goal": "When a charge is hanging",
+          "says": "Three minutes with no answer, longer than all of a call’s retries; given up after a day: [[Partial failure]]. And what a pending charge holds."
+        },
+        {
+          "from": 1,
+          "to": 16,
+          "goal": "Says what it’s for",
+          "says": "What the reconciler does, and the bank, ledger and holds it uses.",
+          "also": true
+        }
+      ]
+    },
+    "migrations/0003_pending_calls.sql": {
+      "what": "Adds the tables for charges waiting on the bank, and for the bank’s events, each kept once.",
+      "parts": [
+        {
+          "from": 1,
+          "to": 14,
+          "goal": "Charges waiting on the bank",
+          "says": "Each charge written down before the bank is asked, by its request’s key, with the hold and amount, and an index by age for the reconciler."
+        },
+        {
+          "from": 16,
+          "to": 23,
+          "goal": "The bank’s events, once",
+          "says": "Each event the bank sent, by its own ID, so one sent twice is acted on once: [[Idempotence]]."
+        }
+      ]
+    },
+    "tests/breaker.rs": {
+      "what": "Tests that the breaker opens after five failures in a row, stays open 30 seconds, then lets one call test the bank.",
+      "parts": [
+        {
+          "from": 34,
+          "to": 69,
+          "goal": "Checks open, wait, test",
+          "says": "Four failures leave it closed; the fifth opens it for 30 seconds. Then one call tests the bank while others are turned away, and a failed test opens it again."
+        },
+        {
+          "from": 6,
+          "to": 33,
+          "goal": "The breaker’s rules, to test",
+          "says": "The same states and rules the breaker has, with five failures to open and 30 seconds to cool off."
+        },
+        {
+          "from": 1,
+          "to": 4,
+          "goal": "Says what it checks",
+          "says": "What it checks, and time.",
+          "also": true
+        }
+      ]
+    },
+    "tests/idempotency.rs": {
+      "what": "Tests against a real database that a request sent twice is claimed once, and the second copy finds the first one’s answer.",
+      "parts": [
+        {
+          "from": 33,
+          "to": 77,
+          "goal": "Checks keys, against Postgres",
+          "says": "The first claim goes ahead and a second finds it. A kept answer comes back, the same key with another body is told apart, and of two copies at once exactly one goes ahead."
+        },
+        {
+          "from": 8,
+          "to": 32,
+          "goal": "Claims a key, as ledger does",
+          "says": "An empty requests table, a body’s hash, and a claim with the same statement the service uses."
+        },
+        {
+          "from": 1,
+          "to": 6,
+          "goal": "Says what it checks",
+          "says": "What it checks, and that it needs a database.",
+          "also": true
+        }
+      ]
+    },
+    "tests/reconcile.rs": {
+      "what": "Tests that a hanging charge ends as the bank says: settled if taken, given back if not, left while pending, and given back after a day.",
+      "parts": [
+        {
+          "from": 33,
+          "to": 71,
+          "goal": "Checks each ending",
+          "says": "Taken is settled, even late; declined or never received is given back; pending waits, until it has waited too long. Every charge ends in exactly one place."
+        },
+        {
+          "from": 5,
+          "to": 32,
+          "goal": "The reconciler’s rules, to test",
+          "says": "What the bank can say, what happens to the money for each, as the reconciler decides."
+        },
+        {
+          "from": 1,
+          "to": 3,
+          "goal": "Says what it checks",
+          "says": "How a hanging charge ends.",
+          "also": true
+        }
+      ]
+    },
+    "docs/failures.md": {
+      "what": "How ledger behaves when the bank fails for longer than a moment, or never answers, for the people who run it.",
+      "parts": [
+        {
+          "from": 7,
+          "to": 19,
+          "goal": "A bank that’s down",
+          "says": "After five failures in a row, calls stop for 30 seconds and shops get a 503 with when to retry; then one call tests the bank: [[Circuit breakers]]."
+        },
+        {
+          "from": 20,
+          "to": 27,
+          "goal": "Not calling too fast",
+          "says": "At most 20 calls a second, in bursts of 40, so retries that failed together don’t reach the bank at once: [[Rate limiting]]."
+        },
+        {
+          "from": 28,
+          "to": 37,
+          "goal": "A request sent twice",
+          "says": "A key is claimed first, so a copy arriving together is told to wait, and every copy gets the same answer for a day: [[Idempotency keys]]."
+        },
+        {
+          "from": 38,
+          "to": 52,
+          "goal": "A charge never answered",
+          "says": "Every minute, charges pending over three minutes are checked with the bank, then settled or given back, after a day at most: [[Partial failure]]."
+        },
+        {
+          "from": 1,
+          "to": 6,
+          "goal": "Says what it covers",
+          "says": "Longer failures than retries handle; retries have a page of their own."
+        }
+      ]
     }
   },
   "folders": {
     "": {
       "what": "A payments service: it takes shops’ charges and refunds, holds the money, asks the bank, and keeps every movement as two entries that balance.",
-      "change": "Calls to the bank now wait longer, at random, and a charge or refund sent twice is taken once.",
+      "change": "Calls to the bank now wait longer at random, stop while the bank is down, and are spaced out; a charge sent twice is taken once, and hanging ones are finished.",
       "shape": "parts",
       "parts": [
         {
           "part": "src",
           "goal": "The service itself",
-          "says": "Takes shops’ requests, holds the money, asks the bank and keeps the books.",
-          "before": "Called the bank with no key, half a second between tries."
+          "says": "Takes shops’ requests, holds the money, asks the bank, finishes charges left hanging and keeps the books.",
+          "before": "Called the bank with no key, half a second between tries, and nothing to stop or space the calls."
         },
         {
           "part": "migrations",
           "goal": "The database’s tables",
-          "says": "The ledger’s entries, and the requests already answered.",
+          "says": "The ledger’s entries, the requests claimed and answered, charges waiting on the bank, and the bank’s events.",
           "before": "Only the ledger’s entries."
         },
         {
           "part": "tests",
           "goal": "Checks that it works",
-          "says": "That the books balance, and that waits grow but stop at 30 seconds."
+          "says": "That the books balance, waits grow, keys are claimed once, the breaker opens and closes, and hanging charges end in one place.",
+          "before": "Only that the books balance."
         },
         {
           "part": "docs",
-          "goal": "How retries work",
-          "says": "Which calls are tried again, how long each wait is, and why a retry never charges twice."
+          "goal": "How failures are handled",
+          "says": "How retries work, and what happens when the bank is down or never answers."
         },
         {
           "part": "README.md",
@@ -551,20 +931,20 @@
       ]
     },
     "src": {
-      "what": "The service’s code: a shop’s request comes in, the money is held, the bank is asked, and the ledger keeps the books.",
-      "change": "The bank now gets a key and a time limit with each call, and calls wait longer, at random, between tries.",
+      "what": "The service’s code: a shop’s request comes in, its key is claimed, the money is held, the bank is asked, and the ledger keeps the books.",
+      "change": "Keys are now claimed before a charge, calls to the bank pass a breaker and a limit, and charges left hanging are finished in the background.",
       "shape": "steps",
       "parts": [
         {
           "part": "src/api",
           "goal": "A shop asks for money",
-          "says": "Takes a shop’s charge or refund, holds the money, and asks the bank, once for each key.",
+          "says": "Takes a shop’s charge or refund, claims its key, holds the money, and asks the bank once for each key.",
           "before": "Charged every request, with no key."
         },
         {
           "part": "src/bank",
           "goal": "The bank is asked",
-          "says": "Sends the payment or refund to the bank, with the key and a 15-second limit.",
+          "says": "Sends the payment or refund to the bank, with the key and a 15-second limit, unless the breaker is open; calls wait their turn.",
           "before": "Called the bank with no key or limit."
         },
         {
@@ -589,24 +969,33 @@
         {
           "says": "One charge at a time holds a customer’s money.",
           "by": "src/reserve.rs"
+        },
+        {
+          "says": "A request’s key is claimed before anything is charged.",
+          "by": "src/idempotency.rs"
         }
       ]
     },
     "docs": {
       "what": "How ledger works, for the people who run it.",
-      "change": "New: a page on how a failed call is tried again.",
+      "change": "New: two pages, on how a failed call is tried again and what happens when the bank fails for longer.",
       "shape": "parts",
       "parts": [
         {
           "part": "docs/retries.md",
           "goal": "How retries work",
           "says": "Which calls are tried again, how long each wait is, and why a retry never charges twice."
+        },
+        {
+          "part": "docs/failures.md",
+          "goal": "When the bank fails",
+          "says": "The breaker, the limit on calls, keys claimed once, and how charges never answered are finished."
         }
       ]
     },
     "migrations": {
       "what": "The database’s tables, made one step at a time, in order.",
-      "change": "Adds a table that remembers each request answered.",
+      "change": "Adds tables for requests claimed by their key, charges waiting on the bank, and the bank’s events.",
       "shape": "parts",
       "parts": [
         {
@@ -616,14 +1005,19 @@
         },
         {
           "part": "migrations/0002_request_keys.sql",
-          "goal": "Requests already answered",
-          "says": "Each request’s key with the receipt it got, so one sent again gets the same answer."
+          "goal": "Requests claimed and answered",
+          "says": "Each request’s key, its body’s hash and its answer, so one sent again gets the same answer."
+        },
+        {
+          "part": "migrations/0003_pending_calls.sql",
+          "goal": "Charges waiting, and events",
+          "says": "Charges waiting on the bank, for the reconciler, and each bank event once."
         }
       ]
     },
     "src/api": {
       "what": "Where shops’ requests and the bank’s news come in.",
-      "change": "Charges and refunds now carry a key, so one sent twice is taken once.",
+      "change": "Charges and refunds now claim their key first, so one sent twice is taken once, and the bank’s events are acted on once.",
       "shape": "parts",
       "parts": [
         {
@@ -642,25 +1036,26 @@
     },
     "src/api/v1": {
       "what": "Version one of ledger’s API: shops ask for charges and refunds, and the bank reports back.",
-      "change": "A charge or refund sent twice with the same key is now taken once.",
+      "change": "A charge or refund sent twice with the same key is now taken once, and each bank event is acted on once.",
       "shape": "parts",
       "parts": [
         {
           "part": "src/api/v1/charges.rs",
           "goal": "A shop charges a card",
-          "says": "Charges it once for each key, however many times the request is sent.",
+          "says": "Claims the key, then charges once, however many times the request is sent.",
           "before": "Charged every request it was sent."
         },
         {
           "part": "src/api/v1/refunds.rs",
           "goal": "A shop gives money back",
-          "says": "Asks the bank to give a payment back, with the caller’s key.",
+          "says": "Claims the key, then asks the bank to give a payment back with it.",
           "before": "Sent refunds to the bank with no key."
         },
         {
           "part": "src/api/v1/webhooks.rs",
           "goal": "The bank reports back",
-          "says": "Checks each report was signed by the bank before trusting it."
+          "says": "Checks each report was signed by the bank, acts on it once, and can finish a hanging charge.",
+          "before": "Checked each report, then ignored it."
         }
       ],
       "also": {
@@ -671,21 +1066,31 @@
       }
     },
     "src/bank": {
-      "what": "How ledger talks to the bank.",
-      "change": "Each call now carries the caller’s key, and gives up after 15 seconds.",
+      "what": "How ledger talks to the bank, and how it spares a bank that’s struggling.",
+      "change": "Each call now carries the caller’s key and a 15-second limit, and passes a breaker and a limit on calls first.",
       "shape": "parts",
       "parts": [
         {
           "part": "src/bank/mod.rs",
           "goal": "Asks the bank",
-          "says": "Sends a payment or refund to the bank, with the key and a 15-second limit.",
+          "says": "Sends a payment or refund, or asks what became of one, with the key and a 15-second limit.",
           "before": "Called the bank with no key or limit."
+        },
+        {
+          "part": "src/bank/breaker.rs",
+          "goal": "Stops calls while it’s down",
+          "says": "After five failures in a row, turns calls away for 30 seconds, then lets one test the bank."
+        },
+        {
+          "part": "src/bank/limit.rs",
+          "goal": "Spaces out calls",
+          "says": "At most 20 calls a second, in bursts of up to 40; the rest wait their turn."
         }
       ]
     },
     "tests": {
       "what": "Checks that ledger does what it says.",
-      "change": "Adds checks that waits grow, and stop at 30 seconds.",
+      "change": "Adds checks that waits grow, keys are claimed once, the breaker opens and closes, and hanging charges end in one place.",
       "shape": "parts",
       "parts": [
         {
@@ -697,15 +1102,30 @@
           "part": "tests/retry.rs",
           "goal": "Waits grow, then stop",
           "says": "The ceiling starts at 200 milliseconds, doubles with each try, and stops at 30 seconds."
+        },
+        {
+          "part": "tests/idempotency.rs",
+          "goal": "A request answered once",
+          "says": "Against a database: a key is claimed once, and a copy finds the first answer."
+        },
+        {
+          "part": "tests/breaker.rs",
+          "goal": "The breaker opens and closes",
+          "says": "Five failures open it, 30 seconds later one call tests the bank."
+        },
+        {
+          "part": "tests/reconcile.rs",
+          "goal": "Hanging charges end once",
+          "says": "Settled, given back or left to wait, as the bank says."
         }
       ]
     }
   },
   "change": {
-    "what": "Calls to the bank now wait longer each time, at a random point, and a charge or refund sent twice is taken once.",
-    "fits": "ledger takes shops’ charges and refunds, holds the money, asks the bank and keeps the books; this changes how it asks the bank.",
+    "what": "Calls to the bank now wait longer each time, at a random point, and stop while the bank is down. A charge sent twice is taken once, and one left hanging is finished.",
+    "fits": "ledger takes shops’ charges and refunds, holds the money, asks the bank and keeps the books; this changes how it asks the bank, and what it does when the bank fails.",
     "kind": "fixes",
-    "change": "Calls waited half a second, three times, with no key. Now waits grow and spread out, and every call carries a key.",
+    "change": "Calls waited half a second, three times, with no key. Now waits grow and spread out, a bank that’s down is left alone, and nothing is charged twice.",
     "parts": [
       {
         "mark": "changed",
@@ -721,10 +1141,12 @@
       {
         "mark": "new",
         "goal": "A charge sent twice, charged once",
-        "says": "A charge’s key is looked up first; one answered before gets the same receipt, and every answer is kept by its key: [[Idempotency keys]].",
+        "says": "A charge’s key is claimed before anything else, so two copies can’t both reach the bank; a copy gets the first one’s answer: [[Idempotency keys]].",
         "files": [
           "src/api/v1/charges.rs",
-          "migrations/0002_request_keys.sql"
+          "src/idempotency.rs",
+          "migrations/0002_request_keys.sql",
+          "tests/idempotency.rs"
         ]
       },
       {
@@ -734,13 +1156,55 @@
         "before": "Calls had no key and no time limit.",
         "files": [
           "src/bank/mod.rs",
-          "src/api/v1/refunds.rs"
+          "src/api/v1/refunds.rs",
+          "Cargo.toml"
+        ]
+      },
+      {
+        "mark": "new",
+        "goal": "Stops calling a bank that’s down",
+        "says": "After five failures in a row, calls stop for 30 seconds, then one call tests whether the bank is back: [[Circuit breakers]].",
+        "files": [
+          "src/bank/breaker.rs",
+          "tests/breaker.rs"
+        ]
+      },
+      {
+        "mark": "new",
+        "goal": "Calls to the bank, spaced out",
+        "says": "At most 20 calls a second, in bursts of up to 40, so retries that failed together don’t reach the bank at once: [[Rate limiting]].",
+        "files": [
+          "src/bank/limit.rs",
+          "src/config.rs"
+        ]
+      },
+      {
+        "mark": "new",
+        "goal": "Charges left hanging get settled",
+        "says": "A charge is written down before the bank is asked. One left pending is checked with the bank every minute, then settled or given back: [[Partial failure]].",
+        "files": [
+          "src/reconcile.rs",
+          "migrations/0003_pending_calls.sql",
+          "src/main.rs",
+          "tests/reconcile.rs"
+        ]
+      },
+      {
+        "mark": "changed",
+        "goal": "Bank events, taken once",
+        "says": "Each bank event is acted on once, by its ID, and can finish a hanging charge; shops are told when to try again.",
+        "before": "Events were checked, then ignored.",
+        "files": [
+          "src/api/v1/webhooks.rs",
+          "src/error.rs",
+          "docs/failures.md"
         ]
       }
     ],
     "touches": [
       "A call to the bank can now take up to 30 seconds longer before it fails.",
-      "Charges and refunds now need an Idempotency-Key header; a request without one is turned away."
+      "Charges and refunds now need an Idempotency-Key header; a request without one is turned away.",
+      "While the bank is down, shops get a 503 at once, with when to try again."
     ]
   }
 }

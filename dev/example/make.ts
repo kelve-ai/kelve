@@ -1,6 +1,6 @@
 // The example project as a git repository: the ledger as it was, committed,
-// then its change, "Retries that back off with jitter", as its last commit. The
-// sandbox and the end-to-end tests both make it from these files.
+// then its change, "Calls to the bank that are safe to retry", as its last
+// commit. The sandbox and the end-to-end tests both make it from these files.
 
 import { spawnSync } from 'node:child_process'
 import { cpSync, readFileSync, rmSync } from 'node:fs'

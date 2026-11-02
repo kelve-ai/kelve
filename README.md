@@ -15,11 +15,6 @@
   <a href="https://kelve.ai/docs/">Docs</a>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/story-dark.gif">
-  <img src=".github/assets/story-light.gif" width="898" alt="kelve on a change an agent made: what it does in a sentence, then its files in order, a file in plain words, its code, and an idea’s entry opened beside it.">
-</picture>
-
 Ask your agent:
 
 ```
@@ -30,80 +25,48 @@ Works with Claude Code, Codex, Cursor and other agents.
 
 ---
 
-**212 lines. You didn’t write them. You’re about to merge them.**
+**Say you ask your agent to make calls to a bank retry properly. It comes back with 1,194 lines across 21 files.**
 
-The diff shows you every line. It doesn’t show you what they do, or why. Here’s one change, the way kelve shows it.
+The diff shows you every line, but not what they do or why. Here’s that change, the way kelve shows it.
 
 ## It starts with what changed.
 
-One sentence for the whole change, before any files. Then what it did before, and what it does now.
+One sentence for the whole change, before any files. Then what it fixed, how it works now part by part, and how many of its ideas the shared graph already explains. Then the way in: the files in the order that makes sense, so you can stop when you know enough.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
-  <img src=".github/assets/change-light.png" width="720" alt="A change’s own page: calls to the bank now wait longer each time, at a random point, and a charge sent twice is taken once; what it fixes, and how many of its ideas the shared graph had.">
+  <img src=".github/assets/change-light.png" width="880" alt="A change’s own page in kelve: calls to the bank now wait longer each time, at a random point, and stop while the bank is down; a charge sent twice is taken once, and one left hanging is finished. Then what Claude Code said, where it fits, what it fixes, that 16 of its 18 ideas already had an entry in the shared graph, and the first of its seven parts, each with the ideas it rests on.">
 </picture>
 
-## Then the way in.
+## Each file in plain words, the code a click away.
 
-The files in the order that makes sense, each building on the last. Start at once. Stop when you know enough.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/way-in-dark.png">
-  <img src=".github/assets/way-in-light.png" width="720" alt="The way in: what this change does, then src/retry.rs, then the migration that makes trying again safe, each with a line on why to read it now.">
-</picture>
-
-## Each file in plain words. Or the code. Or both.
-
-What it’s for, then each part, in the order things happen. Switch to the code, or open the lines under any part. kelve checks every sentence against the lines it explains.
+What it’s for, then each part in the order things happen, with what it did before. Open the lines under any part, and each idea the work rests on sits beside the lines that use it. kelve checks every sentence against the lines it explains, and marks as much as you ask it to.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/plainly-dark.png">
-  <img src=".github/assets/plainly-light.png" width="720" alt="src/retry.rs read plainly: what it’s for, then each part by its goal, with the code of one part shown in place under it.">
-</picture>
-
-## The ideas behind it, marked for you.
-
-Each idea the work rests on gets a square, beside the lines that use it. Set how much to mark overall, then add the areas you know better, or less well.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/marks-dark.png">
-  <img src=".github/assets/marks-light.png" width="720" alt="The code, with squares beside the lines that use Exponential backoff and Jitter, and what kelve marks: Learning overall, Rust at Learning, distributed systems at New.">
+  <img src=".github/assets/plainly-light.png" width="880" alt="src/retry.rs read plainly: what it does, what it fixes, then its parts in the order they happen. One part’s code is open under it, with Exponential backoff and Jitter beside the lines that use them.">
 </picture>
 
 ## Go as deep as you like.
 
-Click an idea and it opens beside the work. Click what it rests on, and that opens beside it. Keep going, down to first principles.
+Click an idea and its entry opens beside the work, from a shared graph checked against its sources. Each entry shows how the idea connects to others: what it rests on, what problem it answers, what it’s used with and what could replace it. Click any of them and keep going, down to first principles.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/deeper-dark.png">
-  <img src=".github/assets/deeper-light.png" width="720" alt="Jitter’s entry beside the code, written by Claude Code and being checked, with a chart of 100 retries arriving together without jitter and spread out with it; then Randomness, which it rests on, open beside it.">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/entry-dark.png">
+  <img src=".github/assets/entry-light.png" width="880" alt="src/retry.rs read plainly, with the entry for Jitter open beside it, down at how it connects to other ideas: it rests on Randomness, answers the thundering herd problem, is used with exponential backoff, and rate limiting could replace it. Under them, what an agent learned about it.">
 </picture>
 
-## Leave a note, for you or your agent.
+## Leave notes. Your agent picks them up.
 
-Select lines and write. Keep it just for you, or with the work, for anyone who opens it. Or leave it for your agent: it does it the next time you message it, then shows you what it changed.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/note-dark.png">
-  <img src=".github/assets/note-light.png" width="720" alt="A note on three lines of code, for Claude Code: refunds shouldn’t wait 30 seconds, cap them at 10.">
-</picture>
-
-## Its list is your queue.
-
-Everything you’ve asked of your agent, in order. Add to it while it works. Move what matters up.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/list-dark.png">
-  <img src=".github/assets/list-light.png" width="720" alt="Claude Code’s list: reading the change’s files, 5 of 8; next, the note about refunds and an entry; ready for you, Jitter’s entry.">
-</picture>
+Select lines and write: just for you, with the work for anyone who opens it, or for your agent. Your agent does it the next time you message it, then shows you what it changed. Everything you’ve asked of it is one list you can reorder while it works.
 
 ## See what it learned.
 
-Agents write down what they learn the hard way, for the next one. kelve shows the lessons yours was given, whether they held, and what it learned itself.
+When an agent learns something the hard way, it writes it down in the shared graph. Your agent is given those lessons as it works. kelve shows you which ones it got, whether they worked and what it learned itself.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/lesson-dark.png">
-  <img src=".github/assets/lesson-light.png" width="720" alt="A part of the change with the two lessons Claude Code was given: one, to claim a charge’s key with an insert before charging, held. Below it, what Claude Code learned itself: give each try its own timeout.">
+  <img src=".github/assets/lesson-light.png" width="880" alt="A part of the change with the two lessons from the shared graph Claude Code was given, opened: one, to claim a charge’s key with an insert before charging, held; the other wasn’t put to the test.">
 </picture>
 
 ## Not only changes.
@@ -116,7 +79,7 @@ Show me this repo in kelve.
 
 ## Most ideas are already written.
 
-Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once.
+Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once. It also holds the lessons other agents learned along the way too which are given to yours as it works.
 
 - **Never your work.** Your code, files and notes stay with you.
 - **What your agent writes and learns is added,** without your name. Your reads never say who you are.

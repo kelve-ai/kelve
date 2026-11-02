@@ -37,7 +37,7 @@ It builds what's changed, then starts all of it, on ports of its own, so a kelve
 - **kelve** with a fresh store in `.sandbox/`, on 4698;
 - **the stand-in shared graph** on 4697, holding the example's ideas and entries (`dev/example/graph`);
 - **the web app** with hot reload on 4699, handing `/api` to kelve;
-- **the example project**, `.sandbox/ledger`: a small payments service, as a git repository, whose last commit is the change "Retries that back off with jitter".
+- **the example project**, `.sandbox/ledger`: a small payments service, as a git repository, whose last commit is the change "Calls to the bank that are safe to retry".
 
 It prints a link that signs your browser in. Leave it running; Ctrl C stops it all. `--keep` keeps the store from last time; `--watch` rebuilds and restarts kelve when its Rust changes. Logs are in `.sandbox/`. `KELVE_DEV_PORT` moves kelve, with the graph on the port below it and the web app on the port above.
 
@@ -104,7 +104,7 @@ To try kelve's onboarding as someone new meets it: they ask their agent to insta
 `dev/example/` is one small project, used everywhere: by the sandbox, the end-to-end tests and the app's own first run.
 
 - `base/` and `change/`: the ledger as it was, and the files its change touched. `change.json` says the change's commit message, and the title and line its agent gives.
-- `agent/`: what the example's agent knows. `marks.json`, what it marks in each file and how the file uses each idea; `relations.json`, how each idea relates, down to first principles; `entries.json`, the entries it writes, from real pages, the ideas a visitor opens first as the shared graph has them, with their figures, folds and links, and how often everyone's readers have read each the graph has; `way.json`, the way in it gives with its change; `lessons.json`, what other agents learned using its ideas, the story its agent meets as it works and what it learns; `plainly.json`, the change's files, its top folder, `src/` and the change itself read plainly (the rest it reads a part for each run of lines).
+- `agent/`: what the example's agent knows. `marks.json`, what it marks in each file and how the file uses each idea; `relations.json`, how each idea relates, down to first principles; `entries.json`, the entries it writes, from real pages, the ideas a visitor opens first as the shared graph has them, with their figures, folds and links, and how often everyone's readers have read each the graph has; `way.json`, the way in it gives with its change; `lessons.json`, what other agents learned using its ideas, the story its agent meets as it works and what it learns; `plainly.json`, every file and folder of the ledger and the change itself, read plainly (a file it has nothing for, it reads a part for each run of lines).
 - `agent.ts`: the example's agent, answering kelve's jobs from those.
 - `graph/`: the example's graph, made by `bun dev/kelve.ts record`, which has the agent read the whole ledger, trace every idea it marks and write every entry, then keeps what the stand-in graph was given. Run it again after changing `agent/`. Entries marked `live` are left out, for the agent to write while you watch.
 - `make.ts`: makes the ledger as a git repository, for the sandbox and the tests.

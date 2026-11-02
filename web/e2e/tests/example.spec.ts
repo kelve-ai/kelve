@@ -1,5 +1,5 @@
-// The example, read as people read it: the ledger and its change, "Retries that
-// back off with jitter", opened by the example's own agent, with its real
+// The example, read as people read it: the ledger and its change, "Calls to the
+// bank that are safe to retry", opened by the example's own agent, with its real
 // marks, relations and entries, beside a shared graph holding the example's.
 // What's new in the change, an idea in the margin with how the work uses it, an
 // entry the agent writes there and then, and the way down to a first principle.
@@ -44,7 +44,7 @@ test('the example change, read down to a first principle', async ({ page, browse
     const side = page.getByRole('complementary', { name: 'What’s open' })
     await page.getByRole('button', { name: /^Search/ }).click()
     const ideas = page.getByRole('region', { name: 'Ideas here' })
-    for (const idea of ['Exponential backoff', 'Idempotency keys', 'Unique keys', 'Timeouts', 'Jitter']) {
+    for (const idea of ['Exponential backoff', 'Idempotency keys', 'Circuit breakers', 'Idempotence', 'Jitter']) {
       await expect(ideas.getByRole('img', { name: `${idea}, new in this change, not read yet` })).toBeVisible()
     }
     await expect(ideas.getByText('Authorisation holds')).toBeVisible()
