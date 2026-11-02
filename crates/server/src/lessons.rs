@@ -407,7 +407,7 @@ fn file_text(file: &str) -> String {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MomentIn {
-    /// `read`, `edit`, `ran`, `failed`, `prompt`, `next` or `end`.
+    /// `read`, `edit`, `ran`, `failed`, `prompt`, `next`, `opened` or `end`.
     pub what: String,
     pub session: String,
     /// The folder it works in.
@@ -437,6 +437,9 @@ pub struct MomentIn {
     /// Work the command handed over, when it did.
     #[serde(default)]
     pub handover: Option<kelve_core::hook::Handover>,
+    /// What it opened in kelve, by its number.
+    #[serde(default)]
+    pub opened: Option<i64>,
 }
 
 /// What kelve has for the agent at a moment: text to put before it, or
@@ -448,8 +451,8 @@ pub struct MomentOut {
 
 /// A moment in the agent's work: the lesson that helps now, if one does;
 /// what came of lessons given before it; when something that failed passes,
-/// a job to write what it learned; and, when it hands work over, to show it
-/// in kelve.
+/// a job to write what it learned; when it hands work over, to show it in
+/// kelve; and, as its turn ends, to finish reading what it opened there.
 pub async fn moment(
     State(app): State<Shared>,
     _agent: Agent,
@@ -458,6 +461,13 @@ pub async fn moment(
     m.cwd = crate::handoff::at_home(&m.cwd).display().to_string();
     let session = m.session.trim();
     if session.is_empty() {
+        return Ok(Json(MomentOut::default()));
+    }
+    // It opened something in kelve: kept for its session, and nothing more.
+    if m.what == "opened" {
+        if let Some(id) = m.opened {
+            crate::handoff::opened(&app, session, id).await?;
+        }
         return Ok(Json(MomentOut::default()));
     }
     // Where it works: a file it reads or edits outside the folder it
@@ -544,11 +554,12 @@ pub async fn moment(
             None => String::new(),
         },
         // The turn ends, or, for an agent that can't say so, the person
-        // writes again: what the stretch taught, asked once; and work it
-        // did, to show if it's done.
+        // writes again: what the stretch taught, asked once; work it did,
+        // to show if it's done; and what it opened, to finish reading.
         "end" | "prompt" => [
             ask_stretch(&app, session).await?,
             crate::handoff::done(&app, session).await?,
+            crate::handoff::reading(&app, session).await?,
         ]
         .into_iter()
         .filter(|t| !t.is_empty())

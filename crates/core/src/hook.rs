@@ -181,9 +181,11 @@ impl Agent {
         match self {
             Agent::Claude | Agent::Qoder => vec![
                 ("UserPromptSubmit", None),
+                // And kelve's own open: what the session opened, to finish
+                // reading as its turn ends.
                 (
                     "PostToolUse",
-                    Some("Read|Edit|Write|MultiEdit|NotebookEdit|Bash"),
+                    Some("Read|Edit|Write|MultiEdit|NotebookEdit|Bash|mcp__kelve__open"),
                 ),
                 ("PostToolUseFailure", None),
                 // A turn ends: what a hard stretch taught, asked once, and
@@ -371,7 +373,8 @@ pub fn partly(agent: Agent, text: &str) -> bool {
     parse(agent, text).is_ok_and(|s| is_kelves(&Value::Object(s)))
 }
 
-/// Whether an agent's file holds kelve's hook, on every event it runs on.
+/// Whether an agent's file holds kelve's hook, on every event it runs on,
+/// for the tools it's for now.
 pub fn installed(agent: Agent, text: &str) -> bool {
     let Ok(settings) = parse(agent, text) else {
         return false;
@@ -382,15 +385,16 @@ pub fn installed(agent: Agent, text: &str) -> bool {
     let Some(events) = events_of(agent, &settings) else {
         return false;
     };
-    agent.events().iter().all(|(event, _)| {
+    agent.events().iter().all(|(event, matcher)| {
         events
             .get(*event)
             .and_then(Value::as_array)
             .is_some_and(|e| {
                 e.iter().any(|x| {
-                    let x = x.to_string();
-                    x.contains(&format!("--on {event}"))
-                        || x.contains(&format!("kelve-moment.sh {event}"))
+                    let line = x.to_string();
+                    (line.contains(&format!("--on {event}"))
+                        || line.contains(&format!("kelve-moment.sh {event}")))
+                        && matcher.is_none_or(|m| x["matcher"] == m)
                 })
             })
     })
@@ -498,7 +502,7 @@ pub fn remove(agent: Agent, text: &str) -> Result<Option<String>, String> {
 pub struct Moment {
     /// `prompt`, `read`, `edit`, `ran`, `failed`, `next`: the agent is
     /// about to call its model, and can be given what was kept for it;
-    /// or `end`: its turn ends.
+    /// `opened`: it opened something in kelve; or `end`: its turn ends.
     pub what: String,
     pub agent: String,
     pub session: String,
@@ -523,6 +527,9 @@ pub struct Moment {
     /// key: the folder, absolute but for a `~` kelve knows, and the branch.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub handover: Option<Handover>,
+    /// What it opened in kelve, by its number.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub opened: Option<i64>,
 }
 
 const READS: [&str; 8] = [
@@ -1027,8 +1034,14 @@ pub fn moment(agent: Agent, on: &str, event: &Value) -> Option<Moment> {
             .find_map(|t| patched(t).into_iter().next())
     });
     // kelve's own tools: what goes wrong there is kelve's to say, not a
-    // problem in the work.
+    // problem in the work. What its open opened is the session's, to finish
+    // reading.
     if tool.to_lowercase().starts_with("mcp__kelve") {
+        if tool == OPEN {
+            m.what = "opened".into();
+            m.opened = Some(opened_in(&response)?);
+            return Some(m);
+        }
         return None;
     }
     let ran = first_str(&input, &["command", "CommandLine", "command_line", "cmd"])
@@ -1192,6 +1205,24 @@ fn written(input: &Value) -> Option<String> {
     }
     let all = parts.join("\n");
     (!all.trim().is_empty()).then(|| crate::text::clip(&all, 20_000))
+}
+
+/// kelve's open tool, as Claude Code names it to its hooks.
+const OPEN: &str = "mcp__kelve__open";
+
+/// The number of what kelve's open tool opened, from its answer: it says
+/// "giving for: 12". None for an open that failed, which says no number.
+pub fn opened_in(response: &Value) -> Option<i64> {
+    match response {
+        Value::String(text) => text.split("giving for: ").skip(1).find_map(|after| {
+            let n: String = after.chars().take_while(char::is_ascii_digit).collect();
+            n.parse().ok()
+        }),
+        Value::Array(items) => items.iter().find_map(opened_in),
+        Value::Object(o) if o.get("isError").and_then(Value::as_bool) == Some(true) => None,
+        Value::Object(o) => o.values().find_map(opened_in),
+        _ => None,
+    }
 }
 
 /// A path, made absolute against the folder the agent works in. One from
@@ -1623,6 +1654,43 @@ mod tests {
                 &json!({ "tool_name": "WebSearch" })
             )
             .is_none()
+        );
+    }
+
+    #[test]
+    fn what_the_agent_opens_in_kelve_is_its_sessions() {
+        let said = "kelve is showing the person Retries: 3 files, all to read. Take kelve's work for it with next_job, giving for: 12, and hand in each answer with hand_in, until there's none.";
+        let opened = json!({ "session_id": "s", "cwd": "/w", "tool_name": "mcp__kelve__open", "tool_input": { "what": "worktree", "base": "main" }, "tool_response": [{ "type": "text", "text": said }] });
+        let m = moment(Agent::Claude, "PostToolUse", &opened).unwrap();
+        assert_eq!(
+            (m.what.as_str(), m.session.as_str(), m.opened),
+            ("opened", "s", Some(12))
+        );
+        // However the agent gives the answer back.
+        assert_eq!(
+            opened_in(&json!({ "content": [{ "text": said }] })),
+            Some(12)
+        );
+        assert_eq!(opened_in(&json!(said)), Some(12));
+        // An open that failed opened nothing; nor did kelve's other tools.
+        let failed =
+            json!({ "content": [{ "text": "Say where, from the root." }], "isError": true });
+        assert_eq!(opened_in(&failed), None);
+        let failed = json!({ "session_id": "s", "cwd": "/w", "tool_name": "mcp__kelve__open", "tool_input": {}, "error": "Say where, from the root." });
+        assert!(moment(Agent::Claude, "PostToolUseFailure", &failed).is_none());
+        let next = json!({ "session_id": "s", "cwd": "/w", "tool_name": "mcp__kelve__next_job", "tool_input": { "for": 12 }, "tool_response": [{ "type": "text", "text": said }] });
+        assert!(moment(Agent::Claude, "PostToolUse", &next).is_none());
+        // A hook from before it saw kelve's open is brought up to date.
+        let older = r#"{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"kelve moment --agent claude --on UserPromptSubmit"}]}],"PostToolUse":[{"matcher":"Read|Edit|Write|MultiEdit|NotebookEdit|Bash","hooks":[{"type":"command","command":"kelve moment --agent claude --on PostToolUse"}]}],"PostToolUseFailure":[{"hooks":[{"type":"command","command":"kelve moment --agent claude --on PostToolUseFailure"}]}],"Stop":[{"hooks":[{"type":"command","command":"kelve moment --agent claude --on Stop"}]}]}}"#;
+        assert!(partly(Agent::Claude, older) && !installed(Agent::Claude, older));
+        let now: Value =
+            serde_json::from_str(&install(Agent::Claude, older, HOME).unwrap()).unwrap();
+        assert_eq!(now["hooks"]["PostToolUse"].as_array().unwrap().len(), 1);
+        assert!(
+            now["hooks"]["PostToolUse"][0]["matcher"]
+                .as_str()
+                .unwrap()
+                .ends_with("|mcp__kelve__open")
         );
     }
 

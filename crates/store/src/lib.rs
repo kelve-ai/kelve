@@ -195,7 +195,7 @@ async fn copy_aside(pool: &Pool, path: &Path) -> Result<()> {
 
 /// What Delete everything empties: every table but those in [`KEPT`].
 /// Children before what they point at.
-const EVERYTHING: [&str; 39] = [
+const EVERYTHING: [&str; 40] = [
     "jobs",
     "marks",
     "entries",
@@ -230,6 +230,7 @@ const EVERYTHING: [&str; 39] = [
     "failed",
     "files_seen",
     "touched",
+    "opened_in",
     "replaced",
     "written",
     "moments",

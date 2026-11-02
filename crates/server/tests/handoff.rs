@@ -346,3 +346,112 @@ async fn what_another_agent_writes_around_a_worktree_isnt_this_ones_work() {
 
     let _ = std::fs::remove_dir_all(&main);
 }
+
+#[tokio::test]
+async fn an_agent_that_opened_something_is_asked_once_to_finish_reading_it() {
+    use axum::Json;
+    use axum::extract::State;
+    use kelve_server::auth::Agent;
+    use kelve_server::lessons::{self, MomentIn};
+
+    let root = common::folder(&[("src/retry.rs", "pub fn again() {}\n")]);
+    let root_s = root.display().to_string();
+    let app = common::kelve(None).await;
+    let (retries, theirs) = {
+        let mut conn = app.db.acquire().await.unwrap();
+        // An agent opened the project; the person, one file of it.
+        let retries = kelve_store::reader::open(&mut conn, "folder", &root_s, "", "", "ledger")
+            .await
+            .unwrap();
+        kelve_store::reader::opened_by(&mut conn, retries, "claude-code", "Retries", "", None)
+            .await
+            .unwrap();
+        let theirs =
+            kelve_store::reader::open(&mut conn, "file", &root_s, "src/retry.rs", "", "retry.rs")
+                .await
+                .unwrap();
+        // Neither has its way in found yet.
+        for id in [retries, theirs] {
+            kelve_store::asks::add(
+                &mut conn,
+                &kelve_store::asks::New {
+                    key: format!("way:{id}"),
+                    kind: "way".into(),
+                    about: "Finding the way in".into(),
+                    idea: None,
+                    opened: Some(id),
+                    material: "{}".into(),
+                    schema: "{}".into(),
+                    resume_kind: "way.find".into(),
+                    resume_key: Some(format!("way.find:{id}")),
+                    resume_payload: json!({ "opened": id }).to_string(),
+                    priority: 0,
+                    follows: None,
+                },
+            )
+            .await
+            .unwrap();
+        }
+        (retries, theirs)
+    };
+    let say = |what: &str, session: &str, opened: Option<i64>| {
+        let m = MomentIn {
+            what: what.into(),
+            session: session.into(),
+            cwd: root_s.clone(),
+            opened,
+            ..MomentIn::default()
+        };
+        let app = app.clone();
+        async move {
+            lessons::moment(State(app), Agent, Json(m))
+                .await
+                .unwrap()
+                .0
+                .text
+        }
+    };
+    let pause = || tokio::time::sleep(std::time::Duration::from_millis(5));
+
+    // The agent's hook saw it open the project; and, by a number it gave,
+    // the person's file, which isn't the agent's to finish.
+    assert_eq!(say("opened", "s", Some(retries)).await, "");
+    say("opened", "s", Some(theirs)).await;
+    // As its turn ends, it's told to finish reading what it opened, by its
+    // name and number.
+    let said = say("end", "s", None).await;
+    assert!(
+        said.contains(&format!("You opened Retries in kelve (number {retries})")),
+        "{said}"
+    );
+    assert!(said.contains(&format!("giving for: {retries}")), "{said}");
+    assert!(
+        said.contains("Unless the person asked you not to"),
+        "{said}"
+    );
+    assert!(said.contains("subagents"), "{said}");
+    assert!(!said.contains(&format!("number {theirs}")), "{said}");
+    // Once: as its next turn ends, nothing; nor for another agent, which
+    // opened nothing.
+    assert_eq!(say("end", "s", None).await, "");
+    assert_eq!(say("end", "t", None).await, "");
+
+    // Opened again, it's told again, while its reading isn't finished.
+    pause().await;
+    say("opened", "s", Some(retries)).await;
+    assert!(say("end", "s", None).await.contains("number"));
+    // Finished, it isn't.
+    {
+        let mut conn = app.db.acquire().await.unwrap();
+        sqlx::query("delete from asks where opened = ?")
+            .bind(retries)
+            .execute(&mut *conn)
+            .await
+            .unwrap();
+    }
+    pause().await;
+    say("opened", "s", Some(retries)).await;
+    assert_eq!(say("end", "s", None).await, "");
+
+    let _ = std::fs::remove_dir_all(&root);
+}

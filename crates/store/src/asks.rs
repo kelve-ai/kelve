@@ -555,6 +555,20 @@ pub async fn reading(conn: &mut Conn, opened: i64) -> Result<i64> {
     .await?)
 }
 
+/// Whether any of the reading of what's open waits for the agent, or is
+/// with it: its way in and the rest of its path, its files, their ideas,
+/// what it's built on, its folders, and reading them plainly.
+pub async fn reading_left(conn: &mut Conn, opened: i64) -> Result<bool> {
+    Ok(sqlx::query_scalar(
+        "select exists(select 1 from asks
+          where state in ('waiting', 'taken') and opened = ?1
+            and kind in ('way', 'path', 'read', 'choose', 'builtOn', 'folders', 'plainly', 'plainlyFolder', 'plainlyChange'))",
+    )
+    .bind(opened)
+    .fetch_one(&mut *conn)
+    .await?)
+}
+
 /// How many of a kind's jobs for what's open, asked for later, as the
 /// rest's pages after the way in are, the agent has done: each by what it
 /// was for.

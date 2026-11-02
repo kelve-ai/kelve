@@ -25,7 +25,7 @@ use crate::client::Kelve;
 const VERSIONS: [&str; 4] = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 
 /// What the agent is told of kelve when it connects.
-const INSTRUCTIONS: &str = "kelve shows the person you're working with what their work rests on, and how and why it works, with an entry for each idea from a shared knowledge graph. Use kelve's tools to show them your work when you've done it, when they ask you to show them something in kelve or to do kelve's work, and when they've left you notes. To show them something, use open, once, with a short title and a line on what it is or what you changed and why: it starts kelve if it isn't running, and opens what you opened in a new browser tab. Never start or open kelve another way as well, such as `kelve serve`, `kelve open` or `kelve diff`. When they ask what you did, show only what's new since you last showed them: the commits since then, as one change against the commit before them, or one commit, or what isn't committed; never again what you've shown them, or a range you've shown with more on top, which kelve takes for the same thing. When they ask to see something else, such as the whole repository, a folder or a file, show that. When you've finished what you were doing, and it changed files the person would want to see, yours or a subagent's, show it to them in kelve without being asked, committed or not, before you hand back to them: what: worktree, with the branch it'll merge into as base, in a worktree or not; or, in a folder that isn't in a git repository, what: files, with every file you've changed in this work. Whether it's worth showing is yours to decide. It's the same thing in kelve each time you show it, brought up to date, so show it again only when the work has changed since: committing it, pushing it or opening a pull request changes nothing in it. kelve's first job for anything with files in it is finding its way in: the order to read it, in parts, and what each folder is for. Then take its jobs with next_job, giving for the number open gave, do each as it says, and hand in each answer with hand_in, giving for too, until there are none. When there's a lot of it, such as a dozen files or more to read, and you can start subagents, share it: start several at once, each taking jobs with next_job and handing each in with hand_in, with the same for, until there are none or they're stopped, so the person sees it sooner. When they ask you to do what's waiting for you in kelve, take kelve's jobs the same way: for one thing, with its number, give that number as for; with none, leave for out. Before you start anything they ask, check notes; do what each note asks as part of their work, mark each done with note_done, its version and a line on what you did, then open what you changed. When a note asks you to find something out, write what you found as a note with their work: a markdown file in the project's `.kelve/notes/`, titled on its first line, so they read it in kelve. When they ask you to write or update what kelve marks for them, read it with marks, then write it with set_marks. When something fails and you don't know why, ask lessons, with the error: other agents may have met it. When kelve gives you a lesson, check it holds here before you act on it, and say whether it held with held. Then tell them, in a sentence, what you did.";
+const INSTRUCTIONS: &str = "kelve shows the person you're working with what their work rests on, and how and why it works, with an entry for each idea from a shared knowledge graph. Use kelve's tools to show them your work when you've done it, when they ask you to show them something in kelve or to do kelve's work, and when they've left you notes. To show them something, use open, once, with a short title and a line on what it is or what you changed and why: it starts kelve if it isn't running, and opens what you opened in a new browser tab. Never start or open kelve another way as well, such as `kelve serve`, `kelve open` or `kelve diff`. When they ask what you did, show only what's new since you last showed them: the commits since then, as one change against the commit before them, or one commit, or what isn't committed; never again what you've shown them, or a range you've shown with more on top, which kelve takes for the same thing. When they ask to see something else, such as the whole repository, a folder or a file, show that. When you've finished what you were doing, and it changed files the person would want to see, yours or a subagent's, show it to them in kelve without being asked, committed or not, before you hand back to them: what: worktree, with the branch it'll merge into as base, in a worktree or not; or, in a folder that isn't in a git repository, what: files, with every file you've changed in this work. Whether it's worth showing is yours to decide. It's the same thing in kelve each time you show it, brought up to date, so show it again only when the work has changed since: committing it, pushing it or opening a pull request changes nothing in it. kelve's first job for anything with files in it is finding its way in: the order to read it, in parts, and what each folder is for. Then take its jobs with next_job, giving for the number open gave, do each as it says, and hand in each answer with hand_in, giving for too, until there are none: when kelve says it's still preparing the next part, call next_job again with the same for. When there's a lot of it, such as a dozen files or more to read, and you can start subagents, share it: start several at once, each taking jobs with next_job and handing each in with hand_in, with the same for, until there are none or they're stopped, so the person sees it sooner. When they ask you to do what's waiting for you in kelve, take kelve's jobs the same way: for one thing, with its number, give that number as for; with none, leave for out. Before you start anything they ask, check notes; do what each note asks as part of their work, mark each done with note_done, its version and a line on what you did, then open what you changed. When a note asks you to find something out, write what you found as a note with their work: a markdown file in the project's `.kelve/notes/`, titled on its first line, so they read it in kelve. When they ask you to write or update what kelve marks for them, read it with marks, then write it with set_marks. When something fails and you don't know why, ask lessons, with the error: other agents may have met it. When kelve gives you a lesson, check it holds here before you act on it, and say whether it held with held. Then tell them, in a sentence, what you did.";
 
 /// How many files to read before the agent is told to share the work among
 /// subagents, if it can.
@@ -259,7 +259,7 @@ fn tools() -> Value {
         {
             "name": "next_job",
             "title": "Take kelve's next job",
-            "description": "Takes the next piece of kelve's work: reading files, tracing an idea down, writing or fixing an idea's entry, or saying plainly what part of the person's work does. Do it as its instructions say, then hand in the answer with hand_in, in exactly the shape it gives. Says so when there's no more.",
+            "description": "Takes the next piece of kelve's work: reading files, tracing an idea down, writing or fixing an idea's entry, or saying plainly what part of the person's work does. Do it as its instructions say, then hand in the answer with hand_in, in exactly the shape it gives. Says so when there's no more, and when kelve is still preparing the next part, to call it again.",
             "inputSchema": {
                 "type": "object",
                 "properties": { "have": have_property(), "model": model_property(), "for": for_property() },
@@ -506,13 +506,42 @@ fn from_here(here: &str, path: &str) -> String {
     whole.strip_suffix("/.").unwrap_or(&whole).to_string()
 }
 
+/// What the agent is told of what it opened: what kelve shows, how much
+/// needs reading, and to take its jobs, giving for its number, which
+/// kelve's hook reads back (`core::hook::opened_in`).
+fn opened_text(o: &Value) -> String {
+    let mut text = crate::open::opened_line(o);
+    if !o["shown"].as_bool().unwrap_or(false) {
+        text.push_str(" kelve wasn't open in their browser, so it opened it there, or showed a link where kelve runs: if they don't see it, they can run `kelve open`.");
+    }
+    let id = o["id"].as_i64().unwrap_or_default();
+    text.push_str(&format!(" Take kelve's work for it with next_job, giving for: {id}, and hand in each answer with hand_in, until there's none."));
+    if o["toRead"].as_u64().unwrap_or_default() >= SHARED {
+        text.push_str(&format!(" That's a lot: if you can start subagents, share it among several at once, each taking jobs with next_job, giving for: {id}, and handing each in with hand_in, until there are none or they're stopped."));
+    }
+    text
+}
+
+/// What the agent is told when no job came in time, but kelve is still
+/// preparing the next part of what it asked for: to ask again, not that
+/// there's no more.
+fn preparing(only: Option<i64>) -> String {
+    match only {
+        Some(id) => format!(
+            "kelve is still preparing the next part of that: call next_job again, giving for: {id}."
+        ),
+        None => "kelve is still preparing the next part: call next_job again.".into(),
+    }
+}
+
 /// Runs one of kelve's tools.
 async fn call(kelve: &Kelve, agent: &str, params: &Value) -> Value {
     let args = &params["arguments"];
     let model = args["model"].as_str();
     let here = crate::notes::here();
     let only = args["for"].as_i64();
-    let who = json!({ "agent": agent, "model": model, "path": here, "for": only });
+    let who =
+        json!({ "agent": agent, "model": model, "path": here, "for": only, "saysPreparing": true });
     match params["name"].as_str().unwrap_or_default() {
         "open" => {
             let mut body = args.clone();
@@ -525,22 +554,12 @@ async fn call(kelve: &Kelve, agent: &str, params: &Value) -> Value {
                 }
             }
             match kelve.send(kelve.post("/api/agent/open").json(&body)).await {
-                Ok(o) => {
-                    let mut text = crate::open::opened_line(&o);
-                    if !o["shown"].as_bool().unwrap_or(false) {
-                        text.push_str(" kelve wasn't open in their browser, so it opened it there, or showed a link where kelve runs: if they don't see it, they can run `kelve open`.");
-                    }
-                    let id = o["id"].as_i64().unwrap_or_default();
-                    text.push_str(&format!(" Take kelve's work for it with next_job, giving for: {id}, and hand in each answer with hand_in, until there's none."));
-                    if o["toRead"].as_u64().unwrap_or_default() >= SHARED {
-                        text.push_str(&format!(" That's a lot: if you can start subagents, share it among several at once, each taking jobs with next_job, giving for: {id}, and handing each in with hand_in, until there are none or they're stopped."));
-                    }
-                    said(text, false)
-                }
+                Ok(o) => said(opened_text(&o), false),
                 Err(e) => said(format!("{e:#}"), true),
             }
         }
         "next_job" => match kelve.send(kelve.post("/api/agent/next").json(&who)).await {
+            Ok(v) if v["preparing"] == true => said(preparing(only), false),
             Ok(Value::Null) => said(
                 if only.is_some() {
                     "There's no more of kelve's work for that. Tell the person, in a sentence, what you did."
@@ -575,6 +594,9 @@ async fn call(kelve: &Kelve, agent: &str, params: &Value) -> Value {
                     false,
                 ),
                 Ok(a) if a["taken"] == "yes" => match &a["next"] {
+                    Value::Null if a["preparing"] == true => {
+                        said(format!("Taken. {}", preparing(only)), false)
+                    }
                     Value::Null => said(
                         "Taken. That was kelve's last job for now. Tell the person, in a sentence, what you did.",
                         false,
@@ -790,6 +812,28 @@ mod tests {
                 .unwrap_or_default()
                 .contains("only after the person has said yes")
         );
+    }
+
+    #[test]
+    fn what_was_opened_is_read_back_by_its_number_and_reading_goes_on_while_its_prepared() {
+        let opened = json!({ "id": 12, "title": "Retries", "files": 30, "folders": 2, "toRead": 30, "shown": true });
+        let text = opened_text(&opened);
+        assert!(
+            text.contains("giving for: 12") && text.contains("That's a lot"),
+            "{text}"
+        );
+        // kelve's hook knows what the agent opened from what it was told.
+        assert_eq!(
+            kelve_core::hook::opened_in(&json!([{ "type": "text", "text": text }])),
+            Some(12)
+        );
+        // Still preparing isn't no more: the agent asks again, for the same.
+        let again = preparing(Some(12));
+        assert!(
+            again.contains("still preparing")
+                && again.contains("call next_job again, giving for: 12")
+        );
+        assert!(!again.contains("no more"));
     }
 
     #[test]

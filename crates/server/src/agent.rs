@@ -401,6 +401,68 @@ pub async fn next_after(
     }))
 }
 
+/// The next job, as `next_after` gives it. When none is ready, kelve waits
+/// at most `wait` while work that may ask for one runs or is due, running
+/// what's due meanwhile, a job at a time, so what it asks comes now: for
+/// one thing opened, asked for by its number, that thing's own work; else
+/// any. And whether that thing's next part is still being prepared, when
+/// none came in time: its own work still runs, or is due. When nothing of
+/// its is, it's done, or stuck, and the agent is told there's no more.
+pub async fn next_waiting(
+    app: &Shared,
+    caller: &Caller,
+    after: asks::After<'_>,
+    wait: Duration,
+) -> ApiResult<(Option<Job>, bool)> {
+    let mut next = next_after(app, caller, after).await?;
+    let until = Instant::now() + wait;
+    while next.is_none() && Instant::now() < until {
+        if !busy(app, caller.only).await? {
+            break;
+        }
+        // What's due runs here while there's time, so what it asks comes
+        // now, in its order; with nothing due, what the workers are running
+        // is waited for.
+        let mut ran = false;
+        while Instant::now() < until
+            && pipeline::run_once(app)
+                .await
+                .map_err(ApiError::internal)?
+                .is_some()
+        {
+            ran = true;
+        }
+        if !ran {
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        }
+        next = next_after(app, caller, after).await?;
+    }
+    let preparing = match (&next, caller.only) {
+        (None, Some(only)) => busy(app, Some(only)).await?,
+        _ => false,
+    };
+    Ok((next, preparing))
+}
+
+/// Whether work that may ask the agent for something runs now, or is due:
+/// one thing opened's own, by its number, or any.
+async fn busy(app: &Shared, only: Option<i64>) -> ApiResult<bool> {
+    let mut conn = app.db.acquire().await?;
+    Ok(match only {
+        Some(id) => kelve_store::jobs::busy_for(&mut conn, id).await?,
+        None => kelve_store::jobs::busy(&mut conn).await?,
+    })
+}
+
+/// Whether reading something opened, by its number, isn't finished: a job
+/// of its reading waits for the agent or is with it, or kelve's own work
+/// for it is still to run.
+pub async fn unfinished(app: &Shared, opened: i64) -> ApiResult<bool> {
+    let mut conn = app.db.acquire().await?;
+    Ok(asks::reading_left(&mut conn, opened).await?
+        || kelve_store::jobs::pending_for(&mut conn, opened).await?)
+}
+
 /// What of a job's material kelve keeps for reading its answer, and never
 /// gives the agent, by kind: what a check's marks were offered, which its
 /// marks say already, and the print a page was asked with.

@@ -6,10 +6,13 @@
 //! reads or edits a file, runs a command, or something fails: the lesson from
 //! the shared graph that helps now, if there is one. As the turn ends, after a
 //! hard stretch of failures the agent got past, one question asking what it
-//! learned; an agent with no such event is asked at the person's next message.
-//! It reads the event on standard input, answers in a fraction of a second (a
-//! few seconds as a turn ends) or says nothing, and starts nothing when kelve
-//! isn't running. Never an error.
+//! learned, and, when it opened something in kelve whose reading isn't
+//! finished, to finish it; an agent with no such event is asked at the
+//! person's next message. As it opens something in kelve: nothing, but kelve
+//! keeps that its session opened it. It reads the event on standard input,
+//! answers in a fraction of a second (a few seconds as a turn ends, or as
+//! something is opened) or says nothing, and starts nothing when kelve isn't
+//! running. Never an error.
 
 use std::io::Read;
 use std::time::Duration;
@@ -22,7 +25,9 @@ use crate::client::Kelve;
 /// How long the hook waits for kelve.
 const WAIT: Duration = Duration::from_millis(200);
 /// How long it waits as a turn ends: the agent is done, so a question about
-/// what the turn taught, worked out from every file's ideas, isn't lost.
+/// what the turn taught, worked out from every file's ideas, isn't lost. And
+/// as the agent opens something in kelve, which is busy then starting to
+/// read it: what it opened is kept for its session, to finish reading.
 const END_WAIT: Duration = Duration::from_secs(3);
 
 /// The agent and event, from the command's flags, else from the event, for
@@ -47,7 +52,11 @@ pub async fn run(agent: Option<&str>, on: Option<&str>) -> anyhow::Result<()> {
     let Some(m) = moment(agent, &on, &event) else {
         return Ok(());
     };
-    let wait = if m.what == "end" { END_WAIT } else { WAIT };
+    let wait = if matches!(m.what.as_str(), "end" | "opened") {
+        END_WAIT
+    } else {
+        WAIT
+    };
     let Ok(kelve) = Kelve::new(wait) else {
         return Ok(());
     };

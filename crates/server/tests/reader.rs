@@ -1990,6 +1990,118 @@ async fn hand_in(k: &Kelve, job: &Value, answer: Value) -> Value {
 }
 
 #[tokio::test]
+async fn reading_asked_for_by_its_number_waits_for_its_next_part_and_never_says_no_more_too_soon() {
+    use kelve_server::agent::{Caller, next_waiting};
+    use std::time::{Duration, Instant};
+
+    let k = Kelve::new().await;
+    // No folders in it, so nothing but its way in leads to its overview.
+    let root = folder(&[
+        ("README.md", "# ledger\n"),
+        ("retry.rs", "pub fn again() {}\n"),
+    ]);
+    let body = json!({
+        "what": "folder", "agent": "claude-code", "path": root.display().to_string(), "title": "ledger",
+    });
+    let (status, opened, _) = k.call("POST", "/api/agent/open", Some(body), true).await;
+    assert_eq!(status, StatusCode::OK, "{opened}");
+    let id = opened["id"].as_i64().unwrap();
+    while kelve_server::pipeline::run_once(&k.app)
+        .await
+        .unwrap()
+        .is_some()
+    {}
+    let caller = json!({ "agent": "claude-code", "for": id, "saysPreparing": true });
+    let (_, way, _) = k
+        .call("POST", "/api/agent/next", Some(caller.clone()), true)
+        .await;
+    assert_eq!(way["kind"], "way", "{way}");
+    let only = Caller {
+        agent: "claude-code".into(),
+        only: Some(id),
+        ..Caller::default()
+    };
+
+    // A worker is busy with something of its: nothing more is ready, but
+    // kelve is still preparing it, and says so rather than no more.
+    let hold = |key: String| {
+        let app = k.app.clone();
+        async move {
+            let mut conn = app.db.acquire().await.unwrap();
+            kelve_store::jobs::add(
+                &mut conn,
+                "way.find",
+                Some(&key),
+                &json!({ "opened": id }),
+                chrono::Utc::now(),
+            )
+            .await
+            .unwrap();
+            kelve_store::jobs::claim_key(&mut conn, &key)
+                .await
+                .unwrap()
+                .unwrap()
+        }
+    };
+    let held = hold(format!("way.find:{id}")).await;
+    let (next, preparing) = next_waiting(&k.app, &only, Default::default(), Duration::from_secs(1))
+        .await
+        .unwrap();
+    assert!(next.is_none() && preparing);
+    assert_eq!(
+        serde_json::to_value(kelve_server::api::agent::Next::Preparing { preparing }).unwrap(),
+        json!({ "preparing": true })
+    );
+    // With nothing of its running or due, its reading may still not be
+    // finished, its way in with the agent, but there's no more now: said at
+    // once, never a loop.
+    {
+        let mut conn = k.app.db.acquire().await.unwrap();
+        kelve_store::jobs::done(&mut conn, held.id).await.unwrap();
+    }
+    assert!(kelve_server::agent::unfinished(&k.app, id).await.unwrap());
+    let started = Instant::now();
+    let (next, preparing) = next_waiting(&k.app, &only, Default::default(), Duration::from_secs(5))
+        .await
+        .unwrap();
+    assert!(next.is_none() && !preparing);
+    assert!(started.elapsed() < Duration::from_secs(2));
+    let (_, none, _) = k
+        .call("POST", "/api/agent/next", Some(caller.clone()), true)
+        .await;
+    assert!(none.is_null(), "{none}");
+
+    // The work the way in's answer runs is with a worker for a while, longer
+    // than kelve waits for any job: handed in for this, its next part, the
+    // overview, still comes with the answer.
+    let held = hold(format!("way.find:{id}")).await;
+    let app = k.app.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(6)).await;
+        let mut conn = app.db.acquire().await.unwrap();
+        kelve_store::jobs::done(&mut conn, held.id).await.unwrap();
+    });
+    let started = Instant::now();
+    let (_, said, _) = k
+        .call(
+            "POST",
+            "/api/agent/answer",
+            Some(json!({ "job": way["job"], "agent": "claude-code", "for": id, "answer": stand_in_way(&way) })),
+            true,
+        )
+        .await;
+    assert_eq!(said["taken"], "yes", "{said}");
+    assert_eq!(said["next"]["kind"], "plainlyFolder", "{said}");
+    assert!(said.get("preparing").is_none(), "{said}");
+    assert!(
+        started.elapsed() >= Duration::from_secs(5),
+        "{:?}",
+        started.elapsed()
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+#[tokio::test]
 async fn every_file_is_read_plainly_once_its_reading_is_handed_in() {
     let mut k = Kelve::new().await;
     let retry =
