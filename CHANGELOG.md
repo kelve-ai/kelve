@@ -2,8 +2,10 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
-## Unreleased
+## 0.1.8, 2 November 2026
 
+- **A part read plainly shows its ideas beside its code and its text.** Show the code and Show the text named each idea under its lines, inside the text column, which made the code harder to read. Now they're drawn as the file is, each idea in the margin beside its lines, across the page's whole width; on a phone, under them, as before. What your agent said leaves the bar: it's on the change's own page.
+- **The example's entries read as real ones do.** The ideas you open first in the example were a key sentence and a few paragraphs. Now they're the shared graph's own entries, with their parts, figures, sources and lessons.
 - **What your agent opens gets read, the way in first.** An agent could open its work in kelve and move on without reading it, and once something else was opened, what it left waited until you opened it again. Now, as its turn ends, kelve's hook asks it to finish reading what it opened, unless you asked it not to. kelve's hook adds kelve's open tool to what it watches, and brings itself up to date when kelve starts.
 - **Your agent isn't told there's no more while kelve is still getting the next part ready.** After an answer, kelve waited five seconds for what came next, so the next part of the way in, or a folder's page waiting on its files, could come after your agent had stopped. Now, working on one thing, it waits for that thing's own work, and if it's still running, tells your agent to ask again.
 - **Your agent is asked to show only its own work.** Working in a worktree inside your project, as agents' apps make them, it was asked to show work another agent had done elsewhere in the project. kelve took the whole project for the folder it worked in. Now a worktree is its own folder.
