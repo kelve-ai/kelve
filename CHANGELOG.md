@@ -2,6 +2,10 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **Your agent is asked to show only its own work.** Working in a worktree inside your project, as agents' apps make them, it was asked to show work another agent had done elsewhere in the project. kelve took the whole project for the folder it worked in. Now a worktree is its own folder.
+
 ## 0.1.7, 2 November 2026
 
 - **Your agent shows you its work when it's finished it, committed or not.** It waited for a commit, a push or a pull request, so work left uncommitted wasn't shown. Now, as your agent's turn ends having changed files you haven't seen in kelve, kelve's hook asks it to show them, if the work's done and worth showing.
