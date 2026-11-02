@@ -24,11 +24,12 @@
 // being checked; `as=read-widely`, Exponential backoff read 1,240 times. On the
 // start page, anonymous counts are asked about; `as=counts-shared` draws them
 // shared, and `as=counts-not` not; `as=returning` draws it for someone who's
-// opened something from it before.
+// opened something from it before, and the project the day before, with
+// more ready in it than shows.
 
 import { useEffect, useState } from 'react'
 import { answerFromExample, type Fixture } from '../api/client'
-import type { AgentList, Block, IdeaPage, ListItem, Me, PlainlyView, Reading, SentToday, Settings, UpdateView, Way } from '../api/types'
+import type { AgentList, Block, IdeaPage, ListItem, Me, Opened, PlainlyView, Reading, SentToday, Settings, UpdateView, Way } from '../api/types'
 import { BACKOFF as BACKOFF_DIAGRAMS, UNIQUE_KEYS } from '../example/diagrams'
 import { changeWaiting, folderWaiting } from '../example/plainly'
 import { Loading } from '../Loader'
@@ -307,6 +308,28 @@ export function Example() {
       if (as === 'returning') {
         const s = fixture.answers['/api/settings'] as Settings
         s.hints = [...s.hints, 'started']
+        // The project opened the day before, with more ready in it than shows.
+        const ready = (key: string, name: string) => ({ kind: 'entry' as const, key, name })
+        const lately = fixture.answers['/api/opened'] as Opened[]
+        fixture.answers['/api/opened'] = [
+          ...lately,
+          {
+            ...lately[0],
+            id: 2,
+            kind: 'folder',
+            change: null,
+            title: 'ledger',
+            said: '',
+            openedAt: new Date(new Date(lately[0].openedAt).getTime() - 24 * 60 * 60 * 1000).toISOString(),
+            ready: [
+              ready('kelve:i000000000001', 'Retries'),
+              ready('kelve:i000000000005', 'Timeouts'),
+              ready('kelve:i000000000014', 'Exponential backoff'),
+              ready('kelve:i000000000017', 'Idempotency keys'),
+              ready('kelve:i000000000018', 'Unique keys'),
+            ],
+          },
+        ]
       }
       // kelve is up to date; with `as=update`, a newer one is out.
       const update: UpdateView = as === 'update'

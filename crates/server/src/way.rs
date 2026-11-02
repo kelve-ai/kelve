@@ -639,8 +639,12 @@ type Folder = (PathBuf, String);
 /// Each folder's parts being worked out now.
 static WORKING: LazyLock<Mutex<HashMap<Folder, Arc<Mutex<()>>>>> = LazyLock::new(Default::default);
 
+/// Folders whose parts are being worked out again in the background.
+static REFRESHING: LazyLock<Mutex<std::collections::HashSet<Folder>>> =
+    LazyLock::new(Default::default);
+
 /// A folder's parts, from its files: read only as far as it takes, and
-/// kept until a file changes, so a folder opens at once the next time.
+/// kept until a file in it changes, so a folder opens at once the next time.
 pub fn parts_of(root: &Path, at: &str) -> Parts {
     let Ok(walked) = kelve_engine::walk::walk(root) else {
         return Parts::default();
@@ -650,10 +654,13 @@ pub fn parts_of(root: &Path, at: &str) -> Parts {
         .iter()
         .filter(|f| f.skip.is_none() && !reader::is_kelves(&f.rel))
         .collect();
+    let inside = |rel: &str| at.is_empty() || rel.starts_with(&format!("{at}/"));
+    // Only its own files are read, so only they say whether it changed: an
+    // agent at work elsewhere in the project doesn't make it be read again.
     let print = {
         use std::hash::{Hash, Hasher};
         let mut h = std::collections::hash_map::DefaultHasher::new();
-        for f in &files {
+        for f in files.iter().filter(|f| inside(&f.rel)) {
             f.rel.hash(&mut h);
             f.bytes.hash(&mut h);
             std::fs::metadata(root.join(&f.rel))
@@ -678,7 +685,6 @@ pub fn parts_of(root: &Path, at: &str) -> Parts {
         return parts.clone();
     }
     let read = |rel: &str| kelve_engine::read::read(root, rel).ok().map(|t| t.text);
-    let inside = |rel: &str| at.is_empty() || rel.starts_with(&format!("{at}/"));
     let texts: Vec<(String, Option<String>)> = files
         .iter()
         .map(|f| {
@@ -693,6 +699,32 @@ pub fn parts_of(root: &Path, at: &str) -> Parts {
         kept.insert(key, (print, found.clone()));
     }
     found
+}
+
+/// A folder's parts as last worked out, at once, for what can show them a
+/// moment out of date, such as what leans on a file: they're worked out
+/// again in the background, once at a time. Only the first time are they
+/// worked out first, as `parts_of` does. For the top of a project that's
+/// every file read, so a page never waits for it while an agent works.
+pub fn parts_lately(root: &Path, at: &str) -> Parts {
+    let key = (root.to_path_buf(), at.to_string());
+    let kept = PARTS
+        .lock()
+        .ok()
+        .and_then(|k| k.get(&key).map(|(_, parts)| parts.clone()));
+    let Some(kept) = kept else {
+        return parts_of(root, at);
+    };
+    if REFRESHING.lock().is_ok_and(|mut r| r.insert(key.clone())) {
+        let (root, at) = (root.to_path_buf(), at.to_string());
+        std::thread::spawn(move || {
+            parts_of(&root, &at);
+            if let Ok(mut r) = REFRESHING.lock() {
+                r.remove(&key);
+            }
+        });
+    }
+    kept
 }
 
 /// A folder, or the folder at the end of its chain of folders that each
@@ -1840,6 +1872,33 @@ mod tests {
             [(0, 1), (1, 0)],
             "worked out again"
         );
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn a_folders_parts_lately_come_at_once_and_are_worked_out_again_behind() {
+        let root = std::env::temp_dir().join(format!("kelve-lately-{}", std::process::id()));
+        std::fs::create_dir_all(root.join("src")).unwrap();
+        std::fs::write(root.join("src/bank.rs"), "use crate::retry;\n").unwrap();
+        std::fs::write(root.join("src/retry.rs"), "pub fn again() {}\n").unwrap();
+        // The first time, worked out then.
+        assert_eq!(parts_lately(&root, "src").uses, [(0, 1)]);
+        std::fs::write(
+            root.join("src/retry.rs"),
+            "use crate::bank;\npub fn again() {}\n",
+        )
+        .unwrap();
+        // Changed since: what was kept, at once, while it's read again.
+        assert_eq!(parts_lately(&root, "src").uses, [(0, 1)], "as kept");
+        let mut now = Vec::new();
+        for _ in 0..200 {
+            now = parts_lately(&root, "src").uses;
+            if now.len() == 2 {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        assert_eq!(now, [(0, 1), (1, 0)], "worked out again, behind");
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

@@ -175,6 +175,19 @@ async fn an_entry_is_traced_written_by_the_agent_and_checked_by_the_graph() {
         ..Default::default()
     };
     agent::hello(&app, &codex).await.unwrap();
+    // Asked about seldom while no one has it open; opened, within seconds.
+    let follow = format!("entry.follow:{}", idea.key);
+    let mut conn = app.db.acquire().await.unwrap();
+    kelve_store::jobs::add(
+        &mut conn,
+        "entry.follow",
+        Some(&follow),
+        &json!({ "idea": idea.key }),
+        chrono::Utc::now() + chrono::Duration::hours(1),
+    )
+    .await
+    .unwrap();
+    drop(conn);
     let page = kelve_server::api::reader::idea(
         axum::extract::State(app.clone()),
         kelve_server::auth::Me,
@@ -185,6 +198,13 @@ async fn an_entry_is_traced_written_by_the_agent_and_checked_by_the_graph() {
     .unwrap()
     .0;
     assert_eq!(page.agent.as_deref(), Some("stand-in-agent"));
+    let mut conn = app.db.acquire().await.unwrap();
+    let due = kelve_store::jobs::due(&mut conn, &follow).await.unwrap();
+    drop(conn);
+    assert!(
+        due.is_some_and(|at| at <= chrono::Utc::now() + chrono::Duration::seconds(6)),
+        "{due:?}"
+    );
     // Its own, being checked: not the graph's, and no reads to tell.
     assert!(!page.from_graph);
     assert_eq!(page.reads, 0);

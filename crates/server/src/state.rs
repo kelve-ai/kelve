@@ -33,6 +33,9 @@ pub struct App {
     /// The instructions for the agent's jobs, as the graph lately served
     /// them.
     pub instructions: crate::agent::Instructions,
+    /// Ideas lately asked about ahead that the graph had no entry for, or
+    /// didn't answer about, with when (`pipeline::entries::take_ahead`).
+    pub none_ahead: std::sync::Mutex<std::collections::HashMap<String, std::time::Instant>>,
     /// The secret kelve shares with its command line.
     pub secret: String,
     settings: RwLock<Arc<Settings>>,
@@ -121,6 +124,7 @@ impl App {
             graph,
             signing_in: std::sync::Mutex::new(None),
             instructions: crate::agent::Instructions::default(),
+            none_ahead: std::sync::Mutex::default(),
             secret,
             settings: RwLock::new(Arc::new(settings)),
             keys: RwLock::new(held),

@@ -15,6 +15,9 @@ export function and(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
 }
 
+/** What kind of thing was opened, as a word: "Change", "Folder", "File". */
+export const OPENED: Record<string, string> = { change: 'Change', folder: 'Folder', file: 'File' }
+
 /** A node's name as people write it: "control plane", and "volume (audio)" for one that shares its name. */
 export const name = (n: string) => {
   const [words, sense] = n.split('--')
