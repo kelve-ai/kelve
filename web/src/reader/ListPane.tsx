@@ -208,7 +208,7 @@ export function ListPane({ list, agent, onOpen, onOpenPaused, reading, newNote, 
         <h2>{agent}’s list</h2>
         <span className={`lstate${list?.working ? '' : ' idle'}`}>
           <State state={list?.working ? 'now' : 'queued'} />
-          {list?.working ? 'Working' : 'Not working'}
+          {list?.working ? 'Working' : 'Waiting'}
         </span>
         <button type="button" className="np-close lclose" onClick={close} aria-label="Close the list">
           <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 3 6 6M9 3l-6 6" stroke="currentColor" strokeWidth="1.4" /></svg>
@@ -278,7 +278,7 @@ export function AgentLine({ list, agent: chosen, open, onClick, reading }: {
       type="button"
       className={`agent-line${working ? '' : ' idle'}${open ? ' open' : ''}${said ? ' reading' : ''}`}
       // What it shows comes first, as it reads, so it can be said to pick it.
-      aria-label={`${agent} ${said ?? `${left} to do`}: its list, ${working ? 'working' : 'not working'}`}
+      aria-label={`${agent} ${said ?? `${left} to do`}: its list, ${working ? 'working' : 'waiting'}`}
       aria-expanded={open}
       onClick={onClick}
     >
@@ -334,12 +334,12 @@ function CopySay({ agent }: { agent: string }) {
   )
 }
 
-/** The one line for your agent's list, at its top while your agent isn't working (board Waiting-6). */
+/** The one line for your agent's list, at its top while nothing's taking it (board Waiting-6): kelve knows only that, not what your agent's doing, so it says what to do. */
 function IdleLine({ agent, left }: { agent: string; left: number }) {
   return (
     <div className="wline">
       <State state="queued" />
-      <span className="wl-t"><b>{agent} isn’t working</b> <span className="wl-q">· {left} thing{left === 1 ? '' : 's'} waiting</span></span>
+      <span className="wl-t"><b>Waiting for you to ask {agent}</b> <span className="wl-q">· {left} thing{left === 1 ? '' : 's'} to do</span></span>
       <CopySay agent={agent} />
     </div>
   )
@@ -349,8 +349,8 @@ function IdleLine({ agent, left }: { agent: string; left: number }) {
  * Something asked for and not written yet, in one slim line (boards
  * Waiting-0 to Waiting-5): kelve's square, a few words, and at most one
  * thing to do, always there. Being written, a thin moving line; first on
- * the list, nothing to do; further down, Do next; your agent not working,
- * what to say to it. An entry being written has its steps under it.
+ * the list, nothing to do; further down, Do next; nothing taking your
+ * agent's list, what to say to it. An entry being written has its steps under it.
  */
 export function WaitingLine({ page, where, working, agent, writing, reading, steps }: {
   /** What it's for, a file's path or an idea's key: Copied lasts until it changes. */
@@ -397,7 +397,7 @@ export function WaitingLine({ page, where, working, agent, writing, reading, ste
       <div className="waiting">
         <div className="wline">
           <State state="queued" />
-          <span className="wl-t" role="status"><b>{agent} isn’t working</b> <span className="wl-q">· {when}</span></span>
+          <span className="wl-t" role="status"><b>Waiting for you to ask {agent}</b> <span className="wl-q">· {when}</span></span>
           <CopySay key={page} agent={agent} />
         </div>
       </div>
