@@ -14,7 +14,10 @@ const load = <T>(name: string): T => JSON.parse(readFileSync(join(here, name), '
 type MarkData = { file: string; words?: string; from?: string; through?: string; idea: string; use: string }
 type Rel = [string, string]
 type Relation = { question: string; restsOn?: Rel[]; kindOf?: Rel[]; answers?: Rel[]; alternatives?: Rel[]; usedWith?: Rel[] }
-type BlockData = { id: string; part: string; fold?: string; follows?: string; type: string; text: string }
+/** A block: its text for prose, and in `data` every other field its type uses, such as a figure's. */
+type BlockData = { id: string; part: string; fold?: string; follows?: string; type: string; text?: string; data?: Record<string, unknown> }
+/** A term the prose links, `[[term]]`, and the idea it leads to, by name. */
+type LinkData = { term: string; idea: string; about: string; kind: string; link: string }
 type ClaimData = { text: string; sources: number[]; quotes: Array<{ source: number; text: string }>; block: string; words: string }
 type SourceData = { n: number; url: string; title: string; publisher: string; published: string }
 type EntryData = {
@@ -22,8 +25,11 @@ type EntryData = {
   live: boolean
   minutes: number
   blocks: BlockData[]
+  links?: LinkData[]
   claims: ClaimData[]
   sources: SourceData[]
+  /** How many times the shared graph's readers have read it, as a graph many people use would say. */
+  reads?: number
   /** What it adds when a reader asks more of the entry. */
   extend?: { blocks: BlockData[]; claims: ClaimData[]; sources: SourceData[] }
 }
@@ -53,6 +59,12 @@ export const LIVE = ENTRIES.filter((e) => e.live).map((e) => e.idea)
 
 /** Every idea the example's agent can write an entry for. */
 export const WRITTEN = ENTRIES.map((e) => e.idea)
+
+/** How many times each entry the graph has was read before, by idea: what the stand-in graph says. */
+export const READS: Array<[string, number]> = ENTRIES.flatMap((e) => (e.reads ? [[e.idea, e.reads] as [string, number]] : []))
+
+/** A block as an answer gives it: its fields beyond the text, as JSON. */
+const answered = ({ data, ...b }: BlockData) => ({ fold: '', text: '', ...b, data: JSON.stringify(data ?? {}) })
 
 /** Every page an entry quotes, and the words it quotes there: what the stand-in graph checks quotes against. */
 export function pages(): Array<[string, string]> {
@@ -155,8 +167,8 @@ export function write(job: Job) {
   return {
     title: e.idea,
     minutes: e.minutes,
-    blocks: e.blocks.map((b) => ({ fold: '', ...b, data: '{}' })),
-    links: [],
+    blocks: e.blocks.map(answered),
+    links: e.links ?? [],
     claims: e.claims,
     sources: e.sources,
     drop: [],
@@ -169,7 +181,7 @@ export function extend(job: Job) {
   const e = ENTRIES.find((x) => x.idea.toLowerCase() === idea.toLowerCase())?.extend
   if (!e) throw new Error(`the example's agent has nothing to add to ${idea}: add an extend to its entry in dev/example/agent/entries.json`)
   return {
-    blocks: e.blocks.map((b) => ({ fold: '', follows: '', ...b, data: '{}' })),
+    blocks: e.blocks.map((b) => ({ follows: '', ...answered(b) })),
     links: [],
     claims: e.claims,
     sources: e.sources,
