@@ -3,7 +3,9 @@
 //! gives the best to the person's agent at the moment it helps (as it reads or
 //! edits a file, as something fails), keeps what came of each, and, as a turn
 //! ends after a hard stretch the agent got past, keeps a job for it to write
-//! what it learned, held a day before it leaves so the person can stop it.
+//! what it learned, named to that agent alone to take then, while it
+//! remembers; what it writes is held a day before it leaves so the person
+//! can stop it.
 //!
 //! Only lessons, what came of them and what showed it go to the graph:
 //! never the problem, the command, the file or anything else from the work.
@@ -1172,11 +1174,12 @@ async fn ask_replaced(app: &Shared, session: &str) -> ApiResult<String> {
         .rev()
         .find(|r| r.path == first.path)
         .unwrap_or(first);
+    let name = format!("replaced:{}", last.id);
     pipeline::add(
         app,
         WRITE,
-        Some(&format!("{WRITE}:replaced:{}", last.id)),
-        json!({ "replaced": last.id, "root": first.root, "files": [first.path] }),
+        Some(&format!("{WRITE}:{name}")),
+        json!({ "replaced": last.id, "root": first.root, "files": [first.path], "lesson": name }),
         Utc::now(),
     )
     .await
@@ -1187,11 +1190,24 @@ async fn ask_replaced(app: &Shared, session: &str) -> ApiResult<String> {
     }
     let names: Vec<&str> = ideas.iter().take(3).map(|i| i.name.as_str()).collect();
     Ok(format!(
-        "kelve: you replaced what you wrote in {}. If the second way is better for anyone using {}, and a capable agent wouldn't choose it unprompted or find it in the docs, write it as a lesson: take kelve's next job. Otherwise answer none.",
+        "kelve: you replaced what you wrote in {}. {} Write a lesson only if the second way is better for anyone using {}, a capable agent wouldn't choose it unprompted, and the docs don't say it. {NONE}",
         first.path,
+        take_it(&name),
         names.join(", ")
     ))
 }
+
+/// What the agent is told to do with the lesson job named for it, as its
+/// turn ends: take that job now, by its name, while it remembers. Only it
+/// can (`asks::take_lesson`).
+fn take_it(name: &str) -> String {
+    format!(
+        "Now, while you remember it, take kelve's job for what you learned: call next_job, giving lesson: \"{name}\", and hand in your answer with hand_in."
+    )
+}
+
+/// How the agent says there's nothing worth a lesson: the job's own answer.
+const NONE: &str = "If not, hand it in with lessons and same empty.";
 
 /// The work was committed: each lesson given as the agent wrote the usual
 /// way, then done the lesson's way, held if it stayed so, and didn't if
@@ -1526,14 +1542,15 @@ async fn ask_stretch(app: &Shared, session: &str) -> ApiResult<String> {
         }
         waiting.last().map(|r| (r.id, r.path.clone()))
     };
-    let mut payload = json!({ "failed": ids, "root": root, "files": t.paths });
+    let name = first.id.to_string();
+    let mut payload = json!({ "failed": ids, "root": root, "files": t.paths, "lesson": name });
     if let Some((id, _)) = &replaced {
         payload["replaced"] = json!(id);
     }
     pipeline::add(
         app,
         WRITE,
-        Some(&format!("{WRITE}:{}", first.id)),
+        Some(&format!("{WRITE}:{name}")),
         payload,
         Utc::now(),
     )
@@ -1552,9 +1569,10 @@ async fn ask_stretch(app: &Shared, session: &str) -> ApiResult<String> {
         None => (String::new(), ""),
     };
     Ok(format!(
-        "kelve: this turn took {}, first with \"{}\"{also}. If what finally worked wasn't what the errors pointed to{or}, the docs don't say it, and it would help anyone using {}, write it as a lesson: take kelve's next job. Otherwise answer none.",
+        "kelve: this turn took {}, first with \"{}\"{also}. {} Write a lesson only if what finally worked wasn't what the errors pointed to{or}, the docs don't say it, and it would help anyone using {}. {NONE}",
         took.what(),
         kelve_core::text::clip(&first.problem, 120),
+        take_it(&name),
         names.join(", ")
     ))
 }
@@ -1965,11 +1983,12 @@ pub async fn write_job(app: &Shared, payload: &Value) -> pipeline::Result<Then> 
         "work": names_from(&root, &files),
     });
     // One job for each thing it's about, so a job run again asks again only
-    // for what it asked before.
-    let key = match (&replaced, ids.first()) {
-        (Some(r), _) => format!("{WRITE}:replaced:{}", r.id),
-        (None, Some(id)) => format!("{WRITE}:{id}"),
-        (None, None) => format!("{WRITE}:asked:{payload}"),
+    // for what it asked before: under the name the agent was given for it.
+    let key = match (payload["lesson"].as_str(), &replaced, ids.first()) {
+        (Some(name), ..) => format!("{WRITE}:{name}"),
+        (None, Some(r), _) => format!("{WRITE}:replaced:{}", r.id),
+        (None, None, Some(id)) => format!("{WRITE}:{id}"),
+        (None, None, None) => format!("{WRITE}:asked:{payload}"),
     };
     let names: Vec<&str> = ideas.iter().take(2).map(|i| i.name.as_str()).collect();
     let Some(answer) = agent::ask(
@@ -2359,16 +2378,17 @@ pub async fn know(
         if lesson_ideas(&app, &root, &files).await?.is_empty() {
             text.push_str("\n\nThere's nothing here a lesson could be about yet: none of the libraries or tools kelve has seen this work use is in the shared graph. Name what it's about in ideas, and ask again.");
         } else {
+            let name = format!("asked:{}", kelve_store::now());
             pipeline::add(
                 &app,
                 WRITE,
-                Some(&format!("{WRITE}:asked:{}", kelve_store::now())),
-                json!({ "failed": [], "root": root, "files": files }),
+                Some(&format!("{WRITE}:{name}")),
+                json!({ "failed": [], "root": root, "files": files, "lesson": name }),
                 Utc::now(),
             )
             .await
             .map_err(ApiError::internal)?;
-            text.push_str("\n\nkelve kept a job for what you learned: take it with next_job.");
+            text.push_str(&format!("\n\nkelve kept a job for what you learned. Take it now with next_job, giving lesson: \"{name}\", and hand in your answer with hand_in."));
         }
     }
     Ok(Json(MomentOut { text }))

@@ -4,6 +4,7 @@ What changes in each release of kelve, for the people who run it. Versions follo
 
 ## Unreleased
 
+- **Your agent writes what it learned.** After a stretch of failures it got past, kelve asked your agent to take "kelve's next job", which handed it whatever came first on the list, so no lesson was ever written. Now kelve names the lesson's job, your agent takes that one straight away, while it remembers, and no other agent can take it. One not taken within six hours is let go, since a later agent can't know what was learned.
 - **Your agent's work is read as what it changed, not everything since your main.** kelve read a branch from where it left your local `main`, which agents rarely update, so a change showed every file merged since and had to be opened again. Now, when your local `main` is behind the remote's, kelve reads from where the work left the remote's. It still fetches nothing.
 
 ## 0.1.8, 2 November 2026

@@ -218,7 +218,7 @@ async fn a_lesson_reaches_the_agent_holds_and_what_it_learns_waits_then_leaves()
     // Only the work it edited, to show if it's done: once, for its last edit.
     let text = moment(&app, "end", |m| m.cwd = root_s.clone()).await;
     assert!(
-        !text.contains("write it as a lesson"),
+        !text.contains("what you learned"),
         "one failure that one edit fixed"
     );
     assert!(text.contains("show them it in kelve"), "{text}");
@@ -246,15 +246,50 @@ async fn a_lesson_reaches_the_agent_holds_and_what_it_learns_waits_then_leaves()
     .await;
     assert_eq!(passing, "", "nothing asked mid-turn");
     let text = moment(&app, "end", |m| m.cwd = root_s.clone()).await;
-    assert!(text.contains("write it as a lesson"), "{text}");
+    assert!(
+        text.contains("Now, while you remember it, take kelve's job for what you learned: call next_job, giving lesson: \""),
+        "named to the agent, to take now: {text}"
+    );
     assert!(text.contains("this turn took 2 failing runs"), "{text}");
+    assert!(
+        text.contains("If not, hand it in with lessons and same empty."),
+        "{text}"
+    );
     assert_eq!(
         moment(&app, "end", |m| m.cwd = root_s.clone()).await,
         "",
         "once"
     );
-    let given = common::work(&app, |job| {
-        assert_eq!(job.kind, "lesson");
+    // Only the agent it's named for takes it: no other agent's next job,
+    // for anything or for one thing opened, is it, nor is it kept for them.
+    common::jobs(&app).await;
+    let other = kelve_server::agent::Caller {
+        agent: "another-agent".into(),
+        ..Default::default()
+    };
+    assert_eq!(
+        kelve_server::agent::next(&app, &other).await.unwrap(),
+        None,
+        "another agent's next job"
+    );
+    assert_eq!(
+        kelve_server::agent::next(
+            &app,
+            &kelve_server::agent::Caller {
+                only: Some(1),
+                ..other.clone()
+            }
+        )
+        .await
+        .unwrap(),
+        None,
+        "another agent's next job, for one thing opened"
+    );
+    {
+        let mut conn = app.db.acquire().await.unwrap();
+        assert_eq!(kelve_store::asks::waiting(&mut conn).await.unwrap(), 0);
+    }
+    let given = common::lesson(&app, &text, |job| {
         assert!(
             job.material["lessons"].as_str().unwrap().contains(&theirs),
             "what's known, first"
@@ -277,7 +312,7 @@ async fn a_lesson_reaches_the_agent_holds_and_what_it_learns_waits_then_leaves()
         })
     })
     .await;
-    assert_eq!(given.len(), 1);
+    assert_eq!(given.about, "What was learned about rand");
     let settings = {
         let mut conn = app.db.acquire().await.unwrap();
         kelve_store::lessons::learned(&mut conn, 10).await.unwrap()
@@ -483,10 +518,13 @@ async fn told_to_hold_lessons_a_short_while_what_was_learned_leaves_by_itself() 
     })
     .await;
     let text = moment(&app, "end", |m| m.cwd = root_s.clone()).await;
-    assert!(text.contains("write it as a lesson"), "{text}");
+    assert!(
+        text.contains("take kelve's job for what you learned"),
+        "{text}"
+    );
     assert!(text.contains("this turn took 2 failing runs"), "{text}");
     assert!(text.contains("anyone using rand"), "{text}");
-    common::work(&app, |job| {
+    common::lesson(&app, &text, |job| {
         let offered: Vec<&str> = job.material["offered"]
             .as_array()
             .unwrap()
@@ -513,6 +551,97 @@ async fn told_to_hold_lessons_a_short_while_what_was_learned_leaves_by_itself() 
     assert_eq!(learned.len(), 1);
     assert_eq!(learned[0].state, "live", "it left once its hold was over");
     assert_eq!(g.lessons().len(), 1);
+}
+
+#[tokio::test]
+async fn a_lesson_job_not_taken_in_six_hours_is_let_go_and_one_asked_for_is_named_too() {
+    let g = StandIn::start().await.unwrap();
+    let rand = g.add("rand", "A Rust library for random numbers.", IdeaKind::Tool);
+    let app = kelve(Some(&g)).await;
+    let root = common::folder(&[("src/dice.rs", "fn roll() {}\n")]);
+    let root_s = root.display().to_string();
+    {
+        let mut conn = app.db.acquire().await.unwrap();
+        kelve_store::reader::read_file(
+            &mut conn,
+            &root_s,
+            "src/dice.rs",
+            &json!([{ "key": rand, "name": "rand" }]).to_string(),
+            "h",
+        )
+        .await
+        .unwrap();
+    }
+    let file = root.join("src/dice.rs").display().to_string();
+    moment(&app, "edit", |m| {
+        m.cwd = root_s.clone();
+        m.file = Some(file.clone());
+    })
+    .await;
+    for problem in ["error[E0599]: no method", "error[E0277]: the trait bound"] {
+        moment(&app, "failed", |m| {
+            m.cwd = root_s.clone();
+            m.command = Some("cargo build".into());
+            m.problem = Some(problem.into());
+        })
+        .await;
+    }
+    moment(&app, "ran", |m| {
+        m.cwd = root_s.clone();
+        m.command = Some("cargo build".into());
+    })
+    .await;
+    let text = moment(&app, "end", |m| m.cwd = root_s.clone()).await;
+    let name = common::named(&text);
+    common::jobs(&app).await;
+    // The agent never took it, and six hours went by: it's let go, since no
+    // later agent can know what was learned.
+    {
+        let mut conn = app.db.acquire().await.unwrap();
+        sqlx::query("update asks set created_at = created_at - ?1 where kind = 'lesson'")
+            .bind(kelve_store::asks::LESSON_MS)
+            .execute(&mut *conn)
+            .await
+            .unwrap();
+    }
+    let gone = kelve_server::agent::lesson(&app, &common::caller(), &name)
+        .await
+        .unwrap_err();
+    assert!(gone.message.contains("isn't waiting any more"), "{gone:?}");
+    {
+        let mut conn = app.db.acquire().await.unwrap();
+        kelve_store::asks::sweep(&mut conn).await.unwrap();
+        let left = kelve_store::asks::by_key(&mut conn, &format!("{}:{name}", lessons::WRITE))
+            .await
+            .unwrap();
+        assert_eq!(left, None, "swept");
+    }
+
+    // Asked for with the lessons tool, it's named the same way, to take now.
+    let asked = lessons::know(
+        State(app.clone()),
+        Agent,
+        Json(lessons::KnowIn {
+            path: root_s.clone(),
+            ideas: Vec::new(),
+            problem: None,
+            write: true,
+            agent: None,
+        }),
+    )
+    .await
+    .unwrap()
+    .0
+    .text;
+    assert!(asked.contains("Take it now with next_job"), "{asked}");
+    common::lesson(&app, &asked, |_| json!({ "lessons": [], "same": [] })).await;
+    assert_eq!(
+        kelve_server::agent::next(&app, &common::caller())
+            .await
+            .unwrap(),
+        None,
+        "none, a good answer, and nothing else waits"
+    );
 }
 
 #[tokio::test]
@@ -659,7 +788,7 @@ async fn replaced_work_asks_for_a_better_way_given_as_the_usual_way_is_written_a
         "{asked}"
     );
     assert_eq!(say(prompt()).await, "", "once");
-    let jobs = common::work(&app, |job| {
+    common::lesson(&app, &asked, |job| {
         let replaced = job.material["replaced"].as_str().unwrap();
         assert!(replaced.contains("tokio::time::sleep") && replaced.contains("tokio::time::advance"));
         json!({
@@ -674,7 +803,6 @@ async fn replaced_work_asks_for_a_better_way_given_as_the_usual_way_is_written_a
         })
     })
     .await;
-    assert_eq!(jobs.len(), 1);
     let learned = {
         let mut conn = app.db.acquire().await.unwrap();
         kelve_store::lessons::learned(&mut conn, 10).await.unwrap()
@@ -829,7 +957,7 @@ async fn replaced_work_asks_for_a_better_way_given_as_the_usual_way_is_written_a
     );
     assert_eq!(asked.matches("kelve:").count(), 1, "one question: {asked}");
     let both = std::sync::atomic::AtomicUsize::new(0);
-    common::work(&app, |job| {
+    common::lesson(&app, &asked, |job| {
         let replaced = job.material["replaced"].as_str().unwrap();
         let failed = job.material["failed"].as_str().unwrap();
         if failed.contains("FAILED")
@@ -941,14 +1069,13 @@ async fn shell_writes_in(repository: bool) {
         asked.contains("you replaced what you wrote in retry.py"),
         "{asked}"
     );
-    let jobs = common::work(&app, |job| {
+    common::lesson(&app, &asked, |job| {
         let replaced = job.material["replaced"].as_str().unwrap();
         assert!(replaced.contains("time.sleep(wait)"), "{replaced}");
         assert!(replaced.contains("random.uniform"), "{replaced}");
         json!({ "lessons": [], "same": [] })
     })
     .await;
-    assert_eq!(jobs.len(), 1);
 
     // A formatter, as `cargo fmt` or `black` runs: only whitespace changes.
     let mine = "def fetch(server, tries=4):\n    for n in range(tries):\n        try:\n            return server.get()\n        except Down:\n            time.sleep(2 ** n)\n";

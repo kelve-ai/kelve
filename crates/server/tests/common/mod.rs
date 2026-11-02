@@ -95,6 +95,29 @@ pub async fn work(app: &Shared, answer: impl Fn(&Job) -> Value) -> Vec<Job> {
     panic!("the agent's work never stopped");
 }
 
+/// The lesson job kelve named to the agent in what it said, as next_job's
+/// `lesson` takes it.
+pub fn named(said: &str) -> String {
+    said.split("giving lesson: \"")
+        .nth(1)
+        .and_then(|rest| rest.split('"').next())
+        .unwrap_or_else(|| panic!("no lesson job named in: {said}"))
+        .to_string()
+}
+
+/// The agent takes the lesson job kelve named to it in what it said, at
+/// once, and hands in `answer`; then kelve keeps what it wrote.
+pub async fn lesson(app: &Shared, said: &str, answer: impl Fn(&Job) -> Value) -> Job {
+    let job = agent::lesson(app, &caller(), &named(said)).await.unwrap();
+    assert_eq!(job.kind, "lesson");
+    let handed = agent::hand_in(app, &caller(), job.job, answer(&job))
+        .await
+        .unwrap();
+    assert_eq!(handed, HandedIn::Yes, "the lesson wasn't taken");
+    jobs(app).await;
+    job
+}
+
 /// The text of a fenced material string, without its tags.
 pub fn unfenced(text: &Value) -> String {
     let text = text.as_str().unwrap_or_default();

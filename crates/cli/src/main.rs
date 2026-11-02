@@ -76,6 +76,7 @@ enum Command {
     ///
     ///   kelve job                        the next job, as JSON
     ///   kelve job --for 12               the next job for what's open as 12
+    ///   kelve job --lesson 17            the lesson job kelve named for you
     ///   kelve job done 7 < answer.json   hand in job 7's answer
     #[command(verbatim_doc_comment)]
     Job {
@@ -90,6 +91,9 @@ enum Command {
         /// Only the jobs for one thing opened, by its number.
         #[arg(long = "for", global = true)]
         only: Option<i64>,
+        /// The lesson job kelve named for you, as it named it.
+        #[arg(long)]
+        lesson: Option<String>,
     },
     /// What's kept for your agent to do
     Kept,
@@ -275,12 +279,14 @@ async fn main() -> std::process::ExitCode {
             agent,
             model,
             only,
-        } => jobs::next(&agent, model.as_deref(), only).await,
+            lesson,
+        } => jobs::next(&agent, model.as_deref(), only, lesson.as_deref()).await,
         Command::Job {
             done: Some(JobCommand::Done { job }),
             agent,
             model,
             only,
+            ..
         } => jobs::done(job, &agent, model.as_deref(), only).await,
         Command::Kept => jobs::kept().await,
         Command::Notes { waiting: true, .. } => notes::waiting().await,

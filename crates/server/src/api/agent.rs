@@ -340,6 +340,10 @@ pub struct NextIn {
     /// none then, as before.
     #[serde(default)]
     pub says_preparing: bool,
+    /// The lesson job kelve named to the agent as its turn ended: that job,
+    /// and no other.
+    #[serde(default)]
+    pub lesson: Option<String>,
 }
 
 /// The next job, or, for one thing opened, that kelve is still preparing
@@ -358,6 +362,10 @@ pub async fn next(
     _agent: Agent,
     Json(asked): Json<NextIn>,
 ) -> ApiResult<Json<Option<Next>>> {
+    if let Some(name) = asked.lesson.as_deref().filter(|n| !n.trim().is_empty()) {
+        let job = agent::lesson(&app, &asked.caller, name).await?;
+        return Ok(Json(Some(Next::Job(Box::new(job)))));
+    }
     let wait = match asked.caller.only {
         Some(_) => PREPARING,
         None => std::time::Duration::ZERO,
@@ -402,6 +410,10 @@ pub struct Answered {
     /// of what the agent asked for by its number: it asks again.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub preparing: bool,
+    /// It was a lesson: handed in as its turn ended, or as it asked, so no
+    /// other job comes with it.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub lesson: bool,
 }
 
 /// The most kelve waits, as an answer comes in, for work running then to
@@ -449,6 +461,17 @@ pub async fn answer(
                     .await
                     .map_err(ApiError::internal)?;
             }
+            // A lesson is the agent's own, handed in as its turn ended, or as
+            // it asked: kept now, and no other job comes with it.
+            if answered.as_ref().is_some_and(|a| a.kind == agent::LESSON) {
+                return Ok(Json(Answered {
+                    handed_in,
+                    next: None,
+                    left: None,
+                    preparing: false,
+                    lesson: true,
+                }));
+            }
             for _ in 0..20 {
                 if std::time::Instant::now() >= spent
                     || crate::pipeline::run_once(&app)
@@ -467,6 +490,7 @@ pub async fn answer(
                     next: None,
                     left: Some(left),
                     preparing: false,
+                    lesson: false,
                 }));
             }
             // Work running in the background as the answer came, such as
@@ -488,6 +512,7 @@ pub async fn answer(
         next,
         left: None,
         preparing,
+        lesson: false,
     }))
 }
 
@@ -577,9 +602,11 @@ pub async fn kept_for_me(State(app): State<Shared>, _me: Me) -> ApiResult<Json<V
 
 async fn kept_list(app: &Shared) -> ApiResult<Vec<Kept>> {
     let mut conn = app.db.acquire().await?;
+    // Not lessons: each waits for the agent it was named for, alone.
     Ok(kelve_store::asks::open(&mut conn)
         .await?
         .into_iter()
+        .filter(|a| a.kind != agent::LESSON)
         .map(|a| Kept {
             id: a.id,
             kind: a.kind,

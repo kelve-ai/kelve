@@ -72,8 +72,12 @@ test('lessons reach the agent as it works, and the person sees which held, and s
     expect(said[4]).toBe('')
     expect(said[8]).toBe('')
     expect(said[9]).toContain('you replaced what you wrote in src/bank/mod.rs')
-    expect(said[9]).toContain('write it as a lesson')
-    const jobs = await me.work()
+    expect(said[9]).toContain('take kelve’s job for what you learned'.replace('’', "'"))
+    // Named to this agent alone, to take now: no other agent's next job is it.
+    const named = /giving lesson: "([^"]+)"/.exec(said[9])?.[1]
+    expect(named).toBeTruthy()
+    expect(await agent(k.base, secret(k), 'another-agent').work()).toEqual([])
+    const jobs = await me.work({ lesson: named })
     expect(jobs.map((j) => j.kind)).toContain('lesson')
 
     await page.goto(`${k.base}/#/o/1`)
