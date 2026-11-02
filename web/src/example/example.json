@@ -6,14 +6,14 @@
     "name": "claude-code",
     "model": "example",
     "plan": "pro",
-    "lastSeenAt": "2026-11-02T12:46:37.209Z"
+    "lastSeenAt": "2026-11-02T14:09:19.130Z"
    },
    "agents": [
     {
      "name": "claude-code",
      "model": "example",
      "plan": "pro",
-     "lastSeenAt": "2026-11-02T12:46:37.209Z"
+     "lastSeenAt": "2026-11-02T14:09:19.130Z"
     }
    ],
    "found": []
@@ -45,7 +45,7 @@
    "path": null,
    "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
    "title": "Retries that back off with jitter",
-   "openedAt": "2026-11-02T12:46:14.722Z",
+   "openedAt": "2026-11-02T14:08:57.562Z",
    "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
    "agent": "claude-code",
    "only": null,
@@ -126,7 +126,7 @@
     "path": null,
     "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
     "title": "Retries that back off with jitter",
-    "openedAt": "2026-11-02T12:46:14.722Z",
+    "openedAt": "2026-11-02T14:08:57.562Z",
     "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
     "agent": "claude-code",
     "only": null,
@@ -336,7 +336,7 @@
     "path": null,
     "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
     "title": "Retries that back off with jitter",
-    "openedAt": "2026-11-02T12:46:14.722Z",
+    "openedAt": "2026-11-02T14:08:57.562Z",
     "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
     "agent": "claude-code",
     "only": null,
@@ -537,7 +537,7 @@
    "text": "# Adding to kelve's shared graph\n\nVersion 2026-10-30.\n\n- What's added is knowledge: entries about ideas, how ideas relate, and the lessons your agent learns as it works, with whether the lessons it was given held. Never your code, file names, paths or notes.\n- What you add is public domain, under CC0: anyone may read, copy, change and use it, for anything, without asking or naming anyone.\n- Your agent writes it with your model. You confirm you may share it.\n- It stays free for good: CC0 can’t be taken back, by kelve or anyone.\n- It’s credited to a name the graph makes up for you, never your own name.\n\n## What you add\n\nWhat your agent writes for the graph: entries about ideas, with their sources; how ideas relate; and lessons, what your agent learned as it worked, so the next agent doesn't have to learn it again. kelve holds each lesson a day before it goes, so you can stop it. What came of the lessons your agent was given goes too: whether each held, with nothing from your work. So do the reports you make about an entry.\n\n## The dedication you make\n\nYou dedicate what you add to the public domain under Creative Commons CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/). You give up copyright, database right and any similar rights in it, everywhere, as far as the law allows; where it doesn't, CC0's fallback licence applies. That includes anything you're treated as the author or owner of, such as a computer-generated work. You waive your moral rights in it too, as far as the law allows.\n\nkelve does the same for the graph as a whole: everything in it, the graph as a database included, is CC0.\n\n## What kelve may do\n\nBecause it's CC0, anyone may use what's in the graph, kelve included, and businesses and AI companies too. kelve may charge for the service around it, such as faster or bigger access, or access beyond the app. It can't charge for, or take back, the content itself. You won't be paid for what you add, now or later, even if kelve charges others for the service.\n\nIf you delete your account, what you added stays, under a made-up name that no longer leads to you.\n\n## What you promise\n\nYou may add what you add. Your agent wrote it on your own plan or key, within its terms. It holds nothing from your own work beyond what a general entry or lesson about an idea needs.\n\nWhat you add is credited to kelve's contributors, under the name the graph made up for you, though CC0 asks no one to credit anyone.\n\n## The rest\n\nThis is part of kelve's terms for the shared graph and kelve.ai, in full at https://kelve.ai/terms. How the shared graph handles what it keeps about you, and your rights, is at https://kelve.ai/privacy.\n"
   },
   "/api/counts": {
-   "thisWeek": "{\n  \"week\": \"2026-11-02\",\n  \"install\": \"\",\n  \"agent\": \"kelve/0.1.6\",\n  \"version\": \"0.1.6\",\n  \"platform\": \"macos\",\n  \"weeksIn\": 0,\n  \"days\": 1,\n  \"deepDays\": 0,\n  \"contributing\": true,\n  \"counts\": {\n    \"agent.connected\": 1,\n    \"entries.graph\": 21,\n    \"entries.read\": 22,\n    \"jobs.done\": 35,\n    \"lessons.given\": 2,\n    \"lessons.held\": 1,\n    \"lessons.written\": 1,\n    \"opened.change\": 1\n  },\n  \"byDay\": {\n    \"2026-11-02\": {\n      \"agent.connected\": 1,\n      \"entries.graph\": 21,\n      \"entries.read\": 22,\n      \"jobs.done\": 35,\n      \"lessons.given\": 2,\n      \"lessons.held\": 1,\n      \"lessons.written\": 1,\n      \"opened.change\": 1\n    }\n  }\n}",
+   "thisWeek": "{\n  \"week\": \"2026-11-02\",\n  \"install\": \"\",\n  \"agent\": \"kelve/0.1.7\",\n  \"version\": \"0.1.7\",\n  \"platform\": \"macos\",\n  \"weeksIn\": 0,\n  \"days\": 1,\n  \"deepDays\": 0,\n  \"contributing\": true,\n  \"counts\": {\n    \"agent.connected\": 1,\n    \"entries.graph\": 21,\n    \"entries.read\": 22,\n    \"jobs.done\": 35,\n    \"lessons.given\": 2,\n    \"lessons.held\": 1,\n    \"lessons.written\": 1,\n    \"opened.change\": 1\n  },\n  \"byDay\": {\n    \"2026-11-02\": {\n      \"agent.connected\": 1,\n      \"entries.graph\": 21,\n      \"entries.read\": 22,\n      \"jobs.done\": 35,\n      \"lessons.given\": 2,\n      \"lessons.held\": 1,\n      \"lessons.written\": 1,\n      \"opened.change\": 1\n    }\n  }\n}",
    "sent": []
   },
   "/api/opened": [
@@ -548,7 +548,7 @@
     "path": null,
     "change": "commit 5b24ca61142285026377e6e62f78d67ee9382dc4",
     "title": "Retries that back off with jitter",
-    "openedAt": "2026-11-02T12:46:14.722Z",
+    "openedAt": "2026-11-02T14:08:57.562Z",
     "said": "Retries now wait longer each time, by a random amount, and every payment carries a key, so a retry can't charge twice.",
     "agent": "claude-code",
     "only": null,
@@ -4186,7 +4186,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4223,7 +4223,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4358,7 +4358,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4403,7 +4403,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4442,7 +4442,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4547,7 +4547,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4592,7 +4592,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4631,7 +4631,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4684,7 +4684,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4729,7 +4729,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4766,7 +4766,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4821,7 +4821,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -4866,7 +4866,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -4905,7 +4905,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -4958,7 +4958,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5003,7 +5003,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -5042,7 +5042,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -5095,7 +5095,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5140,7 +5140,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -5247,7 +5247,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5292,7 +5292,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -5318,7 +5318,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5348,7 +5348,7 @@
       }
      ],
      "state": "waiting",
-     "leavesAt": "2026-11-03T12:46:19.704Z",
+     "leavesAt": "2026-11-03T14:09:01.851Z",
      "why": null,
      "lesson": null,
      "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5390,7 +5390,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -5427,7 +5427,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -5468,7 +5468,7 @@
      "line": "held: the error didn't come back, and the next run passed",
      "path": "src/api/v1/charges.rs",
      "moment": "failed",
-     "at": "2026-11-02T12:46:19.181Z"
+     "at": "2026-11-02T14:09:01.748Z"
     }
    ],
    "instead": null,
@@ -5505,7 +5505,7 @@
      "line": "given to Claude Code; nothing showed yet whether it held",
      "path": "src/api/v1/charges.rs",
      "moment": "wrote",
-     "at": "2026-11-02T12:46:19.161Z"
+     "at": "2026-11-02T14:09:01.729Z"
     }
    ],
    "instead": "ON CONFLICT (key) DO NOTHING",
@@ -5649,7 +5649,7 @@
     }
    ],
    "state": "waiting",
-   "leavesAt": "2026-11-03T12:46:19.704Z",
+   "leavesAt": "2026-11-03T14:09:01.851Z",
    "why": null,
    "lesson": null,
    "example": "with_retries(|_| async {\n    tokio::time::timeout(PER_TRY, call()).await?\n})",
@@ -5667,7 +5667,7 @@
   ],
   "/api/list": {
    "working": true,
-   "workingUntil": 1793623724232,
+   "workingUntil": 1793628686080,
    "by": "claude-code",
    "open": 1,
    "now": [],
@@ -5703,7 +5703,7 @@
     "title": "Exponential backoff",
     "question": "How long should a client wait before trying again?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:00.392Z",
+    "madeAt": "2026-11-02T14:08:34.838Z",
     "blocks": [
      {
       "id": "b1",
@@ -5939,7 +5939,7 @@
     "title": "Exponential backoff",
     "question": "How long should a client wait before trying again?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:00.392Z",
+    "madeAt": "2026-11-02T14:08:34.838Z",
     "blocks": [
      {
       "id": "b1",
@@ -6339,7 +6339,7 @@
     "title": "Jitter",
     "question": "Why add randomness to when clients retry?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:23.552Z",
+    "madeAt": "2026-11-02T14:09:05.685Z",
     "blocks": [
      {
       "id": "b1",
@@ -6778,7 +6778,7 @@
     "title": "Jitter",
     "question": "Why add randomness to when clients retry?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:23.552Z",
+    "madeAt": "2026-11-02T14:09:05.685Z",
     "blocks": [
      {
       "id": "b1",
@@ -7317,7 +7317,7 @@
     "title": "Idempotency keys",
     "question": "How can a request sent twice be carried out once?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:00.411Z",
+    "madeAt": "2026-11-02T14:08:34.695Z",
     "blocks": [
      {
       "id": "b1",
@@ -7560,7 +7560,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -7625,7 +7625,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -7649,7 +7649,7 @@
     "title": "Idempotency keys",
     "question": "How can a request sent twice be carried out once?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:00.411Z",
+    "madeAt": "2026-11-02T14:08:34.695Z",
     "blocks": [
      {
       "id": "b1",
@@ -7892,7 +7892,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -7957,7 +7957,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -8097,7 +8097,7 @@
       "line": "given to Claude Code; nothing showed yet whether it held",
       "path": "src/api/v1/charges.rs",
       "moment": "wrote",
-      "at": "2026-11-02T12:46:19.161Z"
+      "at": "2026-11-02T14:09:01.729Z"
      }
     ],
     "instead": "ON CONFLICT (key) DO NOTHING",
@@ -8162,7 +8162,7 @@
       "line": "held: the error didn't come back, and the next run passed",
       "path": "src/api/v1/charges.rs",
       "moment": "failed",
-      "at": "2026-11-02T12:46:19.181Z"
+      "at": "2026-11-02T14:09:01.748Z"
      }
     ],
     "instead": null,
@@ -8480,7 +8480,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -8545,7 +8545,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -8646,7 +8646,7 @@
        "line": "given to Claude Code; nothing showed yet whether it held",
        "path": "src/api/v1/charges.rs",
        "moment": "wrote",
-       "at": "2026-11-02T12:46:19.161Z"
+       "at": "2026-11-02T14:09:01.729Z"
       }
      ],
      "instead": "ON CONFLICT (key) DO NOTHING",
@@ -8711,7 +8711,7 @@
        "line": "held: the error didn't come back, and the next run passed",
        "path": "src/api/v1/charges.rs",
        "moment": "failed",
-       "at": "2026-11-02T12:46:19.181Z"
+       "at": "2026-11-02T14:09:01.748Z"
       }
      ],
      "instead": null,
@@ -8804,7 +8804,7 @@
       "line": "given to Claude Code; nothing showed yet whether it held",
       "path": "src/api/v1/charges.rs",
       "moment": "wrote",
-      "at": "2026-11-02T12:46:19.161Z"
+      "at": "2026-11-02T14:09:01.729Z"
      }
     ],
     "instead": "ON CONFLICT (key) DO NOTHING",
@@ -8869,7 +8869,7 @@
       "line": "held: the error didn't come back, and the next run passed",
       "path": "src/api/v1/charges.rs",
       "moment": "failed",
-      "at": "2026-11-02T12:46:19.181Z"
+      "at": "2026-11-02T14:09:01.748Z"
      }
     ],
     "instead": null,
@@ -9385,7 +9385,7 @@
     "title": "Transient errors",
     "question": "Which failures pass on their own?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:00.471Z",
+    "madeAt": "2026-11-02T14:08:34.782Z",
     "blocks": [
      {
       "id": "b1",
@@ -9639,7 +9639,7 @@
     "title": "Transient errors",
     "question": "Which failures pass on their own?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:00.471Z",
+    "madeAt": "2026-11-02T14:08:34.782Z",
     "blocks": [
      {
       "id": "b1",
@@ -11873,7 +11873,7 @@
     "title": "Randomness",
     "question": "",
     "minutes": 3,
-    "madeAt": "2026-11-02T12:46:04.296Z",
+    "madeAt": "2026-11-02T14:08:38.603Z",
     "blocks": [
      {
       "id": "b1",
@@ -12057,7 +12057,7 @@
     "title": "Randomness",
     "question": "",
     "minutes": 3,
-    "madeAt": "2026-11-02T12:46:04.296Z",
+    "madeAt": "2026-11-02T14:08:38.603Z",
     "blocks": [
      {
       "id": "b1",
@@ -12298,7 +12298,7 @@
     "title": "Thundering herd problem",
     "question": "What goes wrong when many waiting processes wake at once?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:04.347Z",
+    "madeAt": "2026-11-02T14:08:38.564Z",
     "blocks": [
      {
       "id": "b1",
@@ -12488,7 +12488,7 @@
     "title": "Thundering herd problem",
     "question": "What goes wrong when many waiting processes wake at once?",
     "minutes": 4,
-    "madeAt": "2026-11-02T12:46:04.347Z",
+    "madeAt": "2026-11-02T14:08:38.564Z",
     "blocks": [
      {
       "id": "b1",
@@ -13668,7 +13668,7 @@
     "title": "Mutual exclusion",
     "question": "",
     "minutes": 1,
-    "madeAt": "2026-11-02T12:46:34.131Z",
+    "madeAt": "2026-11-02T14:09:16.284Z",
     "blocks": [
      {
       "id": "b1",
@@ -13751,7 +13751,7 @@
     "title": "Mutual exclusion",
     "question": "",
     "minutes": 1,
-    "madeAt": "2026-11-02T12:46:34.131Z",
+    "madeAt": "2026-11-02T14:09:16.284Z",
     "blocks": [
      {
       "id": "b1",
