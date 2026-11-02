@@ -2,7 +2,8 @@
 
 /**
  * Where the entries for what's open came from: how many ideas it has,
- * how many entries the shared graph had, and how many the person's agent
- * wrote.
+ * how many entries kelve took from the shared graph, how many the
+ * person's agent wrote, here or before, and how many of those the graph
+ * has accepted since.
  */
-export type Origins = { ideas: number, fromGraph: number, byAgent: number, };
+export type Origins = { ideas: number, fromGraph: number, byAgent: number, inGraph: number, };
