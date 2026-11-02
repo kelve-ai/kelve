@@ -13,7 +13,7 @@ import { changed, post } from '../api/client'
 import type { GraphAccount, GraphSignIn, MarksView, Me, Opened, Settings, SettingsIn } from '../api/types'
 import { Button, Choice, CopyWell, Quiet } from '../ui/ui'
 import { useLoad } from '../useLoad'
-import { agentKindName, agentName, roughly } from '../words'
+import { agentKindName, agentName, OPENED, roughly } from '../words'
 import { AGENTS, agentChoice, INSTALLED, SHOW_ME } from './agents'
 import { WRITE_MARKS } from './Marks'
 import { ProblemsNotice } from './Problems'
@@ -87,6 +87,9 @@ function FirstRun({ me, settings }: { me?: Me; settings?: Settings }) {
     </main>
   )
 }
+
+/** How many of what's ready in something opened lately show under it: the rest are in the list. */
+const READY_SHOWN = 3
 
 /** What each level marks, in words. */
 const MARKS: Record<string, string> = {
@@ -214,27 +217,33 @@ function Connected({ me, settings, opened }: { me: Me; settings?: Settings; open
   const recent = !first && lately.data && lately.data.length > 0 && (
     <nav className="recent" aria-label="Opened lately">
       <p className="lgroup"><b>Opened lately</b><span>{lately.data.length}</span></p>
-      {lately.data.map((o) => (
-        <div key={o.id} className="recent-one">
-          <a href={`#/o/${o.id}`} onClick={started}>
-            <span className="what">{o.title}</span>
-            <span className="when">{when(o)}</span>
-            <small>{o.root}</small>
-          </a>
-          {((o.ready && o.ready.length > 0) || left(o.id) > 0) && (
-            <p className="recent-ready">
-              {o.ready && o.ready.length > 0 && <span>Ready for you</span>}
-              {o.ready?.map((r) => (
-                <a key={`e:${r.key}`} href={`#/o/${o.id}?p=${encodeURIComponent(r.key)}`} onClick={started}>
-                  <Square ideaKey={r.key} name={r.name} />
-                  {r.name}
-                </a>
-              ))}
-              {left(o.id) > 0 && <span className="left">{left(o.id)} on the list</span>}
-            </p>
-          )}
-        </div>
-      ))}
+      {lately.data.map((o) => {
+        const ready = o.ready ?? []
+        const more = ready.length - READY_SHOWN
+        return (
+          <div key={o.id} className="recent-one">
+            <a href={`#/o/${o.id}`} onClick={started}>
+              <span className="what"><i>{OPENED[o.kind] ?? o.kind}</i> {o.title}</span>
+              <span className="when">{when(o)}</span>
+              <small>{o.root}</small>
+            </a>
+            {(ready.length > 0 || left(o.id) > 0) && (
+              <p className="recent-ready">
+                {ready.length > 0 && <span>Ready for you</span>}
+                {ready.slice(0, READY_SHOWN).map((r) => (
+                  <a key={`e:${r.key}`} href={`#/o/${o.id}?p=${encodeURIComponent(r.key)}`} onClick={started}>
+                    <Square ideaKey={r.key} name={r.name} />
+                    {r.name}
+                  </a>
+                ))}
+                {/* The rest are in the list's Ready for you, beside it. */}
+                {more > 0 && <a className="more" href={`#/o/${o.id}?k=list`} onClick={started}>and {more} more</a>}
+                {left(o.id) > 0 && <span className="left">{left(o.id)} on the list</span>}
+              </p>
+            )}
+          </div>
+        )
+      })}
     </nav>
   )
   return (

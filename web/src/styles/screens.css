@@ -62,12 +62,14 @@
 .recent-one > a:hover { text-decoration: none; }
 .recent-one > a:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
 .recent-one > a .what { min-width: 0; font-size: 15px; line-height: 22px; font-weight: 500; overflow-wrap: anywhere; }
+.recent-one > a .what i { font-style: normal; font-weight: 400; color: var(--quiet); margin-right: 3px; }
 .recent-one > a .when { font-size: 12.5px; color: var(--quiet); white-space: nowrap; }
 .recent-one > a small { grid-column: 1; margin-top: 1px; font: 12px/18px var(--mono); color: var(--quiet); overflow-wrap: anywhere; }
 /* What's ready in it: on a line under it, each a link of its own; how much is left, at the right. */
 .recent-ready { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 6px 0 0; font-size: 13px; line-height: 20px; color: var(--quiet); }
 .recent-ready a { display: inline-flex; align-items: center; gap: 7px; font-weight: 500; color: var(--ink); text-decoration: none; }
 .recent-ready a:hover { text-decoration: underline; text-decoration-color: var(--mute); text-underline-offset: 3px; }
+.recent-ready a.more { font-weight: 400; color: var(--quiet); }
 .recent-ready .left { margin-left: auto; }
 
 /* ---------------------------------------------------------------- adding (O-4, O-5) */
