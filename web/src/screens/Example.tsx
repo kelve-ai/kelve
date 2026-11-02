@@ -36,6 +36,7 @@ import { Loading } from '../Loader'
 import { Reader } from '../reader/Reader'
 import { PageTop } from '../Top'
 import { Adding } from './Adding'
+import { Moved } from './Moved'
 import { Start } from './Start'
 import { You } from './You'
 
@@ -351,6 +352,7 @@ export function Example() {
   if (!f) return <Loading />
   const me = f.answers['/api/me'] as Me
   if (screen === '') return <Reader id={f.opened} example />
+  if (screen === 'moved') return <Moved />
   return (
     <>
       <PageTop here={screen === 'you' ? 'settings' : 'start'} settings="#/example/you/agent" />

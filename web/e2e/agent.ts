@@ -236,7 +236,7 @@ export type Agent = {
   /** Says hello, as `kelve mcp` does when the agent starts it. */
   hello: () => Promise<void>
   /** Asks kelve to open something, as the `open` tool does: what it says back. */
-  open: (what: Record<string, unknown>) => Promise<{ title: string; files: number; folders: number; toRead: number; shown: boolean }>
+  open: (what: Record<string, unknown>) => Promise<{ id: number; title: string; files: number; folders: number; toRead: number; shown: boolean }>
   /**
    * Does kelve's work until there's none left: the jobs it was given. With
    * `until`, it stops at the first job of that kind, having taken it.

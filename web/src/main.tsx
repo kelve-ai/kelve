@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import { watchPage } from './api/client'
+import { joinTabs } from './tabs'
 import './styles/app.css'
 import './styles/figures.css'
 import './styles/reader.css'
@@ -19,5 +20,8 @@ try {
   // No storage, or nothing kept: settings draw it when they come.
 }
 watchPage()
+// Before the app reads its address: a tab kelve opened to show something
+// takes the place of one already showing it.
+joinTabs()
 
 createRoot(document.getElementById('root')!).render(<App />)

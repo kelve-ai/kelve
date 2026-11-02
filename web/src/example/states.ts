@@ -114,6 +114,7 @@ export function states(answers: Record<string, unknown>): State[] {
     { name: 'reader-list-paused', title: 'Your agent’s list: what’s open first, what you opened before paused', path: `#/example?${file('src/retry.rs')}&k=list&as=paused` },
     { name: 'reader-list-paused-shown', title: 'What’s paused, shown, each with Open', path: `#/example?${file('src/retry.rs')}&k=list&as=paused`, clicks: ['Show'] },
     { name: 'reader-list-paused-now', title: 'Opening something else: what was open, paused just now', path: `#/example?${file('src/retry.rs')}&k=list&as=paused-just` },
+    { name: 'moved', title: 'A tab whose thing kelve showed again in a newer one', path: '#/example/moved' },
     { name: 'first-run', title: 'First run: connect your agent', path: '#/example/first-run', phone: true },
     { name: 'start', title: 'Connected: what to say to your agent, and sharing counts asked once (Count-1)', path: '#/example/start' },
     { name: 'start-counts-shared', title: 'Connected, counts shared: a tick with Stop (Count-2)', path: '#/example/start?as=counts-shared' },
