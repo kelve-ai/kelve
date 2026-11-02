@@ -4,26 +4,8 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { expect, type Page, test } from '@playwright/test'
-import { marginNote, me, open, openFile, pane, repo, world } from '../world'
-
-/**
- * Selects lines of the file shown, from the first through the last, by their
- * text, as a person does: a drag from the start of the first to the end of
- * the last. The editor takes a drag as it goes; a selection made on the page
- * behind its back is read only when the browser says it changed, and is lost
- * when the editor draws the file again before then.
- */
-async function selectLines(page: Page, first: string, last: string) {
-  const line = (text: string) => page.locator('.cm-line').filter({ hasText: text }).first()
-  const from = await line(first).boundingBox()
-  const to = await line(last).boundingBox()
-  if (!from || !to) throw new Error(`The lines from ${first} to ${last} aren’t shown.`)
-  await page.mouse.move(from.x + 1, from.y + from.height / 2)
-  await page.mouse.down()
-  await page.mouse.move(to.x + to.width - 1, to.y + to.height / 2, { steps: 4 })
-  await page.mouse.up()
-}
+import { expect, test } from '@playwright/test'
+import { marginNote, me, open, openFile, pane, repo, selectLines, world } from '../world'
 
 test('a note for your agent waits under its lines, is picked up, and says what was done', async ({ page }) => {
   const root = repo()

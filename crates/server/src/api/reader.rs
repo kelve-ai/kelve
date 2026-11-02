@@ -86,8 +86,11 @@ pub async fn open_again(
 /// Shows the person what was opened for them, in a new browser tab, which
 /// brings their browser to the front, so they see it at once; a tab they
 /// have open on something else, perhaps another agent's work, stays where
-/// it is (Nathan, 29 October). It's signed in by a one-time link that goes
-/// to the person, never to whoever asked. Whether they see it.
+/// it is (Nathan, 29 October). A tab already showing the same thing gives
+/// the new one its place, where the person was in it, and closes (the web
+/// app's `tabs.ts`): no page can bring itself forward, so only a new tab
+/// is sure to be seen. It's signed in by a one-time link that goes to the
+/// person, never to whoever asked. Whether they see it.
 pub async fn show(app: &Shared, id: i64) -> ApiResult<bool> {
     let link = crate::auth::link_to(app, Some(id)).await?;
     Ok(app.hand_off(&link))

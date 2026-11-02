@@ -206,8 +206,8 @@ async fn opening_lands_the_browser_on_it_and_tells_the_command_line_nothing_more
     assert!(status.is_redirection());
     assert_eq!(
         location.as_deref(),
-        Some(format!("/#/o/{id}").as_str()),
-        "it lands on what was opened"
+        Some(format!("/#/o/{id}?shown").as_str()),
+        "it lands on what was opened, marked as kelve showing it, so it takes the place of a tab showing it already"
     );
     assert!(cookie.is_some(), "signed in");
     let (status, _, _) = k.land(&link).await;

@@ -145,6 +145,24 @@ export async function openFile(page: Page, path: string) {
   await expect(page.locator('.fv-name')).toContainText(path)
 }
 
+/**
+ * Selects lines of the file shown, from the first through the last, by their
+ * text, as a person does: a drag from the start of the first to the end of
+ * the last. The editor takes a drag as it goes; a selection made on the page
+ * behind its back is read only when the browser says it changed, and is lost
+ * when the editor draws the file again before then.
+ */
+export async function selectLines(page: Page, first: string, last: string) {
+  const line = (text: string) => page.locator('.cm-line').filter({ hasText: text }).first()
+  const from = await line(first).boundingBox()
+  const to = await line(last).boundingBox()
+  if (!from || !to) throw new Error(`The lines from ${first} to ${last} aren’t shown.`)
+  await page.mouse.move(from.x + 1, from.y + from.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(to.x + to.width - 1, to.y + to.height / 2, { steps: 4 })
+  await page.mouse.up()
+}
+
 const LEDGER = `use sqlx::PgPool;
 
 /// Holds back the most a call could cost, before it's made.

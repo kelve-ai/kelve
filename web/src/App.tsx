@@ -12,6 +12,8 @@ import { isSignedOut, listen, onSignedOut } from './api/client'
 import { Start } from './screens/Start'
 import { Adding } from './screens/Adding'
 import { SignedOut } from './screens/SignedOut'
+import { Moved } from './screens/Moved'
+import { isMoved, onMoved, showHere } from './tabs'
 import { You } from './screens/You'
 import { PageTop } from './Top'
 import { useLoad } from './useLoad'
@@ -46,8 +48,16 @@ export function App() {
   return <Kelve />
 }
 
+/** Whether what this tab showed is open in a newer one. */
+function useMoved() {
+  const [moved, setMoved] = useState(isMoved)
+  useEffect(() => onMoved(() => setMoved(isMoved())), [])
+  return moved
+}
+
 function Kelve() {
   const out = useSignedOut()
+  const moved = useMoved()
   const me = useLoad<Me>('/api/me', ['settings', 'agent'])
   const settings = useLoad<Settings>('/api/settings', ['settings'])
   // How code and text are drawn, from settings.
@@ -68,6 +78,7 @@ function Kelve() {
   const known = !!me.data
   useEffect(() => (known ? listen() : undefined), [known])
   if (out) return <SignedOut />
+  if (moved) return <Moved showHere={showHere} />
   return <Shell me={me.data} />
 }
 

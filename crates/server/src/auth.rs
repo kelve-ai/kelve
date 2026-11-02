@@ -269,9 +269,11 @@ pub async fn sign_in(State(app): State<Shared>, Query(q): Query<SignIn>) -> Resp
         "{COOKIE}={session}; Path=/; HttpOnly; SameSite=Strict; Max-Age={}{secure}",
         SESSION_DAYS * 86_400
     );
+    // Marked as kelve showing it, so it takes the place of a tab already
+    // showing it (the web app's `tabs.ts`).
     let to = q
         .opened
-        .map_or_else(|| "/".to_string(), |id| format!("/#/o/{id}"));
+        .map_or_else(|| "/".to_string(), |id| format!("/#/o/{id}?shown"));
     let mut response = Redirect::to(&to).into_response();
     if let Ok(value) = HeaderValue::from_str(&cookie) {
         response.headers_mut().insert(header::SET_COOKIE, value);
