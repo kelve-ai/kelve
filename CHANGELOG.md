@@ -2,6 +2,10 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **Your agent's work is read as what it changed, not everything since your main.** kelve read a branch from where it left your local `main`, which agents rarely update, so a change showed every file merged since and had to be opened again. Now, when your local `main` is behind the remote's, kelve reads from where the work left the remote's. It still fetches nothing.
+
 ## 0.1.8, 2 November 2026
 
 - **A part read plainly shows its ideas beside its code and its text.** Show the code and Show the text named each idea under its lines, inside the text column, which made the code harder to read. Now they're drawn as the file is, each idea in the margin beside its lines, across the page's whole width; on a phone, under them, as before. What your agent said leaves the bar: it's on the change's own page.

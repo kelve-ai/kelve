@@ -349,14 +349,56 @@ fn blob(repo: &gix::Repository, id: ObjectId) -> Result<Vec<u8>, GitError> {
     Ok(repo.find_object(id).map_err(read_err)?.data.clone())
 }
 
-/// Where the checked-out branch left `base`.
+/// Where the checked-out branch left `base`. Agents fetch and branch from
+/// the remote's branch, and rarely move the local one on, so for a local
+/// branch, where the work left its remote-tracking branch counts too, when
+/// that's further along: else everything merged since would read as the
+/// work. When neither is further along than the other, the local one's.
 fn merge_base(repo: &gix::Repository, head: ObjectId, base: &str) -> Result<ObjectId, GitError> {
     let base_commit = commit(repo, base)?;
-    Ok(repo
+    let local = repo
         .merge_base(head, base_commit.id)
         .map_err(read_err)?
         .ok_or_else(|| GitError::Unrelated(base.to_string()))?
-        .detach())
+        .detach();
+    let further = tracking(repo, base)
+        .and_then(|t| repo.merge_base(head, t).ok().flatten())
+        .map(|id| id.detach())
+        .filter(|&t| {
+            t != local
+                && repo
+                    .merge_base(local, t)
+                    .ok()
+                    .flatten()
+                    .is_some_and(|m| m == local)
+        });
+    Ok(further.unwrap_or(local))
+}
+
+/// The commit a local branch's remote-tracking branch is at: its upstream,
+/// as configured, or else `<remote>/<base>` on the first remote that has
+/// one, origin first. None for anything else: a remote branch, a tag or a
+/// commit is read as it's given.
+fn tracking(repo: &gix::Repository, base: &str) -> Option<ObjectId> {
+    let local = repo.try_find_reference(base).ok().flatten()?;
+    if local.name().category() != Some(gix::refs::Category::LocalBranch) {
+        return None;
+    }
+    let upstream = repo
+        .branch_remote_tracking_ref_name(local.name(), gix::remote::Direction::Fetch)
+        .and_then(Result::ok)
+        .map(|name| name.as_bstr().to_str_lossy().into_owned());
+    let short = local.name().shorten().to_str_lossy().into_owned();
+    let mut remotes: Vec<String> = repo
+        .remote_names()
+        .iter()
+        .map(|r| r.to_str_lossy().into_owned())
+        .collect();
+    remotes.sort_by_key(|r| r != "origin");
+    upstream
+        .into_iter()
+        .chain(remotes.iter().map(|r| format!("refs/remotes/{r}/{short}")))
+        .find_map(|name| commit(repo, &name).ok().map(|c| c.id))
 }
 
 /// The checked-out branch's name, or the commit's when there's no branch.
@@ -407,6 +449,9 @@ struct Commits {
     branch: Option<String>,
     /// What it's read against, or the one commit it is.
     base: Option<ObjectId>,
+    /// And its remote-tracking branch, when it's a local branch: fetching
+    /// can move where the work left it.
+    tracking: Option<ObjectId>,
 }
 
 fn commits(repo: &gix::Repository, which: &Which) -> Result<Commits, GitError> {
@@ -416,6 +461,10 @@ fn commits(repo: &gix::Repository, which: &Which) -> Result<Commits, GitError> {
             Some(commit(repo, spec)?.id)
         }
     };
+    let tracking = match which {
+        Which::Against(spec) | Which::Since(spec) => tracking(repo, spec),
+        Which::Uncommitted | Which::Commit(_) => None,
+    };
     Ok(Commits {
         head: repo.head_id().ok().map(|id| id.detach()),
         branch: repo
@@ -424,6 +473,7 @@ fn commits(repo: &gix::Repository, which: &Which) -> Result<Commits, GitError> {
             .flatten()
             .map(|n| n.as_bstr().to_str_lossy().into_owned()),
         base,
+        tracking,
     })
 }
 
@@ -538,12 +588,7 @@ fn read_change(
         }
         Which::Against(base) => {
             let head = head.ok_or_else(|| GitError::Unknown("HEAD".into()))?;
-            let base_commit = commit(repo, base)?;
-            let from = repo
-                .merge_base(head.id, base_commit.id)
-                .map_err(read_err)?
-                .ok_or_else(|| GitError::Unrelated(base.clone()))?
-                .detach();
+            let from = merge_base(repo, head.id, base)?;
             let from_tree = repo
                 .find_commit(from)
                 .map_err(read_err)?
@@ -1381,6 +1426,79 @@ mod tests {
             change(&dir, &Which::Against("nowhere".into())),
             Err(GitError::Unknown(_))
         ));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// A repo whose local main is at its first commit, with a remote, and a
+    /// second commit, merged elsewhere, that only `ahead` is at.
+    fn with_a_remote(ahead: &str) -> PathBuf {
+        let dir = repo();
+        git(
+            &dir,
+            &["remote", "add", "origin", "https://example.com/ledger.git"],
+        );
+        git(&dir, &["update-ref", "refs/remotes/origin/main", "main"]);
+        std::fs::write(dir.join("src/main.rs"), "fn main() { run() }\n").unwrap();
+        git(&dir, &["commit", "-q", "-am", "Run"]);
+        git(&dir, &["update-ref", ahead, "HEAD"]);
+        if ahead != "refs/heads/main" {
+            git(&dir, &["reset", "-q", "--hard", "HEAD~1"]);
+        }
+        // The agent's work, from the second commit.
+        git(&dir, &["checkout", "-q", "-b", "agent", ahead]);
+        std::fs::write(dir.join("src/retry.rs"), "fn retry() {}\n").unwrap();
+        git(&dir, &["add", "."]);
+        git(&dir, &["commit", "-q", "-m", "Retry"]);
+        dir
+    }
+
+    #[test]
+    fn a_branch_from_a_fetched_main_is_read_from_where_it_left_that_not_a_stale_local_one() {
+        let dir = with_a_remote("refs/remotes/origin/main");
+        let ours = [("src/retry.rs", Status::Added)];
+        let c = change(&dir, &Which::Against("main".into())).expect("read");
+        assert_eq!(c.title, "agent against main");
+        assert_eq!(paths(&c), ours);
+        let c = change(&dir, &Which::Since("main".into())).expect("read");
+        assert_eq!(c.title, "agent since main");
+        assert_eq!(paths(&c), ours);
+        // Fetching again can move where it left: it's read again.
+        let stamp = stamped(&dir, &Which::Against("main".into()));
+        git(&dir, &["update-ref", "refs/remotes/origin/main", "agent"]);
+        assert!(!stamp.holds(), "origin/main moved on");
+        // A branch's upstream, as configured, comes before origin's.
+        git(
+            &dir,
+            &["remote", "add", "fork", "https://example.com/fork.git"],
+        );
+        git(&dir, &["update-ref", "refs/remotes/fork/main", "agent~1"]);
+        git(&dir, &["update-ref", "refs/remotes/origin/main", "main"]);
+        git(&dir, &["config", "branch.main.remote", "fork"]);
+        git(&dir, &["config", "branch.main.merge", "refs/heads/main"]);
+        let c = change(&dir, &Which::Against("main".into())).expect("read");
+        assert_eq!(paths(&c), ours);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_local_main_ahead_of_its_remote_is_read_from_and_any_other_base_as_given() {
+        let dir = with_a_remote("refs/heads/main");
+        let c = change(&dir, &Which::Against("main".into())).expect("read");
+        assert_eq!(paths(&c), [("src/retry.rs", Status::Added)]);
+        // origin/main, a tag or a commit, each at the first commit.
+        git(&dir, &["tag", "v1", "main~1"]);
+        let first = head(&dir, "main~1").expect("a commit").0;
+        for base in ["origin/main", "v1", first.as_str()] {
+            let c = change(&dir, &Which::Against(base.into())).expect("read");
+            assert_eq!(
+                paths(&c),
+                [
+                    ("src/main.rs", Status::Modified),
+                    ("src/retry.rs", Status::Added)
+                ],
+                "{base}"
+            );
+        }
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
