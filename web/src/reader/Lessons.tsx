@@ -57,21 +57,21 @@ function heldLine(l: LessonView): string {
 
 /**
  * At the top of a change or a file: what the shared graph gave this work, in
- * the kind line's shape (board Value-1). On a change, first the ideas: how
- * many someone's agent had already written, and how few yours had to; then
- * the lessons.
+ * the kind line's shape (board Value-1). On a change, first the ideas: of
+ * those kelve marks in it, how many the shared graph had already written,
+ * how many your agent wrote, and how many have no entry yet; then the
+ * lessons. Its label ends in a space, as the kind line's does, so its text
+ * reads as words when it's read out or copied.
  */
 export function GaveLine({ lessons, agent, origins }: { lessons: LessonView[]; agent: string; origins?: Origins }) {
   const Agent = agent.charAt(0).toUpperCase() + agent.slice(1)
   const o = origins && origins.fromGraph > 0 ? origins : undefined
-  const ideas = o
-    ? `${o.fromGraph} of ${o.ideas} ${o.ideas === 1 ? 'idea was' : 'ideas were'} already written${o.byAgent > 0 ? `, so ${Agent} wrote ${o.byAgent}` : ''}.`
-    : ''
+  const ideas = o ? ideasLine(o, Agent) : ''
   if (!lessons.length) {
     if (!ideas) return null
     return (
       <p className="chg gv">
-        <span className="mkt new">From the graph</span>
+        <span className="mkt new">From the graph </span>
         <span>{ideas}</span>
       </p>
     )
@@ -90,13 +90,28 @@ export function GaveLine({ lessons, agent, origins }: { lessons: LessonView[]; a
     : d === 0 ? `; ${say(h)} ${h === 1 ? 'was' : 'were'} put to the test, and held.`
     : h === 0 ? `; ${say(d)} ${d === 1 ? 'was' : 'were'} put to the test, and didn’t hold.`
     : `; ${say(h)} held when put to the test, and ${say(d)} didn’t.`
-  const line = ideas ? `${ideas} It was given ${used}${how}` : cap(`${Agent} was given ${used} from the shared graph${how}`)
+  const line = ideas ? `${ideas} ${Agent} was given ${used}${how}` : cap(`${Agent} was given ${used} from the shared graph${how}`)
   return (
     <p className="chg gv">
-      <span className="mkt new">From the graph</span>
+      <span className="mkt new">From the graph </span>
       <span>{line}</span>
     </p>
   )
+}
+
+/**
+ * Where the entries for a change's ideas came from, as a sentence: "Of the
+ * 199 ideas here, 16 were already in the shared graph and Claude Code wrote
+ * 13. The other 170 have no entry yet." An idea has none until it's opened,
+ * or taken ahead from the graph, so the graph may have some of the rest.
+ */
+export function ideasLine(o: Origins, Agent: string): string {
+  const rest = Math.max(o.ideas - o.fromGraph - o.byAgent, 0)
+  const of = o.ideas === 1 ? 'Its one idea' : `Of the ${o.ideas} ideas here, ${o.fromGraph}`
+  const wrote = o.byAgent > 0 ? ` and ${Agent} wrote ${o.byAgent}` : ''
+  const came = o.ideas === 1 ? `${of} was already in the shared graph.` : `${of} were already in the shared graph${wrote}.`
+  const none = rest === 0 ? '' : rest === 1 ? ' The other one has no entry yet.' : ` The other ${rest} have no entry yet.`
+  return came + none
 }
 
 /** How a lesson went here, for its row: what showed it held or didn't, or when it was given. */

@@ -9,14 +9,13 @@ import { doWaiting, OpenContext, placeSaid, toDo, type Where } from '../agentLis
 import { post } from '../api/client'
 import type { AgentList, ListItem, Paused, Reading } from '../api/types'
 import { State } from '../ui/ui'
-import { agentName, roughly } from '../words'
+import { agentName, OPENED, roughly } from '../words'
 import { AtWork, DOING } from './Side'
 
 /** How far reading what's open has got, as the list counts its lines. */
 type ListReading = Pick<Reading, 'read' | 'of' | 'pages' | 'pagesLeft'> & { opened: number }
 
 const KIND: Record<string, string> = { reading: 'Reading', pages: 'Pages', plainly: 'Plainly', entry: 'Entry', note: 'Note' }
-const OPENED: Record<string, string> = { change: 'Change', folder: 'Folder', file: 'File' }
 
 /** How long something paused stays tinted, saying so. */
 const JUST = 60 * 1000

@@ -2,11 +2,15 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
-## Unreleased
+## 0.1.7, 2 November 2026
 
 - **Your agent shows you its work when it's finished it, committed or not.** It waited for a commit, a push or a pull request, so work left uncommitted wasn't shown. Now, as your agent's turn ends having changed files you haven't seen in kelve, kelve's hook asks it to show them, if the work's done and worth showing.
 - **The same work is one thing in kelve, kept up to date.** Your agent shows its work as its branch, committed or not, so showing it again brings it up to date rather than adding another. In a folder that isn't in a git repository, it shows the files it changed, as they are now, and showing them again does the same. Committing, pushing or opening a pull request for work you've seen since it last changed opens nothing more.
 - **Reading the graph quickly is no longer taken for a day's reading used.** The shared graph asks anyone reading a lot at once to wait a second, and kelve took that for the day's limit: it said the day's reading was used and stopped reading until midnight UTC. Now it waits as asked and reads on.
+- **Entries open quickly while your agent is busy.** kelve asked the shared graph about each entry it was checking so often that opening one waited its turn, and an entry the graph had could go to your agent to write again. Now it asks less often the longer a check goes on, and soon about an entry you have open.
+- **A file's page opens at once.** What uses the file shows straight away, while kelve works it out afresh behind it.
+- **Opened lately stays short.** Each item says whether it's a change, a folder or a file, and shows at most three ready entries.
+- **From the graph says what each count counts:** how many of the ideas were already in the graph, how many your agent wrote, and how many have no entry yet.
 
 ## 0.1.6, 1 November 2026
 

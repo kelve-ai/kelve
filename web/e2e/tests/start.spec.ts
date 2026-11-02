@@ -77,7 +77,8 @@ test('connect your agent, with the example beside it; then what to say to it', a
     await expect(page.getByRole('heading', { name: 'kelve is set up.' })).toHaveCount(0)
     // And the start page leads with what was opened lately: what was set up is done with.
     await page.goto(`${fresh.base}/`)
-    await expect(page.getByRole('navigation', { name: 'Opened lately' })).toContainText('Another look')
+    // Each says what kind it is, so a folder reads apart from a change.
+    await expect(page.getByRole('navigation', { name: 'Opened lately' }).getByRole('link', { name: /Another look/ })).toContainText('Folder Another look')
     await expect(page.getByRole('heading', { name: 'kelve is set up.' })).toHaveCount(0)
     await expect(page.getByText('Claude Code is connected')).toHaveCount(0)
     await expect(page.getByText('To open something else, ask Claude Code:')).toBeVisible()

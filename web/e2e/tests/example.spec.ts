@@ -37,7 +37,7 @@ test('the example change, read down to a first principle', async ({ page, browse
     await me.work()
     const how = page.getByRole('region', { name: 'How it works now' })
     await expect(how).toContainText('Waits longer, at a random point', { timeout: 15_000 })
-    await expect(page.locator('.pl p.chg')).toContainText('Fixes')
+    await expect(page.locator('.pl p.chg').first()).toContainText('Fixes')
     await expect(how.getByRole('button', { name: /Idempotency keys/ })).toBeVisible()
     await expect(page.getByRole('region', { name: 'Its files, in the order to read them' })).toContainText('src/retry.rs')
     // Every idea is in search before you type, what's new red, what was already there too.
@@ -99,6 +99,11 @@ test('the example change, read down to a first principle', async ({ page, browse
     await expect(ground).toContainText('Nothing: this is a first principle, the ground everything above it stands on.')
     // A first principle's square is black, on a line, wherever it shows.
     await expect(entry.getByRole('img', { name: 'Randomness, a first principle' })).toBeVisible()
+
+    // Back on the change's own page, what the shared graph gave it: each
+    // count says what it counts, and the label reads apart from the sentence.
+    await page.goto(`${k.base}/#/o/1`)
+    await expect(page.locator('.pl p.chg.gv')).toContainText(/^From the graph Of the \d+ ideas here, \d+ (was|were) already in the shared graph and Claude Code wrote 1\./, { timeout: 15_000 })
   } finally {
     k.stop()
     g.stop()
