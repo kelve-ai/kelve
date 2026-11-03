@@ -4,6 +4,8 @@ What changes in each release of kelve, for the people who run it. Versions follo
 
 ## Unreleased
 
+## 0.1.12, 3 November 2026
+
 - **Your agent commits what kelve keeps in your project.** `.kelve/` holds what's been read, so no one on the project reads a file twice, and the notes left with the work. Nothing told your agent, so it might leave it out of a commit or add it to `.gitignore`. Now kelve's instructions tell it to commit `.kelve/` with the work, and never ignore it. Whether what's read is kept there is still yours to choose, in settings.
 
 ## 0.1.11, 3 November 2026
