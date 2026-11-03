@@ -330,10 +330,11 @@ static FAILED: LazyLock<Regex> = LazyLock::new(|| {
     )
 });
 /// Lines that say where something failed, or how a command exited, but not
-/// what failed.
+/// what failed; and rustc's pointers to its docs, which name an error's
+/// code but not the error.
 static NOISE: LazyLock<Regex> = LazyLock::new(|| {
     re(
-        r"(?i)^(?:shell cwd was reset to |thread .* panicked at |exit code:? ?-?\d+$|exit status -?\d+$|traceback \(most recent call last\)|running \d+ tests?$|error: test failed|error: could not compile|note: run with|at [\w$.<>]+\(|file \x22|-->\s|\d*\s*\|)",
+        r"(?i)^(?:shell cwd was reset to |for more information about (?:this|an) error|some errors have detailed explanations|thread .* panicked at |exit code:? ?-?\d+$|exit status -?\d+$|traceback \(most recent call last\)|running \d+ tests?$|error: test failed|error: could not compile|note: run with|at [\w$.<>]+\(|file \x22|-->\s|\d*\s*\|)",
     )
 });
 /// A code or a rule's id: `E0425`, `TS2345`, `SC2086`, `Microsoft.Passive`.
@@ -815,6 +816,86 @@ pub fn still_in(line: &str, text: &str) -> bool {
     !line.is_empty() && text.lines().any(|l| l.trim() == line)
 }
 
+/// Work an agent replaced, as a lesson job shows it: the first way and the
+/// second, hunk by hunk, each with a line on either side, hunks apart; and
+/// the lines that are gone, to tell whose they were.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Ways {
+    pub first: String,
+    pub second: String,
+    pub gone: Vec<String>,
+}
+
+/// What an edit replaced, from the text before it and after: only the hunks
+/// where lines went. A hunk that only adds lines replaced nothing, and a
+/// line put back nearly as it was, a number or a word changed, was touched,
+/// not replaced: so a list grown longer under a header that counts it is no
+/// replaced work. None when nothing was.
+pub fn replaced_ways(before: &str, after: &str) -> Option<Ways> {
+    use similar::{ChangeTag, TextDiff};
+    let diff = TextDiff::from_lines(before, after);
+    let (mut first, mut second, mut gone) = (Vec::new(), Vec::new(), Vec::new());
+    for group in diff.grouped_ops(1) {
+        let (mut was, mut now, mut out, mut put) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        for op in &group {
+            for change in diff.iter_changes(op) {
+                let line = change.value().trim_end_matches(['\n', '\r']).to_string();
+                match change.tag() {
+                    ChangeTag::Equal => {
+                        was.push(line.clone());
+                        now.push(line);
+                    }
+                    ChangeTag::Delete => {
+                        out.push(line.clone());
+                        was.push(line);
+                    }
+                    ChangeTag::Insert => {
+                        put.push(line.clone());
+                        now.push(line);
+                    }
+                }
+            }
+        }
+        let went: Vec<String> = out
+            .iter()
+            .filter(|l| l.trim().len() > 2 && !put.iter().any(|p| nearly(l, p)))
+            .map(|l| l.trim().to_string())
+            .collect();
+        if went.is_empty() {
+            continue;
+        }
+        if !first.is_empty() {
+            first.push("…".to_string());
+            second.push("…".to_string());
+        }
+        first.extend(was);
+        second.extend(now);
+        gone.extend(went);
+    }
+    (!gone.is_empty()).then(|| Ways {
+        first: first.join("\n"),
+        second: second.join("\n"),
+        gone,
+    })
+}
+
+/// Whether two lines are nearly the same: most of their words shared, as
+/// when a count or a word in a comment changes.
+fn nearly(a: &str, b: &str) -> bool {
+    let words = |s: &str| -> BTreeSet<String> {
+        s.split(|c: char| !c.is_alphanumeric() && c != '_')
+            .filter(|w| !w.is_empty())
+            .map(str::to_lowercase)
+            .collect()
+    };
+    let (a, b) = (words(a), words(b));
+    if a.is_empty() || b.is_empty() {
+        return false;
+    }
+    let shared = a.intersection(&b).count();
+    shared * 5 >= a.union(&b).count() * 3
+}
+
 /// The line kelve writes before a lesson: how far it's confirmed, never
 /// in the author's words.
 pub fn basis(record: Record) -> String {
@@ -987,6 +1068,48 @@ mod tests {
             seen_as("TS2345: Argument of type 'string' is not assignable"),
             "TS2345: Argument of type <str> is not assignable"
         );
+        // rustc's pointer to its docs names the code, not the error: the
+        // error is seen, wherever the pointer comes.
+        assert_eq!(
+            seen_as(
+                "For more information about this error, try `rustc --explain E0063`.\nerror[E0063]: missing field `code` in initializer of `FileText`"
+            ),
+            "error[E0063]: missing field `code` in initializer of `FileText`"
+        );
+        assert_eq!(
+            seen_as(
+                "Some errors have detailed explanations: E0063, E0425.\nerror[E0425]: cannot find value `x`"
+            ),
+            "error[E0425]: cannot find value `x`"
+        );
+    }
+
+    #[test]
+    fn replaced_work_is_only_lines_that_went_shown_hunk_by_hunk() {
+        // A list grown longer, under a header whose count changed: nothing
+        // replaced.
+        let before = "/// The languages kelve colours.\npub const LANGUAGES: [&str; 3] = [\n    \"rust\",\n    \"toml\",\n    \"yaml\",\n];\n";
+        let after = "/// The languages kelve colours, by name.\npub const LANGUAGES: [&str; 5] = [\n    \"hcl\",\n    \"php\",\n    \"rust\",\n    \"toml\",\n    \"yaml\",\n];\n";
+        assert_eq!(replaced_ways(before, after), None);
+        // Lines only added: nothing replaced either.
+        assert_eq!(
+            replaced_ways("a = 1\nb = 2\n", "a = 1\nc = 3\nb = 2\n"),
+            None
+        );
+        // A retry rewritten: what went, with a line either side, in place.
+        let before = "def charge(bank):\n    for attempt in range(5):\n        try:\n            return bank.send()\n        except Busy:\n            time.sleep(2 ** attempt)\n\ndef refund(bank):\n    return bank.refund()\n";
+        let after = "def charge(bank):\n    return retry(bank.send, tries=5)\n\ndef refund(bank):\n    return bank.refund()\n";
+        let ways = replaced_ways(before, after).unwrap();
+        assert!(ways.gone.contains(&"time.sleep(2 ** attempt)".to_string()));
+        assert!(ways.first.starts_with("def charge(bank):\n    for attempt"));
+        assert!(ways.second.contains("return retry(bank.send, tries=5)"));
+        assert!(!ways.first.contains("refund"), "{}", ways.first);
+        // Two places changed are two hunks, apart, never one stitched block.
+        let before = "x = load()\nfor i in items:\n    total += i.price\n    count += 1\nprint(total)\n\n\n\n\nkeep = 1\nwhile busy():\n    sleep(1)\n    tries += 1\ndone()\n";
+        let after = "x = load()\ntotal = sum(i.price for i in items)\nprint(total)\n\n\n\n\nkeep = 1\nwait_until_idle()\ndone()\n";
+        let ways = replaced_ways(before, after).unwrap();
+        assert_eq!(ways.first.matches('…').count(), 1, "{}", ways.first);
+        assert_eq!(ways.second.matches('…').count(), 1);
     }
 
     #[test]

@@ -1088,22 +1088,21 @@ async fn kept_writing(
     let text = file_text(file);
     if let Some(new) = written {
         let earlier = store::written_in(&mut conn, session, root, path).await?;
-        // A whole file written over says nothing of what it replaced: what
-        // it replaced is what the agent last wrote there that's gone, and
-        // what replaced it what's new since.
-        let (gone, came) = match (replaced, earlier.last()) {
-            (None, Some(last)) => (Some(gone_from(last, &text)), Some(gone_from(new, last))),
-            _ => (None, None),
-        };
-        let old = replaced.or(gone.as_deref()).unwrap_or_default();
-        if replaces_own(old, &earlier.join("\n")) {
+        // What it replaced: an edit's old text, or, for a whole file written
+        // over, which says nothing of it, what the agent last wrote there.
+        // Only the lines that went count, hunk by hunk, never lines added.
+        let before = replaced.or_else(|| earlier.last().map(String::as_str));
+        let ways = before.and_then(|b| lesson::replaced_ways(b, new));
+        if let Some(ways) = ways
+            && replaces_own(&ways.gone.join("\n"), &earlier.join("\n"))
+        {
             store::keep_replaced(
                 &mut conn,
                 session,
                 root,
                 path,
-                &first_lines(old, WAY_LINES),
-                &first_lines(came.as_deref().unwrap_or(new), WAY_LINES),
+                &first_lines(&ways.first, WAY_LINES),
+                &first_lines(&ways.second, WAY_LINES),
             )
             .await?;
         }
@@ -1122,16 +1121,6 @@ async fn kept_writing(
         }
     }
     Ok(())
-}
-
-/// The lines of `earlier` no longer in `now`, in their order.
-fn gone_from(earlier: &str, now: &str) -> String {
-    let still: std::collections::HashSet<&str> = now.lines().map(str::trim).collect();
-    earlier
-        .lines()
-        .filter(|l| !still.contains(l.trim()))
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 /// Whether what an edit replaced is the agent's own earlier work: more
@@ -3026,13 +3015,21 @@ mod tests {
     fn a_file_written_over_replaces_what_the_agent_last_wrote_there_and_is_gone() {
         let first = "def charge(bank):\n    for attempt in range(5):\n        try:\n            return bank.send()\n        except Busy:\n            time.sleep(2 ** attempt)\n";
         let second = "def charge(bank):\n    for attempt in range(5):\n        try:\n            return bank.send()\n        except Busy:\n            delay = 2 ** attempt\n            time.sleep(random.uniform(0, delay))\n";
-        let gone = gone_from(first, second);
-        assert_eq!(gone.trim(), "time.sleep(2 ** attempt)");
-        assert!(!replaces_own(&gone, first), "a line is too few");
+        let ways = lesson::replaced_ways(first, second).unwrap();
+        assert_eq!(ways.gone, ["time.sleep(2 ** attempt)"]);
+        assert!(
+            !replaces_own(&ways.gone.join("\n"), first),
+            "a line is too few"
+        );
 
         let third = "async def charge(bank):\n    await bank.send()\n";
-        let gone = gone_from(second, third);
-        assert!(replaces_own(&gone, second));
-        assert_eq!(gone_from(third, second).lines().count(), 2);
+        let ways = lesson::replaced_ways(second, third).unwrap();
+        assert!(replaces_own(&ways.gone.join("\n"), second));
+        // Going back the other way only adds lines, but for the one it took
+        // out: `async def` back to `def` is the same line touched.
+        assert_eq!(
+            lesson::replaced_ways(third, second).map(|w| w.gone),
+            Some(vec!["await bank.send()".to_string()])
+        );
     }
 }

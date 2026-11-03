@@ -2,6 +2,12 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **Lessons are about what your agent was working with.** kelve took the first word of every line of a command for a program your agent ran, inside quotes and heredocs too, so words from a commit message or a script, such as "backdoor" or "availability", were offered as what a lesson could be about, and looked up in the graph as programs. Now it reads a command as the shell does, and only programs count. What it had kept that way is let go, and kept again as your agent works.
+- **A lesson's problem is the error, not where to read about it.** For a Rust error, kelve could take rustc's "For more information about this error" for what failed. Now it takes the error itself.
+- **Replaced work is what your agent took out, not what it added.** Growing a list, or changing a count or a word, counted as replacing work, and what was replaced was shown as lines from all over the file joined together. Now only lines that went count, and the first way and the second are shown change by change, each with the line above and below.
+
 ## 0.1.10, 3 November 2026
 
 - **Every text file reads plainly, and 57 languages are coloured.** A file in a language kelve didn't know, such as Terraform, had no Plainly switch and no colours, and your agent read it as prose. Now everything but Markdown and plain text reads as code, plainly or not, and kelve colours 57 languages, up from 22, in files and in what entries quote. Full, Quiet and None now hold for code in entries too.

@@ -340,7 +340,9 @@ pub fn tool_of(command: &str) -> String {
 /// Never the shell's own words (`cd`, `echo`, `if`), never a path or a script
 /// of the work's own (`./run.sh`, `dev/kelve.ts`), and never anything that
 /// isn't a plain name. What kelve finds lessons about as the agent works, with
-/// no file read.
+/// no file read. Read as the shell reads it: what's quoted, a heredoc's lines
+/// and a line continued with `\\` run no program, so a commit message or a
+/// script fed to `python3 -` names none.
 pub fn tools_in(command: &str) -> Vec<String> {
     // What runs another program, and the shell's words before one: passed
     // over to reach the program.
@@ -355,8 +357,8 @@ pub fn tools_in(command: &str) -> Vec<String> {
         "for", "done", "case", "esac", "exit", "read", "test", "[",
     ];
     let mut out: Vec<String> = Vec::new();
-    let parts = command.split(['\n', ';', '|', '&', '(', ')', '{', '}', '`']);
-    for part in parts {
+    for part in parts_of(command) {
+        let part = part.as_str();
         let Some(word) = part
             .split_whitespace()
             .find(|w| !w.contains('=') && !LAUNCHERS.contains(&w.to_lowercase().as_str()))
@@ -375,6 +377,96 @@ pub fn tools_in(command: &str) -> Vec<String> {
         let name = name.trim_end_matches(|c: char| c.is_ascii_digit());
         if name.len() >= 2 && !out.iter().any(|o| o == name) {
             out.push(name.to_string());
+        }
+    }
+    out
+}
+
+/// A command's parts, each where a program may start: split at a new line,
+/// `;`, `|`, `&`, a bracket or a backtick, but only outside quotes. Quoted
+/// text is left out, a heredoc's lines too, up to its closing word, and a
+/// line ending in `\\` goes on into the next.
+fn parts_of(command: &str) -> Vec<String> {
+    let mut out = vec![String::new()];
+    let mut quote: Option<char> = None;
+    // Heredocs opened on the line being read, by their closing words, and
+    // the one whose lines are being skipped.
+    let mut pending: Vec<String> = Vec::new();
+    let mut skipping: Option<String> = None;
+    let mut line = String::new();
+    let mut chars = command.chars().peekable();
+    while let Some(c) = chars.next() {
+        if let Some(end) = &skipping {
+            if c == '\n' {
+                if line.trim() == end {
+                    skipping = None;
+                    if !pending.is_empty() {
+                        skipping = Some(pending.remove(0));
+                    }
+                }
+                line.clear();
+            } else {
+                line.push(c);
+            }
+            continue;
+        }
+        match (quote, c) {
+            (Some('\''), '\'') => quote = None,
+            (Some('"'), '"') => quote = None,
+            (Some('"'), '\\') => {
+                chars.next();
+            }
+            (Some(_), _) => {}
+            (None, '\'' | '"') => quote = Some(c),
+            (None, '\\') => {
+                // An escaped character is a word's, and an escaped new line
+                // goes on into the next.
+                if let (Some(n), Some(p)) = (chars.next(), out.last_mut())
+                    && n != '\n'
+                {
+                    p.push(n);
+                }
+            }
+            (None, '<') if chars.peek() == Some(&'<') => {
+                chars.next();
+                if chars.peek() == Some(&'<') {
+                    // `<<<`, a here-string: one word, no lines.
+                    chars.next();
+                    continue;
+                }
+                if chars.peek() == Some(&'-') {
+                    chars.next();
+                }
+                while chars.peek().is_some_and(|n| *n == ' ' || *n == '\t') {
+                    chars.next();
+                }
+                let mut word = String::new();
+                while let Some(&n) = chars.peek() {
+                    if n.is_whitespace() || ";|&()<>".contains(n) {
+                        break;
+                    }
+                    if n != '\'' && n != '"' && n != '\\' {
+                        word.push(n);
+                    }
+                    chars.next();
+                }
+                if !word.is_empty() {
+                    pending.push(word);
+                }
+            }
+            (None, '\n') => {
+                out.push(String::new());
+                if !pending.is_empty() {
+                    skipping = Some(pending.remove(0));
+                    line.clear();
+                }
+            }
+            (None, ';' | '|' | '&' | '(' | ')' | '{' | '}' | '`') => out.push(String::new()),
+            (None, c) => {
+                if let Some(p) = out.last_mut() {
+                    p.push(c);
+                }
+            }
         }
     }
     out
@@ -608,6 +700,37 @@ mod tests {
             ["grep", "ls"]
         );
         assert!(tools_in("test -f x && [ -d y ]").is_empty());
+    }
+
+    #[test]
+    fn what_a_command_quotes_or_feeds_in_runs_no_program() {
+        // A commit message's lines, in quotes, aren't programs.
+        assert_eq!(
+            tools_in(
+                "git commit -m \"docs: shorter\n\nBlocking calls\nbackdoor (none)\" && git push"
+            ),
+            ["git"]
+        );
+        // Nor a heredoc's, up to its closing word, quoted or not, with `-`.
+        assert_eq!(
+            tools_in("python3 - <<'EOF'\nassertion = 1\navailability(2)\nEOF\ncargo test"),
+            ["python", "cargo"]
+        );
+        assert_eq!(
+            tools_in("cat <<-END | wc -l\n\tblocking\n\tEND\nls"),
+            ["cat", "wc", "ls"]
+        );
+        assert_eq!(tools_in("git commit -F - <<EOF\nchmod it\nEOF"), ["git"]);
+        // A pipe or a bracket in quotes splits nothing.
+        assert_eq!(
+            tools_in("grep -E 'error|(failed)' log | sort"),
+            ["grep", "sort"]
+        );
+        assert_eq!(tools_in("echo \"$(date) done\"; jq . x"), ["jq"]);
+        // A line continued with `\\` goes on.
+        assert_eq!(tools_in("cargo test \\\n  --all \\\n  --locked"), ["cargo"]);
+        // A here-string is one word, with no lines to skip.
+        assert_eq!(tools_in("jq . <<< '{}'\nls"), ["jq", "ls"]);
     }
 
     fn lesson(says: &str, act: &str, holds: &str, seen: Option<&str>) -> Lesson {
