@@ -4,6 +4,8 @@ What changes in each release of kelve, for the people who run it. Versions follo
 
 ## Unreleased
 
+- **Your agent commits what kelve keeps in your project.** `.kelve/` holds what's been read, so no one on the project reads a file twice, and the notes left with the work. Nothing told your agent, so it might leave it out of a commit or add it to `.gitignore`. Now kelve's instructions tell it to commit `.kelve/` with the work, and never ignore it. Whether what's read is kept there is still yours to choose, in settings.
+
 ## 0.1.11, 3 November 2026
 
 - **Lessons are about what your agent was working with.** kelve took the first word of every line of a command for a program your agent ran, inside quotes and heredocs too, so words from a commit message or a script, such as "backdoor" or "availability", were offered as what a lesson could be about, and looked up in the graph as programs. Now it reads a command as the shell does, and only programs count. What it had kept that way is let go, and kept again as your agent works.
