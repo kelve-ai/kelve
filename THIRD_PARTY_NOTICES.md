@@ -16,6 +16,7 @@ app's dependencies: run it again after changing them.
 - @codemirror/lang-html 6.4.12, MIT: <https://code.haverbeke.berlin/codemirror/lang-html>
 - @codemirror/lang-javascript 6.2.5, MIT: <https://github.com/codemirror/lang-javascript>
 - @codemirror/lang-markdown 6.5.2, MIT: <https://code.haverbeke.berlin/codemirror/lang-markdown>
+- @codemirror/lang-php 6.0.2, MIT: <https://github.com/codemirror/lang-php>
 - @codemirror/lang-python 6.2.1, MIT: <https://github.com/codemirror/lang-python>
 - @codemirror/lang-rust 6.0.2, MIT: <https://github.com/codemirror/lang-rust>
 - @codemirror/language 6.13.1, MIT: <https://code.haverbeke.berlin/codemirror/language>
@@ -34,6 +35,7 @@ app's dependencies: run it again after changing them.
 - @lezer/javascript 1.5.6, MIT: <https://code.haverbeke.berlin/lezer/javascript>
 - @lezer/lr 1.4.11, MIT: <https://code.haverbeke.berlin/lezer/lr>
 - @lezer/markdown 1.8.0, MIT: <https://code.haverbeke.berlin/lezer/markdown>
+- @lezer/php 1.0.6, MIT: <https://code.haverbeke.berlin/lezer/php>
 - @lezer/python 1.1.19, MIT: <https://code.haverbeke.berlin/lezer/python>
 - @lezer/rust 1.0.3, MIT: <https://code.haverbeke.berlin/lezer/rust>
 - @marijn/find-cluster-break 1.0.4, MIT: <https://code.haverbeke.berlin/marijn/find-cluster-break>
@@ -107,7 +109,7 @@ app's dependencies: run it again after changing them.
 
 ### Their license texts
 
-#### @codemirror/autocomplete 6.20.4 (LICENSE), @codemirror/commands 6.11.1 (LICENSE), @codemirror/lang-css 6.3.1 (LICENSE), @codemirror/lang-html 6.4.12 (LICENSE), @codemirror/lang-javascript 6.2.5 (LICENSE), @codemirror/lang-markdown 6.5.2 (LICENSE), @codemirror/lang-python 6.2.1 (LICENSE), @codemirror/lang-rust 6.0.2 (LICENSE), @codemirror/language 6.13.1 (LICENSE), @codemirror/legacy-modes 6.5.5 (LICENSE), @codemirror/lint 6.9.7 (LICENSE), @codemirror/state 6.7.6 (LICENSE), @codemirror/streamparser 6.0.0 (LICENSE), @codemirror/view 6.43.15 (LICENSE)
+#### @codemirror/autocomplete 6.20.4 (LICENSE), @codemirror/commands 6.11.1 (LICENSE), @codemirror/lang-css 6.3.1 (LICENSE), @codemirror/lang-html 6.4.12 (LICENSE), @codemirror/lang-javascript 6.2.5 (LICENSE), @codemirror/lang-markdown 6.5.2 (LICENSE), @codemirror/lang-php 6.0.2 (LICENSE), @codemirror/lang-python 6.2.1 (LICENSE), @codemirror/lang-rust 6.0.2 (LICENSE), @codemirror/language 6.13.1 (LICENSE), @codemirror/legacy-modes 6.5.5 (LICENSE), @codemirror/lint 6.9.7 (LICENSE), @codemirror/state 6.7.6 (LICENSE), @codemirror/streamparser 6.0.0 (LICENSE), @codemirror/view 6.43.15 (LICENSE)
 
 ```text
 MIT License
@@ -355,7 +357,7 @@ FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 ```
 
-#### @lezer/common 1.5.3 (LICENSE), @lezer/css 1.3.9 (LICENSE), @lezer/highlight 1.2.5 (LICENSE), @lezer/html 1.3.13 (LICENSE), @lezer/javascript 1.5.6 (LICENSE), @lezer/lr 1.4.11 (LICENSE), @lezer/rust 1.0.3 (LICENSE)
+#### @lezer/common 1.5.3 (LICENSE), @lezer/css 1.3.9 (LICENSE), @lezer/highlight 1.2.5 (LICENSE), @lezer/html 1.3.13 (LICENSE), @lezer/javascript 1.5.6 (LICENSE), @lezer/lr 1.4.11 (LICENSE), @lezer/php 1.0.6 (LICENSE), @lezer/rust 1.0.3 (LICENSE)
 
 ```text
 MIT License

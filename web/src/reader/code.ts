@@ -13,28 +13,70 @@ import { javascript } from '@codemirror/lang-javascript'
 import { python } from '@codemirror/lang-python'
 import { go } from '@codemirror/lang-go'
 import { markdown } from '@codemirror/lang-markdown'
-import { c, cpp, csharp, java, kotlin } from '@codemirror/legacy-modes/mode/clike'
+import { php } from '@codemirror/lang-php'
+import { c, cpp, csharp, dart, java, kotlin, objectiveC, scala } from '@codemirror/legacy-modes/mode/clike'
+import { clojure } from '@codemirror/legacy-modes/mode/clojure'
+import { cmake } from '@codemirror/legacy-modes/mode/cmake'
+import { coffeeScript } from '@codemirror/legacy-modes/mode/coffeescript'
+import { commonLisp } from '@codemirror/legacy-modes/mode/commonlisp'
+import { crystal } from '@codemirror/legacy-modes/mode/crystal'
 import { css } from '@codemirror/legacy-modes/mode/css'
+import { d } from '@codemirror/legacy-modes/mode/d'
 import { diff } from '@codemirror/legacy-modes/mode/diff'
 import { dockerFile } from '@codemirror/legacy-modes/mode/dockerfile'
+import { elm } from '@codemirror/legacy-modes/mode/elm'
+import { erlang } from '@codemirror/legacy-modes/mode/erlang'
+import { fortran } from '@codemirror/legacy-modes/mode/fortran'
+import { gherkin } from '@codemirror/legacy-modes/mode/gherkin'
+import { groovy } from '@codemirror/legacy-modes/mode/groovy'
+import { haskell } from '@codemirror/legacy-modes/mode/haskell'
 import { json } from '@codemirror/legacy-modes/mode/javascript'
+import { julia } from '@codemirror/legacy-modes/mode/julia'
+import { liveScript } from '@codemirror/legacy-modes/mode/livescript'
+import { lua } from '@codemirror/legacy-modes/mode/lua'
+import { fSharp, oCaml } from '@codemirror/legacy-modes/mode/mllike'
+import { pascal } from '@codemirror/legacy-modes/mode/pascal'
+import { perl } from '@codemirror/legacy-modes/mode/perl'
+import { powerShell } from '@codemirror/legacy-modes/mode/powershell'
+import { properties } from '@codemirror/legacy-modes/mode/properties'
+import { protobuf } from '@codemirror/legacy-modes/mode/protobuf'
+import { r } from '@codemirror/legacy-modes/mode/r'
 import { ruby } from '@codemirror/legacy-modes/mode/ruby'
+import { scheme } from '@codemirror/legacy-modes/mode/scheme'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
 import { standardSQL } from '@codemirror/legacy-modes/mode/sql'
+import { stylus } from '@codemirror/legacy-modes/mode/stylus'
 import { swift } from '@codemirror/legacy-modes/mode/swift'
+import { tcl } from '@codemirror/legacy-modes/mode/tcl'
 import { toml } from '@codemirror/legacy-modes/mode/toml'
+import { vb } from '@codemirror/legacy-modes/mode/vb'
+import { verilog } from '@codemirror/legacy-modes/mode/verilog'
+import { vhdl } from '@codemirror/legacy-modes/mode/vhdl'
 import { xml } from '@codemirror/legacy-modes/mode/xml'
 import { yaml } from '@codemirror/legacy-modes/mode/yaml'
 import type { Marked } from '../api/types'
+import { hcl } from './hcl'
 import { type Seen, squareLabel } from './Square'
 
 /** The languages kelve names with a simpler grammar, read line by line. */
 const SIMPLER: Record<string, StreamParser<unknown>> = {
   ruby, java, kotlin, swift, c, cpp, csharp, css, json, yaml, xml, diff,
+  scala, dart, lua, perl, haskell, erlang, clojure, r, julia, groovy, protobuf, cmake,
+  elm, crystal, d, fortran, tcl, verilog, vhdl, pascal, scheme, stylus, gherkin, properties,
   bash: shell,
   sql: standardSQL,
   ini: toml,
   dockerfile: dockerFile,
+  objectivec: objectiveC,
+  powershell: powerShell,
+  fsharp: fSharp,
+  ocaml: oCaml,
+  vbnet: vb,
+  lisp: commonLisp,
+  coffeescript: coffeeScript,
+  livescript: liveScript,
+  terraform: hcl as StreamParser<unknown>,
+  hcl: hcl as StreamParser<unknown>,
 }
 
 const defined = new Map<string, StreamLanguage<unknown>>()
@@ -55,6 +97,7 @@ export function grammar(lang: string | null | undefined): Extension {
     case 'python': return python()
     case 'go': return go()
     case 'markdown': return markdown()
+    case 'php': return php()
     default: {
       const simpler = lang ? SIMPLER[lang] : undefined
       if (!simpler || !lang) return []

@@ -3,9 +3,10 @@
 // down by clicking down; squares that fill as you read, and the key at the
 // side's foot that says so.
 
+import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { marginNote, me, open, openFile, pane, repo, toFiles } from '../world'
 
 test('a change reads whole, with each idea beside its lines, and its entry opens beside the work', async ({ page }) => {
@@ -309,4 +310,46 @@ test('a tab out of sight lets its stream go, and catches up once it is back', as
   // Back in sight, it listens again and fetches what it missed.
   await sight(false)
   await expect(page.getByText(/reading \d+ of \d+/)).toHaveCount(0, { timeout: 30_000 })
+})
+
+/** The colour each of these is drawn in. */
+const coloursOf = (page: Page, of: Record<string, string>) =>
+  page.evaluate((of) => Object.fromEntries(Object.entries(of).map(([k, sel]) => [k, getComputedStyle(document.querySelector(sel)!).color])), of)
+
+test('code is coloured as Highlighting says, in any language, in files and in what entries quote', async ({ page }) => {
+  const root = repo()
+  writeFileSync(join(root, 'main.tf'), 'resource "aws_s3_bucket" "logs" {\n  bucket = "logs"\n}\n')
+  writeFileSync(join(root, 'index.php'), '<?php\nfunction greet() { return "hello"; }\n')
+  writeFileSync(join(root, 'init.lua'), 'local name = "world"\n')
+  execFileSync('git', ['add', '.'], { cwd: root })
+  await open(page, { what: 'change', path: root, title: 'Three languages' })
+  // Code an entry quotes, as highlight.js draws it.
+  await page.evaluate(() => {
+    const quoted = document.createElement('div')
+    quoted.className = 'code quoted'
+    quoted.innerHTML = '<span class="hljs-keyword">k</span><span class="hljs-string">s</span><span class="hljs-comment">c</span><span class="hljs-punctuation">p</span>'
+    document.body.append(quoted)
+  })
+  for (const [file, keyword, string] of [['main.tf', 'resource', '"aws_s3_bucket"'], ['index.php', 'function', '"hello"'], ['init.lua', 'local', '"world"']]) {
+    await openFile(page, file)
+    await expect(page.locator('.fv .cm-line span', { hasText: string })).toHaveCount(1)
+    for (const mode of ['full', 'quiet', 'none']) {
+      await page.evaluate((mode) => (document.documentElement.dataset.highlighting = mode), mode)
+      const c = await coloursOf(page, { code: '.fv .cm-content', quotedCode: '.quoted' })
+      const file = await page.evaluate(([keyword, string]) => {
+        const spans = [...document.querySelectorAll<HTMLElement>('.fv .cm-line span')]
+        const colour = (text: string) => getComputedStyle(spans.find((s) => s.textContent === text)!).color
+        return { keyword: colour(keyword), string: colour(string) }
+      }, [keyword, string])
+      const quoted = await coloursOf(page, { keyword: '.quoted .hljs-keyword', string: '.quoted .hljs-string', comment: '.quoted .hljs-comment', punctuation: '.quoted .hljs-punctuation' })
+      const why = `${file}, ${mode}`
+      // Full colours keywords too; quiet, strings and the like alone; none, nothing.
+      expect(file.keyword === c.code, why).toBe(mode !== 'full')
+      expect(file.string === c.code, why).toBe(mode === 'none')
+      expect(quoted.keyword === c.quotedCode, why).toBe(mode !== 'full')
+      expect(quoted.string === c.quotedCode, why).toBe(mode === 'none')
+      expect(quoted.punctuation === c.quotedCode, why).toBe(mode !== 'full')
+      expect(quoted.comment === c.quotedCode, why).toBe(mode === 'none')
+    }
+  }
 })

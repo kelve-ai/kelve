@@ -166,6 +166,8 @@ async fn queue(app: &Shared, kind: &str, key: &str, payload: Value) -> pipeline:
 struct FileText {
     text: String,
     lang: Option<&'static str>,
+    /// Code, not text: what isn't markdown or plain text (`core::code::prose`).
+    code: bool,
     /// In a change: what it was, its file's change, and what it did.
     change: Option<(Option<String>, FileChange, Diff)>,
 }
@@ -182,10 +184,6 @@ impl FileText {
             Some((None, _, _)) => "new".into(),
             None => String::new(),
         }
-    }
-
-    fn code(&self) -> bool {
-        self.lang.is_some_and(|l| l != "markdown")
     }
 }
 
@@ -225,6 +223,7 @@ fn file_text(open: &Open, change: Option<&Change>, path: &str) -> ApiResult<File
         return Ok(FileText {
             text: after,
             lang: kelve_core::code::language(path),
+            code: !kelve_core::code::prose(path),
             change: Some((fc.before.clone(), fc.clone(), diff)),
         });
     }
@@ -232,6 +231,7 @@ fn file_text(open: &Open, change: Option<&Change>, path: &str) -> ApiResult<File
         Ok(read) => Ok(FileText {
             text: read.text,
             lang: read.lang,
+            code: !kelve_core::code::prose(path),
             change: None,
         }),
         Err(kelve_engine::read::ReadError::Skipped(skip)) => {
@@ -850,7 +850,7 @@ pub async fn view(app: &Shared, open: &Open, path: &str, ask: bool) -> ApiResult
         None => None,
     };
     let mut view = PlainlyView {
-        code: ft.code(),
+        code: ft.code,
         what: None,
         ideas: Vec::new(),
         used_by: used_by(open, &path).await,
@@ -1137,7 +1137,7 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
     let material = json!({
         "path": path,
         "language": ft.lang,
-        "code": ft.code(),
+        "code": ft.code,
         "lineCount": count,
         "blankLines": blank,
         "text": fence("said", &core::numbered(&ft.text, MOST_LINES)),
@@ -1731,6 +1731,7 @@ async fn change_material_of(app: &Shared, open: &Open) -> ApiResult<ChangeMateri
                 let ft = FileText {
                     text: after.clone(),
                     lang: kelve_core::code::language(&fc.path),
+                    code: !kelve_core::code::prose(&fc.path),
                     change: Some((fc.before.clone(), fc.clone(), Diff::default())),
                 };
                 kept::<PlainFile>(app, "file", &ft.hash(), &ft.base(), &version).await?
