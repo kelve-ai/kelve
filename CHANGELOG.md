@@ -2,8 +2,9 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
-## Unreleased
+## 0.1.10, 3 November 2026
 
+- **Every text file reads plainly, and 57 languages are coloured.** A file in a language kelve didn't know, such as Terraform, had no Plainly switch and no colours, and your agent read it as prose. Now everything but Markdown and plain text reads as code, plainly or not, and kelve colours 57 languages, up from 22, in files and in what entries quote. Full, Quiet and None now hold for code in entries too.
 - **Your agent answers questions about kelve from kelve's docs.** Asked what kelve does, how to set it up or what it sends, your agent had to guess or search the web. kelve's instructions now tell it to read kelve.ai/llms.txt, which lists every page of the docs, and answer from the pages that cover it.
 
 ## 0.1.9, 2 November 2026
