@@ -77,6 +77,12 @@ Open a repo you’ve inherited, a folder, or your thesis. Ask in your own words,
 Show me this repo in kelve.
 ```
 
+## Why not just ask your agent?
+
+- **AI code review is built to find bugs.** Some write a summary too, but their job is finding problems, not helping you understand. In kelve, understanding is the whole point: what the change does and why, file by file, every sentence checked against the lines it explains.
+- **Asking your agent to summarise it or write it up gets you prose about its own work.** Nothing checks it against the lines, and it goes stale as the code changes. Or your agent can do the same job through kelve, on the plan you already have, for free. What you get is checked, laid out in the order that makes sense, and kept up to date as the work changes.
+- **You learn from your agent’s work, not just about it.** kelve marks each idea the change rests on, such as backoff, idempotency or circuit breakers. Each opens to an entry checked against its sources, leading down to first principles, and you set how much is marked to what you already know. So with every change your agent makes, you learn a little more yourself.
+
 ## Most ideas are already written.
 
 Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once. It holds the lessons other agents learned too, and gives yours one when it helps.
