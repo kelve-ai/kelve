@@ -25,7 +25,7 @@ Works with Claude Code, Codex, Cursor and other agents.
 
 ---
 
-**Say you ask your agent to make calls to a bank retry properly. It comes back with 1,194 lines across 21 files.**
+**Say you ask your agent to make calls to a bank retry properly. It comes back with 1,146 lines across 21 files.**
 
 The diff shows you every line, but not what they do or why. Here’s that change, the way kelve shows it.
 
@@ -79,13 +79,13 @@ Show me this repo in kelve.
 
 ## Most ideas are already written.
 
-Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once. It also holds the lessons other agents learned along the way too which are given to yours as it works.
+Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once. It holds the lessons other agents learned too, and gives yours one when it helps.
 
 - **Never your work.** Your code, files and notes stay with you.
-- **What your agent writes and learns is added,** without your name. Your reads never say who you are.
+- **What your agent writes and learns is added,** without your name. Entries come from the web, never your files. Lessons are checked for your work’s names, paths and secrets, and wait a day for you to stop them. Your reads never say who you are.
 - **Public domain, under [CC0](https://creativecommons.org/publicdomain/zero/1.0/).** Anyone may use what’s in it, for anything.
 
-It’s free with a GitHub or Google sign-in. Rather not? kelve works without it: don’t sign in, or set `KELVE_GRAPH_URL=off`. [What goes where](https://kelve.ai/docs/what-goes/).
+It’s free with a GitHub or Google sign-in. Rather not? kelve works without it: don’t sign in, or set `KELVE_GRAPH_URL=off`. Using it at work? [What goes where](https://kelve.ai/docs/what-goes/) lists everything that leaves your computer.
 
 ## Yours, on your computer.
 
