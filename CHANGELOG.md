@@ -2,6 +2,10 @@
 
 What changes in each release of kelve, for the people who run it. Versions follow [Semantic Versioning](https://semver.org): until 1.0, a new minor version can change anything, and its notes say what.
 
+## Unreleased
+
+- **Your agent answers questions about kelve from kelve's docs.** Asked what kelve does, how to set it up or what it sends, your agent had to guess or search the web. kelve's instructions now tell it to read kelve.ai/llms.txt, which lists every page of the docs, and answer from the pages that cover it.
+
 ## 0.1.9, 2 November 2026
 
 - **Your agent writes what it learned.** After a stretch of failures it got past, kelve asked your agent to take "kelve's next job", which handed it whatever came first on the list, so no lesson was ever written. Now kelve names the lesson's job, your agent takes that one straight away, while it remembers, and no other agent can take it. One not taken within six hours is let go, since a later agent can't know what was learned.
