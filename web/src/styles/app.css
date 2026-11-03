@@ -71,6 +71,8 @@
   --c-title: var(--c-def);
   --c-type: var(--c-def);
   --c-attr: var(--code);
+  /* Comments in code an entry quotes: quieter, until code is one colour. */
+  --c-aside: var(--quiet);
   /* Sizes, from settings (O-7). */
   --code-size: 13.5px;
   --code-line: 24px;
@@ -111,7 +113,7 @@
 :root[data-text='small'] { --text-size: 15.5px; --text-line: 26px; }
 :root[data-text='large'] { --text-size: 18px; --text-line: 30px; }
 /* Highlighting: none. Code is all one colour. */
-:root[data-highlighting='none'] { --c-string: var(--code); --c-const: var(--code); --c-comment: var(--code); --c-def: var(--code); --c-title: var(--code); --c-type: var(--code); }
+:root[data-highlighting='none'] { --c-string: var(--code); --c-const: var(--code); --c-comment: var(--code); --c-def: var(--code); --c-title: var(--code); --c-type: var(--code); --c-aside: var(--code); }
 /* Highlighting: full, the default, so code is coloured from the first paint,
    before settings arrive. Keywords, types, properties and calls get colours
    of their own too, as an IDE gives them, each kept readable on its page. */
@@ -200,7 +202,7 @@ button { font: inherit; color: inherit; }
 .from { margin: 26px 0 0; font-size: 13px; line-height: 20px; color: var(--faint); }
 
 /* Blocks. */
-.code { margin: 6px 0 26px; font: 400 14px/25px var(--mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.code { margin: 6px 0 26px; font: 400 14px/25px var(--mono); color: var(--code); white-space: pre-wrap; overflow-wrap: anywhere; }
 .code .file { font-family: var(--sans); font-size: 13px; line-height: 20px; color: var(--faint); margin: 0 0 8px; white-space: normal; }
 .code .ln { display: grid; grid-template-columns: 34px minmax(0, 1fr); }
 .code .ln.plain { grid-template-columns: minmax(0, 1fr); padding-left: 18px; }
@@ -217,8 +219,9 @@ button { font: inherit; color: inherit; }
 .code .hljs-title, .code .hljs-section, .code .hljs-function .hljs-title { color: var(--c-title); }
 .code .hljs-type, .code .hljs-built_in, .code .hljs-class .hljs-title, .code .hljs-title.class_ { color: var(--c-type); }
 .code .hljs-attr, .code .hljs-attribute, .code .hljs-property, .code .hljs-variable, .code .hljs-params, .code .hljs-name, .code .hljs-selector-class { color: var(--c-attr); }
-.code .hljs-comment, .code .hljs-quote { color: var(--quiet); font-style: italic; }
-.code .hljs-meta, .code .hljs-punctuation, .code .hljs-subst { color: var(--soft); }
+.code .hljs-comment, .code .hljs-quote { color: var(--c-aside); font-style: italic; }
+/* Punctuation is coloured in full highlighting only, as in a file. */
+.code .hljs-meta, .code .hljs-punctuation, .code .hljs-subst { color: var(--hl-punct); }
 .code .hljs-deletion { color: var(--soft); text-decoration: line-through; text-decoration-color: var(--quiet); }
 .code .hljs-emphasis { font-style: italic; }
 .code .hljs-strong { font-weight: 600; }

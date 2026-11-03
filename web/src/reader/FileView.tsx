@@ -82,8 +82,8 @@ function fromFile(f: FileShape): Doc {
   return { path: f.path, lang: f.lang, text: f.text ?? '', lineOf: (n) => n, fileLine: (n) => n, added: new Set(), marks: f.marks, marking: f.marking }
 }
 
-/** Read as text: markdown, and plain text. */
-const isProse = (doc: Doc) => doc.lang === 'markdown' || /\.(txt|text)$/i.test(doc.path)
+/** Read as text: markdown, and plain text in no language kelve knows (`core::code::prose`). */
+const isProse = (doc: Doc) => doc.lang === 'markdown' || (doc.lang == null && /\.(txt|text)$/i.test(doc.path))
 
 export type FileProps = {
   opened: Opened
@@ -197,10 +197,10 @@ function Text(props: FileProps & { source?: () => void }) {
     return fresh
   }, [fresh])
   const [source, setSource] = useState(false)
-  // A code or text file reads plainly or as code: as you chose, or as its
-  // switch says.
+  // Any code or text file reads plainly or as code, whether or not kelve
+  // knows its language: as you chose, or as its switch says.
   const marks = useMarks()
-  const switches = !!doc && (isProse(doc) || doc.lang != null) && !props.source && !!props.setReads
+  const switches = !!doc && !props.source && !!props.setReads
   const reads = doc && switches ? (props.reads ?? opensAs(marks.data?.spec, doc.lang)) : 'code'
   // Read as code, a step of the way is read once its marks are done: seen
   // as your agent left it, never before (Nathan, 29 October). Read

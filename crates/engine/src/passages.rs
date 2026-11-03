@@ -411,8 +411,7 @@ pub fn passages(rel: &str, text: &str) -> Vec<Passage> {
         return Vec::new();
     }
     let lang = kelve_core::code::language(rel);
-    let prose = matches!(lang, Some("markdown"))
-        || lang.is_none() && rel.to_ascii_lowercase().ends_with(".txt");
+    let prose = kelve_core::code::prose(rel);
     let (units, kind) = if matches!(lang, Some("markdown")) {
         (markdown(text), Kind::Prose)
     } else if let Some(units) = code(rel, text) {

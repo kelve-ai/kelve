@@ -97,6 +97,21 @@ test('a text file reads plainly, a section at a time, its words a click away', a
   await expect(section.locator('.ptext')).toHaveCount(0)
 })
 
+test('a Terraform file is coloured, and reads plainly too, as code', async ({ page }, info) => {
+  const root = repo()
+  writeFileSync(join(root, 'main.tf'), `# In ${info.project.name}.\nresource "aws_s3_bucket" "ledger" {\n  bucket = "ledger"\n}\n`)
+  execFileSync('git', ['add', '.'], { cwd: root })
+  await open(page, { what: 'change', path: root, title: 'A bucket for the ledger' })
+  await openFile(page, 'main.tf')
+  // Its strings are coloured as strings, as any code's are.
+  await expect(page.locator('.fv .cm-line span', { hasText: '"aws_s3_bucket"' })).toHaveCount(1)
+  await page.locator('.fv-name').getByRole('radiogroup', { name: 'Read it' }).getByRole('radio', { name: 'Plainly' }).click()
+  await expect(page.locator('.pl-waiting .wline')).toContainText('Claude Code')
+  await me().work()
+
+  await expect(page.locator('.fv .pl').getByRole('heading', { name: /How it works/ })).toBeVisible()
+})
+
 test('a change opens on its own page, plainly, each part a click from its files', async ({ page }) => {
   await open(page, { what: 'change', path: repo(), title: 'Retries that back off', said: 'Each retry now waits twice as long as the last.' })
   // The change's own page, not a file: why, as your agent said it, first.
