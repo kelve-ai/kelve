@@ -4,6 +4,8 @@ What changes in each release of kelve, for the people who run it. Versions follo
 
 ## Unreleased
 
+- **Updating says what's left to do.** Your agent's kelve tools stay the version they started as, but updating said only that kelve was running on the new one, so you couldn't tell your agent was still on the old. Now updating says to restart your agent, or reconnect kelve in its MCP servers. Installing again over a kelve that's running restarts it on the new version too, as `kelve update` does, where before it left the old one running until `kelve stop`.
+
 ## 0.1.12, 3 November 2026
 
 - **Your agent commits what kelve keeps in your project.** `.kelve/` holds what's been read, so no one on the project reads a file twice, and the notes left with the work. Nothing told your agent, so it might leave it out of a commit or add it to `.gitignore`. Now kelve's instructions tell it to commit `.kelve/` with the work, and never ignore it. Whether what's read is kept there is still yours to choose, in settings.

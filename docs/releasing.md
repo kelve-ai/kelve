@@ -44,9 +44,9 @@ kelve.ai serves both scripts: each deploy of the site copies them from kelve at 
 
 ## Updating
 
-`kelve update` updates kelve in place: it finds the newest release where the installer does, downloads this computer's build, checks it against `SHA256SUMS`, and puts it in place of itself. A kelve that's running on an older version stops once the work it's doing is done, and starts again on the new one. Running the installer again still works, but leaves a running kelve on the old build until `kelve stop`.
+`kelve update` updates kelve in place: it finds the newest release where the installer does, downloads this computer's build, checks it against `SHA256SUMS`, and puts it in place of itself. A kelve that's running on an older version stops once the work it's doing is done, and starts again on the new one. Running the installer again works too: the `kelve setup` it runs restarts an older kelve that's running on the new one, the same way.
 
-An agent's `kelve mcp` outlives both: it's the version it was when the agent started it until the agent restarts it or the person reconnects it. The first of its tools the agent calls after an update says so, once, so the agent can tell the person. Installed afresh under it, it reads kelve's new secret when its own is turned away, and starts kelve from the `kelve` on the PATH when the command it was started from is gone.
+An agent's `kelve mcp` outlives both: it's the version it was when the agent started it until the agent restarts it or the person reconnects it. So `kelve update`, and `kelve setup` when it restarts kelve, tell the person to restart their agent or reconnect kelve in its MCP servers; and the first of its tools the agent calls after an update says so, once, so the agent can tell the person. Installed afresh under it, it reads kelve's new secret when its own is turned away, and starts kelve from the `kelve` on the PATH when the command it was started from is gone.
 
 kelve asks GitHub for the newest release once a day, in the background, and says when there's a newer one: in settings, and to the person's agent, once for each version, which asks them whether to update and, on a yes, updates kelve with its `update` tool. `KELVE_UPDATES=off` stops the asking.
 

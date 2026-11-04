@@ -70,22 +70,44 @@ enum Running {
     Restarted(Option<String>),
 }
 
+/// What's left for the person once kelve is new: an agent's kelve tools
+/// stay the version they started as (docs/releasing.md).
+pub const AGENT_TOO: &str = "Restart your agent, or reconnect kelve in its MCP servers, so its kelve tools are the new ones too.";
+
 /// What `kelve update` says it did.
 fn sentence(from: &str, to: &str, running: &Running) -> String {
     match (from == to, running) {
         (false, Running::Restarted(_)) => {
-            format!("kelve is updated from {from} to {to}, and running on it now.")
+            format!("kelve is updated from {from} to {to}, and running on it now. {AGENT_TOO}")
         }
         (false, Running::No) => format!(
-            "kelve is updated from {from} to {to}. It isn't running; `kelve open` starts it."
+            "kelve is updated from {from} to {to}. It isn't running; `kelve open` starts it. {AGENT_TOO}"
         ),
-        (false, Running::Current) => format!("kelve is updated from {from} to {to}."),
-        (true, Running::Restarted(was)) => format!(
-            "kelve {to} is the newest. The kelve running was {}, so it's restarted on {to}.",
-            was.as_deref().unwrap_or("older")
-        ),
+        (false, Running::Current) => format!("kelve is updated from {from} to {to}. {AGENT_TOO}"),
+        (true, Running::Restarted(was)) => {
+            format!(
+                "kelve {to} is the newest. {}",
+                restarted(was.as_deref(), to)
+            )
+        }
         (true, _) => format!("kelve {to} is the newest, so there's nothing to update."),
     }
+}
+
+/// What restarting an older kelve running comes to, in a sentence or two.
+fn restarted(was: Option<&str>, to: &str) -> String {
+    let was = was.unwrap_or("older");
+    format!("The kelve running was {was}, so it's restarted on {to}. {AGENT_TOO}")
+}
+
+/// Restarts the kelve running when it's older than this one, as a newly
+/// installed kelve sets itself up: what it did, when it did anything.
+pub async fn restart_older() -> anyhow::Result<Option<String>> {
+    let exe = installed()?;
+    Ok(match restart_if_older(&exe, VERSION).await? {
+        Running::Restarted(was) => Some(restarted(was.as_deref(), VERSION)),
+        Running::No | Running::Current => None,
+    })
 }
 
 /// Where this binary is, with links followed: what's replaced.
@@ -453,15 +475,23 @@ mod tests {
     fn it_says_what_it_did() {
         assert_eq!(
             sentence("0.2.1", "0.3.0", &Running::Restarted(Some("0.2.1".into()))),
-            "kelve is updated from 0.2.1 to 0.3.0, and running on it now."
+            format!("kelve is updated from 0.2.1 to 0.3.0, and running on it now. {AGENT_TOO}")
         );
         assert_eq!(
             sentence("0.2.1", "0.3.0", &Running::No),
-            "kelve is updated from 0.2.1 to 0.3.0. It isn't running; `kelve open` starts it."
+            format!(
+                "kelve is updated from 0.2.1 to 0.3.0. It isn't running; `kelve open` starts it. {AGENT_TOO}"
+            )
+        );
+        assert_eq!(
+            sentence("0.2.1", "0.3.0", &Running::Current),
+            format!("kelve is updated from 0.2.1 to 0.3.0. {AGENT_TOO}")
         );
         assert_eq!(
             sentence("0.3.0", "0.3.0", &Running::Restarted(None)),
-            "kelve 0.3.0 is the newest. The kelve running was older, so it's restarted on 0.3.0."
+            format!(
+                "kelve 0.3.0 is the newest. The kelve running was older, so it's restarted on 0.3.0. {AGENT_TOO}"
+            )
         );
         assert_eq!(
             sentence("0.3.0", "0.3.0", &Running::Current),
