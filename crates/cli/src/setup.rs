@@ -371,6 +371,14 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
     let me = std::env::current_exe().context("kelve can't tell where it's installed.")?;
     style::head("setup");
 
+    // Installed again over a kelve that's running, the new one takes its
+    // place, as `kelve update` does.
+    match crate::update::restart_older().await {
+        Ok(Some(said)) => style::line(&format!("✓ {said}")),
+        Ok(None) => {}
+        Err(e) => style::line(&format!("{e:#}")),
+    }
+
     // Which agent: the one named, the one running this, the only one
     // installed, or the person's choice.
     let found: Vec<Connectable> = CONNECTABLE
