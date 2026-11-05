@@ -6,9 +6,13 @@
 
 pub mod asks;
 pub mod auth;
+pub mod candidates;
+pub mod checks;
 pub mod counts;
+pub mod debriefs;
 pub mod entries;
 pub mod follows;
+pub mod handovers;
 pub mod jobs;
 pub mod lessons;
 pub mod marks;
@@ -16,6 +20,7 @@ pub mod reader;
 pub mod relations;
 pub mod sends;
 pub mod settings;
+pub mod skills;
 pub mod updates;
 
 use std::path::Path;
@@ -195,7 +200,21 @@ async fn copy_aside(pool: &Pool, path: &Path) -> Result<()> {
 
 /// What Delete everything empties: every table but those in [`KEPT`].
 /// Children before what they point at.
-const EVERYTHING: [&str; 40] = [
+const EVERYTHING: [&str; 54] = [
+    "fits_picks",
+    "checks",
+    "past_tasks",
+    "evidence",
+    "candidates",
+    "explanations",
+    "research",
+    "decisions",
+    "debriefs",
+    "handover_files",
+    "handovers",
+    "messages",
+    "parts",
+    "skills",
     "jobs",
     "marks",
     "entries",
