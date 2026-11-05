@@ -7,6 +7,11 @@ import { useEffect } from 'react'
 import { Header } from '../Header'
 import { hrefOf, placeOf, type Route, SECTIONS, type Section } from '../routes'
 import { Character } from '../ui/Character'
+import { AccountSection } from './hosted/Account'
+import { Address } from './hosted/Address'
+import { Run } from './hosted/Run'
+import { RunSetup } from './hosted/RunSetup'
+import { YourPage } from './hosted/YourPage'
 
 /** What each settings section is called. */
 const SECTION_NAMES: Record<Section, string> = {
@@ -45,6 +50,8 @@ function stubOf(route: Route): { name: string; line: string; what?: string } {
       return { name: 'Editing a skill', line: 'Change this skill by hand. A part you add or reword waits to be checked.', what: route.name }
     case 'agent':
       return { name: 'Your agent', line: 'It learns from what you correct, and keeps it as skills. What it knows, and how well it fits you.' }
+    case 'address':
+      return { name: 'Choose your page’s address', line: '' }
     case 'look':
       return { name: 'Change how it looks', line: 'Build your agent from parts, in colours you choose, or ask it to draw itself.' }
     case 'score-new':
@@ -90,8 +97,14 @@ function Settings({ section, example }: { section: Section; example?: boolean })
       </nav>
       <section className="sets-body" aria-label={SECTION_NAMES[section]} data-stub={`settings-${section}`}>
         <h2>{SECTION_NAMES[section]}</h2>
-        <p className="lede">{SECTION_LINES[section]}</p>
-        <p className="stub-soon">This page is still being built.</p>
+        {section === 'account' ? (
+          <AccountSection example={example} />
+        ) : (
+          <>
+            <p className="lede">{SECTION_LINES[section]}</p>
+            <p className="stub-soon">This page is still being built.</p>
+          </>
+        )}
       </section>
     </div>
   )
@@ -108,7 +121,22 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
       <main className={route.screen === 'settings' ? 'app-main' : 'app-main narrow'}>
-        {route.screen === 'settings' ? <Settings section={route.section} example={example} /> : <Stub route={route} example={example} />}
+        {route.screen === 'settings' ? (
+          <Settings section={route.section} example={example} />
+        ) : route.screen === 'address' ? (
+          <Address example={example} />
+        ) : route.screen === 'score-new' ? (
+          <RunSetup example={example} />
+        ) : route.screen === 'score' ? (
+          <Run id={route.id} example={example} />
+        ) : route.screen === 'agent' ? (
+          <>
+            <Stub route={route} example={example} />
+            <YourPage example={example} />
+          </>
+        ) : (
+          <Stub route={route} example={example} />
+        )}
       </main>
     </div>
   )

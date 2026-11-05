@@ -251,7 +251,8 @@ async fn sign_in_token(State(held): Shared, Json(asked): Json<SignInCode>) -> Re
             if redirect == asked.redirect_uri
                 && challenge == pkce_challenge(&asked.code_verifier) =>
         {
-            let handle = held.accounts.get(KEY).and_then(|a| a.handle.clone());
+            // Signing in after deleting the account makes a new one.
+            let handle = held.accounts.entry(KEY.into()).or_default().handle.clone();
             Json(SignedIn {
                 key: KEY.into(),
                 handle,

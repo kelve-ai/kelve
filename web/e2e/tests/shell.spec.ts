@@ -57,8 +57,6 @@ test('every screen still being built says what it will show', async ({ page }) =
     ['skills/rust', 'A skill'],
     ['skills/rust/edit', 'Editing a skill'],
     ['agent/look', 'Change how it looks'],
-    ['agent/score/new', 'A verified score'],
-    ['agent/score/7', 'Verified score'],
     ['welcome', 'Meet your agent'],
   ]
   for (const [path, name] of screens) {
