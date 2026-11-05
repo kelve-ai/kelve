@@ -152,6 +152,9 @@ const change = exampleChange
 function keyless(): Record<string, string | undefined> {
   const out = { ...process.env }
   for (const k of ['ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN', 'OPENAI_API_KEY', 'KELVE_BENCH_ANTHROPIC_KEY', 'KELVE_BENCH_OPENAI_KEY', 'KELVE_GRAPH_JUDGE_KEY']) delete out[k]
+  // A PORT from whatever started the sandbox would win over each process's
+  // own address, and kelve-graph would then listen on every interface.
+  delete out.PORT
   return out
 }
 
