@@ -607,6 +607,7 @@ async fn estimate(
                 bytes: f.bytes.len() as u64,
             })
             .collect(),
+        working: Vec::new(),
     };
     let pattern = if expert {
         "bbbbbbbbbbsw"
