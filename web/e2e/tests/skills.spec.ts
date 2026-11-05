@@ -146,10 +146,16 @@ test('new parts are checked on past work, as your agent redoes it with each and 
   await expect(dialog).toContainText(/About \d+ runs of your agent\./)
   await expect(dialog).toContainText('Comment what the code is for')
   await dialog.getByRole('button', { name: 'Check them' }).click()
-  await expect(page.getByText('Checking 2 new parts')).toBeVisible()
-  await expect(note(page, 'Keep functions short')).toContainText('Checking now')
+  // Asked for, and nothing's started: it says so until an agent takes it.
+  await expect(page.getByRole('status').filter({ hasText: 'Waiting for your agent' })).toBeVisible()
+  await expect(page.getByText('Checking 2 new parts')).toHaveCount(0)
+  await expect(note(page, 'Keep functions short')).toContainText('Waiting for your agent')
 
-  const jobs = await agent.work()
+  const taken = await agent.work({ until: 'compare' })
+  await expect(page.getByText('Checking 2 new parts')).toBeVisible()
+  await expect(page.locator('.sk-part .sk-st.checking').first()).toBeVisible()
+
+  const jobs = await agent.work({ holding: taken[taken.length - 1] })
   expect([...new Set(jobs.filter((j) => j.kind === 'compare').map((j) => j.about))].sort()).toEqual([
     'Checking “Comment what the code is for” on past work',
     'Checking “Keep functions short” on past work',

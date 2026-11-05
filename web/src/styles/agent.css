@@ -81,6 +81,7 @@
 .psq.works { background: var(--better); }
 .psq.failed { background: var(--worse); }
 .psq.checking { background: var(--ev-check); }
+.psq.waiting { box-shadow: inset 0 0 0 1.5px var(--ev-check); }
 .psq.noDifference { background: var(--same); }
 .psq.notChecked { box-shadow: inset 0 0 0 1.5px var(--key-edge-2); }
 .ya-fits { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 56px; }

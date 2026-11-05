@@ -567,9 +567,10 @@ fn title(app: &Shared, skill: &kelve_store::skills::Skill) -> String {
         .unwrap_or_else(|| skill.name.clone())
 }
 
-fn check_of(state: &str) -> PartCheck {
+fn check_of(state: &str, being_done: bool) -> PartCheck {
     match state {
-        "running" => PartCheck::Checking,
+        "running" if being_done => PartCheck::Checking,
+        "running" => PartCheck::Waiting,
         "works" => PartCheck::Works,
         "no_difference" => PartCheck::NoDifference,
         "failed" => PartCheck::Failed,
@@ -588,10 +589,11 @@ pub async fn knows(app: &Shared) -> ApiResult<Vec<KnowsRow>> {
             "do" => SkillKind::Do,
             _ => SkillKind::Project,
         };
+        let being_done = crate::skill_checks::being_done(&mut conn, skill.id).await?;
         let parts = kelve_store::skills::parts(&mut conn, skill.id, false)
             .await?
             .iter()
-            .map(|p| check_of(&p.state))
+            .map(|p| check_of(&p.state, being_done.contains(&p.id)))
             .collect();
         let order = match kind {
             SkillKind::Like if skill.work == "everywhere" => 0,
@@ -656,7 +658,7 @@ pub async fn page(app: &Shared) -> ApiResult<YourAgentView> {
 // ---------------------------------------------------------------- settings
 
 /// The agents whose settings hold kelve's hook.
-fn connected(app: &Shared) -> Vec<ConnectedAgent> {
+pub(crate) fn connected(app: &Shared) -> Vec<ConnectedAgent> {
     Agent::ALL
         .into_iter()
         .filter(|a| crate::hooks::installed(*a, &app.config.agents_home, &app.config.claude_dir))

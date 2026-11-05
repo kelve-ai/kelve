@@ -71,15 +71,16 @@ const ASYNC = '### Never block inside async code\n\nA `std::fs` call in an `asyn
 function rust(as: string | null): SkillView {
   const intro = 'Rust that fails clearly and reads plainly, in any project.'
   const description = 'How Sam wants Rust written. Use when reading, writing or reviewing Rust.'
-  if (as === 'confirm' || as === 'running') {
-    const now: Part = as === 'running' ? { md: '', check: 'checking', progress: [1, 2] } : { md: '' }
+  if (as === 'confirm' || as === 'running' || as === 'waiting' || as === 'no-agent') {
+    const now: Part = as === 'running' ? { md: '', check: 'checking', progress: [1, 2] } : as === 'confirm' ? { md: '' } : { md: '', check: 'waiting', progress: [0, 2] }
     const view = skill('rust', 'rust', 'Rust', intro, description, 'like', 'rust', [
       {
         title: 'How you like it',
         parts: [{ md: ERRORS, check: 'works', hint: 'Better on 2 of 2 past tasks' }, { ...now, md: EXIT }, { ...now, md: DURATION }, { ...now, md: ASYNC }],
       },
     ])
-    if (as === 'running') view.running = { parts: 3, done: 6, runs: 12 }
+    if (as === 'running') view.running = { parts: 3, done: 6, runs: 12, waiting: false, agent: true }
+    if (as === 'waiting' || as === 'no-agent') view.running = { parts: 3, done: 0, runs: 12, waiting: true, agent: as === 'waiting' }
     return view
   }
   return skill('rust', 'rust', 'Rust', intro, description, 'like', 'rust', [
@@ -173,6 +174,7 @@ function item(s: SkillView): SkillItem {
     project: s.project,
     parts: parts.length,
     failed: parts.filter((p) => p.check === 'failed').length,
+    waiting: parts.some((p) => p.check === 'waiting') && !parts.some((p) => p.check === 'checking'),
     checking: parts.some((p) => p.check === 'checking'),
   }
 }

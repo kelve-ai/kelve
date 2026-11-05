@@ -17,6 +17,7 @@ import { Character } from '../ui/Character'
 import { Btn, Dialog, Segmented, Toast } from '../ui/kit'
 import { Markdown } from '../ui/markdown'
 import { useLoad } from '../useLoad'
+import { DO_WAITING } from '../agentList'
 import { Fits } from './Fits'
 import { SkillEdit } from './SkillEdit'
 
@@ -80,7 +81,7 @@ function useSaid(): [ReactNode, (s: Said | null) => void] {
 }
 
 function SkillsPage({ route, example }: { route: Extract<SkillsRoute, { screen: 'skills' | 'skill' | 'skill-suggested' }>; example?: boolean }) {
-  const list = useLoad<SkillsView>('/api/skills', ['skills'])
+  const list = useLoad<SkillsView>('/api/skills', ['skills', 'asks'])
   if (!list.data) return <Wait error={list.error} example={example} />
   const all = [...list.data.like, ...list.data.doing, ...list.data.project]
   if (route.screen === 'skills' && all.length === 0 && list.data.suggested.length === 0) return <Empty example={example} />
@@ -139,6 +140,8 @@ function Side({ list, current, example }: { list: SkillsView; current: string; e
                 <span>{s.title}</span>
                 {s.checking ? (
                   <span className="sk-meta sk-busy"><i className="sk-dot sk-dot-spin" aria-hidden="true" />Checking</span>
+                ) : s.waiting ? (
+                  <span className="sk-meta">Waiting</span>
                 ) : s.failed > 0 ? (
                   <span className="sk-meta red">{s.failed} failed</span>
                 ) : null}
@@ -154,6 +157,7 @@ function Side({ list, current, example }: { list: SkillsView; current: string; e
 /** What each state of a part is called. */
 const LABEL: Record<PartCheck, string> = {
   notChecked: 'Not checked yet',
+  waiting: 'Waiting for your agent',
   checking: 'Checking now',
   works: 'Works',
   noDifference: 'Makes no difference',
@@ -172,6 +176,7 @@ export function PartState({ check, hide }: { check: PartCheck; hide?: boolean })
 
 /** The line under a part's state: what its check found, or how far it's got. */
 function hintOf(part: SkillPartView): string {
+  if (part.check === 'waiting') return part.progress?.done ? `${part.progress.done} of ${part.progress.of} past ${part.progress.of === 1 ? 'task' : 'tasks'} redone` : ''
   if (part.check === 'checking') return part.progress ? `${part.progress.done} of ${part.progress.of} past ${part.progress.of === 1 ? 'task' : 'tasks'} redone` : ''
   if (part.check === 'noDifference' && part.kept) return 'You kept it anyway'
   return part.hint
@@ -215,7 +220,7 @@ export function chunks(markdown: string, parts: SkillPartView[]): Chunk[] {
 
 function SkillDoc({ id, example }: { id: string; example?: boolean }) {
   const at = `/api/skills/${encodeURIComponent(id)}`
-  const skill = useLoad<SkillView>(id ? at : null, ['skills'])
+  const skill = useLoad<SkillView>(id ? at : null, ['skills', 'asks'])
   const [view, setView] = useState<'doc' | 'md'>('doc')
   const [confirm, setConfirm] = useState(() => asked('check'))
   const [toast, say] = useSaid()
@@ -355,14 +360,33 @@ function SkillDoc({ id, example }: { id: string; example?: boolean }) {
   )
 }
 
-/** A check under way, beside the skill's heading. */
+/** A check under way, or only asked for, beside the skill's heading. */
 function Running({ run, onStop }: { run: CheckRun; onStop: () => void }) {
+  const what = run.parts === 1 ? 'a new part' : `${run.parts} new parts`
+  if (run.waiting) {
+    return (
+      <div className="sk-note sk-running">
+        <Character size={56} move="idle" />
+        <span className="sk-st waiting" role="status">
+          <i className="sk-dot" aria-hidden="true" />
+          Waiting for your agent
+        </span>
+        <span className="sk-hint">
+          {run.done > 0 && `${run.done} of ${run.runs} runs done. `}
+          {run.agent
+            ? `It checks ${what} next time it does kelve’s jobs. To start now, tell it: ${DO_WAITING}`
+            : `No agent is connected, so nothing’s started. Connect one in Settings, and it checks ${what} when it does kelve’s jobs.`}
+        </span>
+        <Btn size="small" onClick={onStop}>Stop the check</Btn>
+      </div>
+    )
+  }
   return (
     <div className="sk-note sk-running">
       <Character size={56} move="work" />
       <span className="sk-st checking" role="status">
         <i className="sk-dot sk-dot-spin" aria-hidden="true" />
-        Checking {run.parts === 1 ? 'a new part' : `${run.parts} new parts`}
+        Checking {what}
       </span>
       <span className="sk-hint">
         {run.done} of {run.runs} runs done. You can close this. kelve tells you when it’s done.
@@ -398,7 +422,7 @@ function CheckDialog({ skill, at, onClose, onDone }: { skill: SkillView; at: str
   const start = async () => {
     try {
       await post(`${at}/check`, {})
-      onDone({ text: one ? 'Checking it now.' : 'Checking them now.' })
+      onDone({ text: one ? 'Asked. Your agent checks it next time it does kelve’s jobs.' : 'Asked. Your agent checks them next time it does kelve’s jobs.' })
     } catch (e) {
       setError(said(e))
     }

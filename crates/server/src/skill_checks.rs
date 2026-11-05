@@ -39,6 +39,10 @@ pub const TASKS: i64 = 2;
 /// The past tasks Fits you redoes at once.
 pub const PAIRS: i64 = 3;
 
+/// How lately an agent with no hook must have called kelve to count as one
+/// that could take a check: a week.
+const AGENT_LATELY_MS: i64 = 7 * 24 * 60 * 60 * 1000;
+
 /// The ask's key for a part's check on one past task.
 fn check_key(check: i64) -> String {
     format!("compare:check:{check}")
@@ -245,16 +249,38 @@ pub async fn auto(app: &Shared) -> ApiResult<u32> {
     Ok(asked)
 }
 
-/// A skill's check, while it runs.
+/// The parts of a skill an agent really is checking now: a job an agent took
+/// and stopped answering doesn't count.
+pub async fn being_done(conn: &mut kelve_store::Conn, skill: i64) -> kelve_store::Result<Vec<i64>> {
+    asks::let_go_of_lapsed(conn).await?;
+    checking::being_done(conn, skill).await
+}
+
+/// A skill's check, while it's asked for: how far it's got, and whether an
+/// agent is doing it, or could.
 pub async fn running(app: &Shared, skill: i64) -> ApiResult<Option<CheckRun>> {
     let mut conn = app.db.acquire().await?;
-    Ok(checking::running_for(&mut conn, skill)
+    let Some((parts, done, all)) = checking::running_for(&mut conn, skill).await? else {
+        return Ok(None);
+    };
+    let waiting = being_done(&mut conn, skill).await?.is_empty();
+    Ok(Some(CheckRun {
+        parts: parts as u32,
+        done: 2 * done as u32,
+        runs: 2 * all as u32,
+        waiting,
+        agent: an_agent_could(app).await?,
+    }))
+}
+
+/// Whether any agent could take a job: one has kelve's hook, or called kelve
+/// lately.
+async fn an_agent_could(app: &Shared) -> ApiResult<bool> {
+    let mut conn = app.db.acquire().await?;
+    let seen = asks::latest_agent(&mut conn)
         .await?
-        .map(|(parts, done, all)| CheckRun {
-            parts: parts as u32,
-            done: 2 * done as u32,
-            runs: 2 * all as u32,
-        }))
+        .is_some_and(|a| kelve_store::now() - a.last_seen_at < AGENT_LATELY_MS);
+    Ok(seen || !crate::your_agent::connected(app).is_empty())
 }
 
 /// Starts checking a skill's parts not checked yet, or those of them named
@@ -301,6 +327,8 @@ pub async fn start(app: &Shared, skill: &skills::Skill, keys: &[String]) -> ApiR
         parts: parts.len() as u32,
         done: 0,
         runs: 2 * asked as u32,
+        waiting: true,
+        agent: an_agent_could(app).await?,
     })
 }
 
@@ -350,7 +378,7 @@ async fn settle(conn: &mut kelve_store::Conn, part: i64) -> kelve_store::Result<
                 PartCheck::Works => "works",
                 PartCheck::NoDifference => "no_difference",
                 PartCheck::Failed => "failed",
-                PartCheck::NotChecked | PartCheck::Checking => "unchecked",
+                PartCheck::NotChecked | PartCheck::Waiting | PartCheck::Checking => "unchecked",
             };
             skills::checked(conn, part, state, Some(&hint), wording.as_deref()).await
         }

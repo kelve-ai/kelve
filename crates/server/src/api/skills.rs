@@ -106,6 +106,10 @@ async fn item(app: &Shared, skill: &kept::Skill) -> ApiResult<SkillItem> {
         .flatten();
     let mut conn = app.db.acquire().await?;
     let parts = kept::parts(&mut conn, skill.id, false).await?;
+    let asked = parts.iter().any(|p| p.state == "running");
+    let done_now = !skill_checks::being_done(&mut conn, skill.id)
+        .await?
+        .is_empty();
     Ok(SkillItem {
         id: id_of(skill),
         name: skill.name.clone(),
@@ -115,7 +119,8 @@ async fn item(app: &Shared, skill: &kept::Skill) -> ApiResult<SkillItem> {
         project: project_of(&skill.root),
         parts: parts.len() as u32,
         failed: parts.iter().filter(|p| p.state == "failed").count() as u32,
-        checking: parts.iter().any(|p| p.state == "running"),
+        waiting: asked && !done_now,
+        checking: asked && done_now,
     })
 }
 
@@ -154,9 +159,10 @@ pub async fn list(State(app): State<Shared>, _me: Me) -> ApiResult<Json<SkillsVi
 }
 
 /// A part's state as the page shows it.
-fn check_of(state: &str) -> PartCheck {
+fn check_of(state: &str, being_done: bool) -> PartCheck {
     match state {
-        "running" => PartCheck::Checking,
+        "running" if being_done => PartCheck::Checking,
+        "running" => PartCheck::Waiting,
         "works" => PartCheck::Works,
         "no_difference" => PartCheck::NoDifference,
         "failed" => PartCheck::Failed,
@@ -186,14 +192,20 @@ async fn sections_of(
         None => Vec::new(),
     };
     let name = skill.map_or_else(|| parsed.name().unwrap_or_default(), |s| s.name.clone());
+    let being_done = match skill {
+        Some(s) => skill_checks::being_done(&mut conn, s.id).await?,
+        None => Vec::new(),
+    };
     let mut out = Vec::new();
     for section in parsed.sections() {
         let mut parts = Vec::new();
         for p in &section.parts {
             let row = stored.iter().find(|s| s.key == p.key);
-            let check = row.map_or(PartCheck::NotChecked, |r| check_of(&r.state));
+            let check = row.map_or(PartCheck::NotChecked, |r| {
+                check_of(&r.state, being_done.contains(&r.id))
+            });
             let progress = match row {
-                Some(r) if check == PartCheck::Checking => {
+                Some(r) if matches!(check, PartCheck::Waiting | PartCheck::Checking) => {
                     let (done, of) = checking::progress(&mut conn, r.id).await?;
                     Some(CheckProgress {
                         done: done as u32,

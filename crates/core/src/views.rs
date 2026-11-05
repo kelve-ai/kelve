@@ -620,7 +620,10 @@ pub enum PartCheck {
     /// Not checked yet: it can be.
     #[default]
     NotChecked,
-    /// Past tasks are being redone, with it and without.
+    /// Its check is asked for, and no agent has taken any of it to do yet:
+    /// nothing has started.
+    Waiting,
+    /// An agent is redoing past tasks, with it and without.
     Checking,
     /// It changes what the agent does: it stays.
     Works,
@@ -679,6 +682,8 @@ pub struct SkillItem {
     /// How many of its parts failed their checks.
     pub failed: u32,
     /// Whether its parts are being checked now.
+    /// A check is asked for, and no agent has taken any of it yet.
+    pub waiting: bool,
     pub checking: bool,
 }
 
@@ -778,6 +783,10 @@ pub struct CheckRun {
     /// Runs of the agent done, of how many.
     pub done: u32,
     pub runs: u32,
+    /// No agent is doing any of it right now.
+    pub waiting: bool,
+    /// Whether any agent could: one has kelve's hook, or called kelve lately.
+    pub agent: bool,
 }
 
 /// What saving a skill came to: saved, or what's wrong with it.

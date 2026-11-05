@@ -61,6 +61,7 @@ ul.sk-error { padding-left: 18px; }
 .sk-st { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; line-height: 19px; font-weight: 600; color: var(--ink-2); }
 .sk-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; box-sizing: border-box; background: transparent; }
 .sk-st.notChecked .sk-dot { border: 2px solid var(--quiet); }
+.sk-st.waiting .sk-dot { border: 2px solid var(--ev-check); }
 .sk-st.works .sk-dot { background: var(--better); }
 .sk-st.failed .sk-dot { background: var(--accent); }
 .sk-st.noDifference .sk-dot { background: var(--ochre); }

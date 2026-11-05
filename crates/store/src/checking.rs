@@ -134,6 +134,23 @@ pub async fn running_for(conn: &mut Conn, skill: i64) -> Result<Option<(i64, i64
     Ok((all > 0 && done < all).then_some((parts, done, all)))
 }
 
+/// The parts of a skill an agent is checking right now: those with a check
+/// not done whose job (`compare:check:<id>`, in `server::skill_checks`) an
+/// agent has taken or has just answered. A check asked for and not taken is
+/// only waiting.
+pub async fn being_done(conn: &mut Conn, skill: i64) -> Result<Vec<i64>> {
+    Ok(sqlx::query_scalar(
+        "select distinct c.part from checks c
+           join parts p on p.id = c.part
+           join asks a on a.key = 'compare:check:' || c.id
+          where p.skill = ?1 and c.state in ('waiting', 'running')
+            and a.state in ('taken', 'answered')",
+    )
+    .bind(skill)
+    .fetch_all(&mut *conn)
+    .await?)
+}
+
 /// The checks of a skill's parts still waiting or running, by id.
 pub async fn open_checks(conn: &mut Conn, skill: i64) -> Result<Vec<(i64, i64)>> {
     Ok(sqlx::query_as(

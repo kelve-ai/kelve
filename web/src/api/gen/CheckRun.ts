@@ -11,4 +11,12 @@ parts: number,
 /**
  * Runs of the agent done, of how many.
  */
-done: number, runs: number, };
+done: number, runs: number, 
+/**
+ * No agent is doing any of it right now.
+ */
+waiting: boolean, 
+/**
+ * Whether any agent could: one has kelve's hook, or called kelve lately.
+ */
+agent: boolean, };

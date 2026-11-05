@@ -521,13 +521,10 @@ async fn a_part_is_checked_on_past_work_redone_with_it_and_without_it() {
     .0;
     assert_eq!((started.parts, started.done, started.runs), (1, 0, 2));
     let view = one(&app, "rust").await;
-    assert_eq!(
-        part(&view, "Errors are one enum").check,
-        PartCheck::Checking
-    );
+    assert_eq!(part(&view, "Errors are one enum").check, PartCheck::Waiting);
     assert_eq!(view.running.map(|r| (r.done, r.runs)), Some((0, 2)));
     let list = skills::list(State(app.clone()), Me).await.unwrap().0;
-    assert!(list.like[0].checking);
+    assert!(list.like[0].waiting);
 
     let given = common::work(&app, redone).await;
     assert_eq!(given.len(), 1);
@@ -916,6 +913,61 @@ async fn asked_each_time_checks_wait_for_the_person_to_agree() {
     assert_eq!(runs_used(&app).await, (6, 10));
 }
 
+/// A check asked for has only been asked for. It says it's being done once
+/// an agent has taken it, and says when no agent could.
+#[tokio::test]
+async fn a_check_waits_for_an_agent_until_one_takes_it() {
+    let app = with_rust().await;
+    past_task(&app).await;
+    let view = one(&app, "rust").await;
+    let key = part(&view, "Errors are one enum").key.clone();
+    let started = skills::check(
+        State(app.clone()),
+        Me,
+        UrlPath("rust".into()),
+        Json(CheckIn { keys: vec![key] }),
+    )
+    .await
+    .unwrap()
+    .0;
+    assert!(started.waiting && !started.agent, "no agent to take it");
+
+    // Kelve keeps the job, and still no agent has it.
+    common::jobs(&app).await;
+    let view = one(&app, "rust").await;
+    let errors = part(&view, "Errors are one enum");
+    assert_eq!(errors.check, PartCheck::Waiting);
+    assert_eq!(errors.progress.map(|p| (p.done, p.of)), Some((0, 1)));
+    let run = view.running.unwrap();
+    assert!(run.waiting && !run.agent);
+    let list = skills::list(State(app.clone()), Me).await.unwrap().0;
+    assert!(list.like[0].waiting && !list.like[0].checking);
+
+    // With kelve's hook in an agent's settings, one could.
+    kelve_server::hooks::set(
+        kelve_core::hook::Agent::Claude,
+        true,
+        &app.config.agents_home,
+        &app.config.claude_dir,
+    )
+    .unwrap();
+    assert!(one(&app, "rust").await.running.unwrap().agent);
+
+    // An agent takes it: now it's being done.
+    let mut conn = app.db.acquire().await.unwrap();
+    let job = kelve_store::asks::take(&mut conn, "claude").await.unwrap();
+    assert_eq!(job.unwrap().kind, "compare");
+    drop(conn);
+    let view = one(&app, "rust").await;
+    assert_eq!(
+        part(&view, "Errors are one enum").check,
+        PartCheck::Checking
+    );
+    assert!(!view.running.unwrap().waiting);
+    let list = skills::list(State(app.clone()), Me).await.unwrap().0;
+    assert!(list.like[0].checking && !list.like[0].waiting);
+}
+
 #[tokio::test]
 async fn when_the_agent_is_free_new_and_changed_parts_are_checked_without_asking() {
     let app = with_rust().await;
@@ -926,8 +978,8 @@ async fn when_the_agent_is_free_new_and_changed_parts_are_checked_without_asking
         view.sections
             .iter()
             .flat_map(|s| s.parts.iter())
-            .all(|p| p.check == PartCheck::Checking),
-        "each part is checked as soon as it's set"
+            .all(|p| p.check == PartCheck::Waiting),
+        "each part is asked for as soon as it's set"
     );
     assert_eq!(view.running.map(|r| r.runs), Some(6));
     assert!(!home_offers_a_check(
@@ -952,7 +1004,7 @@ async fn when_the_agent_is_free_new_and_changed_parts_are_checked_without_asking
     let changed = RUST.replace("Return the error instead.", "Return the error with `?`.");
     kelve_server::skills_home::write(&app.config.skills_dir, "rust", &changed).unwrap();
     let view = one(&app, "rust").await;
-    assert_eq!(part(&view, "Never unwrap").check, PartCheck::Checking);
+    assert_eq!(part(&view, "Never unwrap").check, PartCheck::Waiting);
     assert_eq!(
         part(&view, "Errors are one enum").check,
         PartCheck::NotChecked
@@ -1046,7 +1098,7 @@ async fn the_weeks_runs_are_counted_and_no_more_are_started_past_them() {
     checks_when(&app, ChecksWhen::WhenFree, Some(6)).await;
     assert_eq!(
         part(&one(&app, "rust").await, "Never unwrap").check,
-        PartCheck::Checking
+        PartCheck::Waiting
     );
     assert_eq!(runs_used(&app).await, (6, 6));
 }

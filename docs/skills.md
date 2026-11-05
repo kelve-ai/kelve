@@ -342,7 +342,8 @@ A part of a skill earns its place by changing what your agent does. A **skill ch
 | What the check found | What you see | What you can do |
 |---|---|---|
 | Not checked yet | Not checked yet | Check it |
-| Running | Checking now, with how many past tasks are redone | Wait, or stop it |
+| Asked for, and no agent has taken it | Waiting for your agent, and how to start it, or that no agent is connected | Tell your agent, connect one, or stop it |
+| An agent is doing it | Checking now, with how many past tasks are redone | Wait, or stop it |
 | It changes what your agent does | Works | Nothing: it stays |
 | Your agent does it anyway | Makes no difference | Remove it, or keep it anyway |
 | Your agent still got it wrong, with the part | Failed, with what happened and a clearer wording from your agent | Use that wording, write your own, or remove it |

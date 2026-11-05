@@ -28,9 +28,10 @@ export type Agent = {
   open: (what: Record<string, unknown>) => Promise<{ id: number; title: string; shown: boolean; debrief?: { debrief: number | null; due: boolean; reason: string; again: boolean } }>
   /**
    * Does kelve's work until there's none left: the jobs it was given. With
-   * `until`, it stops at the first job of that kind, having taken it.
+   * `until`, it stops at the first job of that kind, having taken it. With
+   * `holding`, it goes on from a job it stopped at.
    */
-  work: (opts?: { until?: string }) => Promise<Job[]>
+  work: (opts?: { until?: string; holding?: Job }) => Promise<Job[]>
   /** The notes waiting for it in the project at `path`, as the notes tool reads them. */
   notes: (path: string) => Promise<Array<{ id: string; version: string; note: string; file: string | null; textNow: string | null; doneBefore: { text: string; did: string } | null; added: string[] }>>
   /** Says a note is done, for the version it read, and what it did, as note_done does. */
@@ -70,13 +71,13 @@ export function agent(base: string, key: string, name = 'claude-code', answering
     setMarks: async (spec) => {
       await call('/api/agent/marks', { spec })
     },
-    work: async ({ until } = {}) => {
+    work: async ({ until, holding } = {}) => {
       const given: Job[] = []
       // Some work is scheduled a moment ahead: kelve is asked again until
       // it's been quiet for a while.
       let quiet = 0
       // An answer taken comes back with the next job, already the agent's.
-      let next: Job | null = null
+      let next: Job | null = holding ?? null
       while (quiet < 6) {
         if (given.length > 400) throw new Error('kelve’s work never stopped')
         const job: Job | null = next ?? (await call<Job | null>('/api/agent/next', caller))

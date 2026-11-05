@@ -18,6 +18,7 @@ import { useAgentLoad } from './looks'
 const SAYS: Record<PartCheck, string> = {
   works: 'Works',
   failed: 'Failed',
+  waiting: 'Waiting for your agent',
   checking: 'Checking now',
   noDifference: 'Makes no difference',
   notChecked: 'Not checked yet',
@@ -37,7 +38,7 @@ const CHEV = (
 )
 
 export function YourAgent({ example }: { example?: boolean }) {
-  const page = useAgentLoad<YourAgentView>('/api/your-agent', example ? EXAMPLE_AGENT : undefined, ['settings'])
+  const page = useAgentLoad<YourAgentView>('/api/your-agent', example ? EXAMPLE_AGENT : undefined, ['settings', 'skills', 'asks'])
   const p = page.data
   if (!p) return <Loading error={page.error} />
   const c = p.character
@@ -60,7 +61,7 @@ export function YourAgent({ example }: { example?: boolean }) {
           <p className="ya-line">Nothing yet. It learns from each debrief you go through.</p>
         ) : (
           <>
-            <p className="ya-line">A square for each part: green works, orange failed, violet is being checked, grey makes no difference, hollow isn’t checked yet.</p>
+            <p className="ya-line">A square for each part: green works, orange failed, violet is being checked, hollow violet is waiting for your agent, grey makes no difference, hollow isn’t checked yet.</p>
             <div className="ya-rows">
               {p.knows.map((k) => {
                 const works = k.parts.filter((x) => x === 'works').length

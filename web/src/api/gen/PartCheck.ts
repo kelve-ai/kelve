@@ -3,4 +3,4 @@
 /**
  * What a part's checks found.
  */
-export type PartCheck = "notChecked" | "checking" | "works" | "noDifference" | "failed";
+export type PartCheck = "notChecked" | "waiting" | "checking" | "works" | "noDifference" | "failed";

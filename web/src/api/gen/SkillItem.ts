@@ -33,5 +33,6 @@ project: string | null, parts: number,
 failed: number, 
 /**
  * Whether its parts are being checked now.
+ * A check is asked for, and no agent has taken any of it yet.
  */
-checking: boolean, };
+waiting: boolean, checking: boolean, };
