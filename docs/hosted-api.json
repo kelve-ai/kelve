@@ -1120,6 +1120,82 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "working": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "How `dollars` was worked out, a line at a time: tasks, runs a task,\nwhat a run costs and where that comes from."
+          }
+        }
+      },
+      "ExampleCheck": {
+        "type": "object",
+        "required": [
+          "kind",
+          "about"
+        ],
+        "properties": {
+          "about": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          }
+        }
+      },
+      "ExampleFile": {
+        "type": "object",
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "ExampleTask": {
+        "type": "object",
+        "description": "A retired task, in full: the request, the starting folder, and how it\nwas checked.",
+        "required": [
+          "name",
+          "area",
+          "instruction",
+          "checks",
+          "files"
+        ],
+        "properties": {
+          "area": {
+            "type": "string",
+            "description": "`cli`, `library` or `fix`."
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExampleCheck"
+            },
+            "description": "Its hidden checks: `test`, `static` or `judge`, and what each looks\nfor."
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExampleFile"
+            },
+            "description": "The starting folder's files, and its hidden tests under `tests/`."
+          },
+          "instruction": {
+            "type": "string",
+            "description": "The request the agent got."
+          },
+          "name": {
+            "type": "string",
+            "description": "Its short name: `greet-name`."
           }
         }
       },
@@ -1185,6 +1261,13 @@
           "bank": {
             "type": "string",
             "description": "The version of the task bank runs use now."
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExampleTask"
+            },
+            "description": "Retired tasks, shown in full as examples of what the live ones are\nlike. The live tasks are never shown."
           },
           "kind": {
             "type": "string"

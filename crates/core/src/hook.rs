@@ -1298,6 +1298,129 @@ pub fn reply(agent: Agent, on: &str, text: &str) -> Option<String> {
     })
 }
 
+/// A skill as a benchmark run hands it over (`kelve moment --bench`): its
+/// name, what it says it's for, and the rest of its `SKILL.md`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Skill {
+    pub name: String,
+    pub description: String,
+    pub body: String,
+}
+
+/// Reads a skill's `SKILL.md`, in the folder it's named for: its front
+/// matter's `name` and `description`, and what follows. The folder's name
+/// stands in for a missing `name`.
+pub fn skill(folder: &str, text: &str) -> Skill {
+    let mut name = String::new();
+    let mut description = String::new();
+    let mut body = text;
+    if let Some(rest) = text
+        .strip_prefix("---\n")
+        .or_else(|| text.strip_prefix("---\r\n"))
+        && let Some(end) = rest.find("\n---")
+    {
+        for line in rest[..end].lines() {
+            let Some((key, value)) = line.split_once(':') else {
+                continue;
+            };
+            let value = value
+                .trim()
+                .trim_matches(|c| c == '"' || c == '\'')
+                .to_string();
+            match key.trim() {
+                "name" => name = value,
+                "description" => description = value,
+                _ => {}
+            }
+        }
+        let after = &rest[end + 4..];
+        body = after.split_once('\n').map_or("", |(_, b)| b);
+    }
+    if name.is_empty() {
+        name = folder.to_string();
+    }
+    Skill {
+        name,
+        description,
+        body: body.trim().to_string(),
+    }
+}
+
+/// The kind of work a file is, by its name, for the skill named for that
+/// kind: the few a benchmark's tasks are in. Until the kinds of work are
+/// kelve's own, these are the names they'll have.
+pub fn kind_of(path: &str) -> Option<&'static str> {
+    let name = path.rsplit(['/', '\\']).next().unwrap_or(path);
+    let ext = name.rsplit_once('.').map(|(_, e)| e.to_lowercase());
+    let kind = match (name, ext.as_deref()) {
+        ("Cargo.toml" | "Cargo.lock", _) | (_, Some("rs")) => "rust",
+        (_, Some("ts" | "tsx" | "mts" | "cts")) => "typescript",
+        (_, Some("py")) => "python",
+        (_, Some("go")) => "go",
+        (_, Some("css")) => "css",
+        (_, Some("sql")) => "sql",
+        (_, Some("sh" | "bash" | "zsh")) => "shell",
+        (_, Some("md" | "mdx")) => "docs",
+        _ => return None,
+    };
+    Some(kind)
+}
+
+/// What kelve's hook says at a moment in a benchmark run, where there's no
+/// kelve to ask, only the skills in a folder: as the person's message
+/// arrives, the `everywhere` skill and what the others are for; as the
+/// agent first reads or edits a kind of file, the skill for that kind. Each
+/// is said once in a session: `given` is what was said already, and it
+/// comes back with what's said now.
+pub fn bench(m: &Moment, skills: &[Skill], given: &[String]) -> (String, Vec<String>) {
+    let mut given = given.to_vec();
+    let mut said = Vec::new();
+    let give = |name: &str, given: &mut Vec<String>| -> bool {
+        if given.iter().any(|g| g == name) {
+            return false;
+        }
+        given.push(name.to_string());
+        true
+    };
+    let named = |name: &str| skills.iter().find(|s| s.name == name);
+    match m.what.as_str() {
+        "prompt" | "next" => {
+            if let Some(s) = named("everywhere")
+                && give("everywhere", &mut given)
+            {
+                said.push(format!(
+                    "kelve: your skill `everywhere`, for all your work:\n\n{}",
+                    s.body
+                ));
+            }
+            let others: Vec<&Skill> = skills.iter().filter(|s| s.name != "everywhere").collect();
+            if !others.is_empty() && give(":list", &mut given) {
+                let lines: Vec<String> = others
+                    .iter()
+                    .map(|s| format!("- `{}`: {}", s.name, s.description))
+                    .collect();
+                said.push(format!(
+                    "kelve: your skills, in your skills folder, for when they help:\n{}",
+                    lines.join("\n")
+                ));
+            }
+        }
+        "read" | "edit" => {
+            if let Some(kind) = m.file.as_deref().and_then(kind_of)
+                && let Some(s) = named(kind)
+                && give(kind, &mut given)
+            {
+                said.push(format!(
+                    "kelve: your skill `{kind}`, for this kind of work:\n\n{}",
+                    s.body
+                ));
+            }
+        }
+        _ => {}
+    }
+    (said.join("\n\n"), given)
+}
+
 #[cfg(test)]
 mod tests {
     #![allow(clippy::unwrap_used)]
@@ -1312,6 +1435,47 @@ mod tests {
 }"#;
 
     const HOME: &str = "/Users/sam";
+
+    #[test]
+    fn a_benchmark_run_hands_over_skills_from_a_folder_once_each() {
+        let skills = vec![
+            skill(
+                "everywhere",
+                "---\nname: everywhere\ndescription: How I like all work\n---\n\n## How you like it\n\n### Small changes\n",
+            ),
+            skill(
+                "rust",
+                "---\nname: rust\ndescription: \"Rust, my way\"\n---\n### Errors are one enum\n",
+            ),
+            skill("standin-expert", "No front matter here."),
+        ];
+        assert_eq!(skills[1].description, "Rust, my way");
+        assert_eq!(skills[2].name, "standin-expert");
+        assert_eq!(skills[2].body, "No front matter here.");
+        let at = |what: &str, file: Option<&str>| Moment {
+            what: what.into(),
+            file: file.map(str::to_string),
+            ..Moment::default()
+        };
+        let (said, given) = bench(&at("prompt", None), &skills, &[]);
+        assert!(said.contains("### Small changes"), "{said}");
+        assert!(said.contains("- `rust`: Rust, my way"), "{said}");
+        assert!(said.contains("- `standin-expert`"), "{said}");
+        // Said once a session.
+        let (again, given) = bench(&at("prompt", None), &skills, &given);
+        assert_eq!(again, "");
+        // A kind's skill as its kind of file is first read, then not again.
+        let (said, given) = bench(&at("read", Some("/w/src/main.rs")), &skills, &given);
+        assert!(said.starts_with("kelve: your skill `rust`"), "{said}");
+        assert!(said.contains("### Errors are one enum"));
+        let (again, _) = bench(&at("edit", Some("/w/Cargo.toml")), &skills, &given);
+        assert_eq!(again, "");
+        // A kind with no skill, and an empty folder, say nothing.
+        assert_eq!(bench(&at("read", Some("a.py")), &skills, &[]).0, "");
+        assert_eq!(bench(&at("prompt", None), &[], &[]).0, "");
+        assert_eq!(kind_of("C:\\w\\lib.rs"), Some("rust"));
+        assert_eq!(kind_of("Makefile"), None);
+    }
 
     #[test]
     fn work_handed_over_is_seen_and_nothing_else_is() {
