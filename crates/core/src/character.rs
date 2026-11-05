@@ -642,6 +642,33 @@ impl Picture {
             .min()
     }
 
+    /// The picture standing still, as a link's preview draws it: what
+    /// colour each pixel is, `#rrggbb`, and how opaque, row by row, `None`
+    /// where there's nothing. The eyes are open and the arms down, drawn in
+    /// the order [`Picture::svg`] draws them.
+    pub fn still(&self, colours: &Colours) -> Vec<Vec<Option<(String, f64)>>> {
+        let mut grid = vec![vec![None; WIDTH]; HEIGHT];
+        for layer in [
+            Layer::Legs,
+            Layer::Base,
+            Layer::Eyes,
+            Layer::Light,
+            Layer::ArmLeftDown,
+            Layer::ArmRightDown,
+        ] {
+            for (i, paint) in self.layers[layer.index()].iter().enumerate() {
+                if let Some(paint) = paint {
+                    let fill = match &paint.colour {
+                        Colour::Role(role) => colours.of(*role),
+                        Colour::Hex(h) => h.clone(),
+                    };
+                    grid[i / WIDTH][i % WIDTH] = Some((fill, paint.opacity.unwrap_or(1.0)));
+                }
+            }
+        }
+        grid
+    }
+
     /// The picture as an SVG, its layers in named groups (`base`, `eyes`,
     /// `shut`, `light`, `arm-left-down` and the other arms, `legs`) with the
     /// classes `CSS` moves, and the colours chosen in place of the roles.
@@ -1343,14 +1370,38 @@ pub fn part(text: &str) -> Result<Part, Vec<String>> {
 /// the 24 by 27 grid, `base`, `eyes` and `shut` drawn, in at most eight
 /// colours, with nothing else.
 pub fn character(text: &str) -> Result<Character, Vec<String>> {
+    read_character(text, MOST_CHARACTER_COLOURS, true, &[])
+}
+
+/// The most colours a character shown on a page may have: a robot drawn
+/// from kelve's parts uses more than one the agent draws may.
+pub const MOST_SHOWN_COLOURS: usize = 10;
+
+/// Reads a character as it's sent to be shown on a person's page, and
+/// checks it as [`character`] does: whatever kelve drew it from, the robot
+/// from its parts or a character, in at most [`MOST_SHOWN_COLOURS`]
+/// colours, its name left out if it has none. `extra` are keys the page's
+/// own format adds, such as the colours the person chose.
+pub fn shown(text: &str, extra: &[&str]) -> Result<Character, Vec<String>> {
+    read_character(text, MOST_SHOWN_COLOURS, false, extra)
+}
+
+fn read_character(
+    text: &str,
+    most_colours: usize,
+    named: bool,
+    extra: &[&str],
+) -> Result<Character, Vec<String>> {
     let object = object(text, "character")?;
     let mut r = Reader {
         what: "character",
         object: &object,
         problems: Vec::new(),
     };
+    let mut keys = vec!["format", "name", "colours", "layers"];
+    keys.extend_from_slice(extra);
     r.only(
-        &["format", "name", "colours", "layers"],
+        &keys,
         "A character has only format, name, colours and layers.",
     );
     if let Some(format) = r.string("format")
@@ -1359,11 +1410,16 @@ pub fn character(text: &str) -> Result<Character, Vec<String>> {
         r.problems
             .push(format!("The character's format is “{CHARACTER_FORMAT}”."));
     }
-    let name = r.string("name").unwrap_or_default();
-    if let Some(p) = words_problem("The character's name", &name, MOST_PART_NAME) {
-        r.problems.push(p);
-    }
-    let colours = r.colours(MOST_CHARACTER_COLOURS);
+    let name = if named || object.contains_key("name") {
+        let name = r.string("name").unwrap_or_default();
+        if let Some(p) = words_problem("The character's name", &name, MOST_PART_NAME) {
+            r.problems.push(p);
+        }
+        name
+    } else {
+        String::new()
+    };
+    let colours = r.colours(most_colours);
     let mut layers = BTreeMap::new();
     match object.get("layers").and_then(Value::as_object) {
         None => r.problems.push(
@@ -1859,6 +1915,27 @@ mod tests {
             "{found:?}"
         );
         assert!(problems(&|v| v["script"] = json!("x"))[0].contains("`script`"));
+    }
+
+    #[test]
+    fn a_character_for_a_page_may_go_unnamed_in_more_colours_and_stands_still() {
+        let mut v: Value = serde_json::from_str(GHOST).unwrap();
+        v.as_object_mut().unwrap().remove("name");
+        for c in ["c", "d", "f", "g", "h", "i"] {
+            v["colours"][c] = json!("#123456");
+        }
+        v["palette"] = json!({});
+        assert!(character(&v.to_string()).is_err());
+        let shown = shown(&v.to_string(), &["palette"]).unwrap();
+        assert_eq!(shown.name, "");
+        v["layers"]["tail"] = json!(["b"]);
+        assert!(super::shown(&v.to_string(), &["palette"]).is_err());
+        let blob = character(GHOST).unwrap();
+        let still = blob.picture().still(&Robot::default().colours);
+        assert_eq!((still.len(), still[0].len()), (HEIGHT, WIDTH));
+        // Its open eyes, in the robot's eye colour; nothing in a corner.
+        assert_eq!(still[11][10], Some(("#9ff5d6".to_string(), 1.0)));
+        assert_eq!(still[0][0], None);
     }
 
     #[test]

@@ -195,6 +195,46 @@ pub struct AgentOffer {
     /// "Claude Code".
     pub name: String,
     pub models: Vec<ModelOffer>,
+    /// What a person may pay for its runs with: an API key always, and a
+    /// Claude Code subscription only for Claude Code, and only where the
+    /// service is run for that person alone.
+    #[serde(default = "api_key_only")]
+    pub credentials: Vec<Credential>,
+}
+
+/// What a person pays for a run with, for the model's provider.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Credential {
+    /// An API key from the provider's console: `sk-ant-api…`. The run is
+    /// paid for in dollars.
+    #[default]
+    ApiKey,
+    /// A Claude Code subscription's token, from `claude setup-token`:
+    /// `sk-ant-oat…`. The run uses the plan's allowance, in tokens.
+    Subscription,
+}
+
+impl Credential {
+    /// Why a key can't be this kind of credential, by its look alone: a
+    /// subscription's token sent as an API key, or the other way round.
+    pub fn mismatch(self, key: &str) -> Option<&'static str> {
+        let key = key.trim();
+        match self {
+            Credential::ApiKey if key.starts_with("sk-ant-oat") => Some(
+                "That’s a Claude Code subscription’s token, not an API key. Choose your subscription to pay with it, or use an API key.",
+            ),
+            Credential::Subscription if key.starts_with("sk-ant-api") => Some(
+                "That’s an API key, not a Claude Code subscription’s token. Choose an API key to pay with it, or make a token with claude setup-token.",
+            ),
+            _ => None,
+        }
+    }
+}
+
+fn api_key_only() -> Vec<Credential> {
+    vec![Credential::ApiKey]
 }
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
@@ -235,6 +275,10 @@ pub struct RunRequest {
     /// The tar, in standard base64.
     #[cfg_attr(feature = "openapi", schema(format = Byte))]
     pub skills: String,
+    /// What the person will pay with: the estimate is in dollars for an
+    /// API key, and in tokens for a subscription.
+    #[serde(default)]
+    pub credential: Credential,
 }
 
 // Never the skills.
@@ -245,6 +289,7 @@ impl std::fmt::Debug for RunRequest {
             .field("agent", &self.agent)
             .field("model", &self.model)
             .field("skills", &self.skills.len())
+            .field("credential", &self.credential)
             .finish()
     }
 }
@@ -281,8 +326,16 @@ pub struct Estimate {
     pub provider_name: String,
     /// About what it costs on the person's own key, in US dollars, at the
     /// provider's list prices: only the runs with their skills. The
-    /// standard agent's runs, and judging, are on kelve's key.
+    /// standard agent's runs, and judging, are on kelve's key. Nothing for
+    /// a subscription: `tokens` says what it uses.
     pub dollars: f64,
+    /// What it'll be paid with.
+    #[serde(default)]
+    pub credential: Credential,
+    /// For a subscription: about how many tokens of the plan's allowance it
+    /// uses, the runs with the person's skills only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tokens: Option<u64>,
     /// The runs the account has left today, this one not counted.
     pub runs_left: u32,
     pub expires: Timestamp,
@@ -295,19 +348,24 @@ pub struct Estimate {
 }
 
 /// What a person sends to start a run they've seen the estimate for: their
-/// own key for the model's provider. It's used for that run only: held in
-/// memory while the run goes, never kept, never logged, and forgotten as
-/// the run ends.
+/// own key for the model's provider, or their Claude Code subscription's
+/// token, and which it is. It's used for that run only: held in memory
+/// while the run goes, never kept, never logged, and forgotten as the run
+/// ends.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Confirm {
     pub provider_key: String,
+    #[serde(default)]
+    pub credential: Credential,
 }
 
 // Never the key.
 impl std::fmt::Debug for Confirm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Confirm").finish_non_exhaustive()
+        f.debug_struct("Confirm")
+            .field("credential", &self.credential)
+            .finish_non_exhaustive()
     }
 }
 
