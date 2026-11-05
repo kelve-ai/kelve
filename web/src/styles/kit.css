@@ -1,0 +1,106 @@
+/* kelve's controls, as the canvas draws them (STYLE.css), on the app's own
+   tokens so dark follows: the one main action a soft red tint with a key-cap
+   edge, never solid and never black; a white key beside it; quiet ones that
+   are only words until pointed at. Raised surfaces are dialogs and toasts,
+   nothing else. Names stay clear of the reader's (.well, .in, .lk). */
+
+/* ---------------------------------------------------------------- buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 600 14.5px/20px var(--sans); padding: 9px 15px; border-radius: 9px;
+  text-decoration: none; cursor: pointer; white-space: nowrap; color: var(--ink);
+  transition: background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, transform 0.06s ease;
+}
+.btn:hover { text-decoration: none; }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 9px; }
+.btn-p { color: var(--accent-ink); background: var(--accent-tint); border: 1px solid var(--accent-edge); box-shadow: inset 0 -2px 0 var(--accent-key); }
+.btn-p:hover { background: var(--accent-tint-2); border-color: var(--accent-edge-2); }
+.btn-p:active { background: var(--accent-press); box-shadow: inset 0 1px 2px rgba(var(--accent-rgb), 0.18); }
+.btn-s { color: var(--ink); background: var(--white); border: 1px solid var(--key-edge); box-shadow: inset 0 -2px 0 var(--key-under), 0 1px 2px rgba(var(--shadow), 0.05); }
+.btn-s:hover { background: var(--key-hover); border-color: var(--key-edge-2); }
+.btn-s:active { background: var(--key-press); box-shadow: inset 0 1px 2px rgba(var(--shadow), 0.12); }
+/* A toggle that's on. */
+.btn-on, .btn-s[aria-pressed='true'] { color: var(--accent-ink); background: var(--accent-tint); border: 1px solid var(--accent-edge); box-shadow: inset 0 -2px 0 var(--accent-key); }
+.btn-g { color: var(--soft); background: transparent; border: 1px solid transparent; }
+.btn-g:hover { background: var(--well); color: var(--ink); }
+.btn-sm { font-size: 13.5px; padding: 6px 11px; }
+.btn-lg { font-size: 16px; padding: 12px 22px; border-radius: 11px; }
+.btn-icon { padding: 8px; }
+.btn-sm.btn-icon { padding: 6px; }
+.btn[disabled], .btn[aria-disabled='true'] { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* A red text link. */
+.go { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--accent-ink); text-decoration: none; cursor: pointer; }
+.go:hover { color: var(--accent-ink-2); text-decoration: none; }
+.go:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- choices */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 11px; background: var(--well); }
+.seg button { font: 600 13.5px/20px var(--sans); border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; background: transparent; color: var(--quiet); }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed='true'] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(var(--shadow), 0.08), 0 0 0 1px var(--rule); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg.sm button { font-size: 12.5px; padding: 4px 10px; }
+
+.sw { position: relative; width: 40px; height: 24px; border-radius: 999px; border: 0; background: var(--key-edge); cursor: pointer; flex: none; padding: 0; }
+.sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: left 0.15s ease; }
+.sw[aria-checked='true'] { background: var(--accent); }
+.sw[aria-checked='true']::after { left: 19px; }
+.sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- fields */
+.field-at { display: flex; flex-direction: column; gap: 6px; }
+.field-at > label { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--ink); }
+.field-at > small { font-size: 13.5px; line-height: 20px; color: var(--soft); }
+.field {
+  font: 400 16px/24px var(--sans); padding: 10px 13px; border: 1px solid var(--key-edge); border-radius: 10px;
+  background: var(--white); color: var(--ink); box-shadow: inset 0 1px 2px rgba(var(--shadow), 0.04); min-width: 0;
+}
+.field::placeholder { color: var(--placeholder); }
+.field:focus { outline: 2px solid var(--accent-edge); border-color: var(--accent-focus); }
+textarea.field { resize: vertical; }
+
+/* Something to copy: mono in a soft well, a Copy key beside it. */
+.copy { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cwell { flex: 1; min-width: 0; font: 400 14px/22px var(--mono); padding: 9px 14px; border-radius: 10px; background: var(--well); color: var(--ink); white-space: pre; overflow-x: auto; scrollbar-width: none; }
+.cwell::-webkit-scrollbar { display: none; }
+.cwell .ps { color: var(--quiet); }
+.copy.words .cwell { font-family: var(--sans); white-space: normal; }
+
+/* ---------------------------------------------------------------- dialogs and toasts */
+.scrim { position: fixed; inset: 0; background: rgba(var(--shadow), 0.28); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 40; animation: appear 0.15s ease; }
+.sheet {
+  width: 100%; max-width: 520px; max-height: calc(100vh - 48px); overflow: auto; background: var(--white); border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(var(--shadow), 0.06), 0 24px 60px -20px rgba(var(--shadow), 0.45);
+  padding: 28px; display: flex; flex-direction: column; gap: 18px;
+}
+.sheet > h2 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.02em; }
+.sheet > p { margin: 0; font-size: 15.5px; line-height: 24px; color: var(--ink-2); }
+.sheet > .acts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 32px);
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px;
+  background: var(--ink); color: var(--page); font-size: 15px; line-height: 22px; box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.4);
+}
+.toast button { all: unset; cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.toast button:focus-visible { outline: 2px solid var(--page); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- small things */
+.spin { display: inline-block; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--accent-edge); border-top-color: var(--accent); animation: spin 0.8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.busy { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; line-height: 22px; color: var(--ink-2); }
+.kbd { font: 400 11.5px/16px var(--mono); padding: 0 5px; border-radius: 5px; border: 1px solid rgba(var(--shadow), 0.14); background: rgba(var(--hi), 0.7); color: inherit; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; line-height: 18px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--well); color: var(--soft); white-space: nowrap; }
+.chip.debrief { background: var(--ev-debrief-tint); color: var(--ev-debrief-ink); }
+.chip.check { background: var(--ev-check-tint); color: var(--ev-check-ink); }
+.chip.skill { background: var(--ev-skill-tint); color: var(--ev-skill-ink); }
+.chip.score { background: var(--ev-score-tint); color: var(--ev-score-ink); }
+.chip.part { background: var(--ev-part-tint); color: var(--ev-part-ink); }
+.chip.done { background: var(--ev-done-tint); color: var(--ev-done-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .sw::after { transition: none; }
+  .spin { animation: none; }
+  .scrim { animation: none; }
+}

@@ -130,5 +130,27 @@ export function states(answers: Record<string, unknown>): State[] {
     { name: 'you-notes', title: 'Settings: notes', path: '#/example/you/notes' },
     { name: 'you-shared', title: 'Settings: what’s shared', path: '#/example/you/shared' },
     { name: 'adding', title: 'Adding to the shared graph', path: '#/example/adding' },
+    // kelve's screens under its header (Shell), each a stub until it's built.
+    { name: 'home', title: 'Home: your agent, what needs you, and what happened lately', path: '#/example/home', phone: true },
+    { name: 'debrief', title: 'A debrief', path: '#/example/debrief/1' },
+    { name: 'change', title: 'A change, file by file', path: '#/example/change/1' },
+    { name: 'skills', title: 'Skills', path: '#/example/skills' },
+    { name: 'skill', title: 'A skill', path: '#/example/skills/rust' },
+    { name: 'skill-edit', title: 'Editing a skill', path: '#/example/skills/rust/edit' },
+    { name: 'agent', title: 'Your agent', path: '#/example/agent', phone: true },
+    { name: 'agent-look', title: 'Your agent: changing how it looks', path: '#/example/agent/look' },
+    { name: 'score-new', title: 'Your agent: getting a verified score', path: '#/example/agent/score/new' },
+    { name: 'score', title: 'Your agent: a verified score', path: '#/example/agent/score/1' },
+    { name: 'settings-agent', title: 'Settings: your agent', path: '#/example/settings/agent', phone: true },
+    { name: 'settings-account', title: 'Settings: account', path: '#/example/settings/account' },
+    { name: 'settings-checks', title: 'Settings: skill checks', path: '#/example/settings/checks' },
+    { name: 'settings-reading', title: 'Settings: reading', path: '#/example/settings/reading' },
+    { name: 'settings-privacy', title: 'Settings: privacy', path: '#/example/settings/privacy' },
+    { name: 'settings-about', title: 'Settings: about', path: '#/example/settings/about' },
+    { name: 'welcome', title: 'Meet your agent, the first time', path: '#/example/welcome', phone: true },
+    // Every control the screens are built from.
+    { name: 'kit', title: 'Controls: buttons, choices, fields, chips, the character and markdown with notes beside it', path: '#/example/kit', phone: true },
+    { name: 'kit-dialog', title: 'Controls: a dialog over the page', path: '#/example/kit?as=dialog' },
+    { name: 'kit-toast', title: 'Controls: a toast', path: '#/example/kit?as=toast' },
   ]
 }

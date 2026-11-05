@@ -8,6 +8,8 @@ import './styles/reader.css'
 import './styles/ui.css'
 import './styles/screens.css'
 import './styles/list.css'
+import './styles/kit.css'
+import './styles/shell.css'
 
 // Every screen opens at its top, not where the browser left it.
 history.scrollRestoration = 'manual'

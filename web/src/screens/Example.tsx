@@ -25,7 +25,10 @@
 // start page, anonymous counts are asked about; `as=counts-shared` draws them
 // shared, and `as=counts-not` not; `as=returning` draws it for someone who's
 // opened something from it before, and the project the day before, with
-// more ready in it than shows.
+// more ready in it than shows. kelve's screens under its header have their
+// addresses after #/example/ too (routes.ts), home as #/example/home, and
+// #/example/kit shows every control; `as=dialog` opens its dialog, and
+// `as=toast` shows its toast.
 
 import { useEffect, useState } from 'react'
 import { answerFromExample, type Fixture } from '../api/client'
@@ -34,7 +37,10 @@ import { BACKOFF as BACKOFF_DIAGRAMS, UNIQUE_KEYS } from '../example/diagrams'
 import { changeWaiting, folderWaiting } from '../example/plainly'
 import { Loading } from '../Loader'
 import { Reader } from '../reader/Reader'
+import { routeOf } from '../routes'
 import { PageTop } from '../Top'
+import { Kit } from './Kit'
+import { Screen } from './Screen'
 import { Adding } from './Adding'
 import { Moved } from './Moved'
 import { Start } from './Start'
@@ -56,6 +62,9 @@ const BANK_PLAINLY: PlainlyView = {
   waiting: { writing: false, reading: false, before: 3, ask: 21 },
 }
 
+/** The example's own screens: the rest are kelve's screens under its header, or its controls. */
+const OWN = ['', 'moved', 'first-run', 'start', 'you', 'adding', 'kit']
+
 /** The screen the example's address names, and its part. */
 function screenOf(hash: string): [string, string | undefined] {
   const [, screen = '', part] = hash.split('?')[0].replace(/^#\//, '').split('/')
@@ -64,7 +73,14 @@ function screenOf(hash: string): [string, string | undefined] {
 
 export function Example() {
   const [f, setF] = useState<Fixture | null>(null)
-  const [screen, part] = screenOf(location.hash)
+  // Drawn again as its address changes: the header's links lead between screens.
+  const [hash, setHash] = useState(location.hash)
+  useEffect(() => {
+    const on = () => setHash(location.hash)
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
+  const [screen, part] = screenOf(hash)
   useEffect(() => {
     const theme = new URLSearchParams(location.hash.split('?')[1] ?? '').get('theme')
     if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
@@ -349,6 +365,10 @@ export function Example() {
       setF(fixture)
     })
   }, [screen])
+  // kelve's screens under its header, and its controls, need nothing from the example.
+  const route = OWN.includes(screen) ? null : routeOf(hash.split('?')[0].replace(/^#\//, '').split('/').slice(1).map((p) => decodeURIComponent(p)))
+  if (route) return <Screen route={route} example />
+  if (screen === 'kit') return <Kit />
   if (!f) return <Loading />
   const me = f.answers['/api/me'] as Me
   if (screen === '') return <Reader id={f.opened} example />

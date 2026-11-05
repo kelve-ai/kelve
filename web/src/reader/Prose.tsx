@@ -4,108 +4,15 @@
 // margin's notes beside it. Nothing from the file is markup: HTML in it shows
 // as its text, and images as their words, never fetched.
 
-import { Fragment, type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { fromMarkdown } from 'mdast-util-from-markdown'
-import { gfmFromMarkdown } from 'mdast-util-gfm'
-import { gfm } from 'micromark-extension-gfm'
-import type { Nodes, Parents, RootContent } from 'mdast'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { Nodes, RootContent } from 'mdast'
+import { block, parse } from '../ui/markdown'
 import type { Marked, NoteRef } from '../api/types'
 import { bringIntoView } from './code'
 import { type Chosen, type Doc, ideasOn } from './FileView'
 import { MarginNote } from './Margin'
 import { NoteBox, NotesHint, NoteWell, useNotes } from './NoteParts'
 import { useSeen } from './Square'
-
-/** Only links people expect to follow leave the page. */
-const safeHref = (url: string) => (/^(https?:|mailto:)/i.test(url) ? url : undefined)
-
-function inline(nodes: RootContent[], key: string): ReactNode[] {
-  return nodes.map((node, i) => {
-    const k = `${key}.${i}`
-    switch (node.type) {
-      case 'text':
-        return <Fragment key={k}>{node.value}</Fragment>
-      case 'inlineCode':
-        return <code key={k}>{node.value}</code>
-      case 'emphasis':
-        return <em key={k}>{inline(node.children, k)}</em>
-      case 'strong':
-        return <strong key={k}>{inline(node.children, k)}</strong>
-      case 'delete':
-        return <del key={k}>{inline(node.children, k)}</del>
-      case 'break':
-        return <br key={k} />
-      case 'link': {
-        const href = safeHref(node.url)
-        return href ? <a key={k} href={href} target="_blank" rel="noreferrer noopener">{inline(node.children, k)}</a> : <span key={k}>{inline(node.children, k)}</span>
-      }
-      case 'image':
-      case 'imageReference':
-        // Never fetched: its words stand in for it.
-        return node.alt ? <span key={k} className="alt">[{node.alt}]</span> : null
-      case 'html':
-        return <code key={k}>{node.value}</code>
-      case 'footnoteReference':
-        return <sup key={k}>{node.label ?? node.identifier}</sup>
-      default:
-        return 'children' in node ? <Fragment key={k}>{inline((node as Parents).children as RootContent[], k)}</Fragment> : null
-    }
-  })
-}
-
-function block(node: RootContent, key: string): ReactNode {
-  switch (node.type) {
-    case 'heading': {
-      const H = `h${Math.min(node.depth + 1, 6)}` as 'h2'
-      return <H key={key}>{inline(node.children, key)}</H>
-    }
-    case 'paragraph':
-      return <p key={key}>{inline(node.children, key)}</p>
-    case 'blockquote':
-      return <blockquote key={key}>{node.children.map((n, i) => block(n, `${key}.${i}`))}</blockquote>
-    case 'list': {
-      const L = node.ordered ? 'ol' : 'ul'
-      return (
-        <L key={key} start={node.ordered ? (node.start ?? undefined) : undefined}>
-          {node.children.map((item, i) => (
-            <li key={i}>
-              {item.checked != null && <span className="tick" aria-label={item.checked ? 'Done' : 'Not done'}>{item.checked ? '☑' : '☐'} </span>}
-              {item.children.map((n, j) => (n.type === 'paragraph' && !node.spread ? <Fragment key={j}>{inline(n.children, `${key}.${i}.${j}`)}</Fragment> : block(n, `${key}.${i}.${j}`)))}
-            </li>
-          ))}
-        </L>
-      )
-    }
-    case 'code':
-      return <pre key={key}><code>{node.value}</code></pre>
-    case 'thematicBreak':
-      return <hr key={key} />
-    case 'table':
-      return (
-        <div key={key} className="ptable">
-          <table>
-            <tbody>
-              {node.children.map((row, i) => (
-                <tr key={i}>
-                  {row.children.map((cell, j) => {
-                    const Cell = i === 0 ? 'th' : 'td'
-                    return <Cell key={j}>{inline(cell.children, `${key}.${i}.${j}`)}</Cell>
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    case 'html':
-      return <pre key={key}><code>{node.value}</code></pre>
-    case 'definition':
-    case 'footnoteDefinition':
-      return null
-    default:
-      return 'children' in node ? <div key={key}>{((node as Parents).children as RootContent[]).map((n, i) => block(n, `${key}.${i}`))}</div> : null
-  }
-}
 
 type Row = { node: Nodes; from: number; to: number; starts: Marked[] }
 
@@ -180,9 +87,7 @@ export function Prose({ doc, wide, lit, focus, line, open, scroller, placed, not
   // A change's file reads as it is after the change.
   const text = useMemo(() => (doc.kinds ? doc.text.split('\n').filter((_, i) => doc.kinds![i] !== 'removed').join('\n') : doc.text), [doc])
   const rows = useMemo<Row[]>(() => {
-    const tree = fromMarkdown(text, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] })
-    const rows: Row[] = tree.children
-      .filter((n) => n.type !== 'definition' && n.type !== 'footnoteDefinition')
+    const rows: Row[] = parse(text)
       .map((n) => ({ node: n, from: n.position?.start.line ?? 0, to: n.position?.end.line ?? 0, starts: [] }))
     const placedKeys = new Set<string>()
     const ordered = [...doc.marks].sort((a, b) => (a.mark.span?.line ?? a.mark.start) - (b.mark.span?.line ?? b.mark.start))

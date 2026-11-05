@@ -81,6 +81,28 @@
   color-scheme: light;
   --sans: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* The agent's name, and nothing else: pixels, like the character it names. */
+  --pixel: 'Pixelify Sans', var(--sans);
+  /* kelve's red, as the canvas has it (STYLE.css): the logo's square; the one
+     main action, a soft tint with a key-cap edge, never solid; and what's on. */
+  --logo: #cf4a2f;
+  --accent: #c8452c;
+  --accent-ink: #a8361f; --accent-ink-2: #8a2c18; --accent-rgb: 168, 54, 31;
+  --accent-tint: #fdf0ec; --accent-tint-2: #fbe6df; --accent-press: #f9dfd7; --accent-key: #f6dcd3;
+  --accent-edge: #f0c4b8; --accent-edge-2: #eab3a5; --accent-focus: #e09a86;
+  /* A white key: the secondary button, a field, a switch at rest. */
+  --key-hover: #fdfcfa; --key-press: #f6f3ee; --key-edge: #ddd6cb; --key-edge-2: #cfc7ba; --key-under: #efeae2; --hi: 255, 255, 255;
+  /* Kinds of event, each a colour, a tint behind it, and an ink to read on the tint. */
+  --ev-debrief: #c8452c; --ev-debrief-tint: #fdf0ec; --ev-debrief-ink: #a8361f;
+  --ev-check: #7c5cd6; --ev-check-tint: #efe9fb; --ev-check-ink: #5b3fb8;
+  --ev-skill: #2e8a5a; --ev-skill-tint: #e3f2e8; --ev-skill-ink: #23704a;
+  --ev-score: #b8801a; --ev-score-tint: #fbf0d8; --ev-score-ink: #8a5a12;
+  --ev-part: #d6457f; --ev-part-tint: #fbe5ee; --ev-part-ink: #a1286a;
+  --ev-done: #6e6960; --ev-done-tint: #f1eee8; --ev-done-ink: #5e5952;
+  /* A task's result: better, the same, worse. */
+  --better: #2e8a5a; --same: #d6d0c5; --worse: #e58a3c;
+  /* The person's own edit, after their agent handed over. */
+  --own-edit: rgba(242, 182, 50, 0.2);
 }
 
 /* Dark: chosen in settings, or following the system until you choose. */
@@ -93,6 +115,13 @@
   --step-ink: #9cc2f2; --step-tint: rgba(141, 180, 236, 0.13); --code: #ddd8cf; --code-weight: 400; --c-string: #8fc49a; --c-const: #c3a6e6; --c-comment: #e3a868; --c-def: #8db4ec; --line-n: #5f5a52;
   --ink-2: #c2bbb0; --text: #c2bbb0; --mute: #4a4640; --under: #5f5a52; --dim: #6f6a62; --placeholder: #6f6a62;
   --red-soft: rgba(226, 120, 98, 0.16); --mark: rgba(212, 165, 78, 0.22); --selection: rgba(141, 180, 236, 0.22);
+  --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
+  --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22; --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
+  --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
+  --ev-debrief: #e27862; --ev-debrief-tint: #35221d; --ev-debrief-ink: #ef8f7a; --ev-check: #a991f0; --ev-check-tint: #2a2440; --ev-check-ink: #b9a5f5;
+  --ev-skill: #6cc28f; --ev-skill-tint: #1e3227; --ev-skill-ink: #7cc48a; --ev-score: #e0b04f; --ev-score-tint: #382e1a; --ev-score-ink: #d6a659;
+  --ev-part: #ee7fae; --ev-part-tint: #3a2230; --ev-part-ink: #ee8fb8; --ev-done: #a39d93; --ev-done-tint: #26241f; --ev-done-ink: #b0a99e;
+  --better: #6cc28f; --same: #4a4640; --worse: #f0a060; --own-edit: rgba(212, 165, 78, 0.22);
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -105,6 +134,13 @@
     --step-ink: #9cc2f2; --step-tint: rgba(141, 180, 236, 0.13); --code: #ddd8cf; --code-weight: 400; --c-string: #8fc49a; --c-const: #c3a6e6; --c-comment: #e3a868; --c-def: #8db4ec; --line-n: #5f5a52;
     --ink-2: #c2bbb0; --text: #c2bbb0; --mute: #4a4640; --under: #5f5a52; --dim: #6f6a62; --placeholder: #6f6a62;
     --red-soft: rgba(226, 120, 98, 0.16); --mark: rgba(212, 165, 78, 0.22); --selection: rgba(141, 180, 236, 0.22);
+    --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
+    --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22; --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
+    --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
+    --ev-debrief: #e27862; --ev-debrief-tint: #35221d; --ev-debrief-ink: #ef8f7a; --ev-check: #a991f0; --ev-check-tint: #2a2440; --ev-check-ink: #b9a5f5;
+    --ev-skill: #6cc28f; --ev-skill-tint: #1e3227; --ev-skill-ink: #7cc48a; --ev-score: #e0b04f; --ev-score-tint: #382e1a; --ev-score-ink: #d6a659;
+    --ev-part: #ee7fae; --ev-part-tint: #3a2230; --ev-part-ink: #ee8fb8; --ev-done: #a39d93; --ev-done-tint: #26241f; --ev-done-ink: #b0a99e;
+    --better: #6cc28f; --same: #4a4640; --worse: #f0a060; --own-edit: rgba(212, 165, 78, 0.22);
     color-scheme: dark;
   }
 }

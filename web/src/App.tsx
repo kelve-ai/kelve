@@ -1,5 +1,6 @@
 // The app: the top of every page, and the screen for the address.
-//   #/                 what to open, and what was opened lately
+//   #/, and the rest   kelve's screens under its header (routes.ts)
+//   #/start            what to open, and what was opened lately
 //   #/o/<id>           the reader, on something opened
 //   #/you, #/you/…     settings
 //   #/adding           adding to the shared graph: who you are, and the terms
@@ -15,6 +16,8 @@ import { SignedOut } from './screens/SignedOut'
 import { Moved } from './screens/Moved'
 import { isMoved, onMoved, showHere } from './tabs'
 import { You } from './screens/You'
+import { Screen } from './screens/Screen'
+import { routeOf } from './routes'
 import { PageTop } from './Top'
 import { useLoad } from './useLoad'
 import { Loading } from './Loader'
@@ -82,10 +85,12 @@ function Kelve() {
   return <Shell me={me.data} />
 }
 
-const SCREENS = ['', 'you', 'adding']
+const SCREENS = ['start', 'you', 'adding']
 
 function Shell({ me }: { me?: Me }) {
-  const [screen, a] = useRoute()
+  const parts = useRoute()
+  const [screen, a] = parts
+  const route = routeOf(parts)
   const settings = useLoad<Settings>('/api/settings', ['settings'])
   // Every page but the reader opens at its top, not where the last one was.
   useEffect(() => {
@@ -110,11 +115,12 @@ function Shell({ me }: { me?: Me }) {
         <Reader key={a} id={Number(a)} />
       </Suspense>
     )
+  if (route) return <Screen route={route} />
   return (
     <>
-      <PageTop here={screen === 'you' ? 'settings' : screen === '' ? 'start' : undefined} />
+      <PageTop here={screen === 'you' ? 'settings' : screen === 'start' ? 'start' : undefined} />
       <div className="page">
-        {screen === '' && <Start me={me} />}
+        {screen === 'start' && <Start me={me} />}
         {screen === 'you' && <You focus={a} me={me} />}
         {screen === 'adding' && <Adding idea={new URLSearchParams(location.hash.split('?')[1] ?? '').get('idea') ?? undefined} />}
         {!SCREENS.includes(screen) && (
