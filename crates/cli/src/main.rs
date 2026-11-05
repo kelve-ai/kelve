@@ -123,6 +123,11 @@ enum Command {
         /// The event, as the agent names it.
         #[arg(long)]
         on: Option<String>,
+        /// For a benchmark run: hand over the skills in this folder, one
+        /// folder each with its SKILL.md, without kelve running or the
+        /// network.
+        #[arg(long, value_name = "SKILLS")]
+        bench: Option<std::path::PathBuf>,
     },
     /// Set kelve up: connect your agent, add its hook, and say what kelve marks
     ///
@@ -305,7 +310,9 @@ async fn main() -> std::process::ExitCode {
         Command::Hook {
             what: HookCommand::Remove { agent },
         } => notes::hook(false, &agent).await,
-        Command::Moment { agent, on } => moment::run(agent.as_deref(), on.as_deref()).await,
+        Command::Moment { agent, on, bench } => {
+            moment::run(agent.as_deref(), on.as_deref(), bench.as_deref()).await
+        }
         Command::Worktree { base, said, agent } => open::worktree(&base, &said, &agent).await,
         Command::Update => update::update().await,
         Command::Status => status::status().await,

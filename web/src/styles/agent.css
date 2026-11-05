@@ -90,8 +90,6 @@
 .ya-tests { flex: 1 1 440px; display: grid; gap: 6px; }
 .ya-tests span { display: block; height: 34px; border-radius: 7px; background: var(--same); }
 .ya-tests span.yes { background: var(--better); }
-.ya-score { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-top: 32px; border-top: 1px solid var(--rule); }
-.ya-score p { margin: 0; font-size: 19px; line-height: 28px; font-weight: 600; }
 
 /* ---------------------------------------------------------------- settings' sections */
 .sopt { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; padding: 18px 0; border-top: 1px solid var(--rule); }

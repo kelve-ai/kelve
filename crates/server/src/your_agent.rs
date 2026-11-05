@@ -41,9 +41,18 @@ const MOST_ASKED: usize = 20;
 /// The longest thing to ask the agent to draw, in characters.
 const MOST_ASKED_CHARS: usize = 200;
 
-/// What kelve keeps of the person's agent, in their settings.
+/// What the person's agent drew for them, and the drawings they asked for:
+/// kept in their settings under `drawn`, beside `look` and `agentName`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
+pub struct Drawn {
+    pub parts: BTreeMap<String, MadePart>,
+    pub characters: BTreeMap<String, MadeCharacter>,
+    pub asked: Vec<Asked>,
+}
+
+/// What kelve keeps of the person's agent, read from their settings.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Kept {
     /// The name the person gave it; none until they do.
     pub name: Option<String>,
@@ -80,6 +89,28 @@ pub struct Asked {
 }
 
 impl Kept {
+    /// What's kept, from the person's settings.
+    pub fn of(s: &crate::settings::Settings) -> Kept {
+        Kept {
+            name: s.agent_name.clone(),
+            look: s.look.clone(),
+            parts: s.drawn.parts.clone(),
+            characters: s.drawn.characters.clone(),
+            asked: s.drawn.asked.clone(),
+        }
+    }
+
+    /// Puts what's kept back in the person's settings.
+    fn put(self, s: &mut crate::settings::Settings) {
+        s.agent_name = self.name;
+        s.look = self.look;
+        s.drawn = Drawn {
+            parts: self.parts,
+            characters: self.characters,
+            asked: self.asked,
+        };
+    }
+
     /// What the agent drew, as `core::character` reads it.
     pub fn made(&self) -> (BTreeMap<String, Part>, BTreeMap<String, Character>) {
         (
@@ -98,14 +129,28 @@ impl Kept {
 /// One change to what's kept at a time, so two never undo each other.
 static WRITING: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-/// Changes what's kept of the person's agent, and saves it.
+/// Changes what's kept of the person's agent, and saves it. A new look or
+/// name goes to their page on kelve.ai too, if it's published.
 async fn change<T>(app: &Shared, f: impl FnOnce(&mut Kept) -> ApiResult<T>) -> ApiResult<T> {
     let _one = WRITING.lock().await;
     let mut settings = (*app.settings()).clone();
-    let out = f(&mut settings.character)?;
+    let mut kept = Kept::of(&settings);
+    let before = (kept.look.clone(), kept.name.clone());
+    let out = f(&mut kept)?;
+    let changed = before != (kept.look.clone(), kept.name.clone());
+    kept.put(&mut settings);
     app.save_settings(settings).await?;
     app.publish(ServerEvent::Settings);
+    if changed {
+        let app = app.clone();
+        tokio::spawn(async move { crate::hosted::character_changed(&app).await });
+    }
     Ok(out)
+}
+
+/// What the person's agent drew, as `core::character` reads it: for its page.
+pub fn made(app: &Shared) -> (BTreeMap<String, Part>, BTreeMap<String, Character>) {
+    Kept::of(&app.settings()).made()
 }
 
 // ---------------------------------------------------------------- the name
@@ -202,7 +247,7 @@ fn timestamp(ms: i64) -> Timestamp {
 
 /// The person's agent as a character.
 pub fn view(app: &Shared) -> CharacterView {
-    let kept = &app.settings().character;
+    let kept = &Kept::of(&app.settings());
     let (parts, characters) = kept.made();
     let (name, named) = name(app, kept);
     let svg = kept.look.svg(&parts, &characters, Move::Idle, &name, false);
@@ -325,7 +370,7 @@ pub async fn draw(app: &Shared, asked: DrawIn) -> ApiResult<DrawingView> {
 
 /// The drawings the person asked for, the newest first, each where it is.
 pub async fn drawings(app: &Shared) -> ApiResult<Vec<DrawingView>> {
-    let kept = app.settings().character.clone();
+    let kept = Kept::of(&app.settings());
     let mut conn = app.db.acquire().await?;
     let mut out = Vec::new();
     for asked in kept.asked.iter().rev() {
@@ -391,7 +436,7 @@ pub fn shape(value: &Value) -> Result<(), String> {
 /// keeps what it drew once it's handed in.
 pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
     let id = payload["id"].as_str().unwrap_or_default().to_string();
-    let kept = app.settings().character.clone();
+    let kept = Kept::of(&app.settings());
     let Some(asked) = kept.asked.iter().find(|a| a.id == id).cloned() else {
         return Ok(Then::Done);
     };

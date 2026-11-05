@@ -14,6 +14,7 @@ pub mod follows;
 pub mod handoff;
 pub mod handover;
 pub mod hooks;
+pub mod hosted;
 pub mod lessons;
 pub mod list;
 pub mod moment;

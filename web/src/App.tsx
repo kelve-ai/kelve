@@ -100,7 +100,8 @@ function Shell({ me }: { me?: Me }) {
   // Someone new meets their agent before anything else: home sends them there.
   const meet = route?.screen === 'home' && !met.now && !!settings.data && !settings.data.hints.includes('met')
   useEffect(() => {
-    if (meet) location.replace('#/welcome')
+    // Only from home still: the address may have moved on while settings came.
+    if (meet && ['', '#', '#/'].includes(location.hash)) location.replace('#/welcome')
   }, [meet])
   // Someone new meets the first run before the reader, whatever brought
   // them: their agent showing them something, or its sign-in link. It says

@@ -43,8 +43,11 @@ pub struct Settings {
     /// to the shared graph, and the last day they did.
     pub add_nos: u8,
     pub add_no_on: Option<String>,
-    /// Your agent: its name, how it looks, and what it drew.
-    pub character: crate::your_agent::Kept,
+    /// How the person's agent looks, the name they gave it, and what it
+    /// drew for them (`your_agent`).
+    pub look: kelve_core::character::Look,
+    pub agent_name: Option<String>,
+    pub drawn: crate::your_agent::Drawn,
     /// How often a debrief comes.
     pub debriefs: DebriefsWhen,
     /// Whether skills go in each agent's own skills folder too.
@@ -70,7 +73,9 @@ impl Default for Settings {
             hints: Vec::new(),
             add_nos: 0,
             add_no_on: None,
-            character: crate::your_agent::Kept::default(),
+            look: kelve_core::character::Look::default(),
+            agent_name: None,
+            drawn: crate::your_agent::Drawn::default(),
             debriefs: DebriefsWhen::default(),
             skills_folder: false,
             checks: ChecksWhen::default(),

@@ -1,7 +1,7 @@
-// Your agent (board YourAgent), before signing in to kelve.ai: its character
-// and name, with the brush to change how it looks; what it knows, a square
-// for each part of each skill, coloured by what its checks found; Fits you;
-// and a verified score, to give it a page.
+// Your agent (board YourAgent): its character and name, with the brush to
+// change how it looks; what it knows, a square for each part of each skill,
+// coloured by what its checks found; Fits you; and its page on kelve.ai, or a
+// verified score to get one (hosted/YourPage).
 
 import type { PartCheck, YourAgentView } from '../../api/types'
 import { EXAMPLE_AGENT } from '../../example/agent'
@@ -10,6 +10,7 @@ import { hrefOf } from '../../routes'
 import { Character } from '../../ui/Character'
 import { Btn } from '../../ui/kit'
 import { madeOf } from '../../ui/pixels'
+import { YourPage } from '../hosted/YourPage'
 import { useAgentLoad } from './looks'
 
 /** What each square says, read aloud and on hover. */
@@ -89,10 +90,7 @@ export function YourAgent({ example }: { example?: boolean }) {
         </section>
       )}
 
-      <section className="ya-score" aria-label="Your page">
-        <p>A verified score gives your agent a page to share.</p>
-        <Btn kind="primary" size="large" href={hrefOf('agent/score/new', example)}>Get a verified score</Btn>
-      </section>
+      <YourPage example={example} />
     </div>
   )
 }

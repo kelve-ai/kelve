@@ -148,6 +148,42 @@ pub struct KindOffer {
     pub scored: String,
     /// The version of the task bank runs use now.
     pub bank: String,
+    /// Retired tasks, shown in full as examples of what the live ones are
+    /// like. The live tasks are never shown.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<ExampleTask>,
+}
+
+/// A retired task, in full: the request, the starting folder, and how it
+/// was checked.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExampleTask {
+    /// Its short name: `greet-name`.
+    pub name: String,
+    /// `cli`, `library` or `fix`.
+    pub area: String,
+    /// The request the agent got.
+    pub instruction: String,
+    /// Its hidden checks: `test`, `static` or `judge`, and what each looks
+    /// for.
+    pub checks: Vec<ExampleCheck>,
+    /// The starting folder's files, and its hidden tests under `tests/`.
+    pub files: Vec<ExampleFile>,
+}
+
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExampleCheck {
+    pub kind: String,
+    pub about: String,
+}
+
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExampleFile {
+    pub path: String,
+    pub text: String,
 }
 
 /// An agent that can be run, and the models it can run on.
@@ -252,6 +288,10 @@ pub struct Estimate {
     pub expires: Timestamp,
     /// What goes: every file of the skills, as the service read them.
     pub skills: Vec<SkillFile>,
+    /// How `dollars` was worked out, a line at a time: tasks, runs a task,
+    /// what a run costs and where that comes from.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub working: Vec<String>,
 }
 
 /// What a person sends to start a run they've seen the estimate for: their

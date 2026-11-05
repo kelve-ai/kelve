@@ -179,10 +179,16 @@ async fn its_name_is_yours_until_you_give_it_one_and_its_look_is_kept() {
     assert_eq!(worn["look"]["character"], "cat");
     assert!(worn["svg"].as_str().unwrap().contains("#f6b26b"));
     assert_eq!(
-        k.app.settings().character.look.background,
+        k.app.settings().look.background,
         "#fff1d6",
         "kept with the settings"
     );
+    // Where kelve.ai's page reads them: `look` and `agentName` in settings.
+    k.json("POST", "/api/character", Some(json!({ "name": "Bolt" })))
+        .await;
+    let (on_page, named) = kelve_server::hosted::look_and_name(&k.app).await;
+    assert_eq!(on_page.character, "cat");
+    assert_eq!(named.as_deref(), Some("Bolt"));
     let mut wrong = look.clone();
     wrong["robot"]["parts"]["hat"] = json!("a hat no one drew");
     let (_, why) = k

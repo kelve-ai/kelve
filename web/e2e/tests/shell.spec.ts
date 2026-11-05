@@ -56,8 +56,6 @@ test('every screen still being built says what it will show', async ({ page }) =
     ['change/3', 'The change'],
     ['skills/rust', 'A skill'],
     ['skills/rust/edit', 'Editing a skill'],
-    ['agent/score/new', 'A verified score'],
-    ['agent/score/7', 'Verified score'],
   ]
   for (const [path, name] of screens) {
     await page.goto(`/#/${path}`)

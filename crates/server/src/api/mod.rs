@@ -9,6 +9,7 @@
 
 pub mod agent;
 pub mod graph;
+pub mod hosted;
 pub mod me;
 pub mod outline;
 pub mod own;
@@ -41,6 +42,22 @@ pub fn router() -> Router<Shared> {
         .route("/graph/terms", get(graph::terms))
         .route("/graph/agree", post(graph::agree))
         .route("/graph/account/delete", post(graph::delete_account))
+        .route("/hosted", get(hosted::account))
+        .route("/hosted/signin", post(hosted::sign_in))
+        .route("/hosted/signin/stop", post(hosted::stop_signing_in))
+        .route("/hosted/signout", post(hosted::sign_out))
+        .route("/hosted/account/delete", post(hosted::delete_account))
+        .route("/hosted/handle/check", post(hosted::check_handle))
+        .route("/hosted/handle", post(hosted::choose_handle))
+        .route("/hosted/page", post(hosted::set_page))
+        .route("/hosted/scores", get(hosted::scores))
+        .route("/hosted/scores/{id}", post(hosted::show_score))
+        .route("/hosted/keys", post(hosted::keep_key))
+        .route("/hosted/keys/{kind}/{provider}", delete(hosted::forget_key))
+        .route("/hosted/offer", get(hosted::offer))
+        .route("/hosted/runs", post(hosted::estimate))
+        .route("/hosted/runs/{id}", get(hosted::run).delete(hosted::cancel))
+        .route("/hosted/runs/{id}/confirm", post(hosted::confirm))
         .route("/everything", delete(me::everything))
         .route("/stop", post(me::stop))
         .route("/update", get(crate::updates::for_me))

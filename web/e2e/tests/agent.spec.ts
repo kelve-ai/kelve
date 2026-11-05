@@ -69,7 +69,8 @@ test('change how it looks, and keep it', async ({ page }) => {
   try {
     await page.goto('/#/agent')
     await expect(page.getByRole('heading', { level: 2, name: 'What it knows' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Get a verified score' })).toBeVisible()
+    // Its page on kelve.ai, or how to get one.
+    await expect(page.getByRole('region', { name: 'Your page' })).toBeVisible()
     await page.getByRole('link', { name: 'Change how it looks' }).click()
     await expect(page).toHaveURL(/#\/agent\/look$/)
     const parts = page.getByRole('group', { name: 'Parts' })

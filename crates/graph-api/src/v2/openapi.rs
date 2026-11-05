@@ -9,9 +9,10 @@ use utoipa::openapi::security::{Http, HttpAuthScheme, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 
 use super::{
-    Account, AgentOffer, Allowance, Character, Confirm, Deleted, Estimate, HandleAsk, HandleCheck,
-    KindOffer, ModelOffer, Offer, PageSettings, Palette, RunRequest, RunResult, RunState,
-    RunStatus, Score, Scores, SignedIn, SkillFile, TaskProgress, TaskState, Verdict,
+    Account, AgentOffer, Allowance, Character, Confirm, Deleted, Estimate, ExampleCheck,
+    ExampleFile, ExampleTask, HandleAsk, HandleCheck, KindOffer, ModelOffer, Offer, PageSettings,
+    Palette, RunRequest, RunResult, RunState, RunStatus, Score, Scores, SignedIn, SkillFile,
+    TaskProgress, TaskState, Verdict,
 };
 use crate::{Problem, SignInCode};
 
@@ -54,7 +55,8 @@ pub fn document() -> utoipa::openapi::OpenApi {
     ),
     components(schemas(
         Account, Allowance, SignInCode, SignedIn, Deleted, HandleAsk, HandleCheck, PageSettings,
-        Character, Palette, Offer, KindOffer, AgentOffer, ModelOffer, RunRequest, SkillFile,
+        Character, Palette, Offer, KindOffer, ExampleTask, ExampleCheck, ExampleFile, AgentOffer,
+        ModelOffer, RunRequest, SkillFile,
         Estimate, Confirm, RunState, TaskState, Verdict, TaskProgress, RunStatus, RunResult, Score, Scores,
         Problem
     )),
