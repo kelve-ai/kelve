@@ -1,5 +1,5 @@
 //! Home (docs/skills.md): the person's agent, what it asks of them in its
-//! own words, what waits for it, and what happened lately, a day at a time.
+//! own words, if anything, what waits for it, and what happened lately, a day at a time.
 //! Read from what kelve keeps: debriefs and handovers, research and
 //! explanations asked for, and what happened in the person's skills.
 
@@ -333,7 +333,9 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
         ),
         HomeState::Normal => (
             match asks.len() {
-                0 => format!("Nothing needs you right now.{}", then("Next time I work")),
+                // Nothing to ask of them, so it doesn't speak to them: only
+                // what it does next, if anything's waiting for it.
+                0 => then("Next time I work").trim_start().to_string(),
                 n => format!(
                     "{} {} for you.{}",
                     counted(n),

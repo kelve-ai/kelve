@@ -12,7 +12,7 @@ test('the header leads to each place, and says which one you’re in', async ({ 
   await page.goto('/#/')
   const nav = page.getByRole('navigation', { name: 'kelve' })
   await expect(nav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('region', { name: 'From your agent' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'What happened' })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Your agent' })).toBeVisible()
 
   await nav.getByRole('link', { name: 'Skills' }).click()
@@ -64,7 +64,7 @@ test('every screen still being built says what it will show', async ({ page }) =
   await page.goto('/#/welcome')
   await expect(page.getByRole('heading', { level: 1, name: 'Meet your agent' })).toBeVisible()
   await page.getByRole('link', { name: 'Skip for now' }).click()
-  await expect(page.getByRole('region', { name: 'From your agent' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'What happened' })).toBeVisible()
   // Anywhere else, there's no page.
   await page.goto('/#/nowhere')
   await expect(page.getByRole('heading', { name: 'There’s no page here.' })).toBeVisible()

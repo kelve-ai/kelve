@@ -36,6 +36,8 @@ export function states(): State[] {
     { name: 'moved', title: 'A tab whose thing kelve showed again in a newer one', path: '#/example/moved' },
     // kelve's screens under its header (Shell).
     { name: 'home', title: 'Home: your agent, what needs you, and what happened lately', path: '#/example/home', phone: true },
+    { name: 'home-clear', title: 'Home: nothing to ask of you, so no bubble', path: '#/example/home?as=clear', phone: true },
+    { name: 'home-next', title: 'Home: nothing to ask of you, and what it does next', path: '#/example/home?as=next' },
     { name: 'home-working', title: 'Home: your agent at work, with a clock, and what it does next', path: '#/example/home?as=working', phone: true },
     { name: 'home-empty', title: 'Home: someone new, the example to try', path: '#/example/home?as=empty' },
     { name: 'home-attention', title: 'Home: kelve’s hook gone, and a debrief your agent didn’t finish', path: '#/example/home?as=attention' },

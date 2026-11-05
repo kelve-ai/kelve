@@ -40,6 +40,7 @@
   border-left: 1px solid var(--rule); border-bottom: 1px solid var(--rule); transform: rotate(45deg); border-radius: 0 0 0 5px;
 }
 @keyframes hm-pop { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: none; } }
+.hm-next { margin: 0; font-size: 15.5px; line-height: 23px; color: var(--soft); text-wrap: pretty; }
 .hm-say { margin: 0; font-size: 21px; line-height: 30px; font-weight: 600; letter-spacing: -0.012em; color: var(--ink); text-wrap: pretty; }
 .hm-asks { display: flex; flex-direction: column; margin-top: 10px; }
 .hm-ask { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--well); }

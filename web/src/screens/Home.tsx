@@ -1,6 +1,8 @@
 // Home (boards Home, HomeEmpty, HomeWorking, HomeAttention): your agent,
 // big, with what it says in a bubble beside it, the few things it asks of
 // you, and what happened, a day at a time, each line with its pixel icon.
+// With nothing to ask of you, there's no bubble: at most a line on what it
+// does next.
 
 import { useEffect, useState } from 'react'
 import type { HomeAsk, HomeView, TimelineAct, TimelineItem } from '../api/types'
@@ -92,6 +94,7 @@ export function Home({ example }: { example?: boolean }) {
   const dot = thanks || home.status === 'All set' ? 'ok' : home.state === 'empty' ? 'new' : working ? 'live' : 'wait'
   const words = thanks ? 'Thanks. I can reach kelve again.' : home.say
   const asks = home.asks
+  const speaks = asks.length > 0 || home.state !== 'normal' || thanks
   return (
     <div className="hm">
       <section className="hm-me" aria-label="Your agent">
@@ -109,26 +112,30 @@ export function Home({ example }: { example?: boolean }) {
       </section>
 
       <div className="hm-main">
-        <section className="hm-bubble" aria-label="From your agent" key={words}>
-          <p className="hm-say" aria-live="polite">{words}</p>
-          {asks.length > 0 && (
-            <div className="hm-asks">
-              {asks.map((a) => (
-                <div className="hm-ask" key={a.id}>
-                  <PixelIcon kind={a.kind === 'fits' ? 'score' : (a.kind as Pixel)} />
-                  <p>{a.text}</p>
-                  {a.action && a.to && (
-                    <a className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} href={hrefOf(a.to, example)}>{a.action}</a>
-                  )}
-                  {a.action && !a.to && (
-                    <button type="button" className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} disabled={busy === a.id} onClick={() => void run(a)}>{a.action}</button>
-                  )}
-                  {a.alt && <button type="button" className="btn btn-g" disabled={busy === a.id} onClick={() => void run(a, true)}>{a.alt}</button>}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {speaks ? (
+          <section className="hm-bubble" aria-label="From your agent" key={words}>
+            <p className="hm-say" aria-live="polite">{words}</p>
+            {asks.length > 0 && (
+              <div className="hm-asks">
+                {asks.map((a) => (
+                  <div className="hm-ask" key={a.id}>
+                    <PixelIcon kind={a.kind === 'fits' ? 'score' : (a.kind as Pixel)} />
+                    <p>{a.text}</p>
+                    {a.action && a.to && (
+                      <a className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} href={hrefOf(a.to, example)}>{a.action}</a>
+                    )}
+                    {a.action && !a.to && (
+                      <button type="button" className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} disabled={busy === a.id} onClick={() => void run(a)}>{a.action}</button>
+                    )}
+                    {a.alt && <button type="button" className="btn btn-g" disabled={busy === a.id} onClick={() => void run(a, true)}>{a.alt}</button>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          words && <p className="hm-next">{words}</p>
+        )}
 
         <section className="hm-tl" aria-label="What happened">
           {home.days.length === 0 && (

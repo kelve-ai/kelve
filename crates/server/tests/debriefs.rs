@@ -189,6 +189,9 @@ async fn home_starts_empty_then_asks_for_the_debrief_in_the_agents_words() {
     // Handed over with no debrief: a small change, to debrief anyway.
     let home = api::home(State(app.clone()), Me).await.unwrap().0;
     assert_eq!(home.state, HomeState::Normal);
+    assert!(home.asks.is_empty());
+    assert_eq!(home.say, "", "nothing to ask of them: it doesn't speak");
+    assert_eq!(home.status, "All set");
     assert_eq!(home.days[0].label, "Today");
     let small = &home.days[0].items[0];
     assert_eq!(

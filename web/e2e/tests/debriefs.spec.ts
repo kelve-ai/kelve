@@ -103,7 +103,7 @@ test('your agent looks into a decision, with your question, and you redo it its 
   await expect(start.getByText('Researching', { exact: true })).toBeVisible()
   // Home says what waits for your agent.
   await page.goto('/#/')
-  await expect(page.getByRole('region', { name: 'From your agent' })).toContainText('I’ll look into your')
+  await expect(page.getByRole('main').getByText(/I’ll look into your/)).toBeVisible()
 
   await researched(id, 2, '#### What your agent found\n\nStart from **half a second**: a blip passes, and nobody waits long.\n\n| Option | For | Against |\n|---|---|---|\n| 200 milliseconds | Quick | Often too soon |\n| **Half a second** | Rides out a blip | A little slower |\n\n**It suggests** starting from half a second.\n\nSources: [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110)')
   await page.goto(`/#/debrief/${id}`)
