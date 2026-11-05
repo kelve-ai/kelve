@@ -9,7 +9,6 @@
 //! secrets and paths stripped and shown to them first; their agent's
 //! character and name, for their page, when they publish it. Nothing else.
 
-use std::collections::BTreeMap;
 use std::path::Path;
 use std::time::Duration;
 
@@ -326,11 +325,10 @@ pub async fn look_and_name(app: &App) -> (Look, Option<String>) {
     (look, name)
 }
 
-/// The person's agent as its page draws it.
-pub fn character(look: &Look) -> v2::Character {
-    let letters = look
-        .picture(&BTreeMap::new(), &BTreeMap::new(), Move::Idle)
-        .letters();
+/// The person's agent as its page draws it, wearing what it drew for them.
+pub fn character(app: &App, look: &Look) -> v2::Character {
+    let (parts, characters) = crate::your_agent::Kept::of(&app.settings()).made();
+    let letters = look.picture(&parts, &characters, Move::Idle).letters();
     let c = &look.robot.colours;
     use kelve_core::character::Role;
     v2::Character {
@@ -353,7 +351,9 @@ pub fn character(look: &Look) -> v2::Character {
 pub async fn set_page(app: &Shared, c: &Client, public: bool) -> ApiResult<v2::Account> {
     let (look, name) = look_and_name(app).await;
     if public {
-        c.set_character(&character(&look)).await.map_err(said)?;
+        c.set_character(&character(app, &look))
+            .await
+            .map_err(said)?;
     }
     let a = c
         .set_page(&v2::PageSettings { name, public })
@@ -476,16 +476,15 @@ pub fn listed(files: &[tar::File]) -> Vec<SkillFileView> {
 /// agent, pleased, and a line on what happened.
 pub fn signed_in_page(app: &App, look: &Look, ok: bool, said: &str) -> String {
     let moving = if ok { Move::Happy } else { Move::Idle };
-    let svg = look
-        .picture(&BTreeMap::new(), &BTreeMap::new(), moving)
-        .svg(
-            &look.robot.colours,
-            &Draw {
-                moving,
-                label: "Your agent".into(),
-                style: true,
-            },
-        );
+    let (parts, characters) = crate::your_agent::Kept::of(&app.settings()).made();
+    let svg = look.picture(&parts, &characters, moving).svg(
+        &look.robot.colours,
+        &Draw {
+            moving,
+            label: "Your agent".into(),
+            style: true,
+        },
+    );
     let escape = |t: &str| {
         t.replace('&', "&amp;")
             .replace('<', "&lt;")

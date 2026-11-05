@@ -38,6 +38,7 @@ pub mod updates;
 pub mod v2jobs;
 pub mod way;
 pub mod web;
+pub mod your_agent;
 
 use std::future::IntoFuture;
 use std::time::Duration;
@@ -109,6 +110,7 @@ async fn start(config: Config) -> Result<Shared, ServeError> {
     hooks::up_to_date(&app.config.agents_home, &app.config.claude_dir);
     // Skills linked into agents' folders, in step with what's on disk now.
     agent_loop::links::keep_in_step(&app);
+    agent_loop::links::sync_setting(&app).await;
     Ok(app)
 }
 

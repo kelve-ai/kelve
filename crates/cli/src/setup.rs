@@ -456,6 +456,8 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
         &home,
         &claude,
     )?;
+    // kelve's settings say so too.
+    crate::notes::hook_changed().await;
 
     // How much kelve marks: the word given, the person's answer, or the
     // agent's to choose.

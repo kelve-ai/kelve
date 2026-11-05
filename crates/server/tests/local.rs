@@ -302,7 +302,7 @@ async fn settings_change_and_deleting_everything_puts_them_back() {
     settings.as_object_mut().unwrap().remove("notesDir");
     assert_eq!(
         settings,
-        json!({ "contribute": true, "shareCounts": false, "countsOff": null, "notesChosen": false, "agent": "claudeCode", "codeSize": "medium", "textSize": "medium", "highlighting": "full", "keepReadInRepo": true, "newNote": "you", "hints": [], "notesHook": false, "hooksElsewhere": [], "askToAdd": true, "debriefs": "worthOne" })
+        json!({ "contribute": true, "shareCounts": false, "countsOff": null, "notesChosen": false, "agent": "claudeCode", "codeSize": "medium", "textSize": "medium", "highlighting": "full", "keepReadInRepo": true, "newNote": "you", "hints": [], "notesHook": false, "hooksElsewhere": [], "askToAdd": true })
     );
     let changed = k
         .json(
@@ -315,7 +315,7 @@ async fn settings_change_and_deleting_everything_puts_them_back() {
     changed.as_object_mut().unwrap().remove("notesDir");
     assert_eq!(
         changed,
-        json!({ "contribute": true, "shareCounts": false, "countsOff": null, "notesChosen": false, "agent": "claudeCode", "codeSize": "large", "textSize": "medium", "highlighting": "full", "keepReadInRepo": true, "newNote": "you", "hints": [], "notesHook": false, "hooksElsewhere": [], "askToAdd": true, "debriefs": "worthOne" })
+        json!({ "contribute": true, "shareCounts": false, "countsOff": null, "notesChosen": false, "agent": "claudeCode", "codeSize": "large", "textSize": "medium", "highlighting": "full", "keepReadInRepo": true, "newNote": "you", "hints": [], "notesHook": false, "hooksElsewhere": [], "askToAdd": true })
     );
     let (status, bytes, _) = k
         .call(

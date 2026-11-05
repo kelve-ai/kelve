@@ -31,7 +31,7 @@ test('kelve’s screens under its header, and every control they’re built from
   await signIn(page)
   // Still, so nothing is read half way through coming in.
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  for (const path of ['', 'debrief/example', 'skills', 'skills/rust/edit', 'agent', 'agent/score/new', 'settings/agent', 'settings/privacy', 'welcome']) {
+  for (const path of ['', 'debrief/1', 'skills', 'skills/rust/edit', 'agent', 'agent/look', 'agent/score/new', 'settings/agent', 'settings/checks', 'settings/reading', 'settings/privacy', 'settings/about', 'welcome']) {
     await page.goto(`/#/${path}`)
     await expect(page.locator('main h1, main h2').first()).toBeVisible()
     await scan(page)

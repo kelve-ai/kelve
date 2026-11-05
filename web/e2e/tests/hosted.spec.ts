@@ -6,7 +6,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
-import { me, signIn, world } from '../world'
+import { me, noSkills, signIn, world } from '../world'
 
 /** Tells the stand-in service something, as a test can. */
 async function standIn(what: Record<string, unknown>) {
@@ -25,6 +25,9 @@ function skills() {
     writeFileSync(join(dir, name, 'SKILL.md'), text)
   }
 }
+
+// The skills it wrote go with it: other specs share this kelve.
+test.afterEach(() => noSkills())
 
 test('signing in, choosing an address and a verified run, to a score on your page', async ({ page }) => {
   await me().hello()

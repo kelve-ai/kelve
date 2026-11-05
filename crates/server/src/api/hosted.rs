@@ -250,7 +250,7 @@ pub async fn show_score(
         } else if a.public {
             // Sent again, in case the agent changed since.
             let (look, _) = hosted::look_and_name(&app).await;
-            c.set_character(&hosted::character(&look))
+            c.set_character(&hosted::character(&app, &look))
                 .await
                 .map_err(said)?;
         }

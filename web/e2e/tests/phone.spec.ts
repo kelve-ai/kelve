@@ -5,7 +5,7 @@ import { marginNote, me, open, openFile, pane, repo, signIn } from '../world'
 
 const sideways = (page: import('@playwright/test').Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
 
-for (const path of ['/', '/#/start', '/#/you', '/#/settings/agent', '/#/welcome']) {
+for (const path of ['/', '/#/start', '/#/you', '/#/agent', '/#/agent/look', '/#/settings/agent', '/#/welcome']) {
   test(`${path} fits a phone`, async ({ page }) => {
     await me().hello()
     await signIn(page)

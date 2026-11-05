@@ -937,6 +937,91 @@ impl Look {
     }
 }
 
+impl Look {
+    /// What the person's agent looks like now, as an SVG: `Look::picture`
+    /// drawn in the colours chosen, named `label`.
+    pub fn svg(
+        &self,
+        parts: &BTreeMap<String, Part>,
+        characters: &BTreeMap<String, Character>,
+        moving: Move,
+        label: &str,
+        style: bool,
+    ) -> String {
+        self.picture(parts, characters, moving).svg(
+            &self.robot.colours,
+            &Draw {
+                moving,
+                label: label.to_string(),
+                style,
+            },
+        )
+    }
+
+    /// What's wrong with a look the person chose, if anything: a character,
+    /// or a part for a slot, that's neither kelve's nor one their agent
+    /// drew, or a colour that isn't `#rrggbb`.
+    pub fn problem(
+        &self,
+        parts: &BTreeMap<String, Part>,
+        characters: &BTreeMap<String, Character>,
+    ) -> Option<String> {
+        let lib = library();
+        let known = self.character == "robot"
+            || lib.character(&self.character).is_some()
+            || characters.contains_key(&self.character);
+        if !known {
+            return Some(
+                "That character isn't one kelve has, or one your agent drew. Choose another."
+                    .into(),
+            );
+        }
+        for slot in Slot::ALL {
+            let key = self.robot.parts.get(slot);
+            let fits =
+                lib.option(slot, key).is_some() || parts.get(key).is_some_and(|p| p.slot == slot);
+            if !fits {
+                return Some(format!(
+                    "That isn't a part for the robot's {}. Choose another.",
+                    slot.name()
+                ));
+            }
+        }
+        let c = &self.robot.colours;
+        for colour in [&c.body, &c.light, &c.screen, &c.eyes, &self.background] {
+            if hex(colour).is_none() {
+                return Some(
+                    "Each colour is written #rrggbb. Choose one of the colours shown.".into(),
+                );
+            }
+        }
+        None
+    }
+}
+
+/// Something the person's agent drew: a part for the robot, or a whole
+/// character.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Drawing {
+    Part(Part),
+    Character(Character),
+}
+
+/// Reads what the agent drew, by the format it says it is, and checks it.
+pub fn drawing(text: &str) -> Result<Drawing, Vec<String>> {
+    let format = serde_json::from_str::<Value>(text)
+        .ok()
+        .and_then(|v| v.get("format").and_then(Value::as_str).map(str::to_string));
+    match format.as_deref() {
+        Some(CHARACTER_FORMAT) => character(text).map(Drawing::Character),
+        Some(PART_FORMAT) => part(text).map(Drawing::Part),
+        _ if serde_json::from_str::<Value>(text).is_err() => part(text).map(Drawing::Part),
+        _ => Err(vec![format!(
+            "The drawing's format is “{PART_FORMAT}” for a part, or “{CHARACTER_FORMAT}” for a whole character."
+        )]),
+    }
+}
+
 /// The name the person's agent has until they give it one: "Sam’s agent".
 pub fn default_name(first_name: &str) -> String {
     let first = first_name.split_whitespace().next().unwrap_or_default();
@@ -985,13 +1070,15 @@ pub fn name_problem(name: &str) -> Option<String> {
 // ---------------------------------------------------------------- what agents draw
 
 /// A part for the robot, drawn by the person's agent (`kelve-part/1`).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export, rename = "DrawnPart")]
 pub struct Part {
     pub name: String,
     pub slot: Slot,
     /// Where its top left pixel goes.
     pub at: [i32; 2],
     /// A colour for each letter.
+    #[ts(type = "Record<string, string>")]
     pub colours: BTreeMap<char, Colour>,
     pub pixels: Vec<String>,
     /// Eyes: the eyes shut, at the same place.
@@ -1010,10 +1097,13 @@ impl Part {
 
 /// A whole character, drawn by the person's agent (`kelve-character/1`),
 /// or one of kelve's own.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export, rename = "DrawnCharacter")]
 pub struct Character {
     pub name: String,
+    #[ts(type = "Record<string, string>")]
     pub colours: BTreeMap<char, Colour>,
+    #[ts(type = "Record<string, Array<string>>")]
     pub layers: BTreeMap<Layer, Vec<String>>,
 }
 
@@ -1904,5 +1994,281 @@ mod tests {
             "light"
         );
         assert!(serde_json::from_value::<Colour>(json!("red")).is_err());
+    }
+
+    /// A look from a few parts and colours, the rest the robot's own.
+    fn look(parts: &[(Slot, &str)], colours: [&str; 4]) -> Look {
+        let mut look = Look::default();
+        for (slot, key) in parts {
+            look.robot.parts.set(*slot, key);
+        }
+        let [body, light, screen, eyes] = colours.map(str::to_string);
+        look.robot.colours = Colours {
+            body,
+            light,
+            screen,
+            eyes,
+        };
+        look
+    }
+
+    /// The web app draws characters itself, from `parts.json`, as people
+    /// choose how theirs looks: it must draw each exactly as kelve does. This
+    /// writes what kelve draws for a case of every kind, and the moves' CSS,
+    /// into the web app (`web/src/ui/gen`), whose own test draws each case
+    /// again and compares, and whose pages use that CSS.
+    #[test]
+    fn the_web_app_has_what_kelve_draws_to_compare() {
+        let mut made = BTreeMap::new();
+        made.insert("made-party".to_string(), part(HAT).unwrap());
+        for (key, drawn) in [
+            (
+                "made-stars",
+                json!({
+                    "format": "kelve-part/1", "name": "Stars", "slot": "eyes", "at": [8, 7],
+                    "colours": { "e": "eyes", "w": "#FFFFFF" },
+                    "pixels": [".e....e.", "eee..eee", ".ew...e."], "shut": ["", "", "eee..eee"],
+                }),
+            ),
+            (
+                "made-bulb",
+                json!({
+                    "format": "kelve-part/1", "name": "Bulb", "slot": "antenna", "at": [11, 0],
+                    "colours": { "o": "#2b2f3a", "a": "light" },
+                    "pixels": ["..", "..", "oo", "oo"], "light": ["aa", "aa"],
+                }),
+            ),
+            (
+                "made-mitten",
+                json!({
+                    "format": "kelve-part/1", "name": "Mitten", "slot": "hands", "at": [3, 21],
+                    "colours": { "a": "light", "o": "#2b2f3a" }, "pixels": ["aa.", "aoa"],
+                }),
+            ),
+            (
+                "made-fin",
+                json!({
+                    "format": "kelve-part/1", "name": "Fin", "slot": "ears", "at": [1, 8],
+                    "colours": { "p": "#ff8fab" }, "pixels": ["ppp", ".pp"],
+                }),
+            ),
+        ] {
+            made.insert(key.to_string(), part(&drawn.to_string()).unwrap());
+        }
+        let mut characters = BTreeMap::new();
+        characters.insert("made-blob".to_string(), character(GHOST).unwrap());
+        let none = BTreeMap::new();
+
+        let mut cases: Vec<(String, Look, bool, Move, String, bool)> = Vec::new();
+        let mut case = |name: String, look: Look, with_made: bool, moving: Move| {
+            cases.push((name, look, with_made, moving, "Your agent".into(), false));
+        };
+        for moving in [
+            Move::Idle,
+            Move::Work,
+            Move::Happy,
+            Move::Wave,
+            Move::Sleep,
+            Move::Still,
+        ] {
+            case(
+                format!("the robot, {}", moving.name()),
+                Look::default(),
+                false,
+                moving,
+            );
+        }
+        for slot in Slot::ALL {
+            for option in &library().slot(slot).unwrap().options {
+                let mut look = Look::default();
+                look.robot.parts.set(slot, &option.key);
+                // A hat hides the antenna; with none, the antenna shows.
+                case(
+                    format!("{} {}", slot.name(), option.key),
+                    look,
+                    false,
+                    Move::Still,
+                );
+            }
+        }
+        case(
+            "Sunny".into(),
+            look(
+                &[
+                    (Slot::Head, "box"),
+                    (Slot::Hat, "beanie"),
+                    (Slot::Eyes, "dots"),
+                    (Slot::Mouth, "flat"),
+                    (Slot::Ears, "cups"),
+                    (Slot::Body, "round"),
+                    (Slot::Chest, "heart"),
+                    (Slot::Hands, "claws"),
+                    (Slot::Legs, "wheels"),
+                ],
+                ["#ffd166", "#7c6cf2", "#1d1c1a", "#ffffff"],
+            ),
+            false,
+            Move::Happy,
+        );
+        case(
+            "Mint".into(),
+            look(
+                &[
+                    (Slot::Head, "bucket"),
+                    (Slot::Antenna, "double"),
+                    (Slot::Eyes, "visor"),
+                    (Slot::Mouth, "none"),
+                    (Slot::Ears, "none"),
+                    (Slot::Body, "slim"),
+                    (Slot::Legs, "hover"),
+                ],
+                ["#b8e0a8", "#2ec4b6", "#123b3a", "#ffd166"],
+            ),
+            false,
+            Move::Work,
+        );
+        let mut odd = Look::default();
+        odd.robot.colours.body = "not a colour".into();
+        odd.robot.colours.eyes = "#ABCDEF".into();
+        case("colours not given".into(), odd, false, Move::Idle);
+        for key in ["cat", "ghost"] {
+            let own = library().character(key).unwrap();
+            for moving in [Move::Idle, Move::Happy, Move::Sleep] {
+                let mut look = Look {
+                    character: key.into(),
+                    ..Look::default()
+                };
+                look.robot.colours = own.colours.clone();
+                case(format!("the {key}, {}", moving.name()), look, false, moving);
+            }
+        }
+        let wearing = look(
+            &[
+                (Slot::Hat, "none"),
+                (Slot::Antenna, "made-bulb"),
+                (Slot::Eyes, "made-stars"),
+                (Slot::Hands, "made-mitten"),
+                (Slot::Ears, "made-fin"),
+            ],
+            ["#f4a6c0", "#2ec4b6", "#3b2a5c", "#ffffff"],
+        );
+        for moving in [Move::Idle, Move::Happy] {
+            case(
+                format!("parts its agent drew, {}", moving.name()),
+                wearing.clone(),
+                true,
+                moving,
+            );
+        }
+        case(
+            "a party hat its agent drew".into(),
+            look(
+                &[(Slot::Hat, "made-party")],
+                ["#8ecae6", "#7c6cf2", "#22304a", "#9ff5d6"],
+            ),
+            true,
+            Move::Wave,
+        );
+        case(
+            "a character its agent drew".into(),
+            Look {
+                character: "made-blob".into(),
+                ..Look::default()
+            },
+            true,
+            Move::Wave,
+        );
+        case(
+            "a character that isn't there".into(),
+            Look {
+                character: "made-gone".into(),
+                ..Look::default()
+            },
+            true,
+            Move::Idle,
+        );
+        cases.push((
+            "named, with its own style".into(),
+            Look::default(),
+            false,
+            Move::Sleep,
+            "Sam’s <agent> & \"co\"".into(),
+            true,
+        ));
+
+        let cases: Vec<Value> = cases
+            .into_iter()
+            .map(|(name, look, with_made, moving, label, style)| {
+                let (parts, drawn) = if with_made {
+                    (&made, &characters)
+                } else {
+                    (&none, &BTreeMap::new())
+                };
+                let svg = look.svg(parts, drawn, moving, &label, style);
+                json!({
+                    "name": name,
+                    "look": look,
+                    "parts": parts,
+                    "characters": drawn,
+                    "move": moving,
+                    "label": label,
+                    "style": style,
+                    "svg": svg,
+                })
+            })
+            .collect();
+        let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../web/src/ui/gen");
+        std::fs::create_dir_all(&out).unwrap();
+        let write = |file: &str, text: String| {
+            let path = out.join(file);
+            if std::fs::read_to_string(&path).ok().as_deref() != Some(text.as_str()) {
+                std::fs::write(&path, text).unwrap();
+            }
+        };
+        write(
+            "character.json",
+            serde_json::to_string_pretty(&json!({ "cases": cases })).unwrap() + "\n",
+        );
+        write(
+            "character.css",
+            format!(
+                "/* How every character moves, written by kelve's own tests from\n   kelve_core::character::CSS. Don't edit it here. */\n{CSS}\n"
+            ),
+        );
+    }
+
+    #[test]
+    fn a_look_is_checked_and_a_drawing_read_by_its_format() {
+        let mut made = BTreeMap::new();
+        made.insert("made-party".to_string(), part(HAT).unwrap());
+        let none = BTreeMap::new();
+        let no = BTreeMap::new();
+        assert_eq!(Look::default().problem(&none, &no), None);
+        let mut look = Look::default();
+        look.robot.parts.hat = "made-party".into();
+        assert_eq!(look.problem(&made, &no), None);
+        assert!(look.problem(&none, &no).unwrap().contains("robot's hat"));
+        look.robot.parts.head = "made-party".into();
+        assert!(look.problem(&made, &no).unwrap().contains("robot's head"));
+        let cat = Look {
+            character: "cat".into(),
+            ..Look::default()
+        };
+        assert_eq!(cat.problem(&none, &no), None);
+        let gone = Look {
+            character: "made-gone".into(),
+            ..Look::default()
+        };
+        assert!(gone.problem(&none, &no).unwrap().contains("character"));
+        let grey = Look {
+            background: "grey".into(),
+            ..Look::default()
+        };
+        assert!(grey.problem(&none, &no).unwrap().contains("#rrggbb"));
+
+        assert!(matches!(drawing(HAT), Ok(Drawing::Part(_))));
+        assert!(matches!(drawing(GHOST), Ok(Drawing::Character(_))));
+        assert!(drawing("{\"format\": \"kelve-hat/1\"}").unwrap_err()[0].contains("kelve-part/1"));
+        assert!(drawing("not json").unwrap_err()[0].contains("isn't JSON"));
     }
 }

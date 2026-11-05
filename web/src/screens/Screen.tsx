@@ -8,6 +8,10 @@ import { Header } from '../Header'
 import { Loading } from '../Loader'
 import { hrefOf, placeOf, type Route, SECTIONS, type Section } from '../routes'
 import { Character } from '../ui/Character'
+import { Customise } from './agent/Customise'
+import { SettingsSection } from './agent/Settings'
+import { Welcome } from './agent/Welcome'
+import { YourAgent } from './agent/YourAgent'
 import { AccountSection } from './hosted/Account'
 import { Address } from './hosted/Address'
 import { Run } from './hosted/Run'
@@ -98,14 +102,7 @@ function Settings({ section, example }: { section: Section; example?: boolean })
       </nav>
       <section className="sets-body" aria-label={SECTION_NAMES[section]} data-stub={`settings-${section}`}>
         <h2>{SECTION_NAMES[section]}</h2>
-        {section === 'account' ? (
-          <AccountSection example={example} />
-        ) : (
-          <>
-            <p className="lede">{SECTION_LINES[section]}</p>
-            <p className="stub-soon">This page is still being built.</p>
-          </>
-        )}
+        {section === 'account' ? <AccountSection example={example} /> : <SettingsSection section={section} example={example} />}
       </section>
     </div>
   )
@@ -118,6 +115,8 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [key])
+  // Changing how your agent looks has a header of its own, with Cancel and Save.
+  if (route.screen === 'look') return <Customise example={example} />
   return (
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
@@ -134,6 +133,8 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
           <Suspense fallback={<Loading />}>
             <Change key={route.id} id={route.id} example={example} />
           </Suspense>
+        ) : route.screen === 'welcome' ? (
+          <Welcome example={example} />
         ) : route.screen === 'address' ? (
           <Address example={example} />
         ) : route.screen === 'score-new' ? (
@@ -141,10 +142,7 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
         ) : route.screen === 'score' ? (
           <Run id={route.id} example={example} />
         ) : route.screen === 'agent' ? (
-          <>
-            <Stub route={route} example={example} />
-            <YourPage example={example} />
-          </>
+          <YourAgent example={example} />
         ) : (
           <Stub route={route} example={example} />
         )}

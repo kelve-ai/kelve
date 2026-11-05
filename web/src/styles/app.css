@@ -6,6 +6,7 @@
 
 @import '@fontsource-variable/geist/wght.css';
 @import '@fontsource-variable/geist-mono/wght.css';
+@import '@fontsource-variable/pixelify-sans/wght.css';
 
 :root {
   --page: #fcfbf8;
@@ -82,7 +83,7 @@
   --sans: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   /* The agent's name, and nothing else: pixels, like the character it names. */
-  --pixel: 'Pixelify Sans', var(--sans);
+  --pixel: 'Pixelify Sans Variable', 'Pixelify Sans', var(--sans);
   /* kelve's red, as the canvas has it (STYLE.css): the logo's square; the one
      main action, a soft tint with a key-cap edge, never solid; and what's on. */
   --logo: #cf4a2f;

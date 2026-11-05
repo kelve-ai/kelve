@@ -3,7 +3,7 @@
 // in, opening things in kelve and doing its work.
 
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, type Page } from '@playwright/test'
@@ -102,6 +102,8 @@ export async function signIn(page: Page, w?: Pick<World, 'base' | 'secretFile' |
 async function started(page: Page, base: string): Promise<boolean> {
   const before = (await (await page.request.get(`${base}/api/settings`)).json()) as { hints: string[] }
   await page.request.post(`${base}/api/settings`, { data: { hintSeen: 'started' } })
+  // And met their agent, so home is home.
+  await page.request.post(`${base}/api/settings`, { data: { hintSeen: 'met' } })
   return !before.hints.includes('started')
 }
 
@@ -209,4 +211,9 @@ export function ledger(): string {
   const root = join(realpathSync(mkdtempSync(join(tmpdir(), 'kelve-e2e-ledger-'))), 'ledger')
   makeLedger(root)
   return root
+}
+
+/** Takes away the person's own skills, as every spec shares one kelve: for a spec that starts with none. */
+export function noSkills(w: Pick<World, 'skillsDir'> = world()) {
+  rmSync(w.skillsDir, { recursive: true, force: true })
 }

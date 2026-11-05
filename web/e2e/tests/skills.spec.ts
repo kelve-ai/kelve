@@ -9,7 +9,7 @@ import { mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
-import { me, signIn, world } from '../world'
+import { me, noSkills, signIn, world } from '../world'
 
 /** A name no other run of these tests has used, so each starts afresh. */
 const fresh = (name: string) => `${name}-${Date.now().toString(36)}`
@@ -54,6 +54,9 @@ function pastTask(request: string) {
 
 /** The note beside a part's heading. */
 const note = (page: Page, heading: string) => page.locator('.sk-part').filter({ has: page.getByRole('heading', { name: heading }) }).locator('.sk-note')
+
+// Others' specs share this kelve, and may leave skills behind.
+test.beforeEach(() => noSkills())
 
 test.afterEach(() => {
   // Each test's skills go with it: the next starts with none.

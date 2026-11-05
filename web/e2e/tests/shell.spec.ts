@@ -17,7 +17,8 @@ test('the header leads to each place, and says which one you’re in', async ({ 
 
   await nav.getByRole('link', { name: 'Skills' }).click()
   await expect(page).toHaveURL(/#\/skills$/)
-  await expect(page.getByRole('heading', { level: 1, name: 'No skills yet' })).toBeVisible()
+  // Whether there are skills yet depends on what ran before: only the page.
+  await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible()
   await expect(nav.getByRole('link', { name: 'Skills' })).toHaveAttribute('aria-current', 'page')
 
   await nav.getByRole('link', { name: 'Your agent' }).click()
@@ -53,15 +54,15 @@ test('every screen still being built says what it will show', async ({ page }) =
   await me().hello()
   await signIn(page)
   const screens: Array<[string, string]> = [
-    ['agent/look', 'Change how it looks'],
-    ['welcome', 'Meet your agent'],
   ]
   for (const [path, name] of screens) {
     await page.goto(`/#/${path}`)
     await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible()
     await expect(page.getByText('This page is still being built.')).toBeVisible()
   }
-  // Meeting your agent has no places to go yet: only a way to skip.
+  // Meeting your agent has no places to go: only a way to skip.
+  await page.goto('/#/welcome')
+  await expect(page.getByRole('heading', { level: 1, name: 'Meet your agent' })).toBeVisible()
   await page.getByRole('link', { name: 'Skip for now' }).click()
   await expect(page.getByRole('region', { name: 'From your agent' })).toBeVisible()
   // Anywhere else, there's no page.

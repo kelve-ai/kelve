@@ -188,6 +188,50 @@ pub fn unlink(agent: Agent, home: &Path, claude: &Path, skills: &Path) -> Result
     })
 }
 
+/// The person turned "skills in each agent's own folder" on or off in
+/// settings: linked into each agent whose hook kelve has, or taken out of
+/// every one. What couldn't be done, logged.
+pub fn follow_setting(app: &Shared, on: bool) {
+    let (home, claude, skills) = (
+        &app.config.agents_home,
+        &app.config.claude_dir,
+        &app.config.skills_dir,
+    );
+    let agents: Vec<Agent> = if on {
+        Agent::ALL
+            .into_iter()
+            .filter(|a| folder(*a, home, claude).is_some())
+            .filter(|a| crate::hooks::installed(*a, home, claude))
+            .collect()
+    } else {
+        linked(skills)
+    };
+    for agent in agents {
+        let done = if on {
+            link(agent, home, claude, skills)
+        } else {
+            unlink(agent, home, claude, skills)
+        };
+        if let Err(e) = done {
+            tracing::warn!(agent = agent.name(), error = %e, "couldn't change the skills links");
+        }
+    }
+}
+
+/// The setting as the links are: on when setup linked an agent's folder,
+/// off when they were all taken out.
+pub async fn sync_setting(app: &Shared) {
+    let on = !linked(&app.config.skills_dir).is_empty();
+    if app.settings().skills_folder == on {
+        return;
+    }
+    let mut s = (*app.settings()).clone();
+    s.skills_folder = on;
+    if let Err(e) = app.save_settings(s).await {
+        tracing::warn!(error = %e.message, "couldn't keep whether skills are linked");
+    }
+}
+
 /// Keeps the links in each agent's folder the person said yes to in step
 /// with their skills: new skills linked, gone ones taken out.
 pub fn keep_in_step(app: &Shared) {

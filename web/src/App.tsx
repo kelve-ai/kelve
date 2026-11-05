@@ -18,6 +18,7 @@ import { isMoved, onMoved, showHere } from './tabs'
 import { You } from './screens/You'
 import { Screen } from './screens/Screen'
 import { routeOf } from './routes'
+import { met } from './screens/agent/looks'
 import { PageTop } from './Top'
 import { useLoad } from './useLoad'
 import { Loading } from './Loader'
@@ -96,6 +97,12 @@ function Shell({ me }: { me?: Me }) {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [screen, a])
+  // Someone new meets their agent before anything else: home sends them there.
+  const meet = route?.screen === 'home' && !met.now && !!settings.data && !settings.data.hints.includes('met')
+  useEffect(() => {
+    // Only from home still: the address may have moved on while settings came.
+    if (meet && ['', '#', '#/'].includes(location.hash)) location.replace('#/welcome')
+  }, [meet])
   // Someone new meets the first run before the reader, whatever brought
   // them: their agent showing them something, or its sign-in link. It says
   // what was opened, and opens it once they're set up.
@@ -115,6 +122,8 @@ function Shell({ me }: { me?: Me }) {
         <Reader key={a} id={Number(a)} />
       </Suspense>
     )
+  // Someone new meets their agent first: home, until they have.
+  if (route?.screen === 'home' && !settings.data) return <Loading />
   if (route) return <Screen route={route} />
   return (
     <>

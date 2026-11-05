@@ -691,6 +691,8 @@ mod tests {
 /// The command line put kelve's hook in the agent's settings, or took it
 /// out: a page that's open says so at once.
 pub async fn hook_changed(State(app): State<Shared>, _agent: Agent) -> Json<serde_json::Value> {
+    // Setup may have linked the person's skills into an agent's folder too.
+    crate::agent_loop::links::sync_setting(&app).await;
     app.publish(kelve_core::views::ServerEvent::Settings);
     Json(serde_json::json!({}))
 }
