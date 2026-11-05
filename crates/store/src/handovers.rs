@@ -262,6 +262,17 @@ pub async fn messages(conn: &mut Conn, session: &str, since: i64) -> Result<Vec<
     .await?)
 }
 
+/// The session the person last sent a message in, in a repository: whose
+/// work is handed over there, before the hook says.
+pub async fn last_session(conn: &mut Conn, root: &str) -> Result<Option<String>> {
+    Ok(sqlx::query_scalar(
+        "select session from messages where root = ? order by at desc, id desc limit 1",
+    )
+    .bind(root)
+    .fetch_optional(&mut *conn)
+    .await?)
+}
+
 /// Lets go of messages from before a time.
 pub async fn sweep_messages(conn: &mut Conn, before: i64) -> Result<u64> {
     let done = sqlx::query("delete from messages where at < ?")
@@ -410,6 +421,11 @@ mod tests {
                 .expect("read")
                 .is_empty()
         );
+        assert_eq!(
+            last_session(&mut conn, "/w").await.expect("read"),
+            Some("s".to_string())
+        );
+        assert_eq!(last_session(&mut conn, "/x").await.expect("read"), None);
         assert_eq!(
             sweep_messages(&mut conn, now() + 1000)
                 .await

@@ -53,9 +53,9 @@ pub struct File {
     pub removed: u32,
     /// Whether all that changed in it is spaces and line breaks.
     pub whitespace_only: bool,
-    /// The lines it adds and takes out, for files that list dependencies or
-    /// commands (manifests, Makefiles), so kelve can see what's new in them.
-    /// Empty for any other file.
+    /// The lines it adds and takes out, as far as kelve kept them: what's
+    /// new in manifests and Makefiles, and what the person's messages
+    /// already said.
     pub added_lines: Vec<String>,
     pub removed_lines: Vec<String>,
 }
@@ -80,9 +80,9 @@ impl File {
 pub struct Handover {
     /// What the agent said of its work.
     pub said: String,
-    /// Whether the person's messages said exactly what to write, so the
-    /// agent decided nothing.
-    pub said_exactly: bool,
+    /// The person's own messages to their agent in this piece of work: when
+    /// they already said exactly what to write, the agent decided nothing.
+    pub messages: Vec<String>,
 }
 
 /// Whether a debrief is due, and why, in a sentence for home.
@@ -345,9 +345,6 @@ pub fn due(files: &[File], handover: &Handover, when: DebriefsWhen) -> Due {
         }
         DebriefsWhen::WorthOne => {}
     }
-    if handover.said_exactly {
-        return Due::no("Your messages said exactly what to write.");
-    }
 
     // What a person wrote, as against what tools wrote or only moved.
     let written: Vec<&File> = changed
@@ -356,6 +353,10 @@ pub fn due(files: &[File], handover: &Handover, when: DebriefsWhen) -> Due {
         .filter(|f| !made_by_tools(&f.path) && !f.whitespace_only)
         .filter(|f| !(f.status == Status::Renamed && f.added + f.removed == 0))
         .collect();
+
+    if let Some(e) = said_exactly(&written, &handover.messages) {
+        return Due::no(e.reason());
+    }
 
     let decided = DECIDED.find(&handover.said).map(|m| m.as_str().to_string());
     if let Some(word) = &decided
@@ -463,6 +464,168 @@ pub fn due(files: &[File], handover: &Handover, when: DebriefsWhen) -> Due {
         if lines == 1 { "line" } else { "lines" },
         files_count(written.len())
     ))
+}
+
+/// Of the lines changed, at least this share must be ones the person's
+/// messages spelled out for them to have said exactly what to write...
+const SPELLED: usize = 80;
+/// ...and no more than this many lines may be the agent's own.
+const BEYOND: usize = 10;
+/// Quoted text in a message, as a named edit gives it.
+const QUOTED: &str = r#"`([^`\n]{1,80})`|"([^"\n]{1,80})"|“([^”\n]{1,80})”|'([^'\n]{1,80})'"#;
+
+/// An edit a message names: "change `30` to `60`", "replace "foo" with
+/// "bar"", "rename old_name to new_name", "s/foo/bar/".
+static NAMED: LazyLock<Regex> = LazyLock::new(|| {
+    re(&format!(
+        r"(?i)\b(?:replace|change|rename|swap|turn)\s+(?:{QUOTED}|([A-Za-z0-9_.:-]+))\s+(?:with|to|into|for)\s+(?:{q2}|([A-Za-z0-9_.:-]+))",
+        q2 = QUOTED
+    ))
+});
+static SED: LazyLock<Regex> = LazyLock::new(|| re(r"\bs/([^/\n]{1,80})/([^/\n]{0,80})/g?"));
+static ARROW: LazyLock<Regex> = LazyLock::new(|| {
+    re(&format!(
+        r"(?:{QUOTED})\s*(?:->|→|=>)\s*(?:{q2})",
+        q2 = QUOTED
+    ))
+});
+
+/// How the person's messages said exactly what to write: how many of the
+/// lines that changed they spelled out, of how many, and the edit they
+/// named, if one made some of them.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Exactly {
+    pub spelled: usize,
+    pub of: usize,
+    pub named: Option<(String, String)>,
+}
+
+impl Exactly {
+    /// Why no debrief is due, in a sentence for home.
+    pub fn reason(&self) -> String {
+        let lines = if self.spelled == self.of {
+            if self.of == 1 {
+                "the one line it changed".to_string()
+            } else {
+                format!("all {} lines it changed", self.of)
+            }
+        } else {
+            format!("{} of the {} lines it changed", self.spelled, self.of)
+        };
+        match &self.named {
+            Some((from, to)) => format!(
+                "Your messages already said exactly what to write: change “{from}” to “{to}”, which is {lines}."
+            ),
+            None => format!(
+                "Your messages already said exactly what to write: {lines} {} in them.",
+                if self.spelled == 1 { "is" } else { "are" }
+            ),
+        }
+    }
+}
+
+/// A line as it's compared: its words, with every run of spaces as one.
+fn squeezed(line: &str) -> String {
+    line.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// Whether a line says anything: not only brackets, punctuation or a word
+/// of two letters.
+fn says_something(line: &str) -> bool {
+    line.chars().filter(|c| c.is_alphanumeric()).count() >= 3
+}
+
+fn word_char(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
+}
+
+/// Whether `text` holds `line` whole: not as part of a longer word.
+fn holds(text: &str, line: &str) -> bool {
+    text.match_indices(line).any(|(i, _)| {
+        let before = text[..i].chars().next_back();
+        let after = text[i + line.len()..].chars().next();
+        let starts = line.chars().next().is_some_and(word_char);
+        let ends = line.chars().next_back().is_some_and(word_char);
+        !(starts && before.is_some_and(word_char)) && !(ends && after.is_some_and(word_char))
+    })
+}
+
+/// The edits the messages name, each as what's replaced and with what.
+fn named_edits(messages: &str) -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = Vec::new();
+    let pair = |c: regex::Captures<'_>| -> Option<(String, String)> {
+        let found: Vec<&str> = c.iter().skip(1).flatten().map(|m| m.as_str()).collect();
+        match found[..] {
+            [from, to] if !from.is_empty() && from != to => Some((from.into(), to.into())),
+            _ => None,
+        }
+    };
+    for re in [&*NAMED, &*SED, &*ARROW] {
+        out.extend(re.captures_iter(messages).filter_map(pair));
+    }
+    out.dedup();
+    out
+}
+
+/// Whether the person's messages already said exactly what to write: the
+/// work changed little beyond what they spelled out. A line changed is
+/// spelled out when it's in their messages whole, spacing aside, or when
+/// an edit they named ("change `30` to `60`") turns a line taken out into
+/// a line put in. At least 80% of the lines that say something must be,
+/// and no more than ten may not. Lines kelve didn't keep count against it.
+pub fn said_exactly(written: &[&File], messages: &[String]) -> Option<Exactly> {
+    let text = squeezed(&messages.join("\n"));
+    if text.is_empty() || written.is_empty() {
+        return None;
+    }
+    let edits = named_edits(&messages.join("\n"));
+    let mut spelled = 0;
+    let mut of = 0;
+    let mut named = None;
+    for f in written {
+        let kept = |lines: &[String]| -> Vec<String> {
+            lines
+                .iter()
+                .map(|l| squeezed(l))
+                .filter(|l| says_something(l))
+                .collect()
+        };
+        let added = kept(&f.added_lines);
+        let removed = kept(&f.removed_lines);
+        // Lines kelve didn't keep are the agent's, as far as it knows.
+        let unkept = (f.added as usize).saturating_sub(f.added_lines.len())
+            + (f.removed as usize).saturating_sub(f.removed_lines.len());
+        of += added.len() + removed.len() + unkept;
+        let mut used = vec![false; added.len()];
+        for r in &removed {
+            let made = edits.iter().find_map(|(from, to)| {
+                if !r.contains(from.as_str()) {
+                    return None;
+                }
+                let now = r.replace(from.as_str(), to);
+                let i = (0..added.len()).find(|&i| !used[i] && added[i] == now)?;
+                Some((i, (from.clone(), to.clone())))
+            });
+            if let Some((i, edit)) = made {
+                used[i] = true;
+                spelled += 2;
+                named.get_or_insert(edit);
+            } else if holds(&text, r) {
+                spelled += 1;
+            }
+        }
+        spelled += added
+            .iter()
+            .zip(&used)
+            .filter(|(a, used)| !**used && holds(&text, a))
+            .count();
+    }
+    let beyond = of.saturating_sub(spelled);
+    (spelled > 0 && beyond * 100 <= of * (100 - SPELLED) && beyond <= BEYOND).then_some(Exactly {
+        spelled,
+        of,
+        named,
+    })
 }
 
 /// "1 file", "3 files".
@@ -630,7 +793,7 @@ mod tests {
         let files = [File::new("src/retry.rs", Status::Modified, 3, 1)];
         let said = Handover {
             said: "Capped the wait at 30 seconds. I chose a cap over a growing limit.".into(),
-            said_exactly: false,
+            messages: Vec::new(),
         };
         let got = due(&files, &said, DebriefsWhen::WorthOne);
         assert!(got.due);
@@ -640,7 +803,7 @@ mod tests {
         );
         let weighed = Handover {
             said: "Used a loop rather than recursion.".into(),
-            said_exactly: false,
+            messages: Vec::new(),
         };
         assert!(
             due(&files, &weighed, DebriefsWhen::WorthOne)
@@ -650,7 +813,7 @@ mod tests {
         // "Decision" alone, or "decides", is not a call it made.
         let plain = Handover {
             said: "Fixed the decision table's typo.".into(),
-            said_exactly: false,
+            messages: Vec::new(),
         };
         assert!(!due(&files, &plain, DebriefsWhen::WorthOne).due);
     }
@@ -678,21 +841,159 @@ mod tests {
         assert_eq!(worth(&built), Due::no("Only files a tool wrote changed."));
     }
 
+    fn said(messages: &[&str]) -> Handover {
+        Handover {
+            said: "I chose this.".into(),
+            messages: messages.iter().map(|m| m.to_string()).collect(),
+        }
+    }
+
+    const RETRY: &[&str] = &[
+        "pub fn backoff(attempt: u32) -> Duration {",
+        "    let wait = Duration::from_millis(100 * 2u64.pow(attempt));",
+        "    wait.min(Duration::from_secs(30))",
+        "}",
+    ];
+
     #[test]
     fn what_the_person_said_and_chose_comes_first() {
-        let big = [File::new("src/retry.rs", Status::Added, 200, 0)];
-        let exactly = Handover {
-            said: "I chose this.".into(),
-            said_exactly: true,
-        };
+        let big = [with_lines(
+            File::new("src/retry.rs", Status::Added, 4, 0),
+            RETRY,
+            &[],
+        )];
+        let pasted = format!(
+            "Add this to src/retry.rs:\n\n```rust\n{}\n```",
+            RETRY.join("\n")
+        );
         assert_eq!(
-            due(&big, &exactly, DebriefsWhen::WorthOne),
-            Due::no("Your messages said exactly what to write.")
+            due(&big, &said(&[&pasted]), DebriefsWhen::WorthOne),
+            Due::no(
+                "Your messages already said exactly what to write: all 3 lines it changed are in them."
+            )
         );
         let small = [File::new("README.md", Status::Modified, 1, 1)];
         assert!(due(&small, &Handover::default(), DebriefsWhen::Every).due);
         assert!(!due(&big, &Handover::default(), DebriefsWhen::OnlyAsked).due);
         // Every handover still needs something to have changed.
         assert!(!due(&[], &Handover::default(), DebriefsWhen::Every).due);
+    }
+
+    #[test]
+    fn lines_the_messages_spelled_out_are_no_call_of_the_agents() {
+        let file = |added: &[&str], removed: &[&str]| {
+            with_lines(
+                File::new(
+                    "src/retry.rs",
+                    Status::Modified,
+                    added.len() as u32,
+                    removed.len() as u32,
+                ),
+                added,
+                removed,
+            )
+        };
+        let check = |files: &[File], messages: &[&str]| {
+            let written: Vec<&File> = files.iter().collect();
+            let messages: Vec<String> = messages.iter().map(|m| m.to_string()).collect();
+            said_exactly(&written, &messages)
+        };
+        // Pasted with other spacing, the lines are still the same.
+        let pasted = "please add\n  pub fn backoff(attempt: u32)   -> Duration {\n let wait = Duration::from_millis(100 * 2u64.pow(attempt));\nwait.min(Duration::from_secs(30))\n}";
+        let got = check(&[file(RETRY, &[])], &[pasted]).expect("said exactly");
+        assert_eq!((got.spelled, got.of, got.named), (3, 3, None));
+        // Without the messages, or with ones about something else, it's the
+        // agent's work.
+        assert_eq!(check(&[file(RETRY, &[])], &[]), None);
+        assert_eq!(
+            check(&[file(RETRY, &[])], &["Make the retries back off."]),
+            None
+        );
+        // Most, but not enough: the agent wrote the rest.
+        let more: Vec<&str> = RETRY
+            .iter()
+            .copied()
+            .chain([
+                "    log::warn!(\"retrying\");",
+                "    metrics::count(\"retry\");",
+            ])
+            .collect();
+        assert_eq!(check(&[file(&more, &[])], &[pasted]), None);
+        // A little beyond is still what they said: 4 of 5, over two
+        // messages; 3 of 4 isn't.
+        let one: Vec<&str> = RETRY.iter().copied().chain(["    // capped"]).collect();
+        assert_eq!(check(&[file(&one, &[])], &[pasted]), None);
+        let traced = "and `tracing::debug!(attempt, \"backing off\");` first";
+        let two: Vec<&str> = one
+            .iter()
+            .copied()
+            .chain(["    tracing::debug!(attempt, \"backing off\");"])
+            .collect();
+        let got = check(&[file(&two, &[])], &[pasted, traced]).expect("a little beyond");
+        assert_eq!((got.spelled, got.of), (4, 5));
+        assert_eq!(
+            got.reason(),
+            "Your messages already said exactly what to write: 4 of the 5 lines it changed are in them."
+        );
+        // A line inside a longer word isn't the line.
+        assert_eq!(check(&[file(&["x = 1"], &[])], &["max = 10"]), None);
+        // Lines kelve didn't keep count against it.
+        let mut cut = file(RETRY, &[]);
+        cut.added = 40;
+        assert_eq!(check(&[cut], &[pasted]), None);
+    }
+
+    #[test]
+    fn an_edit_the_messages_named_is_no_call_of_the_agents() {
+        let check = |files: &[File], messages: &[&str]| {
+            let written: Vec<&File> = files.iter().collect();
+            let messages: Vec<String> = messages.iter().map(|m| m.to_string()).collect();
+            said_exactly(&written, &messages)
+        };
+        let timeout = |n: u32| {
+            with_lines(
+                File::new("src/client.rs", Status::Modified, n, n),
+                &vec!["    .timeout(Duration::from_secs(60))"; n as usize],
+                &vec!["    .timeout(Duration::from_secs(30))"; n as usize],
+            )
+        };
+        for asked in [
+            "Change `30` to `60` in the client's timeout.",
+            "replace \"from_secs(30)\" with \"from_secs(60)\"",
+            "s/from_secs(30)/from_secs(60)/g",
+            "`30` -> `60`",
+        ] {
+            let got = check(&[timeout(3)], &[asked]).unwrap_or_else(|| panic!("{asked}"));
+            assert_eq!((got.spelled, got.of), (6, 6), "{asked}");
+            assert!(got.named.is_some(), "{asked}");
+        }
+        let got = check(&[timeout(1)], &["rename 30 to 60"]).expect("named bare");
+        assert_eq!(
+            got.reason(),
+            "Your messages already said exactly what to write: change “30” to “60”, which is all 2 lines it changed."
+        );
+        // The edit named, and more besides.
+        let mut more = timeout(1);
+        more.added_lines
+            .extend(["    .retries(5)".into(), "    .backoff(true)".into()]);
+        more.added += 2;
+        assert_eq!(check(&[more], &["Change `30` to `60`."]), None);
+        // An edit that doesn't make the line that's there isn't it.
+        assert_eq!(check(&[timeout(2)], &["Change `30` to `90`."]), None);
+        // Through due, it's said in a sentence, before the size.
+        let files: Vec<File> = (0..3)
+            .map(|i| {
+                let mut f = timeout(10);
+                f.path = format!("src/client{i}.rs");
+                f
+            })
+            .collect();
+        let got = due(
+            &files,
+            &said(&["Change `30` to `60` everywhere."]),
+            DebriefsWhen::WorthOne,
+        );
+        assert!(!got.due);
+        assert!(got.reason.contains("change “30” to “60”"), "{}", got.reason);
     }
 }

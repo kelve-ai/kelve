@@ -79,30 +79,6 @@ fn hunks_of(f: &HandedFile) -> Vec<Hunk> {
     serde_json::from_str(&f.hunks).unwrap_or_default()
 }
 
-/// Whether a file's lines name what `due` reads in them: manifests and
-/// files that run commands.
-fn listed(path: &str) -> bool {
-    let name = path.rsplit('/').next().unwrap_or_default().to_lowercase();
-    [
-        "cargo.toml",
-        "package.json",
-        "pyproject.toml",
-        "pipfile",
-        "setup.py",
-        "setup.cfg",
-        "go.mod",
-        "gemfile",
-        "composer.json",
-        "deno.json",
-        "makefile",
-        "justfile",
-        "taskfile.yml",
-        "taskfile.yaml",
-    ]
-    .contains(&name.as_str())
-        || name.starts_with("requirements")
-}
-
 /// A handover's files, as `due` reads them.
 pub fn due_files(handed: &[HandedFile]) -> Vec<due::File> {
     handed
@@ -132,13 +108,13 @@ pub fn due_files(handed: &[HandedFile]) -> Vec<due::File> {
             file.whitespace_only = (f.added + f.removed) > 0
                 && !hunks.is_empty()
                 && squeeze("added") == squeeze("removed");
-            if listed(&f.path) {
-                for l in hunks.iter().flat_map(|h| &h.lines) {
-                    match l.kind.as_str() {
-                        "added" => file.added_lines.push(l.text.clone()),
-                        "removed" => file.removed_lines.push(l.text.clone()),
-                        _ => {}
-                    }
+            // Every file's lines: what's new in manifests, and what the
+            // person's messages already said.
+            for l in hunks.iter().flat_map(|h| &h.lines) {
+                match l.kind.as_str() {
+                    "added" => file.added_lines.push(l.text.clone()),
+                    "removed" => file.removed_lines.push(l.text.clone()),
+                    _ => {}
                 }
             }
             file
@@ -298,7 +274,7 @@ pub async fn on_handover(
         &due_files(&handed),
         &due::Handover {
             said: format!("{} {}", h.title, h.said),
-            said_exactly: false,
+            messages: said_in(app, &h).await?,
         },
         if asked {
             DebriefsWhen::Every
@@ -426,17 +402,34 @@ async fn keep_task(app: &Shared, h: &Handover, debrief: Option<i64>, root: &Path
 /// What the person asked for in this piece of work: their messages in the
 /// session since its last debrief was sent.
 async fn request_of(app: &Shared, session: &str) -> ApiResult<String> {
+    Ok(messages_of(app, session).await?.join("\n\n"))
+}
+
+/// What the person said to their agent in the work handed over: its
+/// session's messages, or, as the hook only says which session it was
+/// afterwards, those of the session the person last wrote in there.
+async fn said_in(app: &Shared, h: &Handover) -> ApiResult<Vec<String>> {
+    let session = if h.session.is_empty() {
+        let mut conn = app.db.acquire().await?;
+        handovers::last_session(&mut conn, &h.root)
+            .await?
+            .unwrap_or_default()
+    } else {
+        h.session.clone()
+    };
+    messages_of(app, &session).await
+}
+
+/// The person's messages in this piece of work: in the session, since its
+/// last debrief was sent, the earliest first.
+async fn messages_of(app: &Shared, session: &str) -> ApiResult<Vec<String>> {
     if session.is_empty() {
-        return Ok(String::new());
+        return Ok(Vec::new());
     }
     let mut conn = app.db.acquire().await?;
     let since = store::last_sent(&mut conn, session).await?.unwrap_or(0);
     let said = handovers::messages(&mut conn, session, since).await?;
-    Ok(said
-        .into_iter()
-        .map(|m| m.text)
-        .collect::<Vec<_>>()
-        .join("\n\n"))
+    Ok(said.into_iter().map(|m| m.text).collect())
 }
 
 /// The hook says which session opened what was handed over: the debrief and

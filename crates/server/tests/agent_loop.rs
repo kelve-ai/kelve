@@ -364,6 +364,39 @@ async fn small_work_isnt_debriefed_unless_the_person_wants_every_one_or_asks() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[tokio::test]
+async fn work_the_persons_messages_spelled_out_isnt_debriefed() {
+    let dir = repo();
+    let app = common::kelve(None).await;
+    // The person gave their agent the file, line for line.
+    at(
+        &app,
+        MomentIn {
+            what: "prompt".into(),
+            session: "s".into(),
+            cwd: dir.display().to_string(),
+            prompt: Some(format!(
+                "Make src/retry.rs exactly this:\n\n```rust\n{}```",
+                retry()
+            )),
+            ..MomentIn::default()
+        },
+    )
+    .await;
+    let opened = show(&app, &dir, "worktree", json!({})).await;
+    let handed = opened.debrief.unwrap();
+    assert!(!handed.due, "{}", handed.reason);
+    assert!(
+        handed
+            .reason
+            .starts_with("Your messages already said exactly what to write:"),
+        "{}",
+        handed.reason
+    );
+    assert_eq!(handed.debrief, None);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// Hands in the debrief job waiting for what was opened, written on the
 /// change's own lines: the debrief's id.
 async fn debriefed(app: &Shared, opened: &Opened) -> i64 {
