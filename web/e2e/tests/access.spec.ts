@@ -15,7 +15,7 @@ async function scan(page: Page, include?: string) {
 test('the start page and settings', async ({ page }) => {
   await me().hello()
   await signIn(page)
-  await page.goto('/')
+  await page.goto('/#/start')
   // What to say to your agent: on the start page whether or not you've opened anything yet.
   await expect(page.getByText('Show me what you did in kelve.')).toBeVisible()
   await scan(page)
@@ -24,6 +24,26 @@ test('the start page and settings', async ({ page }) => {
     await expect(page.locator('.set-body > h2')).toBeVisible()
     await scan(page)
   }
+})
+
+test('kelve’s screens under its header, and every control they’re built from', async ({ page }) => {
+  await me().hello()
+  await signIn(page)
+  for (const path of ['', 'debrief/1', 'skills', 'skills/rust/edit', 'agent', 'agent/score/new', 'settings/agent', 'settings/privacy', 'welcome']) {
+    await page.goto(`/#/${path}`)
+    await expect(page.locator('main h1, main h2').first()).toBeVisible()
+    await scan(page)
+  }
+  // Still, so no colour is read half way from light to dark.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  for (const theme of ['light', 'dark']) {
+    await page.goto(`/?${theme}#/example/kit?theme=${theme}`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Controls' })).toBeVisible()
+    await scan(page)
+  }
+  await page.goto('/?dialog#/example/kit?as=dialog')
+  await expect(page.getByRole('dialog', { name: 'Send to your agent?' })).toBeVisible()
+  await scan(page)
 })
 
 test('the reader, and an entry beside it', async ({ page }) => {

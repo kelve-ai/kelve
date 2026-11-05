@@ -1,0 +1,131 @@
+/* The app's shell (board Shell): the header, the page under it, stubs for
+   screens still being built, settings' sections, the character's place, and
+   markdown as the debrief and skills draw it (board Md). Lots of space;
+   hairlines, never boxes. */
+
+/* ---------------------------------------------------------------- the header */
+.hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 16px; padding: 14px 40px; background: var(--page); color: var(--ink); }
+.hd-l { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 32px; min-width: 0; }
+.hd-r { display: flex; align-items: center; gap: 6px; }
+.hd a:hover { text-decoration: none; }
+.hd-logo { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; line-height: 22px; font-weight: 650; color: var(--ink); border-radius: 6px; }
+.hd-logo i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; background: var(--logo); }
+.hd-nav { display: flex; flex-wrap: wrap; gap: 6px; font-size: 14.5px; line-height: 20px; }
+.hd-nav a { padding: 6px 10px; border-radius: 8px; color: var(--quiet); font-weight: 500; }
+.hd-nav a:hover { color: var(--ink); }
+.hd-nav a[aria-current='page'] { color: var(--ink); font-weight: 600; background: var(--well); }
+.hd-nav a:focus-visible, .hd-logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hd-set {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 14px; line-height: 20px; font-weight: 600; padding: 6px 11px; border-radius: 9px;
+  color: var(--ink); background: var(--white); border: 1px solid var(--key-edge); box-shadow: inset 0 -2px 0 var(--key-under);
+}
+.hd-set:hover { background: var(--key-hover); border-color: var(--key-edge-2); }
+.hd-set[aria-current='page'] { color: var(--accent-ink); background: var(--accent-tint); border-color: var(--accent-edge); box-shadow: inset 0 -2px 0 var(--accent-key); }
+.hd-set:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hd .theme-switch { margin: 0; padding: 8px; border-radius: 8px; }
+.hd .theme-switch:hover { background: var(--well); }
+.hd .theme-switch i { width: 13px; height: 13px; }
+
+/* ---------------------------------------------------------------- the page */
+.app { min-height: 100vh; background: var(--page); }
+.app-main { max-width: 1160px; margin: 0 auto; padding: 36px 40px 96px; }
+.app-main.narrow { max-width: 1080px; }
+
+/* A screen still being built: its name, and what it will show. */
+.stub { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding-top: 24px; max-width: 680px; }
+.stub h1 { margin: 0; font-size: 44px; line-height: 50px; font-weight: 700; letter-spacing: -0.03em; text-wrap: balance; }
+.stub-what { margin: 0; font: 400 14.5px/22px var(--mono); color: var(--soft); overflow-wrap: anywhere; }
+.stub-line { margin: 0; font-size: 19px; line-height: 30px; color: var(--ink-2); text-wrap: pretty; }
+.stub-soon { margin: 4px 0 0; font-size: 14.5px; line-height: 22px; color: var(--quiet); }
+
+/* Settings: its sections down the side, the one open beside them. */
+.sets { display: flex; flex-wrap: wrap; gap: 24px 56px; }
+.sets-nav { flex: 0 0 216px; display: flex; flex-direction: column; gap: 2px; }
+.nv { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 8px 12px; border-radius: 9px; font-size: 15px; line-height: 20px; font-weight: 500; color: var(--soft); transition: background 0.12s ease, color 0.12s ease; }
+.nv:hover { background: var(--well-2); color: var(--ink); text-decoration: none; }
+.nv[aria-current='page'] { background: var(--well); color: var(--ink); font-weight: 600; }
+.nv:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sets-body { flex: 1 1 520px; min-width: 0; max-width: 720px; }
+.sets-body > h2 { margin: 0 0 24px; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.025em; }
+.sets-body > .lede { margin: -14px 0 24px; max-width: 600px; font-size: 16.5px; line-height: 26px; color: var(--soft); }
+
+/* ---------------------------------------------------------------- the character */
+/* It stands on the page, on a soft shadow of a floor, never in a box. */
+.char { display: inline-flex; flex-direction: column; align-items: center; flex: none; }
+.char svg { display: block; overflow: visible; }
+.char .char-base, .char .char-legs { fill: var(--stem-grey); }
+.char .char-eyes { fill: var(--quiet); }
+.char-floor { display: block; width: 70%; height: 6px; margin-top: -2px; border-radius: 50%; background: rgba(var(--shadow), 0.07); }
+.char.idle .char-base { animation: bob 2.4s ease-in-out infinite; }
+.char.work .char-base { animation: bob 0.9s ease-in-out infinite; }
+.char.happy .char-base { animation: hop 0.7s ease-in-out 2; }
+.char.wave .char-base { animation: bob 1.6s ease-in-out infinite; }
+.char.sleep .char-eyes { transform: scaleY(0.25); transform-box: fill-box; transform-origin: center; }
+.char .char-eyes { animation: blink 4.5s steps(1) infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(0.6px); } }
+@keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-2px); } }
+@keyframes blink { 0%, 96% { transform: scaleY(1); } 97%, 99% { transform: scaleY(0.15); } }
+
+/* ---------------------------------------------------------------- markdown (board Md) */
+.md { display: flex; flex-direction: column; gap: 14px; font-size: 17px; line-height: 27px; color: var(--ink-2); }
+.md.small { gap: 10px; font-size: 15px; line-height: 23px; }
+.md.large { gap: 16px; font-size: 19px; line-height: 30px; }
+/* A margin beside each block, for a note by a heading. */
+.md.with-margin .md-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 240px); column-gap: 40px; align-items: start; }
+.md-b { min-width: 0; }
+.md-m { min-width: 0; font-size: 14px; line-height: 21px; color: var(--soft); }
+.md-m:empty { display: none; }
+.md-b > * { margin: 0; }
+.md h2, .md h3, .md h4, .md h5, .md h6 { margin: 0; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--ink); text-wrap: balance; }
+.md h2, .md h3 { font-size: 1.45em; }
+.md h4 { font-size: 1.2em; }
+.md h5, .md h6 { font-size: 1em; }
+.md .md-row.h1, .md .md-row.h2 { margin-top: 10px; }
+.md .md-row.h3 { margin-top: 4px; }
+.md .md-row:first-child { margin-top: 0; }
+.md ul, .md ol { padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.md ol { padding-left: 24px; }
+.md li > ul, .md li > ol { margin-top: 6px; }
+.md strong { font-weight: 650; color: var(--ink); }
+.md em { font-style: italic; color: var(--soft); }
+.md code { font-family: var(--mono); font-size: 0.86em; padding: 1px 5px; border-radius: 5px; background: var(--well); color: var(--code); }
+.md pre { padding: 2px 0; overflow-x: auto; }
+.md pre code { display: block; padding: 0; background: none; font-size: 13.5px; line-height: 23px; white-space: pre; }
+.md blockquote { padding-left: 16px; color: var(--soft); font-style: italic; }
+.md blockquote > * { margin: 0; }
+.md a, .md .md-a { color: var(--accent-ink); font-weight: 600; }
+.md hr { border: 0; border-top: 1px solid var(--rule); margin: 6px 0; }
+.md .ptable { overflow-x: auto; }
+.md table { border-collapse: collapse; width: 100%; font-size: 0.9em; line-height: 1.45; }
+.md th, .md td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.md th { font-weight: 650; color: var(--ink); }
+.md .alt { color: var(--quiet); }
+
+/* ---------------------------------------------------------------- the controls, in the example */
+.kit { display: flex; flex-direction: column; gap: 48px; max-width: 960px; }
+.kit h1 { margin: 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -0.03em; }
+.kit section > h2 { margin: 0 0 18px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.02em; }
+.kit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 0 0 16px; font-size: 15px; color: var(--ink-2); }
+.kit-field { display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 0 16px; }
+.kit-squares { gap: 6px; }
+.kit-squares i { width: 34px; height: 34px; border-radius: 6px; }
+.kit-chars { gap: 24px 40px; align-items: flex-end; }
+.kit-chars figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.kit-chars figcaption { font-size: 13.5px; color: var(--quiet); }
+
+/* ---------------------------------------------------------------- on a phone */
+@media (max-width: 900px) {
+  .md.with-margin .md-row { grid-template-columns: minmax(0, 1fr); }
+  .md-m { margin-top: 6px; }
+}
+@media (max-width: 640px) {
+  .hd { padding: 12px 16px; }
+  .hd-l { gap: 8px 16px; }
+  .app-main { padding: 24px 16px 72px; }
+  .stub h1 { font-size: 34px; line-height: 40px; }
+  .sets-nav { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .char .char-base, .char .char-eyes { animation: none; }
+  .nv { transition: none; }
+}

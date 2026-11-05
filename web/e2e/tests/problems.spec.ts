@@ -8,7 +8,7 @@ import { me, signIn } from '../world'
 test('an error on the page is kept as a report you can read, post or forget', async ({ page }) => {
   await me().hello()
   await signIn(page)
-  await page.goto('/')
+  await page.goto('/#/start')
   // What to say to your agent: on the start page whether or not you've opened anything yet.
   await expect(page.getByText('Show me what you did in kelve.')).toBeVisible()
   const sent: string[] = []
