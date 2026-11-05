@@ -22,6 +22,7 @@ pub mod sends;
 pub mod settings;
 pub mod skills;
 pub mod updates;
+pub mod your_agent;
 
 use std::path::Path;
 use std::str::FromStr;

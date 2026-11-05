@@ -636,6 +636,7 @@ fn shape(kind: &str, material: &Value, value: &Value) -> Result<(), String> {
         PLAINLY_FOLDER => crate::plainly::folder_shape(material, value),
         PLAINLY_CHANGE => crate::plainly::change_shape(material, value),
         LESSON => crate::lessons::shape(material, value),
+        kelve_core::instructions::DRAW => crate::your_agent::shape(value),
         _ => Ok(()),
     }
 }

@@ -16,6 +16,7 @@ pub mod problems;
 pub mod reader;
 pub mod settings;
 pub mod stream;
+pub mod your_agent;
 
 use axum::Router;
 use axum::routing::{delete, get, post};
@@ -26,6 +27,7 @@ pub fn router() -> Router<Shared> {
     Router::new()
         .route("/me", get(me::me))
         .route("/settings", get(settings::get).post(settings::post))
+        .merge(your_agent::router())
         .route("/counts", get(settings::counts))
         .route("/marks", get(settings::marks).post(settings::set_marks))
         .route("/follows", post(crate::follows::follow))

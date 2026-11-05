@@ -1,0 +1,35 @@
+/* How every character moves, written by kelve's own tests from
+   kelve_core::character::CSS. Don't edit it here. */
+.px *{transform-box:view-box}
+.px .ec,.px .al-u,.px .ar-u,.px .zz{opacity:0}
+.a-idle .up,.a-wave .up{animation:px-bob 1.6s steps(1) infinite}
+.a-idle .light{animation:px-glow 2.4s steps(1) infinite}
+.a-idle .eo,.a-wave .eo,.a-work .eo{animation:px-blink-o 4.2s steps(1) infinite}
+.a-idle .ec,.a-wave .ec,.a-work .ec{animation:px-blink-c 4.2s steps(1) infinite}
+.a-wave .ar-u{animation:px-a .8s steps(1) infinite}
+.a-wave .ar-d{animation:px-b .8s steps(1) infinite}
+.a-wave .light{animation:px-glow .8s steps(1) infinite}
+.a-work .al-u{animation:px-a .5s steps(1) infinite}
+.a-work .al-d{animation:px-b .5s steps(1) infinite}
+.a-work .ar-u{animation:px-b .5s steps(1) infinite}
+.a-work .ar-d{animation:px-a .5s steps(1) infinite}
+.a-work .light{animation:px-glow .4s steps(1) infinite}
+.a-happy .all{animation:px-jump .7s steps(1) infinite}
+.a-happy .al-u,.a-happy .ar-u{opacity:1}
+.a-happy .al-d,.a-happy .ar-d{opacity:0}
+.a-happy .light{animation:px-glow .35s steps(1) infinite}
+.a-sleep .up{animation:px-bob 3.2s steps(1) infinite}
+.a-sleep .eo{opacity:0}
+.a-sleep .ec{opacity:1}
+.a-sleep .light{opacity:.3}
+.a-sleep .zz{animation:px-zz 2.4s steps(4) infinite}
+.px .flame{animation:px-glow .3s steps(1) infinite}
+@keyframes px-bob{0%{transform:translateY(0)}50%{transform:translateY(1px)}}
+@keyframes px-jump{0%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes px-glow{0%{opacity:1}50%{opacity:.4}}
+@keyframes px-blink-o{0%{opacity:1}93%{opacity:0}97%{opacity:1}}
+@keyframes px-blink-c{0%{opacity:0}93%{opacity:1}97%{opacity:0}}
+@keyframes px-a{0%{opacity:1}50%{opacity:0}}
+@keyframes px-b{0%{opacity:0}50%{opacity:1}}
+@keyframes px-zz{0%{opacity:0;transform:translate(0,2px)}25%{opacity:1}100%{opacity:1;transform:translate(2px,-2px)}}
+@media (prefers-reduced-motion: reduce){.px *{animation:none !important}}

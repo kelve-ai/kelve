@@ -98,6 +98,8 @@ export async function signIn(page: Page, w?: Pick<World, 'base' | 'secretFile' |
 async function started(page: Page, base: string): Promise<boolean> {
   const before = (await (await page.request.get(`${base}/api/settings`)).json()) as { hints: string[] }
   await page.request.post(`${base}/api/settings`, { data: { hintSeen: 'started' } })
+  // And met their agent, so home is home.
+  await page.request.post(`${base}/api/settings`, { data: { hintSeen: 'met' } })
   return !before.hints.includes('started')
 }
 

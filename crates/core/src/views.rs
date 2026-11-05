@@ -5,8 +5,9 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::character::{Look, Move, Slot};
+use crate::character::{Character, Look, Move, Part, Slot};
 use crate::debrief::{Followed, Origin};
+use crate::due::DebriefsWhen;
 use crate::skills::{SectionKind, SkillKind, WorkKind};
 use crate::time::Timestamp;
 
@@ -2291,6 +2292,120 @@ pub struct MadeView {
     /// It drawn on its own, as an SVG.
     pub svg: String,
     pub at: Timestamp,
+    /// What it is, so the app can try it on: a part, or a whole character.
+    pub part: Option<Part>,
+    pub character: Option<Character>,
+}
+
+/// A change to the person's agent: only what's given changes.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct CharacterIn {
+    /// Its name; empty for the one it has until it's given one.
+    #[ts(optional)]
+    pub name: Option<String>,
+    #[ts(optional)]
+    pub look: Option<Look>,
+}
+
+/// Asking the person's agent to draw a part or a character.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DrawIn {
+    /// What to draw, in the person's words: "a party hat".
+    pub asked: String,
+}
+
+/// Where a drawing the person asked for is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum DrawingState {
+    /// Waiting for the agent to take it.
+    Waiting,
+    /// The agent is drawing it.
+    Drawing,
+    /// Drawn, checked and kept: it's in what the agent made.
+    Done,
+    /// What the agent drew didn't fit, twice.
+    Failed,
+}
+
+/// A drawing the person asked their agent for.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DrawingView {
+    pub id: String,
+    pub asked: String,
+    pub state: DrawingState,
+    /// What it made, by its key, once it's done.
+    pub made: Option<String>,
+    /// Why it failed, in the agent's last try.
+    pub why: Option<String>,
+    pub at: Timestamp,
+}
+
+/// When kelve runs skill checks.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum ChecksWhen {
+    /// kelve asks on home before each one.
+    Ask,
+    /// When the person's agent has nothing else to do.
+    #[default]
+    WhenFree,
+    /// Never: parts stay not checked.
+    Never,
+}
+
+/// An agent whose settings hold kelve's hook.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ConnectedAgent {
+    /// As kelve names it: `claude`.
+    pub agent: String,
+    /// As people call it: "Claude Code".
+    pub name: String,
+}
+
+/// Settings for the person's agent, and for skill checks.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct AgentSettings {
+    pub connected: Vec<ConnectedAgent>,
+    /// How often a debrief comes.
+    pub debriefs: DebriefsWhen,
+    /// Whether the person's skills go in each agent's own skills folder too.
+    pub skills_folder: bool,
+    pub checks: ChecksWhen,
+    /// How many check runs a week, at most.
+    pub checks_a_week: u32,
+    /// How many ran this week so far.
+    pub checks_this_week: u32,
+}
+
+/// A change to those settings: only what's given changes.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct AgentSettingsIn {
+    #[ts(optional)]
+    pub debriefs: Option<DebriefsWhen>,
+    #[ts(optional)]
+    pub skills_folder: Option<bool>,
+    #[ts(optional)]
+    pub checks: Option<ChecksWhen>,
+    #[ts(optional)]
+    pub checks_a_week: Option<u32>,
+    /// Take kelve's hook out of this agent's settings, by kelve's name for it.
+    #[ts(optional)]
+    pub disconnect: Option<String>,
 }
 
 /// Your agent: its character, what it knows, and how it scores.

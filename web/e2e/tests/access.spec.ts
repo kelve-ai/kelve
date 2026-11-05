@@ -29,7 +29,7 @@ test('the start page and settings', async ({ page }) => {
 test('kelve’s screens under its header, and every control they’re built from', async ({ page }) => {
   await me().hello()
   await signIn(page)
-  for (const path of ['', 'debrief/1', 'skills', 'skills/rust/edit', 'agent', 'agent/score/new', 'settings/agent', 'settings/privacy', 'welcome']) {
+  for (const path of ['', 'debrief/1', 'skills', 'skills/rust/edit', 'agent', 'agent/look', 'agent/score/new', 'settings/agent', 'settings/checks', 'settings/reading', 'settings/privacy', 'settings/about', 'welcome']) {
     await page.goto(`/#/${path}`)
     await expect(page.locator('main h1, main h2').first()).toBeVisible()
     await scan(page)

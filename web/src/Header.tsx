@@ -2,6 +2,7 @@
 // places, Home, Skills and Your agent, then Settings, and light or dark, one
 // click away. Meeting your agent has only kelve's name, and a way to skip.
 
+import type { ReactNode } from 'react'
 import { hrefOf } from './routes'
 import { ThemeSwitch } from './Top'
 
@@ -18,13 +19,15 @@ const GEAR = (
   </svg>
 )
 
-export function Header({ here, example, bare }: {
+export function Header({ here, example, bare, actions }: {
   /** The place the page is under, said as the current page. */
   here?: 'home' | 'skills' | 'agent' | 'settings' | null
   /** In the example: every link stays in it. */
   example?: boolean
   /** Only kelve's name, and a way to skip: for meeting your agent. */
   bare?: boolean
+  /** Only kelve's name, and these: Cancel and Save, for changing how your agent looks. */
+  actions?: ReactNode
 }) {
   return (
     <header className="hd">
@@ -32,7 +35,7 @@ export function Header({ here, example, bare }: {
         <a className="hd-logo" href={hrefOf('', example)}>
           <i aria-hidden="true" />kelve
         </a>
-        {!bare && (
+        {!bare && !actions && (
           <nav className="hd-nav" aria-label="kelve">
             {PLACES.map((p) => (
               <a key={p.place} href={hrefOf(p.path, example)} aria-current={here === p.place ? 'page' : undefined}>
@@ -43,14 +46,16 @@ export function Header({ here, example, bare }: {
         )}
       </div>
       <div className="hd-r">
-        {bare ? (
+        {actions ? (
+          actions
+        ) : bare ? (
           <a className="btn btn-g btn-sm" href={hrefOf('', example)}>Skip for now</a>
         ) : (
           <a className="hd-set" href={hrefOf('settings/agent', example)} aria-current={here === 'settings' ? 'page' : undefined}>
             {GEAR}Settings
           </a>
         )}
-        <ThemeSwitch />
+        {!actions && <ThemeSwitch />}
       </div>
     </header>
   )

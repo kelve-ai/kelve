@@ -7,6 +7,10 @@ import { useEffect } from 'react'
 import { Header } from '../Header'
 import { hrefOf, placeOf, type Route, SECTIONS, type Section } from '../routes'
 import { Character } from '../ui/Character'
+import { Customise } from './agent/Customise'
+import { SettingsSection } from './agent/Settings'
+import { Welcome } from './agent/Welcome'
+import { YourAgent } from './agent/YourAgent'
 
 /** What each settings section is called. */
 const SECTION_NAMES: Record<Section, string> = {
@@ -90,8 +94,14 @@ function Settings({ section, example }: { section: Section; example?: boolean })
       </nav>
       <section className="sets-body" aria-label={SECTION_NAMES[section]} data-stub={`settings-${section}`}>
         <h2>{SECTION_NAMES[section]}</h2>
-        <p className="lede">{SECTION_LINES[section]}</p>
-        <p className="stub-soon">This page is still being built.</p>
+        {section === 'account' ? (
+          <>
+            <p className="lede">{SECTION_LINES[section]}</p>
+            <p className="stub-soon">This page is still being built.</p>
+          </>
+        ) : (
+          <SettingsSection section={section} example={example} />
+        )}
       </section>
     </div>
   )
@@ -104,11 +114,21 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [key])
+  // Changing how your agent looks has a header of its own, with Cancel and Save.
+  if (route.screen === 'look') return <Customise example={example} />
   return (
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
       <main className={route.screen === 'settings' ? 'app-main' : 'app-main narrow'}>
-        {route.screen === 'settings' ? <Settings section={route.section} example={example} /> : <Stub route={route} example={example} />}
+        {route.screen === 'settings' ? (
+          <Settings section={route.section} example={example} />
+        ) : route.screen === 'welcome' ? (
+          <Welcome example={example} />
+        ) : route.screen === 'agent' ? (
+          <YourAgent example={example} />
+        ) : (
+          <Stub route={route} example={example} />
+        )}
       </main>
     </div>
   )

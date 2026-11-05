@@ -56,17 +56,17 @@ test('every screen still being built says what it will show', async ({ page }) =
     ['change/3', 'The change'],
     ['skills/rust', 'A skill'],
     ['skills/rust/edit', 'Editing a skill'],
-    ['agent/look', 'Change how it looks'],
     ['agent/score/new', 'A verified score'],
     ['agent/score/7', 'Verified score'],
-    ['welcome', 'Meet your agent'],
   ]
   for (const [path, name] of screens) {
     await page.goto(`/#/${path}`)
     await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible()
     await expect(page.getByText('This page is still being built.')).toBeVisible()
   }
-  // Meeting your agent has no places to go yet: only a way to skip.
+  // Meeting your agent has no places to go: only a way to skip.
+  await page.goto('/#/welcome')
+  await expect(page.getByRole('heading', { level: 1, name: 'Meet your agent' })).toBeVisible()
   await page.getByRole('link', { name: 'Skip for now' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible()
   // Anywhere else, there's no page.

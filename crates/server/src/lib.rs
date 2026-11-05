@@ -32,6 +32,7 @@ pub mod updates;
 pub mod v2jobs;
 pub mod way;
 pub mod web;
+pub mod your_agent;
 
 use std::future::IntoFuture;
 use std::time::Duration;
