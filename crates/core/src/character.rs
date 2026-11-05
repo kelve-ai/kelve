@@ -2315,6 +2315,16 @@ mod tests {
     }
 
     #[test]
+    fn the_design_systems_characters_move_as_core_says() {
+        // design/kelve.css carries CSS for kelve.ai and its public pages.
+        let design = include_str!("../../../design/kelve.css");
+        assert!(
+            design.contains(CSS),
+            "design/kelve.css must hold kelve_core::character::CSS as it is: copy it there"
+        );
+    }
+
+    #[test]
     fn a_look_is_checked_and_a_drawing_read_by_its_format() {
         let mut made = BTreeMap::new();
         made.insert("made-party".to_string(), part(HAT).unwrap());
