@@ -628,10 +628,7 @@ async fn run_view(
             })
             .collect(),
         minutes_left: s.minutes_left,
-        // kelve.ai's run status doesn't say yet when a run paused for a
-        // subscription's limit goes on (graph-api v2 `RunStatus`): none till
-        // it does.
-        paused_until: None,
+        paused_until: s.paused.map(|p| p.until),
         why: s.why,
         score,
     })

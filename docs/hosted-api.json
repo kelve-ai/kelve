@@ -1412,6 +1412,24 @@
         },
         "additionalProperties": false
       },
+      "Paused": {
+        "type": "object",
+        "description": "A run waiting, uncounted, for something that isn't the person's skills\nor the agent's doing: so far only their Claude Code subscription's plan\nreaching its limit. It goes on by itself at `until`.",
+        "required": [
+          "until",
+          "why"
+        ],
+        "properties": {
+          "until": {
+            "$ref": "#/components/schemas/Timestamp",
+            "description": "When it goes on: when the plan's limit resets."
+          },
+          "why": {
+            "type": "string",
+            "description": "Why it's waiting, in a sentence."
+          }
+        }
+      },
       "Problem": {
         "type": "object",
         "description": "An error, as RFC 9457 problem details.",
@@ -1607,6 +1625,17 @@
           },
           "model": {
             "type": "string"
+          },
+          "paused": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Paused",
+                "description": "While it waits for the person's Claude plan's limit to reset: when\nit goes on, by itself."
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "result": {
             "oneOf": [

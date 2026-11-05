@@ -73,7 +73,7 @@ function Progress({ run: r, example, onCancelled }: { run: RunView; example?: bo
           <>
             <p>
               {paused
-                ? `Paused: your Claude plan reached its limit. It goes on by itself at ${paused.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`
+                ? `Paused: your Claude plan reached its limit. It goes on by itself at ${at(paused)}.`
                 : r.state === 'queued'
                   ? 'Waiting for room to start. You can leave this page.'
                   : `About ${count(r.minutesLeft ?? 1, 'minute')} left. You can leave this page.`}
@@ -84,6 +84,14 @@ function Progress({ run: r, example, onCancelled }: { run: RunView; example?: bo
       </div>
     </div>
   )
+}
+
+/** When a paused run goes on, in the person's time: "4:00 pm", or "1:30 am tomorrow". */
+function at(when: Date) {
+  const time = when.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  return when.toDateString() === tomorrow.toDateString() ? `${time} tomorrow` : time
 }
 
 /** "Your agent passed about 15 more of every 100 hidden checks, between 6 and 24." */

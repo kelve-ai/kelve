@@ -453,12 +453,41 @@ pub struct RunStatus {
     /// Why it failed, or was cancelled by the service, in a sentence.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub why: Option<String>,
+    /// While it waits for the person's Claude plan's limit to reset: when
+    /// it goes on, by itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub paused: Option<Paused>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<RunResult>,
     /// The score it made, once it's finished: what's published, if the
     /// person chooses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub score: Option<String>,
+}
+
+/// A run waiting, uncounted, for something that isn't the person's skills
+/// or the agent's doing: so far only their Claude Code subscription's plan
+/// reaching its limit. It goes on by itself at `until`.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Paused {
+    /// When it goes on: when the plan's limit resets.
+    pub until: Timestamp,
+    /// Why it's waiting, in a sentence.
+    pub why: String,
+}
+
+impl Paused {
+    /// Paused until `until`, when the person's Claude plan's limit resets.
+    pub fn plan_limit(until: Timestamp) -> Paused {
+        Paused {
+            why: format!(
+                "Your Claude plan reached its limit, so the run waits until it resets at {} UTC, then goes on by itself.",
+                until.0.format("%H:%M")
+            ),
+            until,
+        }
+    }
 }
 
 /// What a finished run found: a verdict for each task, the headline, the

@@ -348,6 +348,14 @@ async fn signing_in_choosing_an_address_and_a_run_to_a_published_score() {
     assert_eq!(now["state"], "running");
     assert_eq!(now["squares"][0], "running");
     assert_eq!(now["kindName"], "Rust");
+    assert_eq!(now["pausedUntil"], Value::Null);
+    // Paused for the Claude plan's limit: the page says until when.
+    let until = kelve_core::time::Timestamp(chrono::Utc::now() + chrono::Duration::hours(2));
+    k.graph.hosted.pause(&id, Some(until));
+    let paused = k.json("GET", &format!("/api/hosted/runs/{id}"), None).await;
+    assert_eq!(paused["state"], "running");
+    assert_eq!(paused["pausedUntil"], json!(until));
+    assert_eq!(paused["squares"], now["squares"], "it waits");
     k.graph.hosted.finish(&id);
     let done = k.json("GET", &format!("/api/hosted/runs/{id}"), None).await;
     assert_eq!(done["state"], "finished");

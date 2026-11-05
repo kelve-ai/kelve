@@ -23,8 +23,8 @@ use serde::Deserialize;
 
 use super::{
     Account, Allowance, Character, Credential, Deleted, Estimate, HandleAsk, HandleCheck,
-    ModelOffer, NO_RUNS_LEFT, PageSettings, RunRequest, RunResult, RunState, RunStatus, Score,
-    Scores, SignedIn, SkillFile, TaskProgress, TaskState, Verdict, handle,
+    ModelOffer, NO_RUNS_LEFT, PageSettings, Paused, RunRequest, RunResult, RunState, RunStatus,
+    Score, Scores, SignedIn, SkillFile, TaskProgress, TaskState, Verdict, handle,
 };
 use crate::{Problem, SignInCode, pkce_challenge};
 
@@ -67,6 +67,9 @@ struct Run {
     tasks: Vec<TaskProgress>,
     verdicts: Vec<Verdict>,
     score: Option<String>,
+    /// Waiting for a plan's limit to reset, until then: it doesn't move on
+    /// till it's passed.
+    paused_until: Option<Timestamp>,
 }
 
 /// The stand-in's hosted service: what tests see of it, and change.
@@ -137,10 +140,21 @@ impl Hosted {
         lock(&self.held).a_day = n;
     }
 
-    /// Finishes a run at once, as if every task had run.
+    /// Finishes a run at once, as if every task had run, paused or not.
     pub fn finish(&self, run: &str) {
         let mut held = lock(&self.held);
+        if let Some(r) = held.runs.get_mut(run) {
+            r.paused_until = None;
+        }
         while step(&mut held, run) {}
+    }
+
+    /// Pauses a run that's going until `until`, as if the person's Claude
+    /// plan reached its limit; `None` lets it go on at once.
+    pub fn pause(&self, run: &str, until: Option<Timestamp>) {
+        if let Some(r) = lock(&self.held).runs.get_mut(run) {
+            r.paused_until = until;
+        }
     }
 
     /// The account's page as the stand-in has it: its address, its name and
@@ -650,6 +664,7 @@ async fn estimate(
             ],
             verdicts,
             score: None,
+            paused_until: None,
         },
     );
     (StatusCode::CREATED, Json(estimate)).into_response()
@@ -687,6 +702,7 @@ fn status_of(held: &Held, id: &str) -> Option<RunStatus> {
         minutes_left: matches!(r.state, RunState::Queued | RunState::Running)
             .then(|| u32::try_from(left * 2).unwrap_or(u32::MAX)),
         why: None,
+        paused: paused(r).map(Paused::plan_limit),
         result,
         score: r.score.clone(),
     })
@@ -724,13 +740,24 @@ fn result_of(r: &Run) -> RunResult {
     }
 }
 
-/// Moves a run on by one task: whether there was more to do.
+/// Until when a run that's going waits for a plan's limit, if it does.
+fn paused(r: &Run) -> Option<Timestamp> {
+    r.paused_until
+        .filter(|at| at.0 > chrono::Utc::now())
+        .filter(|_| matches!(r.state, RunState::Queued | RunState::Running))
+}
+
+/// Moves a run on by one task: whether there was more to do. A paused run
+/// waits.
 fn step(held: &mut Held, id: &str) -> bool {
     let Some(r) = held.runs.get_mut(id) else {
         return false;
     };
     if !matches!(r.state, RunState::Queued | RunState::Running) {
         return false;
+    }
+    if paused(r).is_some() {
+        return true;
     }
     r.state = RunState::Running;
     match r.tasks.iter().position(|t| t.state == TaskState::Running) {
@@ -911,6 +938,16 @@ struct Control {
     taken: Vec<String>,
     /// How many runs an account may start a day.
     runs_a_day: Option<u32>,
+    /// Pauses a run, as if the person's Claude plan reached its limit.
+    pause: Option<Pause>,
+}
+
+/// A run to pause, for so many minutes: none lets it go on at once.
+#[derive(Debug, Deserialize)]
+struct Pause {
+    run: String,
+    #[serde(default)]
+    minutes: i64,
 }
 
 async fn control(State(held): Shared, Json(c): Json<Control>) -> StatusCode {
@@ -923,6 +960,11 @@ async fn control(State(held): Shared, Json(c): Json<Control>) -> StatusCode {
     }
     if let Some(n) = c.runs_a_day {
         hosted.runs_a_day(n);
+    }
+    if let Some(p) = &c.pause {
+        let until = (p.minutes > 0)
+            .then(|| Timestamp(chrono::Utc::now() + chrono::Duration::minutes(p.minutes)));
+        hosted.pause(&p.run, until);
     }
     StatusCode::NO_CONTENT
 }
@@ -1124,6 +1166,54 @@ mod tests {
             .unwrap();
         assert_eq!(s.state, RunState::Queued);
         hosted.finish(&e.run);
+    }
+
+    #[tokio::test]
+    async fn a_run_paused_for_a_plans_limit_says_until_when_and_waits() {
+        let (hosted, client) = signed_in().await;
+        let e = client
+            .estimate_paying(
+                "rust",
+                "claude-code",
+                "claude-sonnet-5-6",
+                &skills(&["rust"]),
+                Credential::Subscription,
+            )
+            .await
+            .unwrap();
+        client
+            .confirm_paying(&e.run, "sk-test-oat", Credential::Subscription)
+            .await
+            .unwrap();
+        let before = client.run(&e.run).await.unwrap().unwrap();
+        assert_eq!(before.paused, None);
+        // Paused through the control, as the sandbox and e2e tests do.
+        let until = Timestamp(chrono::Utc::now() + chrono::Duration::minutes(90));
+        reqwest::Client::new()
+            .post(format!("{}/stand-in/v2", client.base()))
+            .json(&serde_json::json!({ "pause": { "run": e.run, "minutes": 90 } }))
+            .send()
+            .await
+            .unwrap()
+            .error_for_status()
+            .unwrap();
+        let paused = client.run(&e.run).await.unwrap().unwrap();
+        let p = paused.paused.clone().expect("paused");
+        assert!((p.until.0 - until.0).num_seconds().abs() < 60, "{p:?}");
+        assert!(p.why.contains("Claude plan reached its limit"), "{}", p.why);
+        assert_eq!(paused.state, RunState::Running);
+        // It doesn't move on while it waits.
+        let again = client.run(&e.run).await.unwrap().unwrap();
+        assert_eq!(again.tasks, paused.tasks);
+        // Once the limit resets, it goes on by itself.
+        hosted.pause(&e.run, None);
+        let on = client.run(&e.run).await.unwrap().unwrap();
+        assert_eq!(on.paused, None);
+        assert_ne!(on.tasks, paused.tasks);
+        hosted.pause(&e.run, Some(until));
+        hosted.finish(&e.run);
+        let done = client.run(&e.run).await.unwrap().unwrap();
+        assert_eq!((done.state, done.paused), (RunState::Finished, None));
     }
 
     #[tokio::test]

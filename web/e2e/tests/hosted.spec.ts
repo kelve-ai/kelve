@@ -80,6 +80,9 @@ test('signing in, choosing an address and a verified run, to a score on your pag
   await expect(page.getByRole('heading', { level: 1, name: 'Your agent is doing Rust tasks' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Cancel the run' })).toBeVisible()
   const run = decodeURIComponent(page.url().split('/').pop() ?? '')
+  // Paused for the Claude plan's limit: the page says so, and when it goes on.
+  await standIn({ pause: { run, minutes: 90 } })
+  await expect(page.getByText('Paused: your Claude plan reached its limit. It goes on by itself at')).toBeVisible({ timeout: 15_000 })
   await standIn({ finish: run })
 
   await expect(page.getByText('Rust tasks better than a standard agent')).toBeVisible({ timeout: 15_000 })

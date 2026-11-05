@@ -11,8 +11,8 @@ use utoipa::{Modify, OpenApi};
 use super::{
     Account, AgentOffer, Allowance, Character, Confirm, Credential, Deleted, Estimate,
     ExampleCheck, ExampleFile, ExampleTask, HandleAsk, HandleCheck, KindOffer, ModelOffer, Offer,
-    PageSettings, Palette, RunRequest, RunResult, RunState, RunStatus, Score, Scores, SignedIn,
-    SkillFile, TaskProgress, TaskState, Verdict,
+    PageSettings, Palette, Paused, RunRequest, RunResult, RunState, RunStatus, Score, Scores,
+    SignedIn, SkillFile, TaskProgress, TaskState, Verdict,
 };
 use crate::{Problem, SignInCode};
 
@@ -57,7 +57,7 @@ pub fn document() -> utoipa::openapi::OpenApi {
         Account, Allowance, SignInCode, SignedIn, Deleted, HandleAsk, HandleCheck, PageSettings,
         Character, Palette, Offer, KindOffer, ExampleTask, ExampleCheck, ExampleFile, AgentOffer,
         ModelOffer, RunRequest, SkillFile,
-        Estimate, Confirm, Credential, RunState, TaskState, Verdict, TaskProgress, RunStatus, RunResult, Score, Scores,
+        Estimate, Confirm, Credential, RunState, TaskState, Verdict, TaskProgress, RunStatus, Paused, RunResult, Score, Scores,
         Problem
     )),
     modifiers(&Key),
@@ -334,6 +334,7 @@ mod tests {
             "Character",
             "RunRequest",
             "RunStatus",
+            "Paused",
             "RunResult",
             "Score",
         ] {
