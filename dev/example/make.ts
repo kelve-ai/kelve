@@ -3,8 +3,8 @@
 // commit. The sandbox and the end-to-end tests both make it from these files.
 
 import { spawnSync } from 'node:child_process'
-import { cpSync, readFileSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 
 const example = import.meta.dirname
 
@@ -20,13 +20,33 @@ export function git(cwd: string, ...args: string[]) {
   return r.stdout.toString().trim()
 }
 
-/** Makes the example at `dir`, afresh. */
-export function makeLedger(dir: string) {
+/** The files the example's change writes, from the ledger's root. */
+export function changeFiles(): string[] {
+  const out: string[] = []
+  const walk = (dir: string, rel: string) => {
+    for (const f of readdirSync(dir, { withFileTypes: true })) {
+      if (f.isDirectory()) walk(join(dir, f.name), `${rel}${f.name}/`)
+      else out.push(`${rel}${f.name}`)
+    }
+  }
+  walk(join(example, 'change'), '')
+  return out.sort()
+}
+
+/** Writes one file of the example's change into the ledger at `dir`, as its agent would. */
+export function writeChange(dir: string, path: string) {
+  mkdirSync(dirname(join(dir, path)), { recursive: true })
+  cpSync(join(example, 'change', path), join(dir, path))
+}
+
+/** Makes the example at `dir`, afresh; with `change` false, only the ledger as it was, its change not yet made. */
+export function makeLedger(dir: string, change = true) {
   rmSync(dir, { recursive: true, force: true })
   cpSync(join(example, 'base'), dir, { recursive: true })
   git(dir, 'init', '-q', '-b', 'main')
   git(dir, 'add', '-A')
   git(dir, 'commit', '-q', '-m', 'A ledger that never charges twice')
+  if (!change) return
   cpSync(join(example, 'change'), dir, { recursive: true })
   git(dir, 'add', '-A')
   git(dir, 'commit', '-q', '-m', exampleChange().commit)

@@ -7,65 +7,6 @@ import * as loop from '../../dev/example/loop'
 
 export type Job = { job: number; kind: string; about: string; material: Record<string, unknown>; waiting: number }
 
-/** The text inside a fence, without its tags. */
-function unfenced(text: unknown): string {
-  const t = typeof text === 'string' ? text : ''
-  const body = t.includes('\n') ? t.slice(t.indexOf('\n') + 1) : t
-  return body.includes('\n') ? body.slice(0, body.lastIndexOf('\n')) : body
-}
-
-/**
- * Redoes a past task twice, as two subagents would: with the part, or every
- * skill, it does what the skills say; without, it doesn't.
- */
-export function compare(job: Job) {
-  const part = 'part' in job.material
-  const run = (line: string, followed: boolean) => ({
-    diff: `diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1 +1,2 @@\n fn main() {}\n+${line}\n`,
-    said: `Done, ${followed ? 'as the skills say' : 'as it would anyway'}.`,
-    ...(part ? { followed, shows: line } : {}),
-  })
-  return { with: run('// with your skills', true), without: run('// as a standard agent', false) }
-}
-
-/**
- * A drawing, as the agent hands one in for `draw`: a whole character when
- * it's asked for a cat, else a party hat for the robot.
- */
-function draw(job: Job) {
-  const asked = unfenced(job.material.asked).toLowerCase()
-  if (asked.includes('cat')) {
-    const row = (at: number, text: string) => '.'.repeat(at) + text
-    const rows = (pairs: Array<[number, number, string]>) => {
-      const out: string[] = new Array(27).fill('')
-      for (const [y, x, text] of pairs) out[y] = row(x, text)
-      return out
-    }
-    return {
-      drawing: {
-        format: 'kelve-character/1',
-        name: 'Stand-in cat',
-        colours: { o: '#2b2f3a', b: 'body', e: 'eyes' },
-        layers: {
-          base: rows([[8, 6, 'o..........o'], [9, 6, 'oooooooooooo'], [10, 6, 'obbbbbbbbbbo'], [11, 6, 'obbbbbbbbbbo'], [12, 6, 'obbbbbbbbbbo'], [13, 6, 'oooooooooooo']]),
-          eyes: rows([[11, 9, 'e....e']]),
-          shut: rows([[12, 9, 'e....e']]),
-        },
-      },
-    }
-  }
-  return {
-    drawing: {
-      format: 'kelve-part/1',
-      name: 'Party hat',
-      slot: 'hat',
-      at: [9, 0],
-      colours: { a: 'light', g: '#f4c84a', w: '#ffffff' },
-      pixels: ['..ww..', '..gg..', '.aaaa.', 'agggga'],
-    },
-  }
-}
-
 /** How the stand-in agent answers a job. */
 export function answer(job: Job): unknown {
   switch (job.kind) {
@@ -74,8 +15,8 @@ export function answer(job: Job): unknown {
     case 'research': return loop.research(job)
     case 'explain': return loop.explain(job)
     case 'learn': return loop.learn(job)
-    case 'compare': return compare(job)
-    case 'draw': return draw(job)
+    case 'compare': return loop.compare(job)
+    case 'draw': return loop.draw(job)
     default: throw new Error(`a job the stand-in agent doesn't know: ${job.kind}`)
   }
 }
