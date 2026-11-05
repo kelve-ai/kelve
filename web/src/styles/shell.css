@@ -57,6 +57,11 @@
 /* ---------------------------------------------------------------- markdown (board Md) */
 .md { display: flex; flex-direction: column; gap: 14px; font-size: 17px; line-height: 27px; color: var(--ink-2); }
 .md.small { gap: 10px; font-size: 15px; line-height: 23px; }
+/* The small things it does between pauses, where it varies how it moves (ui/lively.ts). */
+.px.b-blink .eo { opacity: 0; }
+.px.b-blink .ec { opacity: 1; }
+.px.b-look-left .eo { transform: translateX(-1px); }
+.px.b-look-right .eo { transform: translateX(1px); }
 .md.large { gap: 16px; font-size: 19px; line-height: 30px; }
 /* A margin beside each block, for a note by a heading. */
 .md.with-margin .md-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 240px); column-gap: 40px; align-items: start; }

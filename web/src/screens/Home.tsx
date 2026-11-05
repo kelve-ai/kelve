@@ -98,7 +98,7 @@ export function Home({ example }: { example?: boolean }) {
   return (
     <div className="hm">
       <section className="hm-me" aria-label="Your agent">
-        <Character size={240} move={thanks ? 'happy' : home.moving === 'still' ? 'idle' : home.moving} label={home.name} />
+        <Character size={240} lively move={thanks ? 'happy' : home.moving === 'still' ? 'idle' : home.moving} label={home.name} />
         <div className="hm-name">
           <h1>{home.name}</h1>
           <a className="btn btn-g btn-sm btn-icon" href={hrefOf('agent/look', example)} aria-label="Change how it looks" title="Change how it looks">

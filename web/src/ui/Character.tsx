@@ -3,13 +3,15 @@
 // moves the same way (pixels.ts, and gen/character.css, which kelve's own
 // tests write). `move` is how it moves: waiting (`idle`), working, pleased
 // (`happy`), hello (`wave`), asleep, or `still`; each stops for anyone whose
-// computer asks for less motion. With no `look`, it's the person's own
-// agent, as they made it.
+// computer asks for less motion. `lively` varies it over time (lively.ts), for
+// where it's left on the page. With no `look`, it's the person's own agent,
+// as they made it.
 
 import { useMemo } from 'react'
 import type { AgentLook, CharacterMove, CharacterView } from '../api/types'
 import { EXAMPLE_CHARACTER } from '../example/agent'
 import { useLoad } from '../useLoad'
+import { useLively } from './lively'
 import { defaultLook, draw, type Group, type Made, madeOf, NOTHING_MADE, SHADOW, ZZ } from './pixels'
 import './gen/character.css'
 
@@ -35,10 +37,12 @@ function Layer({ g }: { g: Group | null }) {
   )
 }
 
-export function Character({ size = 120, move = 'idle', label, look, made }: {
+export function Character({ size = 120, move = 'idle', lively = false, label, look, made }: {
   /** Its width in pixels on the page; its height follows the grid. */
   size?: number
   move?: Move
+  /** Whether it varies how it moves as it's left on the page, rather than looping one move. */
+  lively?: boolean
   /** What it's called, for people who can't see it: its name, unless said. */
   label?: string
   /** How it looks, when it isn't the person's own agent as kept: a choice being tried. */
@@ -50,10 +54,11 @@ export function Character({ size = 120, move = 'idle', label, look, made }: {
   const l = look ?? mine?.look ?? defaultLook()
   const m = made ?? (mine ? madeOf(mine.made) : NOTHING_MADE)
   const name = label ?? mine?.name ?? 'Your agent'
-  const d = useMemo(() => draw(l, m, move, name), [l, m, move, name])
+  const now = useLively(move, lively)
+  const d = useMemo(() => draw(l, m, now.move, name), [l, m, now.move, name])
   return (
     <span className="char" style={{ width: size }}>
-      <svg className={`px a-${d.move}`} viewBox="0 0 24 27" width={size} height={(size * 27) / 24} shapeRendering="crispEdges" role="img" aria-label={d.label}>
+      <svg className={`px a-${d.move}${now.beat ? ` b-${now.beat}` : ''}`} viewBox="0 0 24 27" width={size} height={(size * 27) / 24} shapeRendering="crispEdges" role="img" aria-label={d.label}>
         <path d={SHADOW} fill="#1d1c1a" opacity=".1" />
         <g className="all">
           <Layer g={d.legs} />

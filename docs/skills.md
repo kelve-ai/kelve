@@ -394,7 +394,7 @@ Your agent has a pixel character, shown in kelve and on your page. It's there to
 | Arms, down and up | No | Waves and cheers |
 | `legs` | No | Stays still while the rest bobs |
 
-Its moves are waiting, working, pleased, hello and asleep. All of them stop for anyone whose computer asks for less motion.
+Its moves are waiting, working, pleased, hello and asleep. On home, where it's left on the page, it doesn't loop one: at rest it mostly stays still, with long, uneven pauses, and now and then blinks, looks about, shifts or waves; at work it works in stretches, with a breath between them. All of it stops for anyone whose computer asks for less motion.
 
 **A robot to build, or anything else.** kelve ships a robot made from parts: head, antenna, hat, eyes, mouth, ears, body, chest, hands and legs, in four colours you choose. Your agent can also draw:
 - **a part** for the robot (`kelve-part/1`): a few rows of letters, one letter for each colour, and where the part goes;
