@@ -36,7 +36,7 @@ function useNow(on: boolean): number {
 const time = (at: string) => new Date(at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
 export function Home({ example }: { example?: boolean }) {
-  const loaded = useLoad<HomeView>(example ? null : '/api/home', ['debriefs', 'asks', 'agent', 'notes', 'settings'])
+  const loaded = useLoad<HomeView>(example ? null : '/api/home', ['debriefs', 'asks', 'agent', 'settings'])
   const [mock, setMock] = useState<HomeView | null>(() => (example ? exampleHome(asOf()) : null))
   const home = example ? mock : loaded.data
   const [toast, say] = useToast(3200)
@@ -58,7 +58,7 @@ export function Home({ example }: { example?: boolean }) {
         else setMock((m) => m && { ...m, asks: m.asks.filter((a) => a.id !== ask.id), say: 'A few things for you.' })
         say('I’ll ask again tomorrow.')
       } else if (ask.kind === 'hook') {
-        if (!example) await post('/api/settings', { notesHook: true })
+        if (!example) await post('/api/settings', { hook: true })
         else setMock((m) => m && { ...m, asks: m.asks.filter((a) => a.id !== ask.id) })
         setFixed(true)
       } else if (ask.kind === 'stalled') {

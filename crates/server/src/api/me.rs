@@ -66,12 +66,17 @@ pub async fn stop(State(app): State<Shared>, _who: Who) -> StatusCode {
 }
 
 /// Deletes everything kelve keeps: settings, keys, skills' evidence,
-/// debriefs, and work in hand. Skills and notes are the person's own files,
-/// and stay. It can't be undone; the settings page says so.
+/// debriefs, what they said they know, and work in hand. Skills are the
+/// person's own files, and stay. It can't be undone; the settings page says so.
 pub async fn everything(State(app): State<Shared>, _me: Me) -> ApiResult<StatusCode> {
     let mut tx = app.db.begin().await?;
     kelve_store::delete_everything(&mut tx).await?;
     tx.commit().await?;
+    if let Err(e) = std::fs::remove_file(crate::spec::path(&app))
+        && e.kind() != std::io::ErrorKind::NotFound
+    {
+        tracing::warn!(error = %e, "couldn't delete what the person said they know");
+    }
     app.reload().await?;
     app.publish(ServerEvent::Settings);
     tracing::info!("deleted everything, as asked");

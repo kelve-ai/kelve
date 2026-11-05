@@ -229,7 +229,7 @@ const EVERYTHING: [&str; 30] = [
     "held_for_agent",
     "touched",
     "moments",
-    "notes_told",
+    "redos_told",
     "sign_in_links",
 ];
 

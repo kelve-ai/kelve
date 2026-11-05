@@ -2,13 +2,13 @@
 //! shows.
 
 use kelve_core::due::DebriefsWhen;
-use kelve_core::views::{AgentKind, ChecksWhen, Highlighting, Place, SettingsIn, Size};
+use kelve_core::views::{AgentKind, ChecksWhen, Highlighting, SettingsIn, Size};
 use serde::{Deserialize, Serialize};
 
-/// The hints shown once, and the offers made once: the notes hook.
+/// The hints shown once, and the offers made once: the hook.
 // `counts`: the person answered whether to share counts. `met`: the person
 // has met their agent, so home is home.
-const HINTS: [&str; 5] = ["notes", "hook", "marks", "counts", "met"];
+const HINTS: [&str; 3] = ["hook", "counts", "met"];
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
@@ -19,16 +19,11 @@ pub struct Settings {
     /// The install's ID, sent with those counts: 32 random hex characters,
     /// made when the person says yes and gone when they stop.
     pub install: Option<String>,
-    /// The folder notes kept only for the person go in, when they chose
-    /// one: kelve's own otherwise.
-    pub notes_dir: Option<String>,
     /// The coding agent the person uses.
     pub agent: AgentKind,
     pub code_size: Size,
     pub text_size: Size,
     pub highlighting: Highlighting,
-    /// Who a new note is for.
-    pub new_note: Place,
     /// The hints seen.
     pub hints: Vec<String>,
     /// How the person's agent looks, the name they gave it, and what it
@@ -50,12 +45,10 @@ impl Default for Settings {
         Settings {
             share_counts: false,
             install: None,
-            notes_dir: None,
             agent: AgentKind::default(),
             code_size: Size::default(),
             text_size: Size::default(),
             highlighting: Highlighting::default(),
-            new_note: Place::default(),
             hints: Vec::new(),
             look: kelve_core::character::Look::default(),
             agent_name: None,
@@ -74,15 +67,12 @@ impl Settings {
         kelve_core::views::Settings {
             share_counts: self.share_counts,
             counts_off: None,
-            notes_dir: self.notes_dir.clone().unwrap_or_default(),
-            notes_chosen: self.notes_dir.is_some(),
             agent: self.agent,
             code_size: self.code_size,
             text_size: self.text_size,
             highlighting: self.highlighting,
-            new_note: self.new_note,
             hints: self.hints.clone(),
-            notes_hook: false,
+            hook: false,
             hooks_elsewhere: Vec::new(),
         }
     }
@@ -100,18 +90,6 @@ impl Settings {
                 (false, _) => None,
             };
         }
-        if let Some(dir) = change.notes_dir {
-            let dir = dir.trim();
-            self.notes_dir = if dir.is_empty() {
-                None
-            } else {
-                let path = crate::reader::unshown(dir);
-                if !path.is_absolute() || !path.is_dir() {
-                    return Err("Choose a folder that's there, for your notes.".into());
-                }
-                Some(path.display().to_string())
-            };
-        }
         if let Some(agent) = change.agent {
             self.agent = agent;
         }
@@ -123,9 +101,6 @@ impl Settings {
         }
         if let Some(h) = change.highlighting {
             self.highlighting = h;
-        }
-        if let Some(place) = change.new_note {
-            self.new_note = place;
         }
         if let Some(hint) = change.hint_seen {
             if !HINTS.contains(&hint.as_str()) {
@@ -147,25 +122,17 @@ mod tests {
     #[test]
     fn bad_changes_say_why_and_good_ones_stick() {
         let mut s = Settings::default();
-        let err = s
-            .apply(SettingsIn {
-                notes_dir: Some("/no/such/folder/for/notes".into()),
-                ..SettingsIn::default()
-            })
-            .expect_err("refused");
-        assert!(err.contains("folder"), "{err}");
         s.apply(SettingsIn {
             share_counts: Some(true),
             agent: Some(AgentKind::Codex),
             code_size: Some(Size::Large),
             highlighting: Some(Highlighting::None),
-            new_note: Some(Place::Work),
-            hint_seen: Some("notes".into()),
+            hint_seen: Some("met".into()),
             ..SettingsIn::default()
         })
         .expect("applied");
         s.apply(SettingsIn {
-            hint_seen: Some("notes".into()),
+            hint_seen: Some("met".into()),
             ..SettingsIn::default()
         })
         .expect("seen again");
@@ -174,8 +141,7 @@ mod tests {
         assert_eq!(v.code_size, Size::Large);
         assert_eq!(v.text_size, Size::Medium);
         assert_eq!(v.highlighting, Highlighting::None);
-        assert_eq!(v.new_note, Place::Work);
-        assert_eq!(v.hints, vec!["notes".to_string()], "once each");
+        assert_eq!(v.hints, vec!["met".to_string()], "once each");
         assert!(v.share_counts);
         let id = s.install.clone().expect("an install ID, made on yes");
         assert_eq!(id.len(), 32);

@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, type Page, test } from '@playwright/test'
-import { open, openFile, repo, toFiles, world } from '../world'
+import { me, open, openFile, repo } from '../world'
 
 test('work handed over opens as its debrief, or file by file while there’s none', async ({ page }) => {
   await open(page, { what: 'change', path: repo(), title: 'Retries that back off', said: 'Each retry now waits twice as long as the last.' }, { work: false })
@@ -23,7 +23,6 @@ test('a folder opens plainly: its files in the side, a file a click away', async
   const root = repo()
   await open(page, { what: 'folder', path: root })
   const side = page.getByRole('complementary', { name: 'What’s open' })
-  await toFiles(page)
   await expect(side.getByRole('treeitem', { name: /^ledger\.rs/ })).toBeVisible()
   await openFile(page, 'src/retry.rs')
   await expect(page.locator('.cm-line').filter({ hasText: 'pub fn wait' })).toBeVisible()
@@ -37,7 +36,6 @@ test('kelve’s name leads home, and Escape goes there once nothing else has it'
   await logo.hover()
   await expect(page.getByRole('tooltip')).toHaveText('Home, or Esc')
   await page.mouse.move(700, 500)
-  await toFiles(page)
   const here = page.url()
   // Escape in a field is the field's.
   const filter = page.getByRole('complementary', { name: 'What’s open' }).locator('input[type="search"]')
@@ -59,9 +57,7 @@ test('kelve’s name leads home, and Escape goes there once nothing else has it'
 
 test('a tab out of sight lets its stream go, and catches up once it is back', async ({ page }) => {
   const root = repo()
-  const opened = await open(page, { what: 'folder', path: root })
-  const side = page.getByRole('complementary', { name: 'What’s open' })
-  await side.getByRole('tab', { name: 'Notes' }).click()
+  await open(page, { what: 'folder', path: root })
   // As the browser says a tab is in sight, or not.
   const sight = (hidden: boolean) =>
     page.evaluate((h) => {
@@ -70,18 +66,15 @@ test('a tab out of sight lets its stream go, and catches up once it is back', as
       document.dispatchEvent(new Event('visibilitychange'))
     }, hidden)
   await sight(true)
-  // A note kept while it's out of sight, as another tab would keep one.
-  const kept = await page.request.post(`${world().base}/api/opened/${opened.id}/notes`, {
-    headers: { origin: world().base },
-    data: { id: null, place: 'you', text: 'Read the ledger first.', on: { path: 'src/ledger.rs', start: 1, end: 1 } },
-  })
-  expect(kept.ok()).toBe(true)
+  // The same folder opened again, with a new title, while it's out of sight.
+  const title = page.locator('.reader .title')
+  await me().open({ what: 'folder', path: root, title: 'Read the ledger first' })
   // Out of sight, it hears nothing: it shows what it had.
   await page.waitForTimeout(1_000)
-  await expect(side.getByRole('button', { name: /Read the ledger first/ })).toHaveCount(0)
+  await expect(title).not.toContainText('Read the ledger first')
   // Back in sight, it listens again and fetches what it missed.
   await sight(false)
-  await expect(side.getByRole('button', { name: /Read the ledger first/ })).toBeVisible({ timeout: 30_000 })
+  await expect(title).toContainText('Read the ledger first', { timeout: 30_000 })
 })
 
 /** The colour each of these is drawn in. */

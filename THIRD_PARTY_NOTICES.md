@@ -10,7 +10,6 @@ app's dependencies: run it again after changing them.
 ## In the web app
 
 - @codemirror/autocomplete 6.20.4, MIT: <https://code.haverbeke.berlin/codemirror/autocomplete>
-- @codemirror/commands 6.11.1, MIT: <https://code.haverbeke.berlin/codemirror/commands>
 - @codemirror/lang-css 6.3.1, MIT: <https://github.com/codemirror/lang-css>
 - @codemirror/lang-go 6.0.1, MIT: <https://github.com/codemirror/lang-go>
 - @codemirror/lang-html 6.4.12, MIT: <https://code.haverbeke.berlin/codemirror/lang-html>
@@ -110,7 +109,7 @@ app's dependencies: run it again after changing them.
 
 ### Their license texts
 
-#### @codemirror/autocomplete 6.20.4 (LICENSE), @codemirror/commands 6.11.1 (LICENSE), @codemirror/lang-css 6.3.1 (LICENSE), @codemirror/lang-html 6.4.12 (LICENSE), @codemirror/lang-javascript 6.2.5 (LICENSE), @codemirror/lang-markdown 6.5.2 (LICENSE), @codemirror/lang-php 6.0.2 (LICENSE), @codemirror/lang-python 6.2.1 (LICENSE), @codemirror/lang-rust 6.0.2 (LICENSE), @codemirror/language 6.13.1 (LICENSE), @codemirror/legacy-modes 6.5.5 (LICENSE), @codemirror/lint 6.9.7 (LICENSE), @codemirror/state 6.7.6 (LICENSE), @codemirror/streamparser 6.0.0 (LICENSE), @codemirror/view 6.43.15 (LICENSE)
+#### @codemirror/autocomplete 6.20.4 (LICENSE), @codemirror/lang-css 6.3.1 (LICENSE), @codemirror/lang-html 6.4.12 (LICENSE), @codemirror/lang-javascript 6.2.5 (LICENSE), @codemirror/lang-markdown 6.5.2 (LICENSE), @codemirror/lang-php 6.0.2 (LICENSE), @codemirror/lang-python 6.2.1 (LICENSE), @codemirror/lang-rust 6.0.2 (LICENSE), @codemirror/language 6.13.1 (LICENSE), @codemirror/legacy-modes 6.5.5 (LICENSE), @codemirror/lint 6.9.7 (LICENSE), @codemirror/state 6.7.6 (LICENSE), @codemirror/streamparser 6.0.0 (LICENSE), @codemirror/view 6.43.15 (LICENSE)
 
 ```text
 MIT License

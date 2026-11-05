@@ -60,7 +60,6 @@
   --dim: #b5afa5;
   --placeholder: #a39d93;
   --red-soft: rgba(200, 54, 31, 0.12);
-  --mark: #f2e6c9;
   --selection: rgba(42, 94, 168, 0.16);
   --ok: var(--green);
   /* A plain file's parts, numbered in order: the link colour, softly. */
@@ -115,7 +114,7 @@
     --brown: #d9917a; --ochre: #d6a659; --added-ink: #7cc48a; --added-tint: rgba(124, 196, 138, 0.08); --removed-tint: rgba(217, 145, 122, 0.08); --added-mark: #4f7d58; --removed-mark: #8a5a4b;
   --step-ink: #9cc2f2; --step-tint: rgba(141, 180, 236, 0.13); --code: #ddd8cf; --code-weight: 400; --c-string: #8fc49a; --c-const: #c3a6e6; --c-comment: #e3a868; --c-def: #8db4ec; --line-n: #5f5a52;
   --ink-2: #c2bbb0; --text: #c2bbb0; --mute: #4a4640; --under: #5f5a52; --dim: #6f6a62; --placeholder: #6f6a62;
-  --red-soft: rgba(226, 120, 98, 0.16); --mark: rgba(212, 165, 78, 0.22); --selection: rgba(141, 180, 236, 0.22);
+  --red-soft: rgba(226, 120, 98, 0.16); --selection: rgba(141, 180, 236, 0.22);
   --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
   --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22; --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
   --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
@@ -134,7 +133,7 @@
     --brown: #d9917a; --ochre: #d6a659; --added-ink: #7cc48a; --added-tint: rgba(124, 196, 138, 0.08); --removed-tint: rgba(217, 145, 122, 0.08); --added-mark: #4f7d58; --removed-mark: #8a5a4b;
     --step-ink: #9cc2f2; --step-tint: rgba(141, 180, 236, 0.13); --code: #ddd8cf; --code-weight: 400; --c-string: #8fc49a; --c-const: #c3a6e6; --c-comment: #e3a868; --c-def: #8db4ec; --line-n: #5f5a52;
     --ink-2: #c2bbb0; --text: #c2bbb0; --mute: #4a4640; --under: #5f5a52; --dim: #6f6a62; --placeholder: #6f6a62;
-    --red-soft: rgba(226, 120, 98, 0.16); --mark: rgba(212, 165, 78, 0.22); --selection: rgba(141, 180, 236, 0.22);
+    --red-soft: rgba(226, 120, 98, 0.16); --selection: rgba(141, 180, 236, 0.22);
     --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
     --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22; --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
     --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
@@ -236,7 +235,6 @@ button { font: inherit; color: inherit; }
 .code .ln.plain { grid-template-columns: minmax(0, 1fr); padding-left: 18px; }
 .code .n { color: var(--placeholder); text-align: right; padding-right: 14px; }
 .code .dim { color: var(--dim); }
-.code .mark { color: var(--ink); background: var(--red-soft); }
 /* Prose kelve quotes: what you asked, what your agent said. */
 .code.prose { font: 400 15px/25px var(--sans); color: var(--ink-2); white-space: pre-wrap; border-left: 2px solid var(--hair-2); padding-left: 16px; }
 .code.prose .ln.plain { padding-left: 0; }

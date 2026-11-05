@@ -1,27 +1,24 @@
 // What your agent opened in kelve (#/o/<id>). Work it handed over, a change or
 // a worktree, opens as its debrief, or file by file while there's no debrief
 // (screens/Change.tsx). Anything else opens here, plainly: one bar, the title
-// and your agent's line; the side panel, with the files and the notes; and
-// the file. A note or your agent's list opens beside the work. The address
-// holds what it shows: #/o/<id>?f=<file>&l=<line>&t=<tab>&w=all&n=<note, or
-// new>&k=list
+// and your agent's line; the side panel, with the files; and the file. Your
+// agent's list opens beside the work. The address holds what it shows:
+// #/o/<id>?f=<file>&l=<line>&w=all&k=list
 
 import { Component, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
-import type { ChangeView, FolderView, ListItem, NoteRef, Opened, Place, Settings } from '../api/types'
-import { ListContext, OpenContext, useAgentList } from '../agentList'
+import type { ChangeView, FolderView, ListItem, Opened, Settings } from '../api/types'
+import { OpenContext, useAgentList } from '../agentList'
 import { Loader, Loading } from '../Loader'
 import { Top } from '../Top'
 import { useHeld, useLoad } from '../useLoad'
 import { agentKindName, useNarrow } from '../words'
 import { post } from '../api/client'
 import { fetchFile, fileAhead, FileView, fileIn } from './FileView'
-import { NotePage } from './NotePage'
-import { NotesContext, type NotesWith, NotesTab } from './NoteParts'
-import { type SideFile, Side, type Tab } from './Side'
+import { type SideFile, Side } from './Side'
 import { AgentLine, ListPane } from './ListPane'
 import { Grip, usePaneWidths, useWindowWidth, WORK_LEAST } from './widths'
 
-type At = { f: string | null; l?: number; t: Tab; w: 'some' | 'all'; n: string | null; np: Place | null; k: 'list' | null }
+type At = { f: string | null; l?: number; w: 'some' | 'all'; k: 'list' | null }
 
 /** The address, read. */
 function read(): At {
@@ -30,10 +27,7 @@ function read(): At {
   return {
     f: q.get('f'),
     l: l > 0 ? l : undefined,
-    t: q.get('t') === 'notes' ? 'notes' : 'files',
     w: q.get('w') === 'all' ? 'all' : 'some',
-    n: q.get('n'),
-    np: q.get('np') === 'agent' ? 'agent' : null,
     k: q.get('k') === 'list' ? 'list' : null,
   }
 }
@@ -53,11 +47,8 @@ function useAt(base: string): [At, (next: Partial<At>, replace?: boolean) => voi
       const q = new URLSearchParams()
       if (all.f) q.set('f', all.f)
       if (all.f && all.l) q.set('l', String(all.l))
-      if (all.t !== 'files') q.set('t', all.t)
       if (all.w === 'all') q.set('w', 'all')
-      if (all.n) q.set('n', all.n)
-      if (all.n === 'new' && all.np) q.set('np', all.np)
-      if (all.k && !all.n) q.set('k', all.k)
+      if (all.k) q.set('k', all.k)
       const hash = `${base}${q.size ? `?${q}` : ''}`
       if (replace) {
         history.replaceState(null, '', hash)
@@ -120,7 +111,6 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
   const change = useLoad<ChangeView>(isChange ? `/api/opened/${opened.id}/change` : null, ['opened'])
   const folder = useLoad<FolderView>(isChange ? null : `/api/opened/${opened.id}/folder`, ['opened'])
   const list = useLoad<FolderView>(isChange && at.w === 'all' ? `/api/opened/${opened.id}/folder?list=true` : null, ['opened'])
-  const notes = useLoad<NoteRef[]>(`/api/opened/${opened.id}/notes`, ['notes'])
   const settings = useLoad<Settings>('/api/settings', ['settings'])
   const agentList = useAgentList()
   const [sideOpen, setSideOpen] = useState(false)
@@ -159,11 +149,10 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
   const openItem = useCallback(
     (item: ListItem) => {
       if (item.opened != null && item.opened !== opened.id && !example) {
-        location.hash = `#/o/${item.opened}${item.note ? `?n=${encodeURIComponent(item.note)}` : ''}`
+        location.hash = `#/o/${item.opened}`
         return
       }
-      if (item.note) go({ n: item.note, k: null })
-      else go({ k: null })
+      go({ k: null })
     },
     [go, opened.id, example],
   )
@@ -173,25 +162,6 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
     if (!example) void post(`/api/opened/${opened.id}/again`).catch(() => {})
   }, [opened.id, example])
 
-  // Notes: what they need from the reader, and the page one opens as.
-  const [pageKey, setPageKey] = useState(0)
-  const noting: NotesWith = useMemo(
-    () => ({
-      opened: opened.id,
-      agent: agentKindName(settings.data?.agent),
-      place: settings.data?.newNote ?? 'you',
-      notesDir: settings.data?.notesDir ?? 'your notes folder',
-      page: (id) => {
-        setPageKey((k) => k + 1)
-        go({ n: id ?? 'new', np: null, k: null })
-      },
-      goTo: (f, l) => go({ f, l }),
-      hint: !example && !!settings.data && !settings.data.hints.includes('notes'),
-      hinted: () => void post('/api/settings', { hintSeen: 'notes' }).then(settings.reload),
-    }),
-    [opened.id, settings, go, example],
-  )
-
   // Escape closes what's open beside the work; with nothing, it goes home.
   // Never when something else has it: a field, an editor, a key with others held.
   const home = example ? '#/example/home' : '#/'
@@ -200,27 +170,24 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
       if (e.key !== 'Escape' || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
       const t = e.target as HTMLElement
       if (t.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"], [role="listbox"]')) return
-      if (at.n) go({ n: null })
-      else if (at.k) go({ k: null })
+      if (at.k) go({ k: null })
       else location.hash = home
     }
     window.addEventListener('keydown', on)
     return () => window.removeEventListener('keydown', on)
-  }, [at.n, at.k, go, home])
+  }, [at.k, go, home])
 
   const title = opened.title
   const loaded = isChange ? change : folder
-  const page = !!at.n || !!at.k
-  // The page takes its width, and whether the side panel still fits beside the work.
-  const pageWidth = at.k === 'list' ? widths.list : widths.note
-  const showSide = narrow ? sideOpen : windowWidth >= widths.side + WORK_LEAST + (page ? pageWidth : 0)
-  const fileNotes = (notes.data ?? []).filter((n) => n.on?.path === path)
+  const page = !!at.k
+  // The list takes its width, and whether the side panel still fits beside the work.
+  const showSide = narrow ? sideOpen : windowWidth >= widths.side + WORK_LEAST + (page ? widths.list : 0)
   // Going to another file, this one stays until it's in, for a moment, rather than blinking.
   const workId = loaded.error ? 'error' : path ? `f:${path}:${inChange}` : 'none'
   const work = loaded.error ? (
     <p className="fv-say">{loaded.error}</p>
   ) : path ? (
-    <FileView key={`${path}:${inChange}`} opened={opened} path={path} inChange={inChange} line={at.l} notes={fileNotes} />
+    <FileView key={`${path}:${inChange}`} opened={opened} path={path} inChange={inChange} line={at.l} />
   ) : (
     <p className="fv-say">{loaded.data ? 'There’s no file here to read.' : <Loader size="small" />}</p>
   )
@@ -232,39 +199,23 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
   )
   // What's open in this tab, for what to say to your agent: this, by its number.
   const forThis = useMemo(() => ({ id: opened.id, title }), [opened.id, title])
-  // A note, or the list, beside the work.
-  const pageView = at.n ? (
-    <section className="pane page" style={narrow ? undefined : { width: widths.note }} aria-label="The note">
-      {!narrow && <Grip width={widths.note} set={(w) => setWidth('note', w)} label="The width of the note" />}
-      <div className="pane-in">
-        <NotePage
-          key={pageKey}
-          id={at.n === 'new' ? null : at.n}
-          place={at.np ?? undefined}
-          opened={opened.id}
-          kept={(n) => go({ n }, true)}
-          close={() => go({ n: null })}
-        />
-      </div>
-    </section>
-  ) : at.k === 'list' ? (
+  // The list, beside the work.
+  const pageView = at.k === 'list' ? (
     <section className="pane page" style={narrow ? undefined : { width: widths.list }} aria-label={`${agentName}’s list`}>
       {!narrow && <Grip width={widths.list} set={(w) => setWidth('list', w)} label="The width of the list" />}
       <div className="pane-in">
-        <ListPane list={agentList.data} agent={agentName} onOpen={openItem} newNote={() => go({ n: 'new', np: 'agent', k: null })} close={() => go({ k: null })} />
+        <ListPane list={agentList.data} agent={agentName} onOpen={openItem} close={() => go({ k: null })} />
       </div>
     </section>
   ) : null
   return (
-    <ListContext.Provider value={agentList.data}>
     <OpenContext.Provider value={forThis}>
-    <NotesContext.Provider value={noting}>
       <div className={`reader${page ? ' with-panes' : ''}`}>
         <Top
           home={home}
           esc
           settings={example ? '#/example/settings/agent' : '#/settings'}
-          right={<AgentLine list={agentList.data} agent={agentName} open={at.k === 'list'} onClick={() => go({ k: at.k === 'list' ? null : 'list', n: null })} />}
+          right={<AgentLine list={agentList.data} agent={agentName} open={at.k === 'list'} onClick={() => go({ k: at.k === 'list' ? null : 'list' })} />}
         >
           {narrow && !page && (
             <button type="button" className="side-key" aria-expanded={sideOpen} onClick={() => setSideOpen((o) => !o)}>Files</button>
@@ -282,8 +233,6 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
                 <Side
                   width={narrow ? undefined : widths.side}
                   grip={narrow ? undefined : <Grip right width={widths.side} set={(w) => setWidth('side', w)} label="The width of the side" />}
-                  tab={at.t}
-                  setTab={(t) => go({ t }, true)}
                   files={sideFiles}
                   loading={!loaded.data && !loaded.error}
                   which={at.w}
@@ -295,7 +244,6 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
                     setSideOpen(false)
                     go({ f, l: undefined })
                   }}
-                  notes={(filter) => <NotesTab notes={notes.data ?? []} filter={filter} />}
                 />
               )}
               {held}
@@ -304,8 +252,6 @@ function Desk({ opened, example }: { opened: Opened; example?: boolean }) {
           {pageView}
         </div>
       </div>
-    </NotesContext.Provider>
     </OpenContext.Provider>
-    </ListContext.Provider>
   )
 }

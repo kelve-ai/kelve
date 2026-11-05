@@ -1,5 +1,5 @@
-// The side panel (boards X-1 to X-3): Files and Notes, with a filter for the
-// tab you're on. Files is a tree; for a change, it says how much changed, and
+// The side panel (boards X-1 to X-3): the files, with a filter. They're a
+// tree; for a change, it says how much changed, and
 // each file how many lines it added and took out. The tree scrolls on its
 // own, and is drawn as it scrolls, so 20,000 files feel the same as 20.
 
@@ -9,8 +9,6 @@ import { Choice } from '../ui/ui'
 
 /** A file as the side panel lists it; in a change, with the lines it added and took out. */
 export type SideFile = { path: string; skip?: string | null; gone?: boolean; added?: number; removed?: number }
-
-export type Tab = 'files' | 'notes'
 
 /** How long a file's row is rested on before the file is looked at, so passing over rows looks at none. */
 const LOOK_AFTER = 80
@@ -247,13 +245,11 @@ function Files({ files, loading, here, go, filter, kinds, changed }: {
   )
 }
 
-export function Side({ tab, setTab, files, loading, which, setWhich, change, here, look, go, notes, width, grip }: {
-  tab: Tab
+export function Side({ files, loading, which, setWhich, change, here, look, go, width, grip }: {
   /** Its width, when it's beside the work rather than over it. */
   width?: number
   /** Its right edge, to drag wider or narrower. */
   grip?: ReactNode
-  setTab: (t: Tab) => void
   /** The files the choice shows. */
   files: SideFile[]
   /** Whether they're still on their way. */
@@ -265,16 +261,9 @@ export function Side({ tab, setTab, files, loading, which, setWhich, change, her
   /** Looks at a file ahead of opening it, once you've rested on its row: so it opens at once. */
   look?: (path: string) => void
   go: (path: string) => void
-  /** The Notes tab, filtered, when there is one. */
-  notes?: (filter: string) => ReactNode
 }) {
-  const [filters, setFilters] = useState<Record<Tab, string>>({ files: '', notes: '' })
-  const filter = filters[tab]
-  const tabs: Array<[Tab, string]> = [
-    ['files', 'Files'],
-    ...(notes ? [['notes', 'Notes'] as [Tab, string]] : []),
-  ]
-  const placeholder = tab === 'files' ? (change && which === 'some' ? 'Filter changed files' : 'Filter files') : 'Filter notes'
+  const [filter, setFilter] = useState('')
+  const placeholder = change && which === 'some' ? 'Filter changed files' : 'Filter files'
   // A file's row rested on a moment: it's looked at, so it opens at once.
   const resting = useRef<{ path: string; timer: number } | null>(null)
   const rest = (e: React.MouseEvent) => {
@@ -291,38 +280,30 @@ export function Side({ tab, setTab, files, loading, which, setWhich, change, her
   return (
     <aside className="side" aria-label="What’s open" style={width ? { width } : undefined} onMouseOver={rest} onMouseLeave={leave}>
       {grip}
-      <div className="tabs" role="tablist">
-        {tabs.map(([t, label]) => (
-          <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'on' : undefined} onClick={() => setTab(t)}>{label}</button>
-        ))}
-      </div>
       <label className="filter">
         <svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><circle cx="5.5" cy="5.5" r="4" fill="none" stroke="currentColor" strokeWidth="1.3" /><path d="m8.6 8.6 3 3" stroke="currentColor" strokeWidth="1.3" /></svg>
         <span className="sr-only">{placeholder}</span>
-        <input type="search" value={filter} placeholder={placeholder} onChange={(e) => setFilters((f) => ({ ...f, [tab]: e.target.value }))} />
+        <input type="search" value={filter} placeholder={placeholder} onChange={(e) => setFilter(e.target.value)} />
       </label>
-      {tab === 'files' && (
-        <Files
-          files={files}
-          loading={loading}
-          here={here}
-          go={go}
-          filter={filter}
-          changed={change && which === 'some'}
-          kinds={change ? (
-            <div className="opts">
-              <Choice
-                small
-                label="Which files"
-                value={which}
-                onChange={setWhich}
-                options={[{ value: 'some', label: 'Changed' }, { value: 'all', label: 'Every file' }]}
-              />
-            </div>
-          ) : undefined}
-        />
-      )}
-      {tab === 'notes' && notes?.(filter)}
+      <Files
+        files={files}
+        loading={loading}
+        here={here}
+        go={go}
+        filter={filter}
+        changed={change && which === 'some'}
+        kinds={change ? (
+          <div className="opts">
+            <Choice
+              small
+              label="Which files"
+              value={which}
+              onChange={setWhich}
+              options={[{ value: 'some', label: 'Changed' }, { value: 'all', label: 'Every file' }]}
+            />
+          </div>
+        ) : undefined}
+      />
     </aside>
   )
 }

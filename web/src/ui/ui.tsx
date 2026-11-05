@@ -107,20 +107,3 @@ export function Switch({ on, onChange, label }: { on: boolean; onChange: (on: bo
 export function State({ state, label }: { state: 'ready' | 'read' | 'now' | 'dash' | 'queued' | 'done'; label?: string }) {
   return <span className={`lsq ${state === 'read' ? '' : state}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true} />
 }
-
-/** A hint, shown once, beside what it explains: its arrow points at it. */
-export function Hint({ children, side = 'left', style, onDone }: {
-  children: ReactNode
-  side?: 'left' | 'right' | 'up' | 'down'
-  style?: React.CSSProperties
-  onDone?: () => void
-}) {
-  return (
-    <div className={`tip ${side}`} role="note" style={style}>
-      <div>{children}</div>
-      <p className="shown">
-        Shown once.{onDone && <> <button type="button" onClick={onDone}>Got it</button></>}
-      </p>
-    </div>
-  )
-}

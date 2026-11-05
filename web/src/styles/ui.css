@@ -45,25 +45,6 @@
 .well.words .what::before { content: none; }
 .well .raised { flex: none; }
 
-/* A hint, shown once: dark, with an arrow at what it explains. */
-.tip {
-  position: absolute; z-index: 30; width: 300px; padding: 14px 16px;
-  border-radius: 12px; background: #1c1b19; color: #ece8e0;
-  font-size: 14px; line-height: 21px; box-shadow: 0 18px 40px rgba(28, 27, 25, 0.25);
-  /* It never stands in the way: clicks go through it, but for Got it. */
-  pointer-events: none;
-}
-.tip b { color: #fff; font-weight: 600; }
-.tip::before { content: ''; position: absolute; width: 12px; height: 12px; background: #1c1b19; transform: rotate(45deg); }
-.tip.left::before { left: -6px; top: 20px; }
-.tip.right::before { right: -6px; top: 20px; }
-.tip.up::before { left: 24px; top: -6px; }
-.tip.down::before { left: 24px; bottom: -6px; }
-.tip .shown { margin: 8px 0 0; font-size: 12.5px; color: #a39d93; }
-.tip .shown button { all: unset; pointer-events: auto; cursor: pointer; color: #ece8e0; text-decoration: underline; text-underline-offset: 3px; }
-:root[data-theme='dark'] .tip, :root[data-theme='dark'] .tip::before { background: #34312c; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .tip, :root:not([data-theme='light']) .tip::before { background: #34312c; } }
-
 /* The one mark: a small square. Red is new in
    this change, grey isn't; filled is read; black on a line, a first
    principle. */
@@ -106,7 +87,3 @@
 .lrow.pointed { background: var(--well); }
 .lrow.top { align-items: start; }
 .lrow.top > .lsq { margin-top: 6px; }
-.ladd { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: 14px minmax(0, 1fr); column-gap: 12px; align-items: center; min-height: 34px; padding: 6px 8px; border-radius: 8px; font-size: 14px; color: var(--quiet); }
-.ladd::before { content: '+'; justify-self: center; font-size: 16px; line-height: 1; color: var(--placeholder); }
-.ladd:hover { background: var(--well); color: var(--ink); }
-.ladd:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }

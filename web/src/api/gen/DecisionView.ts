@@ -27,7 +27,7 @@ group: string | null,
  */
 place: string, couldHave: Array<string>, restsOn: Array<string>, choice: DecisionChoice | null, status: DecisionStatus, 
 /**
- * The note for the agent, when the person chose to change it.
+ * How they want it, when they chose to change it.
  */
 note: string, 
 /**

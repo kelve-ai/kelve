@@ -3,9 +3,8 @@
 //! jobs and hand in their answers, and see what's kept for it. And what the
 //! reader asks about the agent, as the person.
 //!
-//! The agent never reads what kelve keeps beyond a job's material: not the
-//! person's notes, except those they leave for it, not their skills' evidence,
-//! not the hosted service's key.
+//! The agent never reads what kelve keeps beyond a job's material: not their
+//! skills' evidence, not the hosted service's key.
 
 use std::path::{Path, PathBuf};
 
@@ -131,8 +130,6 @@ pub async fn open(
         tracing::warn!(error = %e.message, "couldn't compare what was committed with a handover");
     }
     let id = open_at(&app, &path, change.as_deref()).await?;
-    // Notes it has just done lead to what it opened.
-    reader::link_done_notes(&app, Path::new(&path), id);
     let plain = |text: &str, most: usize| -> String {
         text.chars()
             .filter(|c| !c.is_control())
@@ -442,24 +439,6 @@ pub async fn kept(State(app): State<Shared>, _agent: Agent) -> ApiResult<Json<Ve
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Where {
-    /// The folder the agent is working in.
-    path: String,
-}
-
-/// The notes the person left for their agent, waiting, in the project the
-/// agent is working in: fenced, to be done only as part of their work.
-pub async fn notes(
-    State(app): State<Shared>,
-    _agent: Agent,
-    axum::extract::Query(at): axum::extract::Query<Where>,
-) -> ApiResult<Json<Vec<reader::ForAgent>>> {
-    Ok(Json(
-        reader::waiting_for_agent(&app, Path::new(&at.path)).await?,
-    ))
-}
-
-#[derive(Debug, Deserialize)]
 pub struct Told {
     /// The folder the agent is working in.
     path: String,
@@ -467,52 +446,16 @@ pub struct Told {
     agent: String,
 }
 
-/// How many notes wait for the agent that its hook hasn't told it of, as
-/// they are now: the hook's one line counts only those.
-pub async fn notes_new(
+/// How many decisions wait to be redone that the agent's hook hasn't told it
+/// of: the hook's one line counts only those.
+pub async fn redos_new(
     State(app): State<Shared>,
     _agent: Agent,
     Json(told): Json<Told>,
 ) -> ApiResult<Json<Value>> {
     let agent = told.agent.trim();
-    let new = reader::new_for_agent(&app, Path::new(&told.path), agent).await?;
+    let new = crate::list::redos_new(&app, Path::new(&told.path), agent).await?;
     Ok(Json(serde_json::json!({ "new": new })))
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Done {
-    path: String,
-    note: String,
-    did: String,
-    /// The note's version, as notes gave it.
-    #[serde(default)]
-    version: String,
-    #[serde(default)]
-    opened: Option<i64>,
-}
-
-/// The agent did what a note asked: it says so, in a line, for the words
-/// it read.
-pub async fn note_done(
-    State(app): State<Shared>,
-    _agent: Agent,
-    Json(done): Json<Done>,
-) -> ApiResult<Json<Value>> {
-    if done.version.trim().is_empty() {
-        return Err(ApiError::bad_request(
-            "Give the note's version, as notes gave it.",
-        ));
-    }
-    reader::note_done(
-        &app,
-        Path::new(&done.path),
-        &done.note,
-        &done.did,
-        done.opened,
-        reader::DoneFor::Read(&done.version),
-    )
-    .await?;
-    Ok(Json(serde_json::json!({ "done": true })))
 }
 
 /// What's kept for the agent, as the reader lists it.
@@ -545,6 +488,15 @@ pub async fn put_aside(
     Ok(Json(kept_list(&app).await?))
 }
 
+/// The command line put kelve's hook in the agent's settings, or took it
+/// out: a page that's open says so at once.
+pub async fn hook_changed(State(app): State<Shared>, _agent: Agent) -> Json<serde_json::Value> {
+    // Setup may have linked the person's skills into an agent's folder too.
+    crate::agent_loop::links::sync_setting(&app).await;
+    app.publish(kelve_core::views::ServerEvent::Settings);
+    Json(serde_json::json!({}))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -566,38 +518,4 @@ mod tests {
         assert!(files_in_folder(&["relative.md".into()]).is_err());
         std::fs::remove_dir_all(&root).ok();
     }
-}
-
-/// The command line put kelve's hook in the agent's settings, or took it
-/// out: a page that's open says so at once.
-pub async fn hook_changed(State(app): State<Shared>, _agent: Agent) -> Json<serde_json::Value> {
-    // Setup may have linked the person's skills into an agent's folder too.
-    crate::agent_loop::links::sync_setting(&app).await;
-    app.publish(kelve_core::views::ServerEvent::Settings);
-    Json(serde_json::json!({}))
-}
-
-/// What kelve marks for the person, for their agent to read before it
-/// changes it.
-pub async fn marks(
-    State(app): State<Shared>,
-    _agent: Agent,
-) -> ApiResult<Json<kelve_core::views::MarksView>> {
-    Ok(Json(crate::api::settings::marks_view(&app)))
-}
-
-#[derive(Debug, Deserialize)]
-pub struct SetMarks {
-    spec: kelve_core::spec::Spec,
-}
-
-/// The person's agent writes what kelve marks for them, as they asked.
-pub async fn set_marks(
-    State(app): State<Shared>,
-    _agent: Agent,
-    Json(set): Json<SetMarks>,
-) -> ApiResult<Json<kelve_core::views::MarksView>> {
-    crate::spec::save(&app, crate::spec::checked(set.spec)?, "agent")?;
-    app.publish(kelve_core::views::ServerEvent::Spec);
-    Ok(Json(crate::api::settings::marks_view(&app)))
 }

@@ -1,63 +1,16 @@
 //! Setting kelve up, as the installer does once kelve is in place: connecting
-//! the person's agent, adding kelve's hook so it picks up their notes and
-//! skills, and how much kelve marks for them. Run by their agent, which they
-//! asked to install kelve, it does all three, and leaves the agent the one word
-//! to choose: how well the person knows their work. Run by the person in a
-//! terminal, it asks.
+//! the person's agent, and adding kelve's hook so it gets their skills as it
+//! works. Run by their agent, which they asked to install kelve, it does both.
+//! Run by the person in a terminal, it asks.
 
 use std::io::{BufRead, IsTerminal, Write};
 use std::path::Path;
 use std::process::Command;
-use std::time::Duration;
 
 use anyhow::{Context, bail};
 use kelve_core::hook::Agent;
 
-use crate::client::Kelve;
 use crate::style;
-
-/// The levels, as the person and their agent name them, and what each marks.
-const LEVELS: [(&str, &str); 4] = [
-    ("new", "every idea, the basics too"),
-    ("learning", "every idea but the basics"),
-    ("working", "advanced and specialist ideas"),
-    ("deep", "specialist ideas only"),
-];
-
-/// What a level marks, in words, or why the word isn't one.
-fn level(word: &str) -> anyhow::Result<(&'static str, &'static str)> {
-    let word = word.trim().to_lowercase();
-    LEVELS
-        .into_iter()
-        .find(|(w, _)| *w == word)
-        .with_context(|| format!("“{word}” isn't a level. Say new, learning, working or deep."))
-}
-
-/// `kelve marks set <level>`: how much kelve marks for the person, keeping
-/// whatever else they said (areas, always and never, their own words).
-pub async fn marks_set(word: &str) -> anyhow::Result<()> {
-    let (word, marks) = level(word)?;
-    crate::open::started().await?;
-    let kelve = Kelve::new(Duration::from_secs(10))?;
-    let now = kelve.send(kelve.get("/api/agent/marks")).await?;
-    let mut spec = now["spec"].clone();
-    if !spec.is_object() {
-        spec = serde_json::json!({});
-    }
-    spec["mark"] = serde_json::json!(word);
-    kelve
-        .send(
-            kelve
-                .post("/api/agent/marks")
-                .json(&serde_json::json!({ "spec": spec })),
-        )
-        .await?;
-    style::head("marks");
-    style::line(&format!(
-        "kelve marks {marks}. Change it in kelve’s settings, under What kelve marks."
-    ));
-    Ok(())
-}
 
 /// An agent kelve can connect itself to, and how it's named to people.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -361,13 +314,12 @@ fn connect(c: Connectable, me: &Path, home: &Path) -> Result<String, String> {
     }
 }
 
-/// `kelve setup`: connects the person's agent, adds kelve's hook to it, and
-/// sets how much kelve marks: asking in a terminal, or, run by their agent,
-/// leaving it the one word to choose.
-pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()> {
+/// `kelve setup`: connects the person's agent, and adds kelve's hook to it:
+/// asking in a terminal, or, run by their agent, which is their yes.
+pub async fn setup(agent: Option<&str>) -> anyhow::Result<()> {
     let person = std::io::stdin().is_terminal() && std::io::stdout().is_terminal();
     let var = |n: &str| std::env::var(n).ok();
-    let (home, claude) = crate::notes::homes()?;
+    let (home, claude) = crate::hook::homes()?;
     let me = std::env::current_exe().context("kelve can't tell where it's installed.")?;
     style::head("setup");
 
@@ -427,7 +379,7 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
     let hook = !person
         || ask(
             &format!(
-                "Let {} pick up your notes, and your skills as it works? It adds one hook to its settings.",
+                "Give {} your skills as it works? It adds one hook to its settings.",
                 chosen.shown
             ),
             &["Yes", "No"],
@@ -436,9 +388,9 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
     if hook {
         match kelve_server::hooks::set(chosen.agent, true, &home, &claude) {
             Ok(_) => {
-                crate::notes::hook_changed().await;
+                crate::hook::hook_changed().await;
                 style::line(&format!(
-                    "✓ Notes and skills: one hook in {}’s settings. `kelve hook remove {}` takes it out.",
+                    "✓ Skills: one hook in {}’s settings. `kelve hook remove {}` takes it out.",
                     chosen.shown,
                     chosen.agent.name()
                 ));
@@ -457,32 +409,8 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
         &claude,
     )?;
     // kelve's settings say so too.
-    crate::notes::hook_changed().await;
+    crate::hook::hook_changed().await;
 
-    // How much kelve marks: the word given, the person's answer, or the
-    // agent's to choose.
-    let word = match word {
-        Some(w) => Some(level(w)?.0),
-        None if person => {
-            let words: Vec<&str> = ["New", "Learning", "Working", "Deep"].to_vec();
-            Some(
-                LEVELS[ask(
-                    "How well do you know your work? kelve marks what’s new to you.",
-                    &words,
-                    1,
-                )?]
-                .0,
-            )
-        }
-        None => None,
-    };
-    match word {
-        Some(w) => marks_set(w).await?,
-        None => style::line(&format!(
-            "Last, for {}: how well does this person know their work? From what you know of them, run `kelve marks set new`, `learning`, `working` or `deep` (new marks every idea; deep, specialist ideas only), then tell them what you chose.",
-            chosen.shown
-        )),
-    }
     let then = if fresh {
         format!(
             "{} has kelve’s tools from its next session; then ask it:",
@@ -500,17 +428,6 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn a_level_is_one_of_four_words() {
-        assert_eq!(level("Working").unwrap().0, "working");
-        assert!(
-            level("expert")
-                .unwrap_err()
-                .to_string()
-                .contains("new, learning, working or deep")
-        );
-    }
 
     #[test]
     fn the_agent_running_this_is_known_by_what_it_sets() {

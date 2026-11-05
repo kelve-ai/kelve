@@ -16,7 +16,7 @@
 // SPEED_PORT moves kelve (4670), with the hosted service on the port above.
 
 import { type ChildProcess, spawn } from 'node:child_process'
-import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -119,14 +119,12 @@ try {
   start(graphBin, ['--port', String(port + 1)], join(home, 'graph.log'))
   await up(`${graph}/`, 'The stand-in hosted service')
   mkdirSync(join(home, 'data'), { recursive: true })
-  writeFileSync(join(home, 'pick.sh'), '#!/bin/sh\n', { mode: 0o755 })
   start(kelveBin, ['serve'], log, {
     KELVE_URL: base,
     KELVE_BIND: `127.0.0.1:${port}`,
     KELVE_DATA: join(home, 'data'),
     KELVE_SECRET_FILE: join(home, 'secret'),
     KELVE_GRAPH_URL: graph,
-    KELVE_PICKER: join(home, 'pick.sh'),
     KELVE_CLAUDE_DIR: join(home, 'claude'),
     KELVE_AGENTS_HOME: join(home, 'home'),
     KELVE_UPDATES: 'off',
@@ -167,8 +165,7 @@ try {
   const side: Record<string, string> = {
     'every file': `/api/opened/${id}/folder?list=true`,
     "the agent's list": '/api/list',
-    'what kelve marks': '/api/marks',
-    notes: `/api/opened/${id}/notes`,
+    'the ideas you know': '/api/known',
     settings: '/api/settings',
   }
   for (const [what, path] of Object.entries(side)) {

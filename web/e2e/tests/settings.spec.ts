@@ -1,11 +1,10 @@
-// Settings (board Settings): reading, with what kelve marks for you; your
-// own notes, under your agent; and privacy, with anonymous counts.
+// Settings (board Settings): reading, with the ideas you know; your agent's
+// hook; and privacy, with anonymous counts.
 
-import { mkdtempSync, realpathSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
-import { me, picks, signIn } from '../world'
+import { open, repo, signIn, world } from '../world'
 
 test('a browser that isn’t signed in is told how to open kelve', async ({ page }) => {
   await page.goto('/')
@@ -25,42 +24,22 @@ test('reading: text size and code colours change how code is drawn', async ({ pa
   await expect(page.locator('html')).toHaveAttribute('data-highlighting', 'full')
 })
 
-test('what kelve marks: set in settings, kept, and written by your agent', async ({ page }) => {
+test('reading: the ideas you know, with nothing to fill in', async ({ page }) => {
   await signIn(page)
   await page.goto('/#/settings/reading')
   const reading = page.getByRole('region', { name: 'Reading' })
-  await reading.getByRole('button', { name: 'Edit marks.md' }).click()
-  await expect(reading).toContainText('marks.md')
-  // Changed here, each choice kept at once.
-  await reading.getByRole('radiogroup', { name: 'Mark as if I’m' }).getByRole('radio', { name: 'Working' }).click()
-  await reading.getByRole('textbox', { name: 'Add an area' }).fill('Rust')
-  await reading.getByRole('textbox', { name: 'Add an area' }).press('Enter')
-  await reading.getByRole('radiogroup', { name: 'rust', exact: true }).getByRole('radio', { name: 'New' }).click()
-  await page.reload()
-  await reading.getByRole('button', { name: 'Edit marks.md' }).click()
-  await expect(reading.getByRole('radiogroup', { name: 'Mark as if I’m' }).getByRole('radio', { name: 'Working' })).toHaveAttribute('aria-checked', 'true')
-  await expect(reading.getByRole('radiogroup', { name: 'rust', exact: true }).getByRole('radio', { name: 'New' })).toHaveAttribute('aria-checked', 'true')
-  await expect(reading).toContainText('Written by you')
-  // Written by the agent, as set_marks does: the page shows it, and who wrote it.
-  await me().setMarks({ mark: 'learning', areas: [], always: [], never: [], words: '' })
-  await expect(reading).toContainText('Written by Claude Code')
-  await expect(reading.getByRole('radiogroup', { name: 'Mark as if I’m' }).getByRole('radio', { name: 'Learning' })).toHaveAttribute('aria-checked', 'true')
-  await expect(reading.getByRole('radiogroup', { name: 'rust', exact: true })).toHaveCount(0)
+  await expect(reading).toContainText('Ideas you know')
+  await expect(reading.getByRole('button', { name: 'Edit marks.md' })).toHaveCount(0)
 })
 
-test('your own notes go to a folder you choose in the picker, and back to kelve’s', async ({ page }) => {
-  await me().hello()
-  await signIn(page)
-  await page.goto('/#/settings/agent')
-  const agent = page.getByRole('region', { name: 'Your agent' })
-  const folder = realpathSync(mkdtempSync(join(tmpdir(), 'kelve-e2e-notes-')))
-  picks(folder)
-  await agent.getByRole('button', { name: 'Choose a folder' }).click()
-  await expect(agent).toContainText(folder.split('/').pop()!)
-  await page.reload()
-  await expect(agent).toContainText(folder.split('/').pop()!)
-  await agent.getByRole('button', { name: 'Use kelve’s own folder' }).click()
-  await expect(agent).toContainText('kelve’s own folder')
+test('the hook goes into Claude Code’s settings only when you turn it on', async ({ page }) => {
+  await open(page, { what: 'folder', path: repo() })
+  const file = join(world().claudeDir, 'settings.json')
+  const set = (on: boolean) => page.evaluate((on) => fetch('/api/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ hook: on }) }).then((r) => r.json()), on)
+  expect((await set(true)).hook).toBe(true)
+  expect(readFileSync(file, 'utf8')).toContain('kelve moment')
+  expect((await set(false)).hook).toBe(false)
+  expect(readFileSync(file, 'utf8')).not.toContain('kelve moment')
 })
 
 test('privacy says who gets what, and anonymous counts are shared only when you say', async ({ page }) => {

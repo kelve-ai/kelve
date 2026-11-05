@@ -1,8 +1,8 @@
 //! `kelve moment`: what kelve's hook runs, on each agent's own events
 //! (`core::hook`). The installed command names the agent and the event: `kelve
 //! moment --agent codex --on PostToolUse`. As the person sends a message: one
-//! line when notes wait for the agent that it hasn't been told of as they are
-//! now, and one, once for each version, when a newer kelve is out; and what
+//! line when decisions wait to be redone that it hasn't been told of, and one,
+//! once for each version, when a newer kelve is out; and what
 //! they sent, short and with secrets stripped, kept to catch what they
 //! corrected (`server::moment`); and the person's skills, as their session
 //! starts. As the agent reads or edits a file: the skill for that kind of
@@ -72,17 +72,17 @@ pub async fn run(
     let Ok(kelve) = Kelve::new(wait) else {
         return Ok(());
     };
-    // As the person sends a message: only notes new, or changed, since the
-    // agent was last told of them, so the line isn't said every time.
+    // As the person sends a message: only what's to redo that the agent
+    // hasn't been told of, so the line isn't said every time.
     let text = if m.what == "prompt" {
-        // All at once, so the hook still answers within its wait: the notes,
-        // a newer kelve, and the skills the session starts with.
-        let (notes, told, asked) = tokio::join!(
-            crate::notes::new_here(&kelve, &m.agent),
+        // All at once, so the hook still answers within its wait: what's to
+        // redo, a newer kelve, and the skills the session starts with.
+        let (redos, told, asked) = tokio::join!(
+            crate::hook::new_here(&kelve, &m.agent),
             kelve.send(kelve.post("/api/agent/update/tell")),
             kelve.send(kelve.post("/api/agent/moment").json(&m))
         );
-        let notes = notes.ok().and_then(crate::notes::waiting_line);
+        let redos = redos.ok().and_then(crate::hook::redo_line);
         let update = told
             .ok()
             .and_then(|t| t["line"].as_str().map(str::to_string));
@@ -90,7 +90,7 @@ pub async fn run(
             .ok()
             .and_then(|t| t["text"].as_str().map(str::to_string))
             .filter(|t| !t.is_empty());
-        [notes, update, asked]
+        [redos, update, asked]
             .into_iter()
             .flatten()
             .collect::<Vec<_>>()

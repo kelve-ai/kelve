@@ -3,4 +3,4 @@
 /**
  * Something changed: fetch it again.
  */
-export type ServerEvent = { "type": "settings" } | { "type": "opened" } | { "type": "notes" } | { "type": "asks" } | { "type": "agent" } | { "type": "page", build: string, } | { "type": "spec" } | { "type": "skills" } | { "type": "debriefs" };
+export type ServerEvent = { "type": "settings" } | { "type": "opened" } | { "type": "asks" } | { "type": "agent" } | { "type": "page", build: string, } | { "type": "spec" } | { "type": "skills" } | { "type": "debriefs" };

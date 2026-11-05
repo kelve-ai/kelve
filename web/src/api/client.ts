@@ -100,7 +100,7 @@ export const del = <T>(path: string) => call<T>(path, { method: 'DELETE' })
 
 /** The screens the server says changed: each fetches again. */
 export type Screen = ServerEvent['type']
-const SCREENS: Screen[] = ['settings', 'opened', 'notes', 'asks', 'agent']
+const SCREENS: Screen[] = ['settings', 'opened', 'asks', 'agent']
 
 type Listener = (event?: ServerEvent) => void
 const listeners = new Map<Screen, Set<Listener>>()

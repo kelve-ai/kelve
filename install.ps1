@@ -5,7 +5,7 @@
 # It downloads the build from GitHub Releases, checks it against the
 # release's checksums, puts kelve.exe in %LOCALAPPDATA%\kelve\bin, or in
 # KELVE_INSTALL_DIR, and adds that folder to your PATH. Then it sets kelve
-# up: connects your agent, adds its hook, and how much kelve marks for you.
+# up: connects your agent, and adds its hook.
 # Downloaded this way, rather than in a browser, kelve.exe isn't marked as
 # from the internet, so SmartScreen doesn't stop it.
 #
@@ -64,6 +64,6 @@
         $env:Path = "$env:Path;$dir"
         Write-Host "It's on your PATH now."
     }
-    # Set it up: connect the agent, add its hook, and how much kelve marks.
+    # Set it up: connect the agent, and add its hook.
     & (Join-Path $dir 'kelve.exe') setup
 }

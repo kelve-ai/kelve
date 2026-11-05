@@ -1,5 +1,4 @@
-/* Rows of settings, as what kelve marks for you uses them; the states
-   gallery; and what kelve marks for you, written in place. */
+/* Rows of settings; and the states gallery. */
 
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 16px 0 0; }
 
@@ -32,17 +31,3 @@
 .shot { position: relative; overflow: hidden; border-radius: 8px; box-shadow: 0 0 0 1px var(--rule); }
 .shot iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; }
 .strings { columns: 3 240px; margin: 8px 0 0; padding: 0 0 0 18px; font-size: 13px; line-height: 20px; color: var(--soft); }
-
-/* What kelve marks for you (boards U-1, U-2): in settings, under Reading. */
-.marks-edit .opt b { text-transform: none; }
-.marks-area b { font-weight: 500; }
-.marks-area .row { display: inline-flex; align-items: center; gap: 14px; }
-.marks-add { display: grid; grid-template-columns: 14px minmax(0, 1fr); column-gap: 12px; align-items: center; min-height: 36px; padding: 0 8px; border-radius: 8px; }
-.marks-add > span { justify-self: center; font-size: 16px; line-height: 1; color: var(--mute); }
-.marks-add textarea { all: unset; min-width: 0; font-size: 14px; color: var(--ink); resize: none; field-sizing: content; white-space: nowrap; overflow: hidden; }
-.marks-add textarea::placeholder { color: var(--quiet); }
-.marks-add:focus-within { background: var(--well); }
-/* Written in place, as a list's row: no box; pointed at or typed in, softly filled. */
-.marks-in { display: block; width: calc(100% + 16px); box-sizing: border-box; margin: 4px -8px 0; padding: 6px 8px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 14px; line-height: 21px; color: var(--ink); resize: none; outline: none; field-sizing: content; }
-.marks-in::placeholder { color: var(--quiet); }
-.marks-in:hover, .marks-in:focus { background: var(--well); }

@@ -2,9 +2,9 @@
 //! how it works and what it decided, read from the markdown it wrote and
 //! the change it handed over, with the person's call on each decision, the
 //! research and explanations they asked for, and every file. And what they
-//! do there: agree, change it (a note for their agent, left as they send
+//! do there: agree, change it (a job for their agent, kept as they send
 //! it), look into it (research), explain an idea, say they know it
-//! (`marks.md`), agree with the rest, and send it, which leaves the notes
+//! (`marks.md`), agree with the rest, and send it, which keeps the jobs
 //! and asks their agent to learn from it. Nothing here leaves.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -15,8 +15,8 @@ use kelve_core::skills::work::{WorkKind, kind_of};
 use kelve_core::views::{
     AnswerState, DebriefChangeView, DebriefDiffView, DebriefFile, DebriefFolder, DebriefLine,
     DebriefLineKind, DebriefState, DebriefView, DecisionChoice, DecisionStatus, DecisionView,
-    DiffNote, ExplanationView, IdeaView, LinesIn, NoteIn, Place, ResearchView, SendKind, SendLine,
-    ServerEvent, SkillAddition, SkillTarget, UsedPart, WritingStep,
+    DiffNote, ExplanationView, IdeaView, ResearchView, SendKind, SendLine, ServerEvent,
+    SkillAddition, SkillTarget, UsedPart, WritingStep,
 };
 use kelve_store::debriefs::{self as store, Decision as Row, Explanation, Research};
 use kelve_store::handovers::{self, HandedFile, Handover};
@@ -993,14 +993,14 @@ pub async fn know(app: &Shared, idea: &str) -> ApiResult<()> {
         .any(|n| store::idea_key(n) == store::idea_key(idea))
     {
         spec.never.push(idea.to_string());
-        crate::spec::save(app, crate::spec::checked(spec)?, "you")?;
+        crate::spec::save(app, crate::spec::tidied(spec))?;
     }
     app.publish(ServerEvent::Spec);
     app.publish(ServerEvent::Debriefs);
     Ok(())
 }
 
-/// Sends the debrief to the person's agent: a note for each decision they
+/// Sends the debrief to the person's agent: a job for each decision they
 /// want another way, and a job to learn from what they kept for every
 /// time. Research asked keeps running.
 pub async fn send(app: &Shared, id: i64) -> ApiResult<DebriefView> {
@@ -1012,7 +1012,7 @@ pub async fn send(app: &Shared, id: i64) -> ApiResult<DebriefView> {
         .filter(|d| d.choice == Some(DecisionChoice::Change))
         .collect();
     if !redo.is_empty() {
-        leave_notes(app, &l, &v.title, &redo).await?;
+        ask_redos(app, id, &l, &v.title, &redo).await?;
     }
     let mut conn = app.db.acquire().await?;
     if !store::sent(&mut conn, id).await? {
@@ -1030,15 +1030,15 @@ pub async fn send(app: &Shared, id: i64) -> ApiResult<DebriefView> {
     .await
     .map_err(|e| ApiError::internal(format!("couldn't ask the agent to learn: {e:?}")))?;
     app.publish(ServerEvent::Debriefs);
-    app.publish(ServerEvent::Notes);
     app.publish(ServerEvent::Asks);
     view(app, id).await
 }
 
-/// A note for the person's agent for each decision they want another way,
-/// on its lines, waiting for it as their notes do.
-async fn leave_notes(
+/// A job for the person's agent for each decision they want another way, on
+/// its lines (`list`).
+async fn ask_redos(
     app: &Shared,
+    id: i64,
     l: &Loaded,
     title: &str,
     redo: &[&DecisionView],
@@ -1052,7 +1052,7 @@ async fn leave_notes(
         None => {
             let Some(h) = &l.handover else {
                 return Err(ApiError::conflict(
-                    "kelve no longer has the work this debrief is about, so it can't leave your agent a note. Tell your agent what to change instead.",
+                    "kelve no longer has the work this debrief is about, so it can't ask your agent to redo it. Tell your agent what to change instead.",
                 ));
             };
             let mut conn = app.db.acquire().await?;
@@ -1064,38 +1064,25 @@ async fn leave_notes(
         }
     };
     for d in redo {
-        let lines = parsed_decision(l, d.n).and_then(|p| p.lines.first());
-        let text = format!(
-            "# Redo decision {} of “{title}”\n\nYou chose: {}\n\nDo it this way instead: {}\n",
-            d.n,
-            d.title,
-            if d.note.trim().is_empty() {
-                "the person wants it another way. Ask them how."
-            } else {
-                d.note.trim()
-            }
-        );
-        let on = lines.and_then(|f| {
-            let r = f.ranges.first()?;
-            Some(LinesIn {
-                path: f.path.clone(),
-                start: r.from,
-                end: r.to,
-            })
-        });
-        let note = |on| NoteIn {
-            id: None,
-            place: Place::Agent,
-            text: text.clone(),
-            on,
-            ideas: None,
-        };
-        // On its lines while they're there; else on the work as a whole.
-        match on {
-            Some(on) => crate::reader::keep_note(app, &open, &note(Some(on)))
-                .or_else(|_| crate::reader::keep_note(app, &open, &note(None)))?,
-            None => crate::reader::keep_note(app, &open, &note(None))?,
-        };
+        let on = parsed_decision(l, d.n)
+            .and_then(|p| p.lines.first())
+            .and_then(|f| {
+                let r = f.ranges.first()?;
+                Some((f.path.as_str(), r.from, r.to))
+            });
+        crate::list::ask_redo(
+            app,
+            &open,
+            &crate::list::Redo {
+                debrief: id,
+                n: d.n,
+                decision: &d.title,
+                title,
+                how: &d.note,
+                on,
+            },
+        )
+        .await?;
     }
     Ok(())
 }

@@ -1,6 +1,7 @@
-//! What kelve marks for the person: a short note, `marks.md` in their own notes
-//! folder, written by hand, in settings or by their agent. A few lines kelve
-//! reads itself, and their own words, which go only to their agent:
+//! What the person knows already: a short file, `marks.md`, in kelve's own
+//! folder, that kelve keeps for itself and "I know this" in a debrief adds to.
+//! Nothing asks them to fill it in. A few lines, and their own words if they
+//! wrote any by hand, which go only to their agent:
 //!
 //! ```text
 //! ---
@@ -16,47 +17,61 @@
 //! I came to backend from frontend work. Mark anything about how money moves.
 //! ```
 //!
-//! kelve gives it to the person's agent as it explains an idea, so it knows
-//! what's new to them; and "I know this" in a debrief adds to it.
+//! kelve gives it to the person's agent as it explains an idea or looks into a
+//! decision, so it knows what's new to them. Only `never` decides anything in
+//! kelve itself: those ideas aren't marked new to them in a debrief. The rest
+//! goes to the agent as it's written.
 
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
-use ts_rs::TS;
 
-use crate::ideas::norm;
-use crate::lens::{self, Depth, Lens, Level};
-
-/// An area and how well the person knows it. An area is a file's when it's
-/// the file's language, as kelve names it (`core::code::language`).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+/// How well the person knows an area, as their agent reads it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
+pub enum Level {
+    /// Every idea is new to them, the basics too.
+    New,
+    /// All but the basics.
+    Learning,
+    /// Advanced and specialist ideas: what kelve takes until it's told more.
+    #[default]
+    Working,
+    /// Specialist ideas only.
+    Deep,
+}
+
+/// An area's name as kelve compares it: lower case, single spaces.
+fn area(name: &str) -> String {
+    name.split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
+}
+
+/// An area and how well the person knows it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AreaLevel {
     pub area: String,
     pub level: Level,
 }
 
-/// What kelve marks for the person.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+/// What the person knows already.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-#[ts(export, rename = "MarksSpec")]
 pub struct Spec {
-    /// How much to mark, anywhere not named in `areas`.
+    /// How well they know their work, anywhere not named in `areas`.
     pub mark: Level,
     /// How well they know each area, as they listed them.
     pub areas: Vec<AreaLevel>,
-    /// Ideas always looked for and marked, by name.
+    /// Ideas to always treat as new to them, by name.
     pub always: Vec<String>,
-    /// Ideas never marked, by name.
+    /// Ideas they know, by name: never marked new to them.
     pub never: Vec<String>,
-    /// Their own words on what they want marked: to their agent, as they
-    /// wrote them.
+    /// Their own words on it: to their agent, as they wrote them.
     pub words: String,
-    /// Who last wrote it: "you", or "agent", their agent.
-    #[ts(optional)]
+    /// Who last wrote it.
     pub by: Option<String>,
     /// When, as a date: 2026-10-22.
-    #[ts(optional)]
     pub at: Option<String>,
 }
 
@@ -123,7 +138,7 @@ pub fn parse(text: &str) -> Spec {
             // read (`rust: new, plainly`), is left out.
             let lv = value.split_once(',').map_or(value, |(lv, _)| lv);
             if let Some(l) = level(lv) {
-                let area = lens::area(key);
+                let area = area(key);
                 if !area.is_empty() {
                     spec.areas.push(AreaLevel { area, level: l });
                 }
@@ -152,11 +167,7 @@ pub fn write(spec: &Spec) -> String {
     if !spec.areas.is_empty() {
         out.push_str("areas:\n");
         for a in &spec.areas {
-            out.push_str(&format!(
-                "  {}: {}\n",
-                lens::area(&a.area),
-                level_word(a.level)
-            ));
+            out.push_str(&format!("  {}: {}\n", area(&a.area), level_word(a.level)));
         }
     }
     if !spec.always.is_empty() {
@@ -177,43 +188,6 @@ pub fn write(spec: &Spec) -> String {
         out.push('\n');
     }
     out
-}
-
-/// A print of the person's own words: what a reading that looked for them
-/// keeps, never the words.
-pub fn words_print(words: &str) -> String {
-    Sha256::digest(words.trim().as_bytes())
-        .iter()
-        .take(8)
-        .map(|b| format!("{b:02x}"))
-        .collect()
-}
-
-impl Spec {
-    /// What a reading for the person looks for.
-    pub fn lens(&self) -> Lens {
-        Lens {
-            level: self.mark,
-            areas: self
-                .areas
-                .iter()
-                .map(|a| (lens::area(&a.area), a.level))
-                .collect(),
-            always: self.always.iter().cloned().collect(),
-            words: if self.words.trim().is_empty() {
-                Default::default()
-            } else {
-                std::iter::once(words_print(&self.words)).collect()
-            },
-        }
-    }
-
-    /// Whether an idea of this area and depth, by this name, is marked for
-    /// the person: what they asked for, less what they never want.
-    pub fn shows(&self, area: &str, depth: Depth, name: &str) -> bool {
-        let n = norm(name);
-        !self.never.iter().any(|x| norm(x) == n) && self.lens().wants(area, depth, name)
-    }
 }
 
 #[cfg(test)]
@@ -253,27 +227,13 @@ mod tests {
         let plain = parse("Mark anything about money.");
         assert_eq!(
             (plain.mark, plain.words.as_str()),
-            (Level::Learning, "Mark anything about money.")
+            (Level::Working, "Mark anything about money.")
         );
     }
 
     #[test]
-    fn the_spec_says_what_is_looked_for_and_what_is_shown() {
-        let spec = parse(HAND);
-        let lens = spec.lens();
-        assert_eq!(lens.level_of("Rust"), Level::Deep);
-        assert_eq!(lens.level_of("payments"), Level::Working);
-        assert_eq!(lens.words.len(), 1, "the words go in as a print");
-        assert!(!lens.words.iter().any(|w| w.contains("frontend")));
-        assert!(spec.shows("distributed systems", Depth::Basic, "Consensus"));
-        assert!(!spec.shows("rust", Depth::Advanced, "Lifetimes"));
-        assert!(
-            spec.shows("payments", Depth::Common, "Idempotency keys"),
-            "always"
-        );
-        assert!(
-            !spec.shows("rust", Depth::Specialist, "Async functions"),
-            "never, whatever else"
-        );
+    fn with_nothing_said_the_person_is_taken_to_be_working() {
+        assert_eq!(Spec::default().mark, Level::Working);
+        assert!(write(&Spec::default()).contains("mark: working\n"));
     }
 }

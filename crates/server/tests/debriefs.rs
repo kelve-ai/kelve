@@ -1,10 +1,11 @@
 //! Home and the debrief, as the person uses them: the agent hands its work
 //! over and writes the debrief; home asks the person to read it; they agree,
 //! ask for a decision another way, have their agent look into one, ask for
-//! an idea to be explained or say they know it, and send it, which leaves
-//! their agent a note and asks it to learn. A small change can be debriefed
-//! anyway, and a debrief that failed asked for again. The change view
-//! shows each file whole, each decision beside its lines.
+//! an idea to be explained or say they know it, and send it, which keeps
+//! their agent a job to redo each decision changed and asks it to learn. A
+//! small change can be debriefed anyway, and a debrief that failed asked for
+//! again. The change view shows each file whole, each decision beside its
+//! lines.
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
@@ -364,7 +365,7 @@ async fn the_person_answers_each_decision_and_sends_it() {
     .0;
     assert!(!v.decisions[1].remember);
 
-    // Change it: a note for their agent, left as they send it.
+    // Change it: a job for their agent, kept as they send it.
     decide(
         &app,
         id,
@@ -514,11 +515,81 @@ async fn the_person_answers_each_decision_and_sends_it() {
     let keys: Vec<String> = jobs(&app).await.into_iter().map(|(_, k)| k).collect();
     assert!(keys.contains(&format!("v2.learn:debrief:{id}")), "{keys:?}");
 
-    // The note waits for the agent, on the decision's lines.
-    let notes = kelve_server::reader::waiting_for_agent(&app, &dir)
+    // The decision waits for the agent as a job of its own, on its lines:
+    // on the list, and only for an agent in that project.
+    let list = kelve_server::list::view(&app).await.unwrap();
+    let row = &list.next[0];
+    assert_eq!(row.kind, "redo");
+    assert_eq!(row.title, "Stop after 5 tries");
+    assert_eq!(row.sub.as_deref(), Some("On src/retry.rs 1–5"));
+    let in_folder = |path: &std::path::Path| kelve_server::agent::Caller {
+        agent: "claude-code".into(),
+        path: Some(path.display().to_string()),
+        ..Default::default()
+    };
+    // Its hook says so once, to each agent, and only in that project.
+    let elsewhere = std::env::temp_dir().join("kelve-another-project");
+    assert_eq!(
+        kelve_server::list::redos_new(&app, &elsewhere, "claude-code")
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(
+        kelve_server::list::redos_new(&app, &dir.join("src"), "claude-code")
+            .await
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        kelve_server::list::redos_new(&app, &dir, "claude-code")
+            .await
+            .unwrap(),
+        0
+    );
+    let others = kelve_server::agent::next(&app, &in_folder(&elsewhere))
         .await
+        .unwrap()
+        .map(|j| j.kind);
+    assert_eq!(others, None);
+    let job = kelve_server::agent::next(&app, &in_folder(&dir.join("src")))
+        .await
+        .unwrap()
         .unwrap();
-    assert_eq!(notes.len(), 1);
+    assert_eq!(job.kind, "redo");
+    assert_eq!(job.version, "redo@1");
+    let request = job.material["request"].as_str().unwrap();
+    assert!(request.starts_with("<request"), "{request}");
+    assert!(request.contains("Add a --retries flag"), "{request}");
+    assert_eq!(job.material["file"], "src/retry.rs");
+    assert_eq!(job.material["lines"], "1-5");
+    assert!(job.material["linesThen"].as_str().unwrap().contains("fn "));
+    // An answer in the wrong shape comes back; one in shape is ready for them.
+    assert!(matches!(
+        kelve_server::agent::hand_in(
+            &app,
+            &in_folder(&dir),
+            job.job,
+            serde_json::json!({ "did": "" })
+        )
+        .await
+        .unwrap(),
+        kelve_server::agent::HandedIn::No { .. }
+    ));
+    assert_eq!(
+        kelve_server::agent::hand_in(
+            &app,
+            &in_folder(&dir),
+            job.job,
+            serde_json::json!({ "did": "Retried 429 too." })
+        )
+        .await
+        .unwrap(),
+        kelve_server::agent::HandedIn::Yes
+    );
+    let list = kelve_server::list::view(&app).await.unwrap();
+    assert!(list.next.is_empty() && list.now.is_empty(), "{list:?}");
+    assert_eq!(list.ready[0].sub.as_deref(), Some("Retried 429 too."));
     // Sent, it can't change.
     let again = api::decide(
         State(app.clone()),

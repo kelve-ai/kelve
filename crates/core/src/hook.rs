@@ -1,6 +1,6 @@
 //! The hook that tells the person's coding agent what kelve has for it, at the
-//! moment it helps: the notes they left it, and what they said, as they send a
-//! message; their skills, as their session starts and as it reads or edits a
+//! moment it helps: what they want redone from a debrief, and what they said,
+//! as they send a message; their skills, as their session starts and as it reads or edits a
 //! kind of file; and work it hasn't shown the person, to show in kelve: as its turn ends,
 //! if it's done and worth showing, and as it commits, pushes or opens a pull
 //! request. One command, `kelve moment`, naming the agent and the event, on each

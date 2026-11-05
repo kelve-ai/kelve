@@ -42,14 +42,10 @@ test('kelve’s screens under its header, and every control they’re built from
   await scan(page)
 })
 
-test('a folder your agent opened, a file in it, and a note', async ({ page }) => {
+test('a folder your agent opened, and a file in it', async ({ page }) => {
   await open(page, { what: 'folder', path: repo() })
   await expect(page.getByRole('complementary', { name: 'What’s open' })).toBeVisible()
   await scan(page)
   await openFile(page, 'src/retry.rs')
-  await scan(page)
-  await page.getByRole('complementary', { name: 'What’s open' }).getByRole('tab', { name: 'Notes' }).click()
-  await page.getByRole('button', { name: 'New note' }).click()
-  await expect(page.getByRole('region', { name: 'The note' })).toBeVisible()
   await scan(page)
 })

@@ -1,5 +1,5 @@
 //! What's open, as the web app reads it: opening something, its files and
-//! changes, the agent's list, and notes. Only the person reads any of it;
+//! changes, and the agent's list. Only the person reads any of it;
 //! kelve's command line can ask to open something, and learn whether a
 //! browser opened, nothing more.
 
@@ -8,12 +8,11 @@ use std::path::{Path, PathBuf};
 use axum::Json;
 use axum::extract::{Path as UrlPath, Query, State};
 use kelve_core::views::{
-    AgentList, ChangeView, ChangedFile, DiffLine, DiffView, FileItem, FileView, FolderView, Note,
-    NoteIn, NoteRef, OpenIn, OpenKind, Opened, PickIn, PickWhat, Picked, Place, ServerEvent,
+    AgentList, ChangeView, ChangedFile, DiffLine, DiffView, FileItem, FileView, FolderView, OpenIn,
+    OpenKind, Opened, ServerEvent,
 };
 use kelve_engine::git::{LineKind, Status};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use crate::auth::{Me, Who};
 use crate::error::{ApiError, ApiResult};
@@ -164,38 +163,6 @@ pub async fn open_at(app: &Shared, path: &str, change: Option<&str>) -> ApiResul
     tracing::info!(kind, "opened something");
     crate::counts::count(app, &format!("opened.{kind}")).await;
     Ok(id)
-}
-
-/// Shows the system's picker for a folder or a file, and waits for the
-/// person: the path they chose, for the page to open.
-pub async fn pick(
-    State(_app): State<Shared>,
-    _me: Me,
-    Json(asked): Json<PickIn>,
-) -> ApiResult<Json<Picked>> {
-    let what = match asked.what {
-        PickWhat::Folder => crate::pick::What::Folder,
-        PickWhat::File => crate::pick::What::File,
-    };
-    let path = crate::pick::pick(what)
-        .await
-        .map_err(|e| ApiError::bad_request(e.to_string()))?;
-    Ok(Json(Picked {
-        path: path.map(|p| p.display().to_string()),
-    }))
-}
-
-/// Shows the person's notes folder in the system's file manager.
-pub async fn show_notes(State(app): State<Shared>, _me: Me) -> ApiResult<Json<serde_json::Value>> {
-    let dir = reader::own_notes(&app);
-    std::fs::create_dir_all(&dir).map_err(ApiError::internal)?;
-    crate::pick::reveal(&dir).await.map_err(|_| {
-        ApiError::bad_request(format!(
-            "kelve couldn't show the folder. It's {}.",
-            reader::shown(&dir)
-        ))
-    })?;
-    Ok(Json(json!({})))
 }
 
 /// What was opened lately, latest first.
@@ -447,58 +414,4 @@ pub async fn diff(
         skip: fc.skip.map(|s| s.says().to_string()),
         path: fc.path,
     }))
-}
-
-pub async fn notes(
-    State(app): State<Shared>,
-    _me: Me,
-    UrlPath(id): UrlPath<i64>,
-) -> ApiResult<Json<Vec<NoteRef>>> {
-    let open = reader::opened(&app, id).await?;
-    Ok(Json(reader::notes(&app, &open)))
-}
-
-#[derive(Debug, Deserialize)]
-pub struct NoteAt {
-    note: String,
-}
-
-pub async fn note(
-    State(app): State<Shared>,
-    _me: Me,
-    UrlPath(id): UrlPath<i64>,
-    Query(at): Query<NoteAt>,
-) -> ApiResult<Json<Note>> {
-    let open = reader::opened(&app, id).await?;
-    Ok(Json(reader::note(&app, &open, &at.note)?))
-}
-
-pub async fn forget_note(
-    State(app): State<Shared>,
-    _me: Me,
-    UrlPath(id): UrlPath<i64>,
-    Query(at): Query<NoteAt>,
-) -> ApiResult<Json<serde_json::Value>> {
-    let open = reader::opened(&app, id).await?;
-    reader::forget_note(&app, &open, &at.note)?;
-    Ok(Json(json!({})))
-}
-
-pub async fn keep_note(
-    State(app): State<Shared>,
-    _me: Me,
-    UrlPath(id): UrlPath<i64>,
-    Json(note): Json<NoteIn>,
-) -> ApiResult<Json<Note>> {
-    let open = reader::opened(&app, id).await?;
-    let kept = reader::keep_note(&app, &open, &note)?;
-    if note.id.is_none() {
-        let place = match note.place {
-            Place::You => "notes.you",
-            Place::Work => "notes.work",
-            Place::Agent => "notes.agent",
-        };
-        crate::counts::count(&app, place).await;
-    }
-    Ok(Json(kept))
 }

@@ -10,7 +10,7 @@ export type Job = { job: number; kind: string; about: string; material: Record<s
 /** How the stand-in agent answers a job. */
 export function answer(job: Job): unknown {
   switch (job.kind) {
-    case 'note': return { did: 'Did what the note asked, as the stand-in agent.' }
+    case 'redo': return { did: 'Redid the decision, as the stand-in agent.' }
     case 'debrief': return loop.debrief(job)
     case 'research': return loop.research(job)
     case 'explain': return loop.explain(job)
@@ -31,12 +31,8 @@ export type Agent = {
    * `until`, it stops at the first job of that kind, having taken it.
    */
   work: (opts?: { until?: string }) => Promise<Job[]>
-  /** The notes waiting for it in the project at `path`, as the notes tool reads them. */
-  notes: (path: string) => Promise<Array<{ id: string; version: string; note: string; file: string | null; textNow: string | null; doneBefore: { text: string; did: string } | null; added: string[] }>>
-  /** Says a note is done, for the version it read, and what it did, as note_done does. */
-  noteDone: (path: string, note: string, version: string, did: string) => Promise<void>
-  /** Writes what kelve marks for the person, as set_marks does. */
-  setMarks: (spec: Record<string, unknown>) => Promise<void>
+  /** What's kept for it, as the `kept` tool reads it. */
+  kept: () => Promise<Array<{ id: number; kind: string; about: string }>>
 }
 
 /**
@@ -59,16 +55,10 @@ export function agent(base: string, key: string, name = 'claude-code', answering
       await call('/api/agent/hello', caller)
     },
     open: (what) => call('/api/agent/open', { ...caller, ...what }),
-    notes: async (path) => {
-      const res = await fetch(`${base}/api/agent/notes?path=${encodeURIComponent(path)}`, { headers: { authorization: `Bearer ${key}` } })
-      if (!res.ok) throw new Error(`kelve said no to the notes: ${await res.text()}`)
+    kept: async () => {
+      const res = await fetch(`${base}/api/agent/kept`, { headers: { authorization: `Bearer ${key}` } })
+      if (!res.ok) throw new Error(`kelve said no to what's kept: ${await res.text()}`)
       return res.json()
-    },
-    noteDone: async (path, note, version, did) => {
-      await call('/api/agent/note-done', { path, note, version, did })
-    },
-    setMarks: async (spec) => {
-      await call('/api/agent/marks', { spec })
     },
     work: async ({ until } = {}) => {
       const given: Job[] = []

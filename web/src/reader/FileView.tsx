@@ -2,17 +2,15 @@
 // code, read only. A change's file shows what changed, with what's as before
 // folded to a line; its added lines are tinted green, and its removed lines
 // stay where they were, greyed and tinted. Markdown and plain text read as
-// text (Prose). Select lines to leave a note on them.
+// text (Prose).
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Compartment, EditorState, Text as Lines } from '@codemirror/state'
-import { Decoration, EditorView, lineNumbers, WidgetType } from '@codemirror/view'
-import type { DiffView, FileView as FileShape, NoteRef, Opened } from '../api/types'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { EditorState, Text as Lines } from '@codemirror/state'
+import { EditorView, lineNumbers } from '@codemirror/view'
+import type { DiffView, FileView as FileShape, Opened } from '../api/types'
 import { Loader } from '../Loader'
 import { fetchAhead, fetchNow, isKept, useLoad } from '../useLoad'
 import { asBefore, colours, diffMarks, folding, foldRuns, grammar, lineClasses, parsed, unfoldAt } from './code'
-import { NoteBox, NotesHint, NoteWell, useNotes } from './NoteParts'
 import { Prose } from './Prose'
 
 /** A file as the reader draws it: its lines, and what each one is. */
@@ -26,8 +24,6 @@ export type Doc = {
   numbers?: string[]
   /** A line of the file, as a line of the document. */
   lineOf: (n: number) => number | undefined
-  /** A line of the document, as a line of the file: none for one taken out. */
-  fileLine: (n: number) => number | undefined
   /** The file's lines a change added. */
   added: Set<number>
 }
@@ -56,11 +52,11 @@ function fromDiff(d: DiffView): Doc {
     }
     if (l.kind === 'added' && l.new != null) added.add(l.new)
   }
-  return { path: d.path, lang: d.lang, text: lines.join('\n'), kinds, numbers, lineOf: (n) => byNew.get(n), fileLine: (n) => byDoc.get(n), added }
+  return { path: d.path, lang: d.lang, text: lines.join('\n'), kinds, numbers, lineOf: (n) => byNew.get(n), added }
 }
 
 function fromFile(f: FileShape): Doc {
-  return { path: f.path, lang: f.lang, text: f.text ?? '', lineOf: (n) => n, fileLine: (n) => n, added: new Set() }
+  return { path: f.path, lang: f.lang, text: f.text ?? '', lineOf: (n) => n, added: new Set() }
 }
 
 /** Read as text: markdown, and plain text in no language kelve knows (`core::code::prose`). */
@@ -73,8 +69,6 @@ export type FileProps = {
   inChange: boolean
   /** A line of the file to bring into view. */
   line?: number
-  /** The notes on lines of this file. */
-  notes: NoteRef[]
 }
 
 /** Images a browser draws, by name: shown as pictures, not read. */
@@ -172,7 +166,7 @@ function FileName({ path, children }: { path: string; children?: React.ReactNode
 }
 
 /** The file in its own scroller. */
-function Scroller({ doc, prose, source, line, notes }: FileProps & {
+function Scroller({ doc, prose, source, line }: FileProps & {
   doc: Doc
   prose: boolean
   /** A switch between ways of showing it: markdown as text or source, an SVG as a picture. */
@@ -191,9 +185,9 @@ function Scroller({ doc, prose, source, line, notes }: FileProps & {
             )}
           </FileName>
           {prose ? (
-            <Prose doc={doc} line={line} scroller={scroller} notes={notes} />
+            <Prose doc={doc} line={line} scroller={scroller} />
           ) : (
-            <Code doc={doc} line={line} scroller={scroller} notes={notes} />
+            <Code doc={doc} line={line} scroller={scroller} />
           )}
         </div>
       </div>
@@ -201,68 +195,12 @@ function Scroller({ doc, prose, source, line, notes }: FileProps & {
   )
 }
 
-/** Lines chosen for a note, and where its button sits. */
-export type Chosen = { start: number; end: number; top: number; left: number }
-
-/** Elements CodeMirror draws for notes under lines, for React to fill. */
-class Slots {
-  map = new Map<string, HTMLElement>()
-  private fns = new Set<() => void>()
-  set(key: string, el: HTMLElement) {
-    this.map.set(key, el)
-    queueMicrotask(() => this.fns.forEach((f) => f()))
-  }
-  unset(key: string, el: HTMLElement) {
-    if (this.map.get(key) !== el) return
-    this.map.delete(key)
-    queueMicrotask(() => this.fns.forEach((f) => f()))
-  }
-  listen(fn: () => void) {
-    this.fns.add(fn)
-    return () => void this.fns.delete(fn)
-  }
-}
-
-class Slot extends WidgetType {
-  constructor(readonly key: string, readonly slots: Slots) {
-    super()
-  }
-  eq(o: Slot) {
-    return o.key === this.key
-  }
-  toDOM() {
-    const el = document.createElement('div')
-    el.className = 'cm-slot'
-    this.slots.set(this.key, el)
-    return el
-  }
-  destroy(el: HTMLElement) {
-    this.slots.unset(this.key, el)
-  }
-  ignoreEvent() {
-    return true
-  }
-}
-
-/**
- * A file's code, read only, with notes under the lines they're on, and a
- * Note button on lines chosen.
- */
-export function Code({ doc, line, scroller, notes }: {
+/** A file's code, read only. */
+export function Code({ doc, line, scroller }: {
   doc: Doc
   line?: number
   scroller: React.RefObject<HTMLDivElement | null>
-  /** The notes on lines of this file. */
-  notes: NoteRef[]
 }) {
-  const noted = useNotes()
-  const slots = useMemo(() => new Slots(), [])
-  const [, redraw] = useReducer((x: number) => x + 1, 0)
-  useEffect(() => slots.listen(redraw), [slots])
-  const noting = useRef(new Compartment())
-  const [chosen, setChosen] = useState<Chosen | null>(null)
-  const [draft, setDraft] = useState<{ start: number; end: number } | null>(null)
-  const choose = useRef<(v: EditorView) => void>(() => {})
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
 
@@ -288,10 +226,6 @@ export function Code({ doc, line, scroller, notes }: {
           doc.kinds ? diffMarks(doc.kinds) : [],
           grammar(doc.lang),
           colours,
-          noting.current.of([]),
-          EditorView.updateListener.of((u) => {
-            if (u.selectionSet) choose.current(u.view)
-          }),
         ],
       })),
     })
@@ -307,56 +241,6 @@ export function Code({ doc, line, scroller, notes }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc.text, doc.lang, doc.path, numbersKey, kindsKey])
 
-  // Lines chosen: a Note button at the end of them.
-  choose.current = (v) => {
-    const s = v.state.selection.main
-    if (s.empty || !noted) return setChosen(null)
-    const a = v.state.doc.lineAt(s.from).number
-    // A selection that ends at the start of a line doesn't take that line.
-    const b = v.state.doc.lineAt(s.to > s.from && v.state.doc.lineAt(s.to).from === s.to ? s.to - 1 : s.to).number
-    const lines = Array.from({ length: b - a + 1 }, (_, i) => doc.fileLine(a + i)).filter((n): n is number => n !== undefined)
-    const at = v.coordsAtPos(s.head)
-    const box = host.current?.getBoundingClientRect()
-    if (!lines.length || !at || !box) return setChosen(null)
-    setChosen({ start: Math.min(...lines), end: Math.max(...lines), top: at.bottom - box.top + 6, left: Math.max(60, Math.min(at.left - box.left, box.width - 90)) })
-  }
-
-  // Notes under the lines they're on, and the box for a new one.
-  const shownNotes = useMemo(() => notes.filter((n) => n.on?.found), [notes])
-  useEffect(() => {
-    const v = view.current
-    if (!v) return
-    const at = (fileLine: number) => {
-      const n = doc.lineOf(fileLine)
-      return n && n <= v.state.doc.lines ? v.state.doc.line(n).to : undefined
-    }
-    const widgets = []
-    for (const n of shownNotes) {
-      const pos = at(n.on!.end)
-      if (pos !== undefined) widgets.push(Decoration.widget({ widget: new Slot(`n:${n.id}`, slots), block: true, side: 2 }).range(pos))
-    }
-    const d = draft ? at(draft.end) : undefined
-    if (d !== undefined) widgets.push(Decoration.widget({ widget: new Slot('draft', slots), block: true, side: 3 }).range(d))
-    // A note's lines are never folded away: their folds open.
-    const opening = shownNotes.flatMap((n) => {
-      const a = doc.lineOf(n.on!.start)
-      const b = doc.lineOf(n.on!.end)
-      return [...(a ? unfoldAt(v.state, a) : []), ...(b ? unfoldAt(v.state, b) : [])]
-    })
-    v.dispatch({ effects: [...opening, noting.current.reconfigure(EditorView.decorations.of(Decoration.set(widgets, true)))] })
-  }, [shownNotes, draft, doc, slots])
-  // What's drawn into them changes their height.
-  const filled = [...slots.map.keys()].join(' ')
-  useLayoutEffect(() => view.current?.requestMeasure(), [filled, draft, shownNotes])
-
-  const startNote = useCallback(() => {
-    if (!chosen) return
-    setDraft({ start: chosen.start, end: chosen.end })
-    setChosen(null)
-    const v = view.current
-    if (v) v.dispatch({ selection: { anchor: v.state.selection.main.head } })
-  }, [chosen])
-
   // Bring a line into view, a third of the way down. CodeMirror does it,
   // once it has drawn the lines on the way and knows their heights. A line
   // folded away is opened first.
@@ -371,43 +255,9 @@ export function Code({ doc, line, scroller, notes }: {
     if (line) scrollTo(line)
   }, [line, scrollTo])
 
-  // N leaves a note on the lines chosen.
-  useEffect(() => {
-    const el = scroller.current
-    if (!el) return
-    const key = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      if ((e.target as HTMLElement).closest('textarea, input, .nbox')) return
-      if ((e.key === 'n' || e.key === 'N') && chosen) {
-        e.preventDefault()
-        startNote()
-      }
-    }
-    el.addEventListener('keydown', key)
-    return () => el.removeEventListener('keydown', key)
-  }, [scroller, chosen, startNote])
-
   return (
     <div className="fv-body">
-      <div className="fv-code" ref={host}>
-        {chosen && !draft && (
-          <>
-            <span className="note-key sel-keys" style={{ top: chosen.top, left: chosen.left }}>
-              <button type="button" className="raised small" onMouseDown={(e) => e.preventDefault()} onClick={startNote}>
-                Note
-              </button>
-            </span>
-            <NotesHint top={chosen.top} left={chosen.left} />
-          </>
-        )}
-      </div>
-      {[...slots.map.entries()].map(([key, el]) => {
-        if (key === 'draft') {
-          return draft ? createPortal(<NoteBox path={doc.path} start={draft.start} end={draft.end} close={() => setDraft(null)} />, el, key) : null
-        }
-        const note = shownNotes.find((n) => `n:${n.id}` === key)
-        return note ? createPortal(<NoteWell note={note} />, el, key) : null
-      })}
+      <div className="fv-code" ref={host} />
     </div>
   )
 }

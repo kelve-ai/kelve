@@ -5,29 +5,25 @@
  */
 export type ListItem = { 
 /**
- * Steady while it's on the list: `note:…`.
+ * Steady while it's on the list: `redo:…`.
  */
 key: string, 
 /**
- * `note`.
+ * `redo`.
  */
 kind: string, 
 /**
- * What it's about: what a note says.
+ * What it's about: the decision to redo.
  */
 title: string, 
 /**
- * A line under it: where a note is, what the agent did.
+ * A line under it: where the decision is, what the agent did.
  */
 sub: string | null, 
 /**
  * What was opened it's for.
  */
 opened: number | null, 
-/**
- * A note, by its id.
- */
-note: string | null, 
 /**
  * The title of what it was asked for in, when that isn't what's open.
  */

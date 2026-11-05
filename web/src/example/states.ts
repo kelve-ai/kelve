@@ -42,7 +42,7 @@ export function states(): State[] {
     { name: 'debrief', title: 'A debrief: research ready on one decision, agreed on two, one left', path: '#/example/debrief/1' },
     { name: 'debrief-small', title: 'A debrief of one line you changed', path: '#/example/debrief/2', phone: true },
     { name: 'debrief-large', title: 'A debrief of 86 files: decisions by the part they belong to, folders closed', path: '#/example/debrief/3' },
-    { name: 'debrief-change-it', title: 'A debrief: changing a decision, with a note for your agent, and its code', path: '#/example/debrief/1', clicks: ['Show the code', 'Change it'] },
+    { name: 'debrief-change-it', title: 'A debrief: changing a decision, saying how, and its code', path: '#/example/debrief/1', clicks: ['Show the code', 'Change it'] },
     { name: 'debrief-look', title: 'A debrief: the question for your agent, before it looks into a decision', path: '#/example/debrief/2', clicks: ['Look into it'] },
     { name: 'debrief-explain', title: 'A debrief: an idea explained', path: '#/example/debrief/1', clicks: ['Explain'] },
     { name: 'debrief-writing', title: 'A debrief, your agent writing it', path: '#/example/debrief/1?as=writing' },

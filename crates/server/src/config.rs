@@ -33,8 +33,8 @@ pub struct Config {
     pub endpoints: Endpoints,
     /// The person's time zone, as an offset from UTC: what "today" means.
     pub offset: FixedOffset,
-    /// Claude Code's folder, whose settings hold the hook that tells it of
-    /// notes left for it (`KELVE_CLAUDE_DIR`, else Claude Code's own
+    /// Claude Code's folder, whose settings hold the hook that gives it the
+    /// person's skills (`KELVE_CLAUDE_DIR`, else Claude Code's own
     /// `CLAUDE_CONFIG_DIR`, else `~/.claude`).
     pub claude_dir: PathBuf,
     /// The home folder other agents' settings are in, for their hooks

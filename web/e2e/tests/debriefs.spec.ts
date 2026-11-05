@@ -2,7 +2,7 @@
 // DebriefSent, ChangeView): the agent hands its work over and writes its
 // debrief; home asks you to read it; you agree, ask for a decision another
 // way, have your agent look into one, ask for an idea to be explained or
-// say you know it, and send it, which leaves your agent a note. A small
+// say you know it, and send it, which keeps your agent a job to redo it. A small
 // change can be debriefed anyway. The change shows each file, each
 // decision beside its lines. The stand-in agent writes the debriefs, the
 // research and the explanations, as kelve asks (e2e/debriefs.ts).
@@ -18,11 +18,10 @@ const decision = (page: Page, title: string) => page.getByRole('article', { name
 
 test('home asks you to read the debrief, and you answer it and send it', async ({ page }) => {
   const title = unique('Retries that back off')
-  const { id, root } = await debriefed(title)
+  const { id } = await debriefed(title)
   await signIn(page)
   // Jitter is new to you, as it was before any other run said you know it.
-  const before = (await (await page.request.get('/api/marks')).json()) as { spec: { never: string[] } }
-  await page.request.post('/api/marks', { data: { ...before.spec, never: before.spec.never.filter((n) => n !== 'Jitter') } })
+  await page.request.post('/api/known/forget', { data: { idea: 'Jitter' } })
   await page.goto('/#/')
   const bubble = page.getByRole('region', { name: 'From your agent' })
   await expect(bubble.getByText(`I finished ${title}. I made 2 decisions you might want a say in.`)).toBeVisible()
@@ -41,7 +40,7 @@ test('home asks you to read the debrief, and you answer it and send it', async (
   await wait.getByRole('button', { name: 'Show the code' }).click()
   await expect(wait.getByRole('group', { name: 'The code: src/retry.rs, lines 1 to 4' })).toContainText('200 * 2u64.pow(attempt)')
 
-  // Another way: a note for your agent, as you send it.
+  // Another way: a job for your agent, as you send it.
   const start = decision(page, 'Start from 200 milliseconds')
   await start.getByRole('button', { name: 'Change it' }).click()
   await start.getByRole('textbox', { name: 'How you want it' }).fill('Start from half a second.')
@@ -61,8 +60,8 @@ test('home asks you to read the debrief, and you answer it and send it', async (
   await expect(jitter.getByText('New to you')).toBeVisible()
   await jitter.getByRole('button', { name: 'I know this' }).click()
   await expect(jitter.getByText('New to you')).toHaveCount(0)
-  const marks = (await (await page.request.get('/api/marks')).json()) as { spec: { never: string[] } }
-  expect(marks.spec.never).toContain('Jitter')
+  const known = (await (await page.request.get('/api/known')).json()) as string[]
+  expect(known).toContain('Jitter')
 
   // What happens when it's sent, then sent.
   const send = page.locator('.db-send')
@@ -73,13 +72,12 @@ test('home asks you to read the debrief, and you answer it and send it', async (
   await expect(page.getByText('Your agent redoes decision 2 when you next message it.')).toBeVisible()
   await expect(page.getByText('Your agent drafts a new skill, Rust, from decision 1.')).toBeVisible()
 
-  // The note waits for your agent, on the decision's lines.
+  // What to redo waits for your agent, as a job of its own, with what you said.
   await expect
-    .poll(async () => {
-      const notes = await me().notes(root)
-      return notes.map((n) => n.note).join('\n')
-    }, { timeout: 20_000 })
-    .toContain('Start from half a second.')
+    .poll(async () => (await me().kept()).filter((k) => k.kind === 'redo').length, { timeout: 20_000 })
+    .toBe(1)
+  const redo = (await me().work()).find((j) => j.kind === 'redo')
+  expect(JSON.stringify(redo?.material)).toContain('Start from half a second.')
 
   // Home: done, a line on the timeline.
   await page.getByRole('link', { name: 'Back to home' }).click()

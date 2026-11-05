@@ -60,7 +60,7 @@ pub fn offer(
 /// every agent's skills folder, and kelve's hook out of every agent's
 /// settings, leaving the rest as it was. The skills themselves stay.
 pub async fn remove() -> anyhow::Result<()> {
-    let (home, claude) = crate::notes::homes()?;
+    let (home, claude) = crate::hook::homes()?;
     let skills = skills_dir(&home);
     style::head("setup --remove");
     let mut did = false;
@@ -84,7 +84,7 @@ pub async fn remove() -> anyhow::Result<()> {
         }
     }
     if did {
-        crate::notes::hook_changed().await;
+        crate::hook::hook_changed().await;
     } else {
         style::line("kelve's hook and links to your skills weren't in any agent's settings.");
     }
