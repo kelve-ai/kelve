@@ -13,7 +13,7 @@
 # It downloads the build for this computer from GitHub Releases, checks it
 # against the release's checksums, and puts it in ~/.local/bin, or in
 # KELVE_INSTALL_DIR. Then it sets kelve up: connects your agent, adds its
-# hook for your notes and lessons, and how much kelve marks for you.
+# hook for your notes and skills, and how much kelve marks for you.
 set -eu
 
 repo=kelve-ai/kelve

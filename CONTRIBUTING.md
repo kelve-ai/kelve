@@ -25,7 +25,7 @@ cd web && bun run e2e
 cd web && bun run looks
 ```
 
-`cargo test` writes the web app's types (`web/src/api/gen`) and the shared graph's API document (`docs/graph-api.json`) from the Rust: commit them with the change. After a change meant to show, take the screenshots again with `bun run looks --update-snapshots`, look at each that changed, and commit them. After changing a dependency, run `bun run notices` in `web/` and commit `THIRD_PARTY_NOTICES.md`.
+`cargo test` writes the web app's types (`web/src/api/gen`) and the hosted service's API documents (`docs/hosted-api.json`, `docs/graph-api.json`) from the Rust: commit them with the change. After a change meant to show, take the screenshots again with `bun run looks --update-snapshots`, look at each that changed, and commit them. After changing a dependency, run `bun run notices` in `web/` and commit `THIRD_PARTY_NOTICES.md`.
 
 ## Pull requests
 
