@@ -45,7 +45,7 @@ const DAYS: HomeView['days'] = [
 ]
 
 const DEBRIEF_ASK = { id: 'debrief:1', kind: 'debrief', text: 'I finished Retry failed downloads. I made 4 decisions you might want a say in.', action: 'Read the debrief', to: 'debrief/1', main: true, alt: null } as const
-const CHECK_ASK = { id: 'check:rust', kind: 'check', text: 'I can check 3 new Rust lines on your past work.', action: 'Check them', to: 'skills/rust', main: false, alt: null } as const
+const CHECK_ASK = { id: 'check:rust', kind: 'check', text: 'I can check 3 new Rust parts on your past work.', action: 'Check them', to: 'skills/rust', main: false, alt: null } as const
 
 export function exampleHome(as: string | null): HomeView {
   const base: HomeView = { state: 'normal', name: 'Sam’s agent', status: 'Waiting for you', workingSince: null, say: 'Two things for you.', moving: 'idle', asks: [{ ...DEBRIEF_ASK }, { ...CHECK_ASK }], days: DAYS }

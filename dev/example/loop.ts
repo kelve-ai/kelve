@@ -201,18 +201,30 @@ export function explain(job: LoopJob) {
   }
 }
 
+/** A text's first sentence, with its full stop. */
+function firstSentence(text: string) {
+  const t = text.trim()
+  const end = t.search(/[.!?](\s|$)/)
+  return end < 0 ? t : t.slice(0, end + 1)
+}
+
 /** Parts for the person's skills, from what they showed they know: one, in the first skill given. */
 export function learn(job: LoopJob) {
   const skills = (job.material.skills ?? []) as Array<{ name: string; markdown: string }>
   const skill = skills[0]
   const none = { additions: [], same: [], disagrees: [] }
   if (!skill) return none
-  const kept = /^### (.+)$/m.exec(unfenced(job.material.kept))?.[1]
+  // As a good agent writes them: the decision's own reason, or the
+  // person's own words, never a sentence that would fit any part.
+  const keptText = unfenced(job.material.kept)
+  const kept = /^### (.+)$/m.exec(keptText)?.[1]
+  const why = kept ? firstSentence(keptText.split('\n').slice(1).find((l) => l.trim() && !l.startsWith('They ')) ?? '') : ''
   const said = /They said: (.+)/.exec(unfenced(job.material.said))?.[1]
+  const saidAs = said ? firstSentence(said).replace(/\.$/, '') : ''
   const [heading, body, evidence] = kept
-    ? [kept, 'The person wants it this way every time, so do it without being asked.', `They sent “${kept}” to be done every time.`]
+    ? [kept, why || `So it's done this way without being asked.`, `They sent “${kept}” to be done every time.`]
     : said
-      ? ['Do it the way the person said, not the first way that works', 'They corrected it once; an agent that knows why gets it right the next time.', said.slice(0, 200)]
+      ? [saidAs.charAt(0).toUpperCase() + saidAs.slice(1), 'They said so while the agent worked, after it had done it another way.', said.slice(0, 200)]
       : job.material.edit
         ? ['Keep limits as the person set them', 'They changed a limit the agent chose, after it handed over: theirs is the one that holds.', 'Their edit after the handover.']
         : ['', '', '']

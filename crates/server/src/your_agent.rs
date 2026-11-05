@@ -148,6 +148,21 @@ async fn change<T>(app: &Shared, f: impl FnOnce(&mut Kept) -> ApiResult<T>) -> A
     Ok(out)
 }
 
+/// What the agent drew since `since` (ms), for home's timeline: its key,
+/// its name, whether it's a whole character, and when it was kept.
+pub fn drawn_since(app: &Shared, since: i64) -> Vec<(String, String, bool, i64)> {
+    let k = Kept::of(&app.settings());
+    let parts = k
+        .parts
+        .iter()
+        .map(|(key, m)| (key.clone(), m.part.name.clone(), false, m.at));
+    let characters = k
+        .characters
+        .iter()
+        .map(|(key, m)| (key.clone(), m.character.name.clone(), true, m.at));
+    parts.chain(characters).filter(|d| d.3 >= since).collect()
+}
+
 /// What the person's agent drew, as `core::character` reads it: for its page.
 pub fn made(app: &Shared) -> (BTreeMap<String, Part>, BTreeMap<String, Character>) {
     Kept::of(&app.settings()).made()

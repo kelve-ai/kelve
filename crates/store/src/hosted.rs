@@ -67,6 +67,17 @@ pub async fn stands(conn: &mut Conn, id: &str, state: &str, score: Option<&str>)
     Ok(())
 }
 
+/// The runs that finished with a score since `since` (ms), the latest first.
+pub async fn scored_since(conn: &mut Conn, since: i64, most: i64) -> Result<Vec<Run>> {
+    Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{RUN} where state = 'finished' and score is not null and at >= ? order by at desc limit ?"
+    )))
+    .bind(since)
+    .bind(most)
+    .fetch_all(&mut *conn)
+    .await?)
+}
+
 /// The latest run that's confirmed and not finished: the one to go back to.
 pub async fn going(conn: &mut Conn) -> Result<Option<Run>> {
     Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(

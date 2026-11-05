@@ -382,20 +382,24 @@ async fn signs(app: &Shared, from: &From) -> ApiResult<Option<Signs>> {
             });
             let mut chosen = Vec::new();
             let mut kept_text = Vec::new();
+            // The files the decisions sent are about, not the whole change:
+            // a choice in Rust code is a Rust default, even in a change that
+            // touched the docs too.
+            let mut decided: Vec<String> = Vec::new();
             for x in &every {
                 if let Some(s) = x.skill
                     && let Some(s) = kept::get(&mut conn, s).await?
                 {
                     chosen.push((s.root.clone(), s.name.clone()));
                 }
-                let why = read
-                    .as_ref()
-                    .and_then(|r| {
-                        r.decisions
-                            .get(usize::try_from(x.number - 1).unwrap_or(usize::MAX))
-                    })
-                    .map(|w| w.why.clone())
-                    .unwrap_or_default();
+                let written = read.as_ref().and_then(|r| {
+                    r.decisions
+                        .get(usize::try_from(x.number - 1).unwrap_or(usize::MAX))
+                });
+                if let Some(w) = written {
+                    decided.extend(w.lines.iter().map(|l| l.path.clone()));
+                }
+                let why = written.map(|w| w.why.clone()).unwrap_or_default();
                 let call = match x.choice.as_deref() {
                     Some("change") => format!(
                         "They want it another way: {}",
@@ -405,7 +409,11 @@ async fn signs(app: &Shared, from: &From) -> ApiResult<Option<Signs>> {
                 };
                 kept_text.push(format!("### {}\n{why}\n\n{call}", x.title));
             }
-            let paths: Vec<&str> = handed.iter().map(|f| f.path.as_str()).collect();
+            let paths: Vec<&str> = if decided.is_empty() {
+                handed.iter().map(|f| f.path.as_str()).collect()
+            } else {
+                decided.iter().map(String::as_str).collect()
+            };
             Some(Signs {
                 evidence: Vec::new(),
                 latest: 0,

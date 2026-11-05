@@ -44,7 +44,7 @@ export function Welcome({ example }: { example?: boolean }) {
     <div className="meet">
       <div className="meet-top">
         <h1>Meet your agent</h1>
-        <p>It learns each time you correct it. Pick a look to start.</p>
+        <p>It gets better with each piece of work you go through together. Pick a look to start.</p>
       </div>
       <div className="meet-looks" role="radiogroup" aria-label="How it looks">
         {STARTS.map((s) => {

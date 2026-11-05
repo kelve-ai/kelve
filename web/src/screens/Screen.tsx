@@ -54,7 +54,7 @@ function stubOf(route: Exclude<Route, SkillsRoute>): { name: string; line: strin
     case 'handover':
       return { name: 'The change', line: 'Every file your agent changed, with each decision beside the lines it holds.', what: `Change ${route.id}` }
     case 'agent':
-      return { name: 'Your agent', line: 'It learns from what you correct, and keeps it as skills. What it knows, and how well it fits you.' }
+      return { name: 'Your agent', line: 'It keeps what you know as skills, and gets better with each piece of work. What it knows, and how well it fits you.' }
     case 'address':
       return { name: 'Choose your page’s address', line: '' }
     case 'look':
@@ -66,7 +66,7 @@ function stubOf(route: Exclude<Route, SkillsRoute>): { name: string; line: strin
     case 'settings':
       return { name: SECTION_NAMES[route.section], line: SECTION_LINES[route.section] }
     case 'welcome':
-      return { name: 'Meet your agent', line: 'It learns each time you correct it. Pick a look to start.' }
+      return { name: 'Meet your agent', line: 'It gets better with each piece of work you go through together. Pick a look to start.' }
   }
 }
 

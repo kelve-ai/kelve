@@ -49,14 +49,14 @@ export function YourAgent({ example }: { example?: boolean }) {
             <h1>{c.name}</h1>
             <Btn icon href={hrefOf('agent/look', example)} label="Change how it looks">{BRUSH}</Btn>
           </div>
-          <p>It learns from what you correct, and keeps it as skills.</p>
+          <p>It keeps what you know as skills, and gets better with each piece of work.</p>
         </div>
       </section>
 
       <section className="ya-knows" aria-labelledby="knows">
         <h2 id="knows">What it knows</h2>
         {p.knows.length === 0 ? (
-          <p className="ya-line">Nothing yet. It learns as you correct it.</p>
+          <p className="ya-line">Nothing yet. It learns from each debrief you go through.</p>
         ) : (
           <>
             <p className="ya-line">A square for each part: green works, orange failed, violet is being checked, grey makes no difference, hollow isn’t checked yet.</p>

@@ -124,6 +124,7 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
     let debriefs = kelve_store::home::debriefs_since(&mut conn, since, 60).await?;
     let small = kelve_store::home::small(&mut conn, since, 30).await?;
     let skills = kelve_store::home::skill_events(&mut conn, since, 30).await?;
+    let scored = kelve_store::hosted::scored_since(&mut conn, since, 10).await?;
     let research = kelve_store::home::research_waiting(&mut conn).await?;
     let explaining = kelve_store::home::explanations_waiting(&mut conn).await?;
     let unchecked = kelve_store::home::unchecked(&mut conn).await?;
@@ -208,9 +209,9 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
                 "I can check {} new {} {} on your past work.",
                 n,
                 titled(skill),
-                if *n == 1 { "line" } else { "lines" }
+                if *n == 1 { "part" } else { "parts" }
             ),
-            action: Some("Check them".into()),
+            action: Some(if *n == 1 { "Check it" } else { "Check them" }.into()),
             to: Some(format!("skills/{skill}")),
             main: false,
             alt: None,
@@ -394,6 +395,32 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
             at: at(e.at),
             act: Some(TimelineAct::SeeIt),
             to: Some(format!("skills/{}", e.skill)),
+            squares: Vec::new(),
+        });
+    }
+    for (key, name, whole, when) in crate::your_agent::drawn_since(app, since) {
+        items.push(TimelineItem {
+            id: format!("part:{key}"),
+            kind: TimelineKind::Part,
+            title: if whole {
+                format!("Drew a new character: {name}")
+            } else {
+                format!("Drew a new part: {name}")
+            },
+            at: at(when),
+            act: Some(TimelineAct::TryItOn),
+            to: Some("agent/look".into()),
+            squares: Vec::new(),
+        });
+    }
+    for r in &scored {
+        items.push(TimelineItem {
+            id: format!("score:{}", r.id),
+            kind: TimelineKind::Score,
+            title: format!("A verified run on {} tasks, on {}", r.kind_name, r.model_name),
+            at: at(r.at),
+            act: Some(TimelineAct::SeeIt),
+            to: Some(format!("agent/score/{}", r.id)),
             squares: Vec::new(),
         });
     }
