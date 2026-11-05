@@ -20,7 +20,7 @@ use clap::{CommandFactory, FromArgMatches, Parser, Subcommand};
 #[command(
     name = "kelve",
     version,
-    about = "See what anything is built on, and how and why it works.",
+    about = "Make your coding agent better as you work, and prove it.",
     styles = style::HELP
 )]
 struct Cli {
