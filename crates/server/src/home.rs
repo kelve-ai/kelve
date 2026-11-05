@@ -277,7 +277,7 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
         [first, rest @ ..] => format!(" {when}, I’ll {first}, and {}.", rest.join(", ")),
     };
 
-    let name = kelve_core::character::default_name("");
+    let name = crate::your_agent::shown_name(app);
     let new_here = !ever && !working && asks.is_empty();
     if new_here {
         asks.push(HomeAsk {

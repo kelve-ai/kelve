@@ -21,8 +21,8 @@
 .hm { max-width: 1080px; margin: 0 auto; padding: 40px 40px 96px; display: flex; flex-wrap: wrap; gap: 40px 56px; align-items: flex-start; }
 .hm-error { max-width: 1080px; margin: 40px auto; padding: 0 40px; color: var(--soft); }
 .hm-me { flex: 0 0 260px; display: flex; flex-direction: column; align-items: center; gap: 14px; position: sticky; top: 24px; }
-.hm-name { display: flex; align-items: center; gap: 10px; }
-.hm-name h1 { margin: 0; font-family: var(--pixel); font-size: 30px; line-height: 36px; font-weight: 700; white-space: nowrap; }
+.hm-name { display: flex; align-items: center; justify-content: center; gap: 10px; max-width: 100%; }
+.hm-name h1 { margin: 0; min-width: 0; font-family: var(--pixel); font-size: 30px; line-height: 36px; font-weight: 700; text-align: center; overflow-wrap: anywhere; }
 .hm-name .btn-icon { padding: 7px; }
 .hm-status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--soft); font-variant-numeric: tabular-nums; }
 .hm-dot { width: 8px; height: 8px; border-radius: 2px; background: var(--worse); }

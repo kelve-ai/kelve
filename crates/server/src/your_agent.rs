@@ -250,6 +250,11 @@ fn name(app: &Shared, kept: &Kept) -> (String, bool) {
     }
 }
 
+/// The agent's name as it's shown: the one given, or "Sam’s agent".
+pub fn shown_name(app: &Shared) -> String {
+    name(app, &Kept::of(&app.settings())).0
+}
+
 // ---------------------------------------------------------------- views
 
 fn timestamp(ms: i64) -> Timestamp {

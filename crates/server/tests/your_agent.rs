@@ -148,6 +148,11 @@ async fn its_name_is_yours_until_you_give_it_one_and_its_look_is_kept() {
         .await;
     assert_eq!(named["name"], "Bolt");
     assert_eq!(named["named"], true);
+    assert_eq!(
+        k.json("GET", "/api/home", None).await["name"],
+        "Bolt",
+        "home says it too"
+    );
     let (status, why) = k
         .refused("POST", "/api/character", json!({ "name": "x".repeat(30) }))
         .await;
