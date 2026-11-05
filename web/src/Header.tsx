@@ -1,6 +1,6 @@
 // The top of every page (board Shell): kelve's square and its name, the three
-// places, Home, Skills and Your agent, then Settings, and light or dark, one
-// click away. Meeting your agent has only kelve's name, and a way to skip.
+// places, Home, Skills and Your agent, then the docs, Settings, and light or
+// dark, one click away. Meeting your agent has only kelve's name, and a way to skip.
 
 import type { ReactNode } from 'react'
 import { hrefOf } from './routes'
@@ -38,7 +38,7 @@ export function Header({ here, example, bare, actions }: {
         {!bare && !actions && (
           <nav className="hd-nav" aria-label="kelve">
             {PLACES.map((p) => (
-              <a key={p.place} href={hrefOf(p.path, example)} aria-current={here === p.place ? 'page' : undefined}>
+              <a key={p.place} href={hrefOf(p.path, example)} data-label={p.label} aria-current={here === p.place ? 'page' : undefined}>
                 {p.label}
               </a>
             ))}
@@ -51,9 +51,12 @@ export function Header({ here, example, bare, actions }: {
         ) : bare ? (
           <a className="btn btn-g btn-sm" href={hrefOf('', example)}>Skip for now</a>
         ) : (
-          <a className="hd-set" href={hrefOf('settings/agent', example)} aria-current={here === 'settings' ? 'page' : undefined}>
+          <>
+            <a className="hd-docs" href="https://kelve.ai/docs/" target="_blank" rel="noopener">Docs</a>
+            <a className="hd-set" href={hrefOf('settings/agent', example)} aria-current={here === 'settings' ? 'page' : undefined}>
             {GEAR}Settings
-          </a>
+            </a>
+          </>
         )}
         {!actions && <ThemeSwitch />}
       </div>

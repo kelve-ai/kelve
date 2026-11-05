@@ -119,7 +119,7 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
   return (
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
-      <main className={route.screen === 'settings' || isSkillsRoute(route) ? 'app-main' : ['home', 'debrief', 'change', 'handover'].includes(route.screen) ? 'app-own' : 'app-main narrow'}>
+      <main className={['home', 'debrief', 'change', 'handover'].includes(route.screen) ? 'app-own' : 'app-main'}>
         {route.screen === 'settings' ? (
           <Settings section={route.section} example={example} />
         ) : isSkillsRoute(route) ? (

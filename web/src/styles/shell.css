@@ -12,6 +12,8 @@
 .hd-logo i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; background: var(--logo); }
 .hd-nav { display: flex; flex-wrap: wrap; gap: 6px; font-size: 14.5px; line-height: 20px; }
 .hd-nav a { padding: 6px 10px; border-radius: 8px; color: var(--quiet); font-weight: 500; }
+/* Each place is as wide as its bolder self, so choosing one moves none of them. */
+.hd-nav a::after { content: attr(data-label); display: block; height: 0; overflow: hidden; visibility: hidden; font-weight: 600; }
 .hd-nav a:hover { color: var(--ink); }
 .hd-nav a[aria-current='page'] { color: var(--ink); font-weight: 600; background: var(--well); }
 .hd-nav a:focus-visible, .hd-logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -22,6 +24,9 @@
 .hd-set:hover { background: var(--key-hover); border-color: var(--key-edge-2); }
 .hd-set[aria-current='page'] { color: var(--accent-ink); background: var(--accent-tint); border-color: var(--accent-edge); box-shadow: inset 0 -2px 0 var(--accent-key); }
 .hd-set:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hd-docs { font-size: 14px; line-height: 20px; font-weight: 500; padding: 6px 10px; border-radius: 8px; color: var(--quiet); }
+.hd-docs:hover { color: var(--ink); }
+.hd-docs:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hd .theme-switch { margin: 0; padding: 8px; border-radius: 8px; }
 .hd .theme-switch:hover { background: var(--well); }
 .hd .theme-switch i { width: 13px; height: 13px; }
@@ -29,7 +34,6 @@
 /* ---------------------------------------------------------------- the page */
 .app { min-height: 100vh; background: var(--page); }
 .app-main { max-width: 1160px; margin: 0 auto; padding: 36px 40px 96px; }
-.app-main.narrow { max-width: 1080px; }
 
 /* A screen still being built: its name, and what it will show. */
 .stub { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding-top: 24px; max-width: 680px; }
@@ -53,15 +57,15 @@
 /* It stands on the page, on its own shadow, never in a box; ui/gen/character.css moves it. */
 .char { display: inline-flex; flex-direction: column; align-items: center; flex: none; }
 .char svg { display: block; overflow: visible; }
-
-/* ---------------------------------------------------------------- markdown (board Md) */
-.md { display: flex; flex-direction: column; gap: 14px; font-size: 17px; line-height: 27px; color: var(--ink-2); }
-.md.small { gap: 10px; font-size: 15px; line-height: 23px; }
 /* The small things it does between pauses, where it varies how it moves (ui/lively.ts). */
 .px.b-blink .eo { opacity: 0; }
 .px.b-blink .ec { opacity: 1; }
 .px.b-look-left .eo { transform: translateX(-1px); }
 .px.b-look-right .eo { transform: translateX(1px); }
+
+/* ---------------------------------------------------------------- markdown (board Md) */
+.md { display: flex; flex-direction: column; gap: 14px; font-size: 17px; line-height: 27px; color: var(--ink-2); }
+.md.small { gap: 10px; font-size: 15px; line-height: 23px; }
 .md.large { gap: 16px; font-size: 19px; line-height: 30px; }
 /* A margin beside each block, for a note by a heading. */
 .md.with-margin .md-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 240px); column-gap: 40px; align-items: start; }

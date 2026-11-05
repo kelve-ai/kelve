@@ -201,7 +201,7 @@ function Head() {
       <Character size={104} move="idle" />
       <div>
         <h1>Get a verified score</h1>
-        <p>Your agent and a standard one do the same secret tasks. Hidden tests check both.</p>
+        <p>Your agent and a standard one do the same secret tasks. Hidden tests check both. <a className="go" href="https://kelve.ai/docs/how-verified-scores-work/" target="_blank" rel="noopener">How verified scores work</a></p>
       </div>
     </div>
   )

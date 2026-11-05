@@ -367,7 +367,7 @@ function AboutSection({ example }: { example?: boolean }) {
         ) : (
           <Opt title={`kelve ${u.version}`} what="Up to date." />
         ))}
-      <Opt title="Docs"><a className="go" href="https://kelve.ai/docs" target="_blank" rel="noopener">kelve.ai/docs</a></Opt>
+      <Opt title="Docs"><a className="go" href="https://kelve.ai/docs/" target="_blank" rel="noopener">kelve.ai/docs</a></Opt>
       <Opt title="Source"><a className="go" href="https://github.com/kelve-ai/kelve" target="_blank" rel="noopener">github.com/kelve-ai/kelve</a></Opt>
     </>
   )

@@ -168,6 +168,9 @@
 ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-corner { background: transparent; }
 html, body { margin: 0; }
+/* The page's scrollbar keeps its room whether a screen is long enough to need it or not, so nothing moves between screens. The reader never scrolls the page, so it has none to keep. */
+html { scrollbar-gutter: stable; }
+html:has(.reader) { scrollbar-gutter: auto; }
 body {
   background: var(--page);
   color: var(--ink);
@@ -183,11 +186,11 @@ a { color: var(--ink); text-decoration: none; }
 a:hover { text-decoration: underline; text-decoration-color: var(--mute); text-underline-offset: 4px; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+/* Focus on anything typed in or chosen from, everywhere: quiet and neutral, never the accent. */
+:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), textarea, select):focus { outline: 2px solid var(--key-edge-2); outline-offset: 0; border-color: var(--quiet); }
 
 .page { padding: 0 24px 120px; }
 .col { max-width: 640px; margin: 96px auto 0; }
-/* Focus on anything typed in or chosen from, everywhere: quiet and neutral, never the accent. */
-:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), textarea, select):focus { outline: 2px solid var(--key-edge-2); outline-offset: 0; border-color: var(--quiet); }
 
 /* Text, for the pages around the reader and the blocks of an entry. */
 .p { margin: 0 0 18px; color: var(--text); text-wrap: pretty; }
