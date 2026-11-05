@@ -447,6 +447,16 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
         }
     }
 
+    // The skills folder: asked of the person; for the agent they asked to
+    // install kelve, their yes.
+    crate::skills_setup::offer(
+        chosen.agent,
+        chosen.shown,
+        |question| Ok(!person || ask(question, &["Yes", "No"], 0)? == 0),
+        &home,
+        &claude,
+    )?;
+
     // How much kelve marks: the word given, the person's answer, or the
     // agent's to choose.
     let word = match word {

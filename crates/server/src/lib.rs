@@ -4,6 +4,7 @@
 //! reader, on the person's own computer (docs/architecture.md).
 
 pub mod agent;
+pub mod agent_loop;
 pub mod api;
 pub mod auth;
 pub mod config;
@@ -100,6 +101,8 @@ async fn start(config: Config) -> Result<Shared, ServeError> {
     lessons::start(&app);
     updates::start(&app);
     hooks::up_to_date(&app.config.agents_home, &app.config.claude_dir);
+    // Skills linked into agents' folders, in step with what's on disk now.
+    agent_loop::links::keep_in_step(&app);
     Ok(app)
 }
 

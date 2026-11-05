@@ -1264,7 +1264,7 @@ fn absolute(cwd: &str, path: &str) -> String {
 }
 
 /// The most kelve says at one moment, under every agent's cap.
-const MOST: usize = 6000;
+pub const MOST: usize = 6000;
 
 /// What the hook prints for kelve's text, as the agent takes it; None for
 /// nothing.

@@ -4,6 +4,7 @@
 //! function takes a connection, so callers decide what runs in one
 //! transaction. Times are milliseconds since 1970, UTC (`ms`).
 
+pub mod agent_loop;
 pub mod asks;
 pub mod auth;
 pub mod candidates;
@@ -200,7 +201,9 @@ async fn copy_aside(pool: &Pool, path: &Path) -> Result<()> {
 
 /// What Delete everything empties: every table but those in [`KEPT`].
 /// Children before what they point at.
-const EVERYTHING: [&str; 54] = [
+const EVERYTHING: [&str; 56] = [
+    "skill_edits",
+    "skills_given",
     "fits_picks",
     "checks",
     "past_tasks",

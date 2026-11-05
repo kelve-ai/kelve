@@ -58,6 +58,9 @@ pub struct OpenIn {
     /// and why.
     #[serde(default)]
     pub said: String,
+    /// The person asked for a debrief of this work ("debrief this").
+    #[serde(default)]
+    pub debrief: bool,
     #[serde(flatten)]
     pub caller: Caller,
 }
@@ -77,6 +80,10 @@ pub struct Opened {
     /// and a change's own.
     pub to_read: u32,
     pub shown: bool,
+    /// Work handed over: whether a debrief is due, and, when it is, its
+    /// number, for the agent to write it now.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debrief: Option<crate::agent_loop::debrief::Handed>,
 }
 
 /// The longest title an agent may give the work.
@@ -122,6 +129,13 @@ pub async fn open(
             "Say where, from the root: the folder you're working in.",
         ));
     }
+    // What the person committed since the last handover there is compared
+    // with it first, so it's learned from before more is handed over.
+    if change.is_some()
+        && let Err(e) = crate::agent_loop::after::look(&app, &path).await
+    {
+        tracing::warn!(error = %e.message, "couldn't compare what was committed with a handover");
+    }
     let id = open_at(&app, &path, change.as_deref()).await?;
     // Notes it has just done lead to what it opened.
     reader::link_done_notes(&app, Path::new(&path), id);
@@ -151,12 +165,27 @@ pub async fn open(
     let open = reader::opened(&app, id).await?;
     // Work shown as a change or a worktree is handed over: kept as it is
     // now, to compare with what's committed later.
-    if matches!(asked.what, What::Change | What::Worktree)
-        && let Err(e) =
-            crate::handover::record(&app, &open, &asked.caller.agent, &title, &said).await
-    {
-        tracing::warn!(error = %e.message, "couldn't keep what the agent handed over");
+    let mut debrief = None;
+    if matches!(asked.what, What::Change | What::Worktree) {
+        match crate::handover::record(&app, &open, &asked.caller.agent, &title, &said).await {
+            Ok(Some(handover)) => {
+                match crate::agent_loop::debrief::on_handover(&app, &open, handover, asked.debrief)
+                    .await
+                {
+                    Ok(handed) => debrief = Some(handed),
+                    Err(e) => {
+                        tracing::warn!(error = %e.message, "couldn't ask for a debrief of what was handed over")
+                    }
+                }
+            }
+            Ok(None) => {}
+            Err(e) => {
+                tracing::warn!(error = %e.message, "couldn't keep what the agent handed over")
+            }
+        }
     }
+    // The debrief, asked first, comes before reading the change, which
+    // goes on as it did until the debrief replaces it.
     let (files, to_read, folders) = to_read(&app, &open).await?;
     let shown = show(&app, id).await?;
     Ok(Json(Opened {
@@ -166,6 +195,7 @@ pub async fn open(
         folders,
         to_read,
         shown,
+        debrief,
     }))
 }
 

@@ -28,6 +28,7 @@ pub use kelve_core::instructions::{
     BUILT_ON, CHOOSE, EXTEND, FIX, FOLDERS, LESSON, NOTE, PATH, PLAINLY, PLAINLY_CHANGE,
     PLAINLY_FOLDER, READ, RELATE, WAY, WRITE,
 };
+pub use kelve_core::instructions::{DEBRIEF, EXPLAIN, LEARN, RESEARCH};
 
 /// How soon a job is wanted.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -390,6 +391,7 @@ async fn job_of(app: &Shared, row: asks::Ask) -> ApiResult<Job> {
         asks::waiting(&mut conn).await?
     };
     app.publish(ServerEvent::Asks);
+    crate::agent_loop::taken(app, &row).await;
     let instructions = instructions(app, &row.kind).await.ok_or_else(|| {
         ApiError::internal(format!("no instructions for a job of kind {}", row.kind))
     })?;
@@ -518,10 +520,13 @@ pub async fn unfinished(app: &Shared, opened: i64) -> ApiResult<bool> {
 /// What of a job's material kelve keeps for reading its answer, and never
 /// gives the agent, by kind: what a check's marks were offered, which its
 /// marks say already, and the print a page was asked with.
-const KELVES: [(&str, &str); 3] = [
+const KELVES: [(&str, &str); 6] = [
     (CHOOSE, "offered"),
     (PLAINLY_FOLDER, "print"),
     (PLAINLY_CHANGE, "print"),
+    (DEBRIEF, "changed"),
+    (LEARN, "given"),
+    (LEARN, "evidence"),
 ];
 
 /// A job's material as the agent is given it: without what's kelve's own.
@@ -570,6 +575,7 @@ pub async fn hand_in(app: &Shared, caller: &Caller, job: i64, value: Value) -> A
     if let Err(why) = shaped {
         let put_aside = asks::wrong(&mut conn, row.id, &why).await?;
         tracing::info!(kind = %row.kind, put_aside, "an agent's answer wasn't in the shape asked for");
+        crate::agent_loop::wrong(app, &row, &why, put_aside).await;
         // What's opened's overview, the first on its way in, is asked for
         // afresh, twice at most, rather than left unwritten.
         let mut payload: Value = serde_json::from_str(&row.resume_payload).unwrap_or_default();
@@ -636,6 +642,10 @@ fn shape(kind: &str, material: &Value, value: &Value) -> Result<(), String> {
         PLAINLY_FOLDER => crate::plainly::folder_shape(material, value),
         PLAINLY_CHANGE => crate::plainly::change_shape(material, value),
         LESSON => crate::lessons::shape(material, value),
+        DEBRIEF => crate::agent_loop::debrief::shape(material, value),
+        RESEARCH => crate::agent_loop::research::shape(value),
+        EXPLAIN => crate::agent_loop::explain::shape(value),
+        LEARN => crate::agent_loop::learn::shape(material, value),
         _ => Ok(()),
     }
 }

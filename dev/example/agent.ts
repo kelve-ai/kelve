@@ -7,6 +7,7 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import * as loop from './loop'
 
 const here = join(import.meta.dirname, 'agent')
 const load = <T>(name: string): T => JSON.parse(readFileSync(join(here, name), 'utf8')) as T
@@ -341,6 +342,10 @@ export function answer(job: Job): unknown {
     case 'plainlyChange': return plainlyChange(job)
     case 'note': return { did: 'Did what the note asked.' }
     case 'lesson': return lesson(job)
+    case 'debrief': return loop.debrief(job)
+    case 'research': return loop.research(job)
+    case 'explain': return loop.explain(job)
+    case 'learn': return loop.learn(job)
     default: throw new Error(`a job the example's agent doesn't know: ${job.kind}`)
   }
 }

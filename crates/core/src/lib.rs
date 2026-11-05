@@ -14,6 +14,7 @@ pub mod formula;
 pub mod hook;
 pub mod ideas;
 pub mod instructions;
+pub mod learn;
 pub mod lens;
 pub mod lesson;
 pub mod marks;

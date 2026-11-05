@@ -291,7 +291,8 @@ async fn a_commit_with_nothing_handed_over_or_nothing_changed_keeps_nothing() {
             handover.uncommitted,
             handover.branch.as_str()
         ),
-        ("uncommitted", true, "")
+        // The branch, read from git, though the change's words don't say.
+        ("uncommitted", true, "main")
     );
     git(&dir, &["commit", "-qam", "Call c"]);
     assert_eq!(

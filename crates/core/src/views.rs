@@ -95,6 +95,11 @@ pub struct Settings {
     /// Whether to ask, under an entry their agent wrote, to add it to the
     /// shared graph: at most once a day, and never after a second no.
     pub ask_to_add: bool,
+    /// How often you want a debrief: for work worth one, for every
+    /// handover, or only when you ask.
+    #[serde(default)]
+    #[ts(optional)]
+    pub debriefs: Option<crate::due::DebriefsWhen>,
 }
 
 /// How large text is drawn.
@@ -170,6 +175,9 @@ pub struct SettingsIn {
     /// The person said no to adding what their agent wrote, this time.
     #[ts(optional)]
     pub keep_to_myself: Option<bool>,
+    /// How often you want a debrief.
+    #[ts(optional)]
+    pub debriefs: Option<crate::due::DebriefsWhen>,
 }
 
 // ---------------------------------------------------------------- keys

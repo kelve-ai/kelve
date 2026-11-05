@@ -8,6 +8,7 @@
 //! notes, or what kelve keeps beyond a job's material.
 
 pub mod agent;
+pub mod agent_loop;
 pub mod graph;
 pub mod me;
 pub mod outline;
@@ -58,6 +59,12 @@ pub fn router() -> Router<Shared> {
         .route("/agent/marks", get(agent::marks).post(agent::set_marks))
         .route("/agent/hook", post(agent::hook_changed))
         .route("/agent/moment", post(crate::moment::moment))
+        .route("/agent/skills", get(agent_loop::skills))
+        .route("/handovers/{id}/debrief", post(agent_loop::debrief_anyway))
+        .route("/debriefs/{id}/again", post(agent_loop::debrief_again))
+        .route("/debriefs/{id}/explain", post(agent_loop::explain))
+        .route("/decisions/{id}/research", post(agent_loop::research))
+        .route("/skills/edits/{id}/undo", post(agent_loop::undo))
         .route("/agent/lessons", post(crate::lessons::know))
         .route("/agent/held", post(crate::lessons::held))
         .route("/lessons", get(crate::lessons::settings))

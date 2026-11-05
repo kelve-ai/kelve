@@ -341,6 +341,35 @@ pub fn head(dir: &Path, spec: &str) -> Option<(String, i64)> {
     Some((c.id.to_string(), at))
 }
 
+/// The branch checked out in the repository a folder is in, by its short
+/// name: none when no branch is, as with a detached head.
+pub fn branch(dir: &Path) -> Option<String> {
+    let (repo, _) = open(dir).ok()?;
+    repo.head_name()
+        .ok()
+        .flatten()
+        .map(|n| n.shorten().to_str_lossy().into_owned())
+}
+
+/// The commit work shown as `which` started from: the last commit for what
+/// isn't committed, where the branch left its base, or a commit's first
+/// parent. None when it can't be read.
+pub fn start_of(dir: &Path, which: &Which) -> Option<String> {
+    let (repo, _) = open(dir).ok()?;
+    let head = commit(&repo, "HEAD").ok()?.id;
+    match which {
+        Which::Uncommitted => Some(head.to_string()),
+        Which::Since(base) | Which::Against(base) => {
+            merge_base(&repo, head, base).ok().map(|id| id.to_string())
+        }
+        Which::Commit(rev) => commit(&repo, rev)
+            .ok()?
+            .parent_ids()
+            .next()
+            .map(|p| p.detach().to_string()),
+    }
+}
+
 fn short(id: ObjectId) -> String {
     id.to_hex_with_len(7).to_string()
 }

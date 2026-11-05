@@ -42,6 +42,8 @@ pub struct Settings {
     /// to the shared graph, and the last day they did.
     pub add_nos: u8,
     pub add_no_on: Option<String>,
+    /// How often the person wants a debrief.
+    pub debriefs: kelve_core::due::DebriefsWhen,
 }
 
 impl Default for Settings {
@@ -60,6 +62,7 @@ impl Default for Settings {
             hints: Vec::new(),
             add_nos: 0,
             add_no_on: None,
+            debriefs: kelve_core::due::DebriefsWhen::default(),
         }
     }
 }
@@ -85,6 +88,7 @@ impl Settings {
             ask_to_add: self.add_nos < 2
                 && self.add_no_on.as_deref()
                     != Some(&chrono::Utc::now().format("%Y-%m-%d").to_string()),
+            debriefs: Some(self.debriefs),
         }
     }
 
@@ -133,6 +137,9 @@ impl Settings {
         }
         if let Some(keep) = change.keep_read_in_repo {
             self.keep_read_in_repo = keep;
+        }
+        if let Some(when) = change.debriefs {
+            self.debriefs = when;
         }
         if let Some(place) = change.new_note {
             self.new_note = place;
