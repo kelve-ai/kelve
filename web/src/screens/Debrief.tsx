@@ -14,6 +14,7 @@ import { agreeRestIn, decideIn, exampleDebrief, explainIn, knowIn, lookIn, remem
 import { hrefOf } from '../routes'
 import { useLoad } from '../useLoad'
 import { Character } from '../ui/Character'
+import { FileTree } from '../ui/FileTree'
 import { Spinner, useToast } from '../ui/kit'
 import { Markdown } from '../ui/markdown'
 
@@ -272,7 +273,7 @@ function Ready({ v, act, example }: { v: DebriefView; act: Act; example?: boolea
         <div className="row2">
           <section className="db-files" aria-labelledby="files">
             <h2 className="db-h2" id="files">Files</h2>
-            {v.folders.map((f) => <Folder key={f.name} f={f} id={v.id} example={example} />)}
+            <Files v={v} example={example} />
           </section>
           <div />
         </div>
@@ -465,30 +466,25 @@ function Idea({ i, act }: { i: IdeaView; act: Act }) {
   )
 }
 
-function Folder({ f, id, example }: { f: DebriefView['folders'][number]; id: string; example?: boolean }) {
-  const [open, setOpen] = useState(f.open)
-  const prefix = f.name === 'the top folder' ? '' : f.name
+/** Every file, in its folders. A folder's name ends in a slash; the top folder has none. */
+function Files({ v, example }: { v: DebriefView; example?: boolean }) {
+  const folderPath = (name: string) => (name.endsWith('/') ? name.slice(0, -1) : '')
+  const more = Object.fromEntries(v.folders.filter((f) => f.count > f.files.length).map((f) => [folderPath(f.name), f.count - f.files.length]))
   return (
-    <div className="db-folder">
-      <button type="button" className="db-folder-b" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: `rotate(${open ? 90 : 0}deg)` }}><path d="m9 6 6 6-6 6" /></svg>
-        <span className="db-folder-n">{f.name}</span>
-        <span className="quiet">{filesSaid(f.count)}</span>
-      </button>
-      {open && (
-        <div className="db-folder-files">
-          {f.files.map((x) => (
-            <a key={x.path} className="frow" href={`${hrefOf(`change/${id}`, example)}?file=${encodeURIComponent(x.path)}`}>
-              <span className="frow-l">
-                <span className="mono">{x.path.startsWith(prefix) ? x.path.slice(prefix.length) : x.path}</span>
-                {x.yours && <span className="db-yours">your edit</span>}
-              </span>
-              <span className="mono small"><span className="add">{plus(x.added)}</span> <span className="del">{minus(x.removed)}</span></span>
-            </a>
-          ))}
-          {f.count > f.files.length && <span className="db-more">{f.count - f.files.length} more</span>}
-        </div>
+    <FileTree
+      files={v.folders.flatMap((f) => f.files)}
+      startsOpen={(path) => v.folders.some((f) => f.open && f.name.startsWith(`${path}/`))}
+      more={more}
+      note={filesSaid}
+      file={(x, name) => (
+        <a className="frow" href={`${hrefOf(`change/${v.id}`, example)}?file=${encodeURIComponent(x.path)}`}>
+          <span className="frow-l">
+            {name}
+            {x.yours && <span className="db-yours">your edit</span>}
+          </span>
+          <span className="mono small"><span className="add">{plus(x.added)}</span> <span className="del">{minus(x.removed)}</span></span>
+        </a>
       )}
-    </div>
+    />
   )
 }

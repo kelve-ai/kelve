@@ -1,6 +1,6 @@
 // A debrief's change, file by file (board ChangeView), or work handed over
-// that has no debrief, the same way, from what was kept of it: its files by folder
-// down the side, to find and step through; the file, whole, through the
+// that has no debrief, the same way, from what was kept of it: its files in
+// their folders down the side, to find and step through; the file, whole, through the
 // reader's CodeMirror (reader/code.ts), what it left as it was folded away;
 // and each decision in the margin beside its first line, with where it
 // stands. Lines the person changed after handover are theirs.
@@ -12,6 +12,8 @@ import type { DebriefChangeView, DebriefDiffView, DecisionStatus, DiffNote } fro
 import { exampleChange, exampleDiff } from '../example/debriefs'
 import { asBefore, colours, diffMarks, folding, foldOf, foldRuns, grammar, lineClasses, parsed, unfoldAt } from '../reader/code'
 import { hrefOf } from '../routes'
+import { FileTree, inOrder, tree } from '../ui/FileTree'
+import { Kbd } from '../ui/kit'
 import { useLoad } from '../useLoad'
 
 const STATUS: Record<DecisionStatus, string> = {
@@ -36,7 +38,8 @@ export function Change({ id, example, handover }: {
   const from = handover ? `/api/handovers/${id}` : `/api/debriefs/${id}`
   const loaded = useLoad<DebriefChangeView>(local ? null : `${from}/change`, ['debriefs'])
   const change = local ? exampleChange(id) : loaded.data
-  const files = useMemo(() => change?.folders.flatMap((f) => f.files) ?? [], [change])
+  // In the order the side lists them, so stepping goes down the list.
+  const files = useMemo(() => inOrder(tree(change?.folders.flatMap((f) => f.files) ?? [])), [change])
   const [find, setFind] = useState('')
   const [chosen, setChosen] = useState<string | null>(fileParam)
   const path = chosen ?? files.find((f) => f.decisions.length)?.path ?? files[0]?.path ?? null
@@ -50,6 +53,20 @@ export function Change({ id, example, handover }: {
   }
   const at = files.findIndex((f) => f.path === path)
   const step = (by: number) => files.length && pick(files[(at + by + files.length) % files.length].path)
+  const stepRef = useRef(step)
+  stepRef.current = step
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      if (e.key !== '[' && e.key !== ']') return
+      // Cmd+[ is the browser's Back; a key that needs AltGr still counts.
+      if (e.metaKey || (e.ctrlKey && !e.altKey) || e.defaultPrevented) return
+      if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable="true"]')) return
+      e.preventDefault()
+      stepRef.current(e.key === '[' ? -1 : 1)
+    }
+    window.addEventListener('keydown', on)
+    return () => window.removeEventListener('keydown', on)
+  }, [])
 
   if (!change) {
     if (loaded.error) return <p className="cv-error" role="alert">{loaded.error}</p>
@@ -69,22 +86,17 @@ export function Change({ id, example, handover }: {
         <nav className="cv-nav" aria-label="Files">
           <label className="sr-only" htmlFor="cv-find">Find a file</label>
           <input id="cv-find" className="field cv-find" placeholder="Find a file" value={find} onChange={(e) => setFind(e.target.value)} />
-          {change.folders.map((g) => {
-            const shown = g.files.filter((f) => !words || f.path.toLowerCase().includes(words))
-            if (!shown.length) return null
-            const prefix = g.name === 'the top folder' ? '' : g.name
-            return (
-              <div className="cv-group" key={g.name}>
-                <span className="cv-folder">{g.name}</span>
-                {shown.map((f) => (
-                  <button key={f.path} type="button" className="cv-file" aria-current={f.path === path} onClick={() => pick(f.path)}>
-                    <span className={`cv-file-n${f.yours ? ' yours' : ''}`}>{f.path.startsWith(prefix) ? f.path.slice(prefix.length) : f.path}</span>
-                    <span className="cv-file-c"><span className="add">{plus(f.added)}</span> <span className="del">{minus(f.removed)}</span></span>
-                  </button>
-                ))}
-              </div>
-            )
-          })}
+          <FileTree
+            files={files.filter((f) => !words || f.path.toLowerCase().includes(words))}
+            allOpen={!!words}
+            current={path}
+            file={(f, name) => (
+              <button type="button" className="cv-file" title={f.path} aria-current={f.path === path} onClick={() => pick(f.path)}>
+                <span className={`cv-file-n${f.yours ? ' yours' : ''}`}>{name}</span>
+                <span className="cv-file-c"><span className="add">{plus(f.added)}</span> <span className="del">{minus(f.removed)}</span></span>
+              </button>
+            )}
+          />
         </nav>
         <section className="cv-file-view" aria-label={path ?? 'The file'}>
           <div className="cv-file-head">
@@ -93,8 +105,8 @@ export function Change({ id, example, handover }: {
               {file && <span className={`cv-kind ${file.kind.replace(' ', '-')}`}>{file.kind}</span>}
             </div>
             <div className="cv-steps">
-              <button type="button" className="btn btn-s btn-sm" onClick={() => step(-1)}>Previous file</button>
-              <button type="button" className="btn btn-s btn-sm" onClick={() => step(1)}>Next file</button>
+              <button type="button" className="btn btn-s btn-sm" aria-keyshortcuts="[" onClick={() => step(-1)}>Previous file <Kbd>[</Kbd></button>
+              <button type="button" className="btn btn-s btn-sm" aria-keyshortcuts="]" onClick={() => step(1)}>Next file <Kbd>]</Kbd></button>
             </div>
           </div>
           {file && !file.shown && <p className="cv-quiet">kelve doesn’t show this file: it isn’t text, or it holds a secret.</p>}

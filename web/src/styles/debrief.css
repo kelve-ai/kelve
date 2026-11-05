@@ -129,20 +129,22 @@
 
 /* Every file, by folder. */
 .db-files { display: flex; flex-direction: column; gap: 10px; }
-.db-folder { display: flex; flex-direction: column; }
-.db-folder-b { all: unset; box-sizing: border-box; cursor: pointer; display: flex; gap: 10px; align-items: baseline; padding: 7px 10px; border-radius: 9px; }
-.db-folder-b:hover { background: var(--well-2); }
-.db-folder-b:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.db-folder-b svg { color: var(--quiet); }
-.db-folder-n { font: 600 14.5px var(--mono); }
-.db-folder-b .quiet { font-size: 14px; }
-.db-folder-files { display: flex; flex-direction: column; padding-left: 22px; }
-.frow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 7px 10px; border-radius: 9px; color: var(--ink); text-decoration: none; }
+.ft-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ft-list .ft-list { margin-left: 15px; padding-left: 7px; border-left: 1px solid var(--rule); }
+.ft-dir { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; gap: 6px; align-items: center; padding: 5px 8px; border-radius: 8px; }
+.ft-dir:hover { background: var(--well-2); }
+.ft-dir:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ft-chev { flex: none; color: var(--quiet); }
+.ft-icon { flex: none; color: var(--quiet); }
+.ft-dir-n { font: 500 14px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ft-note { font-size: 13.5px; color: var(--quiet); white-space: nowrap; margin-left: 4px; }
+.ft-name { display: flex; gap: 6px; align-items: center; min-width: 0; padding-left: 18px; }
+.ft-file-n { font: 14px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ft-more { font-size: 14px; color: var(--quiet); padding: 5px 8px 5px 26px; }
+.frow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 5px 8px; border-radius: 9px; color: var(--ink); text-decoration: none; }
 .frow:hover { background: var(--well-2); text-decoration: none; }
-.frow-l { display: flex; gap: 12px; align-items: baseline; min-width: 0; }
-.frow-l .mono { font-size: 14.5px; overflow-wrap: anywhere; }
+.frow-l { display: flex; gap: 12px; align-items: center; min-width: 0; }
 .db-yours { font-size: 13.5px; color: var(--ochre); white-space: nowrap; }
-.db-more { font-size: 14px; color: var(--quiet); padding: 6px 10px; }
 
 /* When you send it. */
 .db-send { padding-top: 20px; border-top: 1px solid var(--rule); }
@@ -195,15 +197,13 @@
 .cv-title h1 { margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.02em; }
 .cv-counts { font-size: 14px; }
 .cv-body { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
-.cv-nav { flex: 0 0 250px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.cv-nav { flex: 0 0 290px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .cv-find { font-size: 14px; padding: 8px 11px; }
-.cv-group { display: flex; flex-direction: column; gap: 1px; }
-.cv-folder { font: 12.5px var(--mono); color: var(--quiet); padding: 6px 10px 2px; overflow-wrap: anywhere; }
-.cv-file { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 6px 10px; border-radius: 8px; font-size: 14px; }
+.cv-file { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 8px; font-size: 14px; }
 .cv-file:hover { background: var(--well); }
 .cv-file[aria-current='true'] { background: var(--white); box-shadow: 0 0 0 1px var(--rule), 0 1px 2px rgba(var(--shadow), 0.05); }
 .cv-file:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.cv-file-n { font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.cv-file-n { min-width: 0; color: var(--ink); }
 .cv-file-n.yours { color: var(--ochre); }
 .cv-file-c { font: 12px var(--mono); }
 .cv-file-view { flex: 1 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -214,6 +214,7 @@
 .cv-kind.new { color: var(--added-ink); }
 .cv-kind.your-edit { color: var(--ochre); }
 .cv-steps { display: flex; gap: 6px; align-items: center; }
+@media (hover: none) { .cv-steps .kbd { display: none; } }
 .cv-quiet { margin: 0; color: var(--soft); font-size: 15px; }
 .cv-code { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .cv-code.wide { grid-template-columns: minmax(0, 1fr) 230px; gap: 24px; }

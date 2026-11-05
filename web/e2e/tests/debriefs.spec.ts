@@ -139,6 +139,66 @@ test('a small change can be debriefed anyway, and the change shows each decision
   await expect(page).toHaveURL(new RegExp(`#/debrief/${id}$`))
 })
 
+test('a change’s files sit inside their folders, and [ and ] step down them', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/?example#/example/change/1')
+  const files = page.getByRole('navigation', { name: 'Files' })
+  // Each folder its own row, inside its parent: no paths with slashes.
+  await expect(files.getByRole('button', { name: 'workflows' })).toBeVisible()
+  await expect(files).not.toContainText('.github/')
+  const looking = files.locator('[aria-current="true"]')
+  await expect(looking).toContainText('args.rs')
+  await expect(page.getByRole('button', { name: 'Next file' })).toHaveAttribute('aria-keyshortcuts', ']')
+
+  await page.keyboard.press(']')
+  await expect(looking).toContainText('clock.rs')
+  await page.keyboard.press('[')
+  await expect(looking).toContainText('args.rs')
+  // Stepping to a file opens the folder it's in.
+  await files.getByRole('button', { name: 'tests' }).click()
+  await expect(files.getByText('status_codes.rs')).toHaveCount(0)
+  await page.keyboard.press('[')
+  await expect(looking).toContainText('retries.md')
+  await page.keyboard.press('[')
+  await expect(looking).toContainText('README.md')
+  await page.keyboard.press('[')
+  await page.keyboard.press('[')
+  await page.keyboard.press('[')
+  await page.keyboard.press('[')
+  await expect(looking).toContainText('status_codes.rs')
+
+  // In the box, the keys are for typing. It shows no ring as you do, and finding opens every folder.
+  const find = page.getByRole('textbox', { name: 'Find a file' })
+  await find.focus()
+  await expect(find).toHaveCSS('outline-style', 'none')
+  await page.keyboard.type(']')
+  await expect(find).toHaveValue(']')
+  await expect(page.getByRole('region', { name: 'tests/status_codes.rs' })).toBeVisible()
+  await find.fill('test.yml')
+  await expect(files.getByRole('button', { name: 'workflows' })).toHaveAttribute('aria-expanded', 'true')
+  await expect(files.getByText('test.yml')).toBeVisible()
+})
+
+test('a debrief’s files sit inside their folders, and what you type in shows no ring', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/?example#/example/debrief/1')
+  const files = page.getByRole('region', { name: 'Files' })
+  await expect(files.getByRole('button', { name: /^src/ })).toHaveAttribute('aria-expanded', 'true')
+  await expect(files.getByRole('button', { name: /^docs/ })).toHaveAttribute('aria-expanded', 'false')
+  await files.getByRole('button', { name: /^docs/ }).click()
+  await expect(files.getByRole('link', { name: /retries\.md/ })).toBeVisible()
+  await expect(files).not.toContainText('docs/')
+
+  await page.getByRole('button', { name: 'Change it' }).first().click()
+  await page.getByRole('button', { name: 'Look into it' }).nth(1).click()
+  const typed = page.locator('textarea')
+  await expect(typed.first()).toBeVisible()
+  for (const box of await typed.all()) {
+    await box.focus()
+    await expect(box).toHaveCSS('outline-style', 'none')
+  }
+})
+
 test('home offers the example until you’ve opened it', async ({ page, browserName }) => {
   const port = Number(process.env.E2E_EXAMPLE_PORT ?? 4679) + (browserName === 'webkit' ? 2 : 0)
   const fresh = await startKelve(port, world().graph, { log: `e2e/.example-${browserName}.log` })

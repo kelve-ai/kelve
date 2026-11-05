@@ -5,6 +5,7 @@
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader } from '../Loader'
+import { byName, type Dir as TreeDir, tree } from '../ui/FileTree'
 import { Choice } from '../ui/ui'
 
 /** A file as the side panel lists it; in a change, with the lines it added and took out. */
@@ -17,26 +18,7 @@ type Row =
   | { kind: 'dir'; path: string; name: string; depth: number; open: boolean }
   | { kind: 'file'; file: SideFile; name: string; depth: number }
 
-type Dir = { name: string; path: string; dirs: Map<string, Dir>; files: SideFile[] }
-
-/** The folders and files as a tree, folders first, each by name; tooling's dot-folders last. */
-function tree(files: SideFile[]): Dir {
-  const root: Dir = { name: '', path: '', dirs: new Map(), files: [] }
-  for (const f of files) {
-    const parts = f.path.split('/')
-    let at = root
-    for (let i = 0; i < parts.length - 1; i++) {
-      const path = parts.slice(0, i + 1).join('/')
-      let next = at.dirs.get(parts[i])
-      if (!next) at.dirs.set(parts[i], (next = { name: parts[i], path, dirs: new Map(), files: [] }))
-      at = next
-    }
-    at.files.push(f)
-  }
-  return root
-}
-
-const byName = (a: string, b: string) => Number(a.startsWith('.')) - Number(b.startsWith('.')) || a.localeCompare(b)
+type Dir = TreeDir<SideFile>
 
 /** The rows on show: open folders' contents, a chain of single folders as one row. */
 function rows(root: Dir, open: (path: string) => boolean): Row[] {
