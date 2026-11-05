@@ -31,4 +31,8 @@ accepts: Array<CredentialKind>,
 /**
  * What kelve keeps already for this provider.
  */
-kept: Array<CredentialKind>, skills: Array<SkillFileView>, };
+kept: Array<CredentialKind>, 
+/**
+ * What it was estimated for: what pays when it's confirmed.
+ */
+paying: CredentialKind, skills: Array<SkillFileView>, };

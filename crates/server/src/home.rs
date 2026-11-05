@@ -444,7 +444,10 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
         items.push(TimelineItem {
             id: format!("score:{}", r.id),
             kind: TimelineKind::Score,
-            title: format!("A verified run on {} tasks, on {}", r.kind_name, r.model_name),
+            title: format!(
+                "A verified run on {} tasks, on {}",
+                r.kind_name, r.model_name
+            ),
             at: at(r.at),
             act: Some(TimelineAct::SeeIt),
             to: Some(format!("agent/score/{}", r.id)),

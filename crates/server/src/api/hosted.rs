@@ -450,7 +450,13 @@ pub async fn estimate(
         .or_else(|| accepts.iter().copied().find(|k| kept.contains(k)))
         .unwrap_or(accepts[0]);
     let e = c
-        .estimate_paying(&kind.kind, &agent.agent, &model.model, &skills, paying.into())
+        .estimate_paying(
+            &kind.kind,
+            &agent.agent,
+            &model.model,
+            &skills,
+            paying.into(),
+        )
         .await
         .map_err(said)?;
     tracing::info!(kind = %e.kind, model = %e.model, files = files.len(), "sent the person's skills to kelve.ai for an estimate");

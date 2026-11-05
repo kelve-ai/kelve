@@ -279,9 +279,18 @@ async fn signing_in_choosing_an_address_and_a_run_to_a_published_score() {
         ]
     );
 
+    // Estimated for what pays: with nothing chosen and nothing kept, the
+    // first the agent takes, a subscription here; then for an API key,
+    // once it's chosen, the one before dropped.
     let run = json!({ "kind": "rust", "agent": "claude-code", "model": "claude-sonnet-5-6" });
+    let first = k.json("POST", "/api/hosted/runs", Some(run)).await;
+    assert_eq!(first["paying"], "subscription");
+    let dropped = format!("/api/hosted/runs/{}", first["run"].as_str().unwrap());
+    k.json("DELETE", &dropped, None).await;
+    let run = json!({ "kind": "rust", "agent": "claude-code", "model": "claude-sonnet-5-6", "credential": "apiKey" });
     let e = k.json("POST", "/api/hosted/runs", Some(run)).await;
     let id = e["run"].as_str().unwrap().to_string();
+    assert_eq!(e["paying"], "apiKey");
     assert_eq!(e["dollars"], 60.0);
     assert_eq!(e["providerName"], "Anthropic");
     assert_eq!(e["kept"], json!([]));
