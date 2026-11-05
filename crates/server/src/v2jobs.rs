@@ -9,10 +9,10 @@
 //!
 //! | Job | Key | Done by |
 //! |---|---|---|
-//! | [`DEBRIEF`] | the handover's id | the agent loop: asks the `debrief` job, then keeps the answer |
-//! | [`RESEARCH`] | the decision's id | the agent loop: asks `research`, keeps the answer |
-//! | [`EXPLAIN`] | the explanation's id | the agent loop: asks `explain`, keeps the answer |
-//! | [`LEARN`] | `debrief:<id>` when one is sent, `message:<id>` or `edit:<handover>` for a correction | the agent loop: asks `learn`, turns the answer into candidates |
+//! | [`DEBRIEF`] | `v2.debrief:<debrief id>`, payload `{debrief, opened}` | the agent loop (`agent_loop::debrief`): asks the `debrief` job, then keeps the answer |
+//! | [`RESEARCH`] | `v2.research:<research id>`, payload `{research}` or `{decision}` | the agent loop (`agent_loop::research::ask_for`): asks `research`, keeps the answer |
+//! | [`EXPLAIN`] | `v2.explain:<explanation id>`, payload `{explanation, lines}` | the agent loop (`agent_loop::explain::ask_for`): asks `explain`, keeps the answer |
+//! | [`LEARN`] | `v2.learn:debrief:<id>` when one is sent (payload `{debrief}`), `v2.learn:messages:<session>` for corrections (`{session}`), `v2.learn:edit:<handover>` for edits after handover (`{handover}`); read from the payload | the agent loop (`agent_loop::learn`): asks `learn`, turns the answer into candidates, and writes what was sent into the skills |
 //! | [`CHECK`] | the check's id | skills: asks `compare`, keeps the verdict |
 //! | [`DRAW`] | a fresh id per ask | your agent: asks `draw`, keeps the part or character |
 
@@ -35,7 +35,17 @@ pub const CHECK: &str = "v2.check";
 pub const DRAW: &str = "v2.draw";
 
 /// Queues `kind` for `key` now, with `payload`. The same kind and key queued
-/// again replaces the payload instead of adding a second job.
+/// again replaces the payload instead of adding a second job. Keys are kept
+/// under the kind (`v2.research:12`), as the jobs table's keys are one
+/// namespace: research on decision 12 and an explanation numbered 12 are
+/// two jobs.
 pub async fn queue(app: &Shared, kind: &str, key: &str, payload: Value) -> pipeline::Result<()> {
-    pipeline::add(app, kind, Some(key), payload, Utc::now()).await
+    pipeline::add(
+        app,
+        kind,
+        Some(&format!("{kind}:{key}")),
+        payload,
+        Utc::now(),
+    )
+    .await
 }

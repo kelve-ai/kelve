@@ -8,6 +8,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
 import type { Parents, RootContent } from 'mdast'
+import { colours, highlight } from '../blocks/highlight'
 
 /** Only links people expect to follow leave the page. */
 const safeHref = (url: string) => (/^(https?:|mailto:)/i.test(url) ? url : undefined)
@@ -72,8 +73,13 @@ export function block(node: RootContent, key: string, links = true): ReactNode {
         </L>
       )
     }
-    case 'code':
+    case 'code': {
+      // Coloured as its language is, when kelve knows it: highlight.js
+      // escapes the code, so what it gives back holds only its own spans.
+      const lang = node.lang?.toLowerCase()
+      if (lang && colours(lang)) return <pre key={key} className="code"><code dangerouslySetInnerHTML={{ __html: highlight(node.value.split('\n'), lang).join('\n') }} /></pre>
       return <pre key={key}><code>{node.value}</code></pre>
+    }
     case 'thematicBreak':
       return <hr key={key} />
     case 'table':

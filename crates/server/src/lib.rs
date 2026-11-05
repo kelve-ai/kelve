@@ -4,15 +4,18 @@
 //! reader, on the person's own computer (docs/architecture.md).
 
 pub mod agent;
+pub mod agent_loop;
 pub mod api;
 pub mod auth;
 pub mod config;
 pub mod counts;
 pub mod crypto;
+pub mod debriefs;
 pub mod error;
 pub mod follows;
 pub mod handoff;
 pub mod handover;
+pub mod home;
 pub mod hooks;
 pub mod hosted;
 pub mod lessons;
@@ -35,6 +38,7 @@ pub mod updates;
 pub mod v2jobs;
 pub mod way;
 pub mod web;
+pub mod your_agent;
 
 use std::future::IntoFuture;
 use std::time::Duration;
@@ -104,6 +108,9 @@ async fn start(config: Config) -> Result<Shared, ServeError> {
     updates::start(&app);
     skills_sync::start(&app);
     hooks::up_to_date(&app.config.agents_home, &app.config.claude_dir);
+    // Skills linked into agents' folders, in step with what's on disk now.
+    agent_loop::links::keep_in_step(&app);
+    agent_loop::links::sync_setting(&app).await;
     Ok(app)
 }
 

@@ -233,6 +233,25 @@ impl Credential {
     }
 }
 
+/// The app shows a credential as kelve's own view of it (`core::hosted`).
+impl From<kelve_core::hosted::CredentialKind> for Credential {
+    fn from(kind: kelve_core::hosted::CredentialKind) -> Credential {
+        match kind {
+            kelve_core::hosted::CredentialKind::ApiKey => Credential::ApiKey,
+            kelve_core::hosted::CredentialKind::Subscription => Credential::Subscription,
+        }
+    }
+}
+
+impl From<Credential> for kelve_core::hosted::CredentialKind {
+    fn from(c: Credential) -> kelve_core::hosted::CredentialKind {
+        match c {
+            Credential::ApiKey => kelve_core::hosted::CredentialKind::ApiKey,
+            Credential::Subscription => kelve_core::hosted::CredentialKind::Subscription,
+        }
+    }
+}
+
 fn api_key_only() -> Vec<Credential> {
     vec![Credential::ApiKey]
 }

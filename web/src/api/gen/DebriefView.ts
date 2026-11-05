@@ -6,6 +6,7 @@ import type { IdeaView } from "./IdeaView";
 import type { SendLine } from "./SendLine";
 import type { SkillAddition } from "./SkillAddition";
 import type { SuggestedItem } from "./SuggestedItem";
+import type { Timestamp } from "./Timestamp";
 import type { UsedPart } from "./UsedPart";
 import type { WritingStep } from "./WritingStep";
 
@@ -57,4 +58,8 @@ onSend: Array<SendLine>,
 /**
  * When it failed: what was wrong with it.
  */
-problems: Array<string>, };
+problems: Array<string>, 
+/**
+ * When it was sent.
+ */
+sentAt: Timestamp | null, };

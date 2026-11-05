@@ -33,10 +33,10 @@ jobs:
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all --all-features --locked
       # New type files count too, so this asks git status rather than git diff.
-      - name: The web app's types, and the graph's API document, match the code
+      - name: The web app's types and characters, and the graph's API document, match the code
         run: |
-          git status --porcelain web/src/api/gen docs/graph-api.json
-          test -z "$(git status --porcelain web/src/api/gen docs/graph-api.json)"
+          git status --porcelain web/src/api/gen web/src/ui/gen docs/graph-api.json
+          test -z "$(git status --porcelain web/src/api/gen web/src/ui/gen docs/graph-api.json)"
 
   web:
     name: Web

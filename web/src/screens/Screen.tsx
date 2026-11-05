@@ -3,16 +3,25 @@
 // so no address is ever a blank page. Each stub is replaced here by its
 // screen as it's built.
 
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Header } from '../Header'
+import { Loading } from '../Loader'
 import { hrefOf, placeOf, type Route, SECTIONS, type Section } from '../routes'
 import { Character } from '../ui/Character'
+import { Customise } from './agent/Customise'
+import { SettingsSection } from './agent/Settings'
+import { Welcome } from './agent/Welcome'
+import { YourAgent } from './agent/YourAgent'
 import { AccountSection } from './hosted/Account'
 import { Address } from './hosted/Address'
 import { Run } from './hosted/Run'
 import { RunSetup } from './hosted/RunSetup'
-import { YourPage } from './hosted/YourPage'
 import { isSkillsRoute, SkillsScreens, type SkillsRoute } from './Skills'
+import { Debrief } from './Debrief'
+import { Home } from './Home'
+
+// The change view brings CodeMirror and its grammars: fetched only when it's opened.
+const Change = lazy(() => import('./Change').then((m) => ({ default: m.Change })))
 
 /** What each settings section is called. */
 const SECTION_NAMES: Record<Section, string> = {
@@ -92,14 +101,7 @@ function Settings({ section, example }: { section: Section; example?: boolean })
       </nav>
       <section className="sets-body" aria-label={SECTION_NAMES[section]} data-stub={`settings-${section}`}>
         <h2>{SECTION_NAMES[section]}</h2>
-        {section === 'account' ? (
-          <AccountSection example={example} />
-        ) : (
-          <>
-            <p className="lede">{SECTION_LINES[section]}</p>
-            <p className="stub-soon">This page is still being built.</p>
-          </>
-        )}
+        {section === 'account' ? <AccountSection example={example} /> : <SettingsSection section={section} example={example} />}
       </section>
     </div>
   )
@@ -112,14 +114,26 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [key])
+  // Changing how your agent looks has a header of its own, with Cancel and Save.
+  if (route.screen === 'look') return <Customise example={example} />
   return (
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
-      <main className={route.screen === 'settings' || isSkillsRoute(route) ? 'app-main' : 'app-main narrow'}>
+      <main className={route.screen === 'settings' || isSkillsRoute(route) ? 'app-main' : ['home', 'debrief', 'change'].includes(route.screen) ? 'app-own' : 'app-main narrow'}>
         {route.screen === 'settings' ? (
           <Settings section={route.section} example={example} />
         ) : isSkillsRoute(route) ? (
           <SkillsScreens route={route} example={example} />
+        ) : route.screen === 'home' ? (
+          <Home example={example} />
+        ) : route.screen === 'debrief' ? (
+          <Debrief key={`${route.id}${location.hash.split('?')[1] ?? ''}`} id={route.id} example={example} />
+        ) : route.screen === 'change' ? (
+          <Suspense fallback={<Loading />}>
+            <Change key={route.id} id={route.id} example={example} />
+          </Suspense>
+        ) : route.screen === 'welcome' ? (
+          <Welcome example={example} />
         ) : route.screen === 'address' ? (
           <Address example={example} />
         ) : route.screen === 'score-new' ? (
@@ -127,10 +141,7 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
         ) : route.screen === 'score' ? (
           <Run id={route.id} example={example} />
         ) : route.screen === 'agent' ? (
-          <>
-            <Stub route={route} example={example} />
-            <YourPage example={example} />
-          </>
+          <YourAgent example={example} />
         ) : (
           <Stub route={route} example={example} />
         )}

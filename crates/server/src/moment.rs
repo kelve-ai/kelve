@@ -101,6 +101,10 @@ pub async fn moment(
         if let Some(id) = m.opened {
             crate::handoff::opened(&app, session, id).await?;
             crate::handover::of_session(&app, id, session).await?;
+            // The agent loop's: the debrief and the past task are its session's.
+            if let Err(e) = crate::agent_loop::debrief::in_session(&app, id, session).await {
+                tracing::warn!(error = %e.message, "couldn't keep which session handed work over");
+            }
         }
         return Ok(Json(MomentOut::default()));
     }
@@ -137,13 +141,20 @@ pub async fn moment(
         let mut conn = app.db.acquire().await?;
         kelve_store::lessons::moment_now(&mut conn, session).await?
     };
+    // The agent loop's: what was committed since the last handover here,
+    // however it was, is compared with it.
+    if let Err(e) = crate::agent_loop::after::look(&app, &cwd).await {
+        tracing::warn!(error = %e.message, "couldn't compare what was committed with a handover");
+    }
     let text = match m.what.as_str() {
         "read" | "edit" => match &m.file {
             Some(file) => {
                 let edit = m.what == "edit";
                 touch(&app, session, file, edit, read_root.as_deref()).await?;
+                // The agent loop's: the skill for this kind of work, once.
+                let skills = crate::agent_loop::deliver::on_file(&app, session, &cwd, file).await?;
                 // Lessons'.
-                lessons::on_file(
+                let lessons = lessons::on_file(
                     &app,
                     session,
                     agent,
@@ -153,7 +164,8 @@ pub async fn moment(
                     m.replaced.as_deref(),
                     read_root.as_deref(),
                 )
-                .await?
+                .await?;
+                joined([skills, lessons])
             }
             None => String::new(),
         },
@@ -179,8 +191,18 @@ pub async fn moment(
         "end" | "prompt" => {
             if let Some(said) = m.prompt.as_deref().filter(|_| m.what == "prompt") {
                 kept_message(&app, session, agent, &cwd, said).await?;
+                // The agent loop's: a correction is learned from.
+                let root = crate::agent_loop::repo_of(&cwd).await;
+                crate::agent_loop::learn::on_message(&app, session, &root, said).await?;
             }
+            // The agent loop's: the skills the session starts with, as it
+            // does; and, as its turn ends, the jobs waiting for it.
+            let skills = match m.what.as_str() {
+                "prompt" => crate::agent_loop::deliver::at_prompt(&app, session, &cwd).await?,
+                _ => crate::agent_loop::deliver::waiting(&app, session).await?,
+            };
             joined([
+                skills,
                 lessons::at_turn_end(&app, session).await?,
                 crate::handoff::done(&app, session).await?,
                 crate::handoff::reading(&app, session).await?,

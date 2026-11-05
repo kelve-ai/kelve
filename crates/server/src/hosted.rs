@@ -9,7 +9,6 @@
 //! secrets and paths stripped and shown to them first; their agent's
 //! character and name, for their page, when they publish it. Nothing else.
 
-use std::collections::BTreeMap;
 use std::path::Path;
 use std::time::Duration;
 
@@ -171,22 +170,24 @@ pub(crate) async fn keep_provider_key(
     seal(app, &format!("{}{provider}", kind.prefix()), key).await
 }
 
-/// What can pay for a run on a provider's model: an API key, and a Claude
-/// subscription's token only where the service allows it, which is one
-/// the person runs locally.
-///
-/// TODO: read this from the run's offer once the hosted service's v2
-/// shapes say it.
-pub fn accepts(app: &App, provider: Option<&str>) -> Vec<CredentialKind> {
-    let local = reqwest::Url::parse(&app.config.endpoints.graph)
-        .ok()
-        .and_then(|u| u.host_str().map(str::to_string))
-        .is_some_and(|h| matches!(h.as_str(), "127.0.0.1" | "localhost" | "[::1]" | "::1"));
-    if local && provider.is_none_or(|p| p == "anthropic") {
-        vec![CredentialKind::Subscription, CredentialKind::ApiKey]
-    } else {
-        vec![CredentialKind::ApiKey]
+/// What can pay for a run with these agents, as kelve.ai's offer says for
+/// each: an API key always, a Claude subscription's token where it allows
+/// one. The subscription first, when there is one.
+pub fn accepts<'a>(
+    agents: impl IntoIterator<Item = &'a kelve_graph_api::v2::AgentOffer>,
+) -> Vec<CredentialKind> {
+    let mut out: Vec<CredentialKind> = Vec::new();
+    for c in agents.into_iter().flat_map(|a| a.credentials.iter()) {
+        let kind = CredentialKind::from(*c);
+        if !out.contains(&kind) {
+            out.push(kind);
+        }
     }
+    if out.is_empty() {
+        out.push(CredentialKind::ApiKey);
+    }
+    out.sort_by_key(|k| *k != CredentialKind::Subscription);
+    out
 }
 
 /// A provider's ID as kelve.ai gives it: lower-case letters, digits and hyphens.
@@ -326,11 +327,10 @@ pub async fn look_and_name(app: &App) -> (Look, Option<String>) {
     (look, name)
 }
 
-/// The person's agent as its page draws it.
-pub fn character(look: &Look) -> v2::Character {
-    let letters = look
-        .picture(&BTreeMap::new(), &BTreeMap::new(), Move::Idle)
-        .letters();
+/// The person's agent as its page draws it, wearing what it drew for them.
+pub fn character(app: &App, look: &Look) -> v2::Character {
+    let (parts, characters) = crate::your_agent::Kept::of(&app.settings()).made();
+    let letters = look.picture(&parts, &characters, Move::Idle).letters();
     let c = &look.robot.colours;
     use kelve_core::character::Role;
     v2::Character {
@@ -353,7 +353,9 @@ pub fn character(look: &Look) -> v2::Character {
 pub async fn set_page(app: &Shared, c: &Client, public: bool) -> ApiResult<v2::Account> {
     let (look, name) = look_and_name(app).await;
     if public {
-        c.set_character(&character(&look)).await.map_err(said)?;
+        c.set_character(&character(app, &look))
+            .await
+            .map_err(said)?;
     }
     let a = c
         .set_page(&v2::PageSettings { name, public })
@@ -476,16 +478,15 @@ pub fn listed(files: &[tar::File]) -> Vec<SkillFileView> {
 /// agent, pleased, and a line on what happened.
 pub fn signed_in_page(app: &App, look: &Look, ok: bool, said: &str) -> String {
     let moving = if ok { Move::Happy } else { Move::Idle };
-    let svg = look
-        .picture(&BTreeMap::new(), &BTreeMap::new(), moving)
-        .svg(
-            &look.robot.colours,
-            &Draw {
-                moving,
-                label: "Your agent".into(),
-                style: true,
-            },
-        );
+    let (parts, characters) = crate::your_agent::Kept::of(&app.settings()).made();
+    let svg = look.picture(&parts, &characters, moving).svg(
+        &look.robot.colours,
+        &Draw {
+            moving,
+            label: "Your agent".into(),
+            style: true,
+        },
+    );
     let escape = |t: &str| {
         t.replace('&', "&amp;")
             .replace('<', "&lt;")

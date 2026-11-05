@@ -47,8 +47,8 @@ pub fn provider_name(provider: &str) -> String {
 /// locally), their Claude subscription, through a token from
 /// `claude setup-token`, which uses their plan's usage.
 ///
-/// TODO: kelve's own until the hosted service's v2 shapes say which kinds
-/// a run's offer accepts and `Confirm` carries one; switch to theirs then.
+/// The app's view of the hosted service's `Credential` (graph-api v2), which
+/// converts to and from it: kept here, with its words, for the web app.
 #[derive(
     Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, TS,
 )]

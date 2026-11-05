@@ -293,8 +293,9 @@ pub async fn on_commit(app: &Shared, session: &str, cwd: &str) -> ApiResult<usiz
         .filter(|e| !by_agent(&e.path))
         .collect();
     let mut conn = app.db.acquire().await?;
+    let mut ids = Vec::with_capacity(edits.len());
     for e in &edits {
-        kelve_store::candidates::add_evidence(
+        let id = kelve_store::candidates::add_evidence(
             &mut conn,
             &kelve_store::candidates::NewEvidence {
                 kind: "edit",
@@ -307,8 +308,18 @@ pub async fn on_commit(app: &Shared, session: &str, cwd: &str) -> ApiResult<usiz
             },
         )
         .await?;
+        ids.push(id);
     }
     handovers::compared(&mut conn, handover.id).await?;
+    drop(conn);
+    // What the person kept, and learning from what they changed.
+    let dir = root.clone();
+    let head = tokio::task::spawn_blocking(move || kelve_engine::git::head(&dir, "HEAD"))
+        .await
+        .map_err(ApiError::internal)?
+        .map(|(id, _)| id)
+        .unwrap_or_default();
+    crate::agent_loop::after::compared(app, handover.id, &head, &ids).await?;
     Ok(edits.len())
 }
 

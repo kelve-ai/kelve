@@ -28,6 +28,8 @@ function licenses(): Plugin {
 export default defineConfig({
   plugins: [react(), licenses()],
   server: {
+    // The characters' parts are core's own file, read where it is.
+    fs: { allow: [import.meta.dirname, resolve(import.meta.dirname, '../crates/core/src/character')] },
     port: Number(process.env.KELVE_WEB_PORT ?? 4699),
     strictPort: true,
     proxy: Object.fromEntries(toServer.map(path => [path, { target: server }])),

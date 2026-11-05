@@ -29,7 +29,9 @@ test('the start page and settings', async ({ page }) => {
 test('kelve’s screens under its header, and every control they’re built from', async ({ page }) => {
   await me().hello()
   await signIn(page)
-  for (const path of ['', 'debrief/1', 'skills', 'skills/rust/edit', 'agent', 'agent/score/new', 'settings/agent', 'settings/privacy', 'welcome']) {
+  // Still, so nothing is read half way through coming in.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  for (const path of ['', 'debrief/1', 'skills', 'skills/rust/edit', 'agent', 'agent/look', 'agent/score/new', 'settings/agent', 'settings/checks', 'settings/reading', 'settings/privacy', 'settings/about', 'welcome']) {
     await page.goto(`/#/${path}`)
     await expect(page.locator('main h1, main h2').first()).toBeVisible()
     await scan(page)
@@ -40,6 +42,14 @@ test('kelve’s screens under its header, and every control they’re built from
     await page.goto(`/?${theme}#/example/kit?theme=${theme}`)
     await expect(page.getByRole('heading', { level: 1, name: 'Controls' })).toBeVisible()
     await scan(page)
+  }
+  // Home, the debrief in each of its states, and the change, light and dark.
+  for (const theme of ['light', 'dark']) {
+    for (const path of ['home', 'home?as=attention', 'debrief/1', 'debrief/1?as=writing', 'debrief/3?as=sent', 'change/1']) {
+      await page.goto(`/?${theme}#/example/${path}${path.includes('?') ? '&' : '?'}theme=${theme}`)
+      await expect(page.locator('main h1, main h2').first()).toBeVisible()
+      await scan(page)
+    }
   }
   await page.goto('/?dialog#/example/kit?as=dialog')
   await expect(page.getByRole('dialog', { name: 'Send to your agent?' })).toBeVisible()

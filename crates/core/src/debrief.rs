@@ -282,6 +282,16 @@ struct Draft {
 /// files, with the lines each added or changed. The debrief, when it
 /// passes; else every problem, as sentences the agent can act on.
 pub fn read(text: &str, change: &[Changed]) -> Result<Debrief, Vec<String>> {
+    read_against(text, Some(change))
+}
+
+/// Reads a debrief kelve kept: it passed its checks as it was handed in, so
+/// its lines aren't checked again, as the work may have moved on since.
+pub fn read_kept(text: &str) -> Result<Debrief, Vec<String>> {
+    read_against(text, None)
+}
+
+fn read_against(text: &str, change: Option<&[Changed]>) -> Result<Debrief, Vec<String>> {
     let mut problems = Vec::new();
     let Some(front) = md::front_matter(text) else {
         return Err(vec![format!(
@@ -469,7 +479,7 @@ fn joined(lines: &[&str]) -> String {
 }
 
 /// A decision's fields, read and checked.
-fn decision(d: Draft, name: &str, change: &[Changed]) -> Result<Decision, Vec<String>> {
+fn decision(d: Draft, name: &str, change: Option<&[Changed]>) -> Result<Decision, Vec<String>> {
     let mut problems = Vec::new();
     if d.title.trim().is_empty() {
         problems.push(format!(
@@ -526,8 +536,10 @@ fn decision(d: Draft, name: &str, change: &[Changed]) -> Result<Decision, Vec<St
             "{name} has no lines. Add `- lines:` with the path and the line ranges in the change, such as `src/fetch.rs 59-66`."
         ));
     }
-    for l in &lines {
-        problems.extend(in_change(l, name, change));
+    if let Some(change) = change {
+        for l in &lines {
+            problems.extend(in_change(l, name, change));
+        }
     }
     let why = d.why.join("\n").trim_matches('\n').trim_end().to_string();
     if why.trim().is_empty() {
@@ -985,6 +997,9 @@ themselves. A 4xx means the request itself is wrong.
         );
         let elsewhere = DEBRIEF.replace("src/fetch.rs 59-66", "src/http.rs 59-66");
         assert!(problems(&elsewhere)[0].contains("in src/http.rs, which this change didn't touch"));
+        // Kept, it reads whatever lines it gives: the work may have moved on.
+        assert!(read_kept(&elsewhere).is_ok());
+        assert!(read_kept("no front matter").is_err());
         let backwards = DEBRIEF.replace("src/fetch.rs 59-66", "src/fetch.rs 66-59");
         assert!(problems(&backwards)[0].contains("Give the first line, then the last"));
         let none = DEBRIEF.replace("- lines: src/fetch.rs 59-66\n", "");

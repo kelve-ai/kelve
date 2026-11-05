@@ -3,4 +3,4 @@
 /**
  * What a line on the timeline is.
  */
-export type TimelineKind = "debrief" | "check" | "skill" | "score" | "part" | "done" | "small";
+export type TimelineKind = "debrief" | "check" | "skill" | "score" | "part" | "done" | "small" | "failed";

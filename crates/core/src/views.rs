@@ -5,8 +5,9 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::character::{Look, Move, Slot};
+use crate::character::{Character, Look, Move, Part, Slot};
 use crate::debrief::{Followed, Origin};
+use crate::due::DebriefsWhen;
 use crate::skills::{SectionKind, SkillKind, WorkKind};
 use crate::time::Timestamp;
 
@@ -294,6 +295,9 @@ pub enum ServerEvent {
     Spec,
     /// The person's skills, their checks, or Fits you changed.
     Skills,
+    /// A debrief moved on: written, answered, researched, explained or sent;
+    /// or a handover came in. Home and the debrief fetch again.
+    Debriefs,
 }
 
 /// A job kept for the person's agent, as the reader lists them.
@@ -2020,6 +2024,8 @@ pub struct DebriefView {
     pub on_send: Vec<SendLine>,
     /// When it failed: what was wrong with it.
     pub problems: Vec<String>,
+    /// When it was sent.
+    pub sent_at: Option<Timestamp>,
 }
 
 /// A step the agent takes as it writes a debrief.
@@ -2061,8 +2067,15 @@ pub struct DecisionView {
     /// Whether it goes into a skill when the debrief is sent, and which.
     pub remember: bool,
     pub skill: Option<SkillTarget>,
+    /// Whether the person can say they want it this way every time: they
+    /// asked for it another way, their agent's research is in, or it was
+    /// theirs to begin with and they agreed.
+    pub can_remember: bool,
     /// Its own lines of code, folded away until opened.
     pub code: Vec<DebriefLine>,
+    /// The file its code is in, and that file's language, for colouring it.
+    pub path: Option<String>,
+    pub lang: Option<String>,
 }
 
 /// Research on a decision.
@@ -2073,6 +2086,8 @@ pub struct ResearchView {
     pub state: AnswerState,
     /// The answer, in markdown, once it's ready.
     pub markdown: Option<String>,
+    /// What it suggests, in a sentence: what "Redo it this way" asks for.
+    pub suggests: Option<String>,
 }
 
 /// The skill something goes into.
@@ -2195,10 +2210,73 @@ pub struct DebriefFile {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct SendLine {
+    pub kind: SendKind,
     pub text: String,
     /// What it leads to, when it leads somewhere.
     pub action: Option<String>,
     pub to: Option<String>,
+}
+
+/// What a line of what happens when a debrief is sent is about.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum SendKind {
+    /// The agent redoes decisions, as notes.
+    Redo,
+    /// Research still running.
+    Research,
+    /// Into a skill the person has.
+    Skill,
+    /// A new skill.
+    NewSkill,
+    /// Decisions left open, or nothing to do.
+    Open,
+}
+
+/// A debrief's change, file by file: the change view's list.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefChangeView {
+    pub id: String,
+    pub title: String,
+    pub files: u32,
+    pub added: u32,
+    pub removed: u32,
+    pub folders: Vec<DebriefFolder>,
+}
+
+/// One file of a debrief's change, whole, with each decision beside its
+/// lines.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefDiffView {
+    pub path: String,
+    /// Its language, for colouring it.
+    pub lang: Option<String>,
+    /// `new`, `changed`, `deleted` or `your edit`.
+    pub kind: String,
+    /// Whether kelve shows it: not when it's a secret, a lockfile or not text.
+    pub shown: bool,
+    /// Its lines, the ones taken out where they were. A fold stands for
+    /// lines kelve didn't keep.
+    pub lines: Vec<DebriefLine>,
+    /// The decisions in it, each beside its first line.
+    pub notes: Vec<DiffNote>,
+}
+
+/// A decision, in the change view's margin.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DiffNote {
+    /// The line it's beside, as a place in the file's lines, from 1.
+    pub at: u32,
+    pub n: u32,
+    pub title: String,
+    pub status: DecisionStatus,
 }
 
 // ---------------------------------------------------------------- home
@@ -2224,6 +2302,8 @@ pub enum HomeState {
 #[ts(export)]
 pub struct HomeView {
     pub state: HomeState,
+    /// The agent's name: the one given, or "Sam's agent".
+    pub name: String,
     /// The agent's status, in a few words: "Waiting for you".
     pub status: String,
     /// When it started working, for a clock.
@@ -2295,6 +2375,8 @@ pub enum TimelineKind {
     Done,
     /// A small change, with no debrief.
     Small,
+    /// A debrief the agent couldn't write.
+    Failed,
 }
 
 /// What a line on the timeline can do.
@@ -2366,6 +2448,120 @@ pub struct MadeView {
     /// It drawn on its own, as an SVG.
     pub svg: String,
     pub at: Timestamp,
+    /// What it is, so the app can try it on: a part, or a whole character.
+    pub part: Option<Part>,
+    pub character: Option<Character>,
+}
+
+/// A change to the person's agent: only what's given changes.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct CharacterIn {
+    /// Its name; empty for the one it has until it's given one.
+    #[ts(optional)]
+    pub name: Option<String>,
+    #[ts(optional)]
+    pub look: Option<Look>,
+}
+
+/// Asking the person's agent to draw a part or a character.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DrawIn {
+    /// What to draw, in the person's words: "a party hat".
+    pub asked: String,
+}
+
+/// Where a drawing the person asked for is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum DrawingState {
+    /// Waiting for the agent to take it.
+    Waiting,
+    /// The agent is drawing it.
+    Drawing,
+    /// Drawn, checked and kept: it's in what the agent made.
+    Done,
+    /// What the agent drew didn't fit, twice.
+    Failed,
+}
+
+/// A drawing the person asked their agent for.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DrawingView {
+    pub id: String,
+    pub asked: String,
+    pub state: DrawingState,
+    /// What it made, by its key, once it's done.
+    pub made: Option<String>,
+    /// Why it failed, in the agent's last try.
+    pub why: Option<String>,
+    pub at: Timestamp,
+}
+
+/// When kelve runs skill checks.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum ChecksWhen {
+    /// kelve asks on home before each one.
+    Ask,
+    /// When the person's agent has nothing else to do.
+    #[default]
+    WhenFree,
+    /// Never: parts stay not checked.
+    Never,
+}
+
+/// An agent whose settings hold kelve's hook.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ConnectedAgent {
+    /// As kelve names it: `claude`.
+    pub agent: String,
+    /// As people call it: "Claude Code".
+    pub name: String,
+}
+
+/// Settings for the person's agent, and for skill checks.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct AgentSettings {
+    pub connected: Vec<ConnectedAgent>,
+    /// How often a debrief comes.
+    pub debriefs: DebriefsWhen,
+    /// Whether the person's skills go in each agent's own skills folder too.
+    pub skills_folder: bool,
+    pub checks: ChecksWhen,
+    /// How many check runs a week, at most.
+    pub checks_a_week: u32,
+    /// How many ran this week so far.
+    pub checks_this_week: u32,
+}
+
+/// A change to those settings: only what's given changes.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct AgentSettingsIn {
+    #[ts(optional)]
+    pub debriefs: Option<DebriefsWhen>,
+    #[ts(optional)]
+    pub skills_folder: Option<bool>,
+    #[ts(optional)]
+    pub checks: Option<ChecksWhen>,
+    #[ts(optional)]
+    pub checks_a_week: Option<u32>,
+    /// Take kelve's hook out of this agent's settings, by kelve's name for it.
+    #[ts(optional)]
+    pub disconnect: Option<String>,
 }
 
 /// Your agent: its character, what it knows, and how it scores.

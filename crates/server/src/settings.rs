@@ -1,16 +1,17 @@
 //! The person's settings, as kelve keeps them: what the settings page
 //! shows.
 
-use kelve_core::views::{AgentKind, Highlighting, Place, SettingsIn, Size};
+use kelve_core::due::DebriefsWhen;
+use kelve_core::views::{AgentKind, ChecksWhen, Highlighting, Place, SettingsIn, Size};
 use serde::{Deserialize, Serialize};
 
 /// The hints kelve shows, each once.
 /// The hints shown once, and the offers made once: the notes hook.
 // `started`: the person has been through the first run, so what their agent
 // opens goes straight to the reader. `counts`: the person answered whether to
-// share counts.
-const HINTS: [&str; 7] = [
-    "squares", "notes", "hook", "graph", "marks", "started", "counts",
+// share counts. `met`: the person has met their agent, so home is home.
+const HINTS: [&str; 8] = [
+    "squares", "notes", "hook", "graph", "marks", "started", "counts", "met",
 ];
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -42,6 +43,18 @@ pub struct Settings {
     /// to the shared graph, and the last day they did.
     pub add_nos: u8,
     pub add_no_on: Option<String>,
+    /// How the person's agent looks, the name they gave it, and what it
+    /// drew for them (`your_agent`).
+    pub look: kelve_core::character::Look,
+    pub agent_name: Option<String>,
+    pub drawn: crate::your_agent::Drawn,
+    /// How often a debrief comes.
+    pub debriefs: DebriefsWhen,
+    /// Whether skills go in each agent's own skills folder too.
+    pub skills_folder: bool,
+    /// When skill checks run, and how many a week at most.
+    pub checks: ChecksWhen,
+    pub checks_a_week: u32,
 }
 
 impl Default for Settings {
@@ -60,6 +73,13 @@ impl Default for Settings {
             hints: Vec::new(),
             add_nos: 0,
             add_no_on: None,
+            look: kelve_core::character::Look::default(),
+            agent_name: None,
+            drawn: crate::your_agent::Drawn::default(),
+            debriefs: DebriefsWhen::default(),
+            skills_folder: false,
+            checks: ChecksWhen::default(),
+            checks_a_week: 10,
         }
     }
 }

@@ -6,6 +6,8 @@
 // It knows a few ideas by the words that use them (IDEAS), and the way
 // down from each to a first principle (DOWN).
 
+import * as loop from '../../dev/example/loop'
+
 /** Words in a file, and the idea they use. */
 export const IDEAS: Array<{ words: string; name: string; definition: string }> = [
   { words: 'pg_advisory_xact_lock', name: 'Advisory locks', definition: 'A lock a program names, and the database keeps.' },
@@ -226,6 +228,44 @@ export function compare(job: Job) {
   return { with: run('// with your skills', true), without: run('// as a standard agent', false) }
 }
 
+/**
+ * A drawing, as the agent hands one in for `draw`: a whole character when
+ * it's asked for a cat, else a party hat for the robot.
+ */
+function draw(job: Job) {
+  const asked = unfenced(job.material.asked).toLowerCase()
+  if (asked.includes('cat')) {
+    const row = (at: number, text: string) => '.'.repeat(at) + text
+    const rows = (pairs: Array<[number, number, string]>) => {
+      const out: string[] = new Array(27).fill('')
+      for (const [y, x, text] of pairs) out[y] = row(x, text)
+      return out
+    }
+    return {
+      drawing: {
+        format: 'kelve-character/1',
+        name: 'Stand-in cat',
+        colours: { o: '#2b2f3a', b: 'body', e: 'eyes' },
+        layers: {
+          base: rows([[8, 6, 'o..........o'], [9, 6, 'oooooooooooo'], [10, 6, 'obbbbbbbbbbo'], [11, 6, 'obbbbbbbbbbo'], [12, 6, 'obbbbbbbbbbo'], [13, 6, 'oooooooooooo']]),
+          eyes: rows([[11, 9, 'e....e']]),
+          shut: rows([[12, 9, 'e....e']]),
+        },
+      },
+    }
+  }
+  return {
+    drawing: {
+      format: 'kelve-part/1',
+      name: 'Party hat',
+      slot: 'hat',
+      at: [9, 0],
+      colours: { a: 'light', g: '#f4c84a', w: '#ffffff' },
+      pixels: ['..ww..', '..gg..', '.aaaa.', 'agggga'],
+    },
+  }
+}
+
 export function answer(job: Job, quote = 'PostgreSQL provides a means for creating locks that have application-defined meanings.'): unknown {
   switch (job.kind) {
     case 'read': return read(job)
@@ -242,7 +282,12 @@ export function answer(job: Job, quote = 'PostgreSQL provides a means for creati
     case 'folders': return { folders: folderLines(job) }
     case 'way': return { order: ((job.material.files as string[]) ?? []).slice(0, 40).map((path) => ({ path, why: `Why to read ${path} now, said by the stand-in agent.` })), parts: [], folders: folderLines(job) }
     case 'path': return { parts: [] }
+    case 'debrief': return loop.debrief(job)
+    case 'research': return loop.research(job)
+    case 'explain': return loop.explain(job)
+    case 'learn': return loop.learn(job)
     case 'compare': return compare(job)
+    case 'draw': return draw(job)
     default: throw new Error(`a job the stand-in agent doesn't know: ${job.kind}`)
   }
 }
@@ -251,7 +296,7 @@ export type Agent = {
   /** Says hello, as `kelve mcp` does when the agent starts it. */
   hello: () => Promise<void>
   /** Asks kelve to open something, as the `open` tool does: what it says back. */
-  open: (what: Record<string, unknown>) => Promise<{ id: number; title: string; files: number; folders: number; toRead: number; shown: boolean }>
+  open: (what: Record<string, unknown>) => Promise<{ id: number; title: string; files: number; folders: number; toRead: number; shown: boolean; debrief?: { debrief: number | null; due: boolean; reason: string; again: boolean } }>
   /**
    * Does kelve's work until there's none left: the jobs it was given. With
    * `until`, it stops at the first job of that kind, having taken it. With
@@ -290,7 +335,13 @@ export function agent(base: string, key: string, name = 'claude-code', answering
     },
     open: (what) => call('/api/agent/open', { ...caller, ...what }),
     findWay: async () => {
-      const job = await call<Job | null>('/api/agent/next', caller)
+      let job = await call<Job | null>('/api/agent/next', caller)
+      // Work handed over is debriefed first, while the agent remembers why.
+      if (job?.kind === 'debrief') {
+        const handed: { taken: string; why?: string } = await call('/api/agent/answer', { ...caller, job: job.job, answer: answering(job), more: false })
+        if (handed.taken !== 'yes') throw new Error(`kelve didn’t take the debrief: ${handed.why}`)
+        job = await call<Job | null>('/api/agent/next', caller)
+      }
       if (!job) return
       if (job.kind !== 'way') throw new Error(`kelve’s first job wasn’t finding the way in: ${job.about}`)
       const handed: { taken: string; why?: string } = await call('/api/agent/answer', { ...caller, job: job.job, answer: answering(job), more: false })

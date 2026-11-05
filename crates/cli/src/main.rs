@@ -9,6 +9,7 @@ mod moment;
 mod notes;
 mod open;
 mod setup;
+mod skills_setup;
 mod status;
 mod style;
 mod update;
@@ -138,6 +139,7 @@ enum Command {
     ///
     ///   kelve setup
     ///   kelve setup --agent codex --level working
+    ///   kelve setup --remove
     #[command(verbatim_doc_comment)]
     Setup {
         /// The agent to connect: claude, codex, cursor or gemini.
@@ -146,6 +148,10 @@ enum Command {
         /// How much kelve marks: new, learning, working or deep.
         #[arg(long)]
         level: Option<String>,
+        /// Take out what setup put in: kelve's hook, and the links to your
+        /// skills in each agent's skills folder.
+        #[arg(long)]
+        remove: bool,
     },
     /// What kelve marks for you
     ///
@@ -300,7 +306,10 @@ async fn main() -> std::process::ExitCode {
             ..
         } => notes::done(&note, &version, &did).await,
         Command::Notes { done: None, .. } => notes::list().await,
-        Command::Setup { agent, level } => setup::setup(agent.as_deref(), level.as_deref()).await,
+        Command::Setup { remove: true, .. } => skills_setup::remove().await,
+        Command::Setup { agent, level, .. } => {
+            setup::setup(agent.as_deref(), level.as_deref()).await
+        }
         Command::Marks {
             what: MarksCommand::Set { level },
         } => setup::marks_set(&level).await,

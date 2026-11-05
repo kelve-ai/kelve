@@ -15,6 +15,7 @@ pub mod hook;
 pub mod hosted;
 pub mod ideas;
 pub mod instructions;
+pub mod learn;
 pub mod lens;
 pub mod lesson;
 pub mod marks;
