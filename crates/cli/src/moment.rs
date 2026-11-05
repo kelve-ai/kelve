@@ -2,7 +2,9 @@
 //! (`core::hook`). The installed command names the agent and the event: `kelve
 //! moment --agent codex --on PostToolUse`. As the person sends a message: one
 //! line when notes wait for the agent that it hasn't been told of as they are
-//! now, and one, once for each version, when a newer kelve is out. As the agent
+//! now, and one, once for each version, when a newer kelve is out; and what
+//! they sent, short and with secrets stripped, kept to catch what they
+//! corrected (`server::moment`). As the agent
 //! reads or edits a file, runs a command, or something fails: the lesson from
 //! the shared graph that helps now, if there is one. As the turn ends, after a
 //! hard stretch of failures the agent got past, one question asking what it

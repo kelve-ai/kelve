@@ -530,6 +530,24 @@ pub struct Moment {
     /// What it opened in kelve, by its number.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub opened: Option<i64>,
+    /// For `prompt`: what the person sent, when the agent's event says,
+    /// short and with secrets stripped (`PROMPT`). Kept on the person's
+    /// computer, to catch what they corrected.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prompt: Option<String>,
+}
+
+/// The most of the person's message the hook passes on, in characters.
+pub const PROMPT: usize = 4_000;
+
+/// What the person sent, as each agent's prompt event gives it: `prompt`
+/// in most (Claude Code, Codex, Gemini's BeforeAgent, Qwen, Qoder, Droid,
+/// Kiro, Copilot), `user_prompt` or `userPrompt` in others. Short, secrets
+/// stripped; None when there's none.
+fn prompt_of(event: &Value) -> Option<String> {
+    let text = first_str(event, &["prompt", "user_prompt", "userPrompt"])?;
+    let text = crate::text::clip(crate::redact::redact(&text).trim(), PROMPT);
+    (!text.is_empty()).then_some(text)
 }
 
 const READS: [&str; 8] = [
@@ -983,6 +1001,7 @@ pub fn moment(agent: Agent, on: &str, event: &Value) -> Option<Moment> {
     let lower = on.to_lowercase();
     if ["userpromptsubmit", "beforeagent", "userpromptsubmitted"].contains(&lower.as_str()) {
         m.what = "prompt".into();
+        m.prompt = prompt_of(event);
         return Some(m);
     }
     if lower == "preinvocation" {
@@ -1747,6 +1766,98 @@ mod tests {
         assert_eq!(
             moved_to("cd '/w/my ledger' && cargo test"),
             Some("/w/my ledger".into())
+        );
+    }
+
+    #[test]
+    fn what_the_person_sent_is_read_from_each_agents_own_event() {
+        let said = "No, that should exit 1, not 2.";
+        // Each agent's prompt event, as it sends it.
+        let events = [
+            (
+                Agent::Claude,
+                "UserPromptSubmit",
+                json!({ "session_id": "c", "transcript_path": "/h/.claude/projects/w/c.jsonl", "cwd": "/w", "permission_mode": "default", "hook_event_name": "UserPromptSubmit", "prompt": said }),
+            ),
+            (
+                Agent::Qoder,
+                "UserPromptSubmit",
+                json!({ "session_id": "q", "transcript_path": "/h/.qoder/q.jsonl", "cwd": "/w", "hook_event_name": "UserPromptSubmit", "prompt": said }),
+            ),
+            (
+                Agent::Codex,
+                "UserPromptSubmit",
+                json!({ "session_id": "x", "transcript_path": null, "cwd": "/w", "hook_event_name": "UserPromptSubmit", "model": "gpt-5-codex", "turn_id": "t1", "prompt": said }),
+            ),
+            (
+                Agent::Gemini,
+                "BeforeAgent",
+                json!({ "session_id": "g", "transcript_path": "/h/.gemini/tmp/g.json", "cwd": "/w", "hook_event_name": "BeforeAgent", "timestamp": "2026-11-05T10:00:00Z", "prompt": said }),
+            ),
+            (
+                Agent::Qwen,
+                "UserPromptSubmit",
+                json!({ "session_id": "w", "transcript_path": "/h/.qwen/w.json", "cwd": "/w", "hook_event_name": "UserPromptSubmit", "timestamp": "2026-11-05T10:00:00Z", "prompt": said }),
+            ),
+            (
+                Agent::Droid,
+                "UserPromptSubmit",
+                json!({ "session_id": "d", "transcript_path": "/h/.factory/d.jsonl", "cwd": "/w", "permission_mode": "default", "hook_event_name": "UserPromptSubmit", "prompt": said }),
+            ),
+            (
+                Agent::Kiro,
+                "UserPromptSubmit",
+                json!({ "hook_event_name": "userPromptSubmit", "cwd": "/w", "prompt": said }),
+            ),
+            (
+                Agent::Copilot,
+                "userPromptSubmitted",
+                json!({ "timestamp": 1_762_336_800_000_u64, "cwd": "/w", "prompt": said }),
+            ),
+        ];
+        for (agent, on, event) in events {
+            let m = moment(agent, on, &event).unwrap();
+            assert_eq!(m.what, "prompt", "{agent:?}");
+            assert_eq!(m.prompt.as_deref(), Some(said), "{agent:?}");
+            assert_eq!(m.cwd, "/w", "{agent:?}");
+        }
+        // Under another name, in an agent that names it so.
+        let m = moment(
+            Agent::Claude,
+            "UserPromptSubmit",
+            &json!({ "session_id": "c", "user_prompt": said }),
+        )
+        .unwrap();
+        assert_eq!(m.prompt.as_deref(), Some(said));
+        // None said, or nothing but spaces: none kept.
+        for event in [json!({ "session_id": "c" }), json!({ "prompt": "  " })] {
+            assert_eq!(
+                moment(Agent::Claude, "UserPromptSubmit", &event)
+                    .unwrap()
+                    .prompt,
+                None
+            );
+        }
+        // Short, with its secrets stripped, and passed on to kelve.
+        let secret = format!(
+            "use this key ghp_abcdefghijklmnopqrstuvwxyz0123456789 {}",
+            "and more ".repeat(1_000)
+        );
+        let m = moment(
+            Agent::Claude,
+            "UserPromptSubmit",
+            &json!({ "session_id": "c", "prompt": secret }),
+        )
+        .unwrap();
+        let kept = m.prompt.clone().unwrap();
+        assert!(!kept.contains("ghp_abc"), "{kept}");
+        assert_eq!(kept.chars().count(), PROMPT);
+        assert_eq!(serde_json::to_value(&m).unwrap()["prompt"], json!(kept));
+        // Only as the person sends a message.
+        let edit = json!({ "session_id": "c", "cwd": "/w", "tool_name": "Edit", "prompt": said, "tool_input": { "file_path": "/w/a.rs", "old_string": "a", "new_string": "b" } });
+        assert_eq!(
+            moment(Agent::Claude, "PostToolUse", &edit).unwrap().prompt,
+            None
         );
     }
 }
