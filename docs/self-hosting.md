@@ -22,7 +22,6 @@ kelve reads these from the environment as it starts. Everything else is set in t
 | `DO_NOT_TRACK` | Set to anything but `0` or `false`, kelve never sends anonymous counts of how it's used, whatever you chose. `KELVE_TELEMETRY=off` does the same. |
 | `KELVE_UPDATES` | Where kelve asks, once a day, whether a newer version is out. Default GitHub's newest release of kelve, as the installer uses; a kelve built from a checkout doesn't ask. `off` stops it: settings and your agent then never hear of a newer kelve, and `kelve update` still works when you run it. An address asks there instead, in the shape of GitHub's API: for a mirror, or for tests. |
 | `KELVE_NO_BROWSER` | Set to anything, kelve never opens a browser: for a machine without one. Run `kelve serve` in a terminal there, which shows each sign-in link instead. |
-| `KELVE_PICKER` | A program kelve runs in place of the system's file picker, given `folder` or `file`, which prints the path. For the browser tests. |
 | `RUST_LOG` | How much kelve logs, like `info` or `kelve_server=debug`. |
 
 kelve has no model and no model key of its own: your own coding agent does its work. A verified run on kelve.ai is paid with your own model provider's key, which you give in the app when a run first needs it: it's sealed before it's kept, and sent with a run you confirm, and nowhere else.

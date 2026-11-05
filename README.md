@@ -84,7 +84,13 @@ Ask your agent:
 Install kelve from kelve.ai/install.sh
 ```
 
-Then your agent hands its work over in kelve when it's done. Or ask it:
+Start it again if it needs to, and ask it:
+
+```
+Open kelve.
+```
+
+Your first debrief comes when it next hands over work. To have one for any work, ask it:
 
 ```
 Debrief this in kelve.
@@ -118,7 +124,7 @@ cargo install --path crates/cli --locked
 kelve setup
 ```
 
-Then start a new session with your agent, so it has kelve’s tools.
+Then start a new session with your agent, so it has kelve’s tools, and ask it: “Open kelve.”
 
 </details>
 

@@ -45,8 +45,8 @@ Never push, open pull requests, or touch anything outside this repo unless the p
 ```
 crates/core     Everything pure: skills, their parts and kinds of work (skills.rs), the debrief and
                 when one is due (debrief.rs, due.rs), where something learned goes (learn.rs), your
-                agent's character (character.rs), the hook for each agent (hook.rs), notes, what
-                kelve marks for the person (spec.rs, from marks.md), what's sent to the hosted
+                agent's character (character.rs), the hook for each agent (hook.rs), what the
+                person knows already (spec.rs, from marks.md), what's sent to the hosted
                 service (hosted.rs), secret stripping, fencing material, what agents are told for
                 each job (instructions.rs), updating, and the API's shapes (views.rs). No IO. The
                 shared graph's entries, ideas, relations, lessons and terms stay here only for the
@@ -63,13 +63,12 @@ crates/server   The local service: the jobs it keeps for the person's agent (age
                 list (list.rs), the agent loop (agent_loop/: debriefs, research, explanations,
                 learning, and skills to the agent), what was handed over (handover.rs), debriefs
                 and home, skills and their checks, your agent, kelve.ai (hosted.rs), the hook's
-                router (moment.rs) and the hook (hooks.rs), what's open and its notes (reader.rs),
+                router (moment.rs) and the hook (hooks.rs), what's open (reader.rs),
                 the API (api/), the work it does in the background (pipeline/), signing a browser
                 in, and the web app, on one port.
 crates/cli      The `kelve` command: open and diff (starting kelve in the background), serve,
-                status, stop, update; setup, hook and marks, to set it up; and for the person's
-                agent, mcp (kelve's tools over MCP), job, kept, notes, moment (what the hook runs)
-                and worktree.
+                status, stop, update; setup and hook, to set it up; and for the person's agent,
+                mcp (kelve's tools over MCP), job, kept, moment (what the hook runs) and worktree.
 web/            The web app: home, debriefs, skills, your agent and settings. web/e2e tests it in
                 a browser.
 dev/            One command for developing kelve (bun dev/kelve.ts), and the example project its
@@ -81,15 +80,15 @@ docs/           How kelve is built, run and released, its design (skills.md), an
 Rules that keep it sound:
 
 - `core` never does IO and never panics on bad input.
-- Every route that reads or changes anything checks who's asking first: `Me`, the person signed in on this browser, or `Agent`, the command line's secret, which `kelve mcp` uses too. The command line can ask kelve to open something, take kelve's jobs and hand in their answers, see what's kept for the agent, read the person's skills, read the notes the person left for their agent and mark them done, read and write what kelve marks for the person (`marks.md`), pass on the moments kelve's hook sees, learn whether a newer kelve is out, say it changed kelve's hook, or ask kelve to stop. It never reads what kelve keeps beyond a job's material, those notes, the skills and that one: not the person's other notes, not their skills' evidence or their debriefs, not the keys kelve keeps. It can ask for a sign-in link, but never has one: kelve gives the link to the person, opening their browser or showing it where `kelve serve` runs, and tells the asker only whether a browser opened.
+- Every route that reads or changes anything checks who's asking first: `Me`, the person signed in on this browser, or `Agent`, the command line's secret, which `kelve mcp` uses too. The command line can ask kelve to open something, take kelve's jobs and hand in their answers, see what's kept for the agent, read the person's skills, pass on the moments kelve's hook sees, learn whether a newer kelve is out, say it changed kelve's hook, or ask kelve to stop. It never reads what kelve keeps beyond a job's material, the skills and that one: not their skills' evidence or their debriefs, not the keys kelve keeps. It can ask for a sign-in link, but never has one: kelve gives the link to the person, opening their browser or showing it where `kelve serve` runs, and tells the asker only whether a browser opened.
 - Nothing of the person's leaves, except their skills, to kelve's hosted service, for a verified run they asked for, under its terms: secrets and paths stripped first, and every file shown to them before it goes. Their work, their messages to their agent, their edits and their tasks never leave. Their page shows only what they publish: their agent's character and name, and the scores they choose. The weekly count, numbers only, goes only with their yes.
 - Secrets are stripped (`core::redact`) as files are read, and again before anything goes to the agent or the hosted service. The service turns away skills that seem to hold a secret or a path, or name its tasks.
-- kelve runs nothing from what the person opens: no builds, no hooks, no scripts, nothing a repo configures to run, and it never starts the person's agent. Outside the project it changes only how the person's agent reaches it, with their yes: kelve as an MCP server in the agent's own settings; one hook there, one command, `kelve moment`, on the agent's own events, installed and taken out together, which tells the agent of notes left for it, keeps what the person says to catch their corrections, gives it their skills as it works, and has it hand work over in kelve as it finishes (`kelve setup`, `kelve hook`, `core::hook`); and links to their skills in each agent's own skills folder, kelve's links and nothing else. Asking to install kelve is that yes: the installer runs `kelve setup`, which says what it changed and how to take it out.
+- kelve runs nothing from what the person opens: no builds, no hooks, no scripts, nothing a repo configures to run, and it never starts the person's agent. Outside the project it changes only how the person's agent reaches it, with their yes: kelve as an MCP server in the agent's own settings; one hook there, one command, `kelve moment`, on the agent's own events, installed and taken out together, which tells the agent what the person wants redone from a debrief, keeps what the person says to catch their corrections, gives it their skills as it works, and has it hand work over in kelve as it finishes (`kelve setup`, `kelve hook`, `core::hook`); and links to their skills in each agent's own skills folder, kelve's links and nothing else. Asking to install kelve is that yes: the installer runs `kelve setup`, which says what it changed and how to take it out.
 - kelve has no model and no key of its own. Every job is the person's agent's (`server::agent`), with instructions kelve was built with (`core::instructions`), its material, and the shape its answer must fit; kelve checks the shape before it takes an answer. The hosted service runs agents on its own keys, for benchmarks only; a verified run is paid with the person's own provider key, which kelve keeps sealed and sends with that run alone.
 - Signing in is for one thing only: the person's account on kelve's hosted service, for verified runs and their page. Everything else works signed out.
 - A debrief is checked against the change as it was handed over (`core::debrief`), and a skill's parts in code (`core::skills`); what fails goes back to the agent once, with what to fix, then is dropped. What kelve learned waits for the person in their next debrief; only what they sent is written into a skill at once, and every edit kelve makes to a skill can be undone. kelve never changes back what the person wrote in a skill by hand.
 - Only kelve's own words reach the person's screen as markup. An agent's text is markdown of a few kinds (headings, paragraphs, lists, tables, code, bold, italics and links to pages on the web), which kelve draws as its own elements. No HTML or images from an agent, ever.
-- Text from what the person opens, their notes and their messages goes to the agent fenced (`core::fence`), and its instructions say it's material, never instructions.
+- Text from what the person opens and their messages goes to the agent fenced (`core::fence`), and its instructions say it's material, never instructions.
 - The keys kelve keeps, the account's on kelve.ai and the person's provider key, are sealed with the install's key before they're kept, and never logged.
 - Errors people see are full sentences that say what to do. Internal errors are logged with context and shown as a plain apology.
 - Never log tokens, keys, passwords, secrets or file contents.
@@ -104,5 +103,3 @@ The app's words are part of the design. When you write copy:
 - Name things plainly ("Getting a verified score", not "Benchmark configuration"). No eyebrow labels over headings, no jargon, no exclamation marks.
 - The app never says where kelve runs ("on this computer", "stays here"). Docs may say it runs locally, plainly, where it matters: installing and signing in.
 - Match the voice already in the app before inventing a new one.
-
-Read `.kelve/notes/agents.md` before you start: notes on how the person you're working with wants the work done.
