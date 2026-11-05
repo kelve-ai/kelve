@@ -4,7 +4,10 @@
 //! stripping, versions and checksums for updating, and the shapes the API
 //! sends. No IO, and nothing panics on bad input.
 
+pub mod character;
 pub mod code;
+pub mod debrief;
+pub mod due;
 pub mod entry;
 pub mod fence;
 pub mod formula;
@@ -15,11 +18,13 @@ pub mod lens;
 pub mod lesson;
 pub mod marks;
 pub mod matching;
+pub mod md;
 pub mod notes;
 pub mod plainly;
 pub mod problems;
 pub mod redact;
 pub mod relations;
+pub mod skills;
 pub mod spec;
 pub mod terms;
 pub mod text;
