@@ -49,6 +49,16 @@ test('signing in and a verified run, then choosing an address, to a score on you
   // Signed in, the run comes first: an address is only for publishing.
   await expect(page).toHaveURL(/#\/agent\/score\/new$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Get a verified score' })).toBeVisible()
+  // A retired task of the kind, as an example: never a live one.
+  await page.getByRole('button', { name: 'See an example task' }).click()
+  const example = page.getByRole('region', { name: 'An example task' })
+  await expect(example).toContainText('Add a --name option to greet')
+  await expect(example.getByRole('listitem').filter({ hasText: 'src/main.rs' })).toBeVisible()
+  await expect(example).not.toContainText('tests/cli.rs')
+  await expect(example).toContainText('Hidden test')
+  await expect(example).toContainText('The judge')
+  await page.getByRole('button', { name: 'Hide the example' }).click()
+  await expect(example).toHaveCount(0)
   await page.getByRole('button', { name: 'See exactly what goes' }).click()
   await expect(page.getByText('standin-expert/SKILL.md')).toBeVisible()
   await expect(page.getByText('Secrets and paths are taken out first.')).toBeVisible()

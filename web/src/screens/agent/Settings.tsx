@@ -157,7 +157,7 @@ function NotesOpts({ example }: { example?: boolean }) {
 function ChecksSection({ example }: { example?: boolean }) {
   const { s, set, said } = useAgentSettings(example)
   if (!s) return null
-  const when = CHECKS.find((c) => c.value === s.checks) ?? CHECKS[1]
+  const when = CHECKS.find((c) => c.value === s.checks) ?? CHECKS[0]
   return (
     <>
       <p className="lede">A check redoes a past task with and without part of a skill.</p>

@@ -188,6 +188,16 @@ pub async fn next_pair(conn: &mut Conn) -> Result<Option<Pair>> {
     .await?)
 }
 
+/// How many pairs are ready to pick between.
+pub async fn pairs_ready(conn: &mut Conn) -> Result<u32> {
+    let n: i64 = sqlx::query_scalar(
+        "select count(*) from fits_picks where picked is null and skills_diff is not null",
+    )
+    .fetch_one(&mut *conn)
+    .await?;
+    Ok(u32::try_from(n).unwrap_or(u32::MAX))
+}
+
 /// How many pairs the agent is still redoing.
 pub async fn pairs_waiting(conn: &mut Conn) -> Result<i64> {
     Ok(sqlx::query_scalar(

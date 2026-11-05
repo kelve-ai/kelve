@@ -7,9 +7,22 @@
 // with no clear difference, 4 paused for the plan's limit. What's sent is
 // answered by the same address, read (`send`).
 
-import type { EstimateView, HandleView, HostedView, OfferView, RunView, ScoreSquare, ScoreView, TaskSquare } from '../api/types'
+import type { EstimateView, ExampleTaskView, HandleView, HostedView, OfferView, RunView, ScoreSquare, ScoreView, TaskSquare } from '../api/types'
 
 const AT = '2026-11-03T14:20:00.000Z'
+
+/** A retired Rust task, as the offer shows it. */
+const GREET: ExampleTaskView = {
+  name: 'greet-name',
+  request: 'Add a --name option to greet, so `greet --name Sam` prints "Hello, Sam." With no name, it still prints "Hello."',
+  files: ['Cargo.toml', 'src/main.rs'],
+  checks: [
+    { kind: 'test', about: '`greet --name Sam` prints "Hello, Sam."' },
+    { kind: 'test', about: '`greet` with no name still prints "Hello."' },
+    { kind: 'static', about: 'No unwrap outside tests.' },
+    { kind: 'judge', about: 'The option’s help says what it’s for.' },
+  ],
+}
 const MORE = '2026-11-06T00:00:00.000Z'
 
 const squares = (pattern: string): ScoreSquare[] => pattern.split('').map((c) => (c === 'b' ? 'better' : c === 'w' ? 'worse' : 'same'))
@@ -43,8 +56,8 @@ export function hostedAnswers(as: string | null): Record<string, unknown> {
   const local = as === 'subscription'
   const offer: OfferView = {
     kinds: [
-      { kind: 'rust', name: 'Rust', about: 'Command-line tools, libraries, and fixing bugs in code that already exists.', tasks: 12 },
-      { kind: 'words', name: 'Words', about: 'The words in an app: buttons, errors, settings and empty screens.', tasks: 10 },
+      { kind: 'rust', name: 'Rust', about: 'Command-line tools, libraries, and fixing bugs in code that already exists.', tasks: 12, examples: [GREET] },
+      { kind: 'words', name: 'Words', about: 'The words in an app: buttons, errors, settings and empty screens.', tasks: 10, examples: [] },
     ],
     agents: [
       { agent: 'claude-code', name: 'Claude Code', models: [{ model: 'claude-sonnet-5-6', name: 'Sonnet 5.6', provider: 'anthropic', providerName: 'Anthropic' }, { model: 'claude-opus-5-5', name: 'Opus 5.5', provider: 'anthropic', providerName: 'Anthropic' }] },

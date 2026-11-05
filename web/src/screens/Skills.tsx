@@ -3,8 +3,10 @@
 // beside it, rendered with a note beside each part's heading, or as its
 // SKILL.md with each part's mark beside its `###` line. A part is a `###`
 // heading and everything under it. Under a part that needs it: what its check
-// found, and what you can do. Checks run only when you agree, with what they
-// take in front of you. Editing is SkillEdit.tsx; Fits you is Fits.tsx.
+// found, and what you can do. Checks run as settings say: when you agree,
+// with what they take in front of you, or by themselves; never past the
+// week's runs, and not at all when they're off, which the page says where a
+// check would be offered. Editing is SkillEdit.tsx; Fits you is Fits.tsx.
 
 import { type ReactNode, useEffect, useState } from 'react'
 import { ApiError, post } from '../api/client'
@@ -222,6 +224,8 @@ function SkillDoc({ id, example }: { id: string; example?: boolean }) {
   if (!id) return <Wait error="There’s no skill here." example={example} />
   if (!s) return <Wait error={skill.error} example={example} />
   const parts = s.sections.flatMap((sec) => sec.parts)
+  // A part a check can take now: none when checks are off or the week's runs are used.
+  const offered = (part: SkillPartView) => s.offer.parts.some((o) => o.heading === part.heading)
 
   const run = async (go: () => Promise<Said>) => {
     try {
@@ -246,7 +250,7 @@ function SkillDoc({ id, example }: { id: string; example?: boolean }) {
     <div className="sk-note">
       <PartState check={part.check} />
       {hintOf(part) && <span className="sk-hint">{hintOf(part)}</span>}
-      {part.check === 'notChecked' && !editing && (
+      {part.check === 'notChecked' && !editing && offered(part) && (
         <button type="button" className="go" onClick={() => setConfirm(true)}>Check it</button>
       )}
       {((part.check === 'noDifference' && !part.kept) || part.check === 'failed') && (
@@ -276,6 +280,11 @@ function SkillDoc({ id, example }: { id: string; example?: boolean }) {
             />
             <Btn size="small" href={hrefOf(`skills/${s.id}/edit`, example)}>Edit</Btn>
           </div>
+          {s.offer.held && (
+            <p className="sk-held" role="note">
+              {s.offer.held} <a href={hrefOf('settings/checks', example)}>Open settings</a>
+            </p>
+          )}
         </div>
         <div>{s.running && <Running run={s.running} onStop={stop} />}</div>
       </div>
@@ -366,7 +375,13 @@ function Running({ run, onStop }: { run: CheckRun; onStop: () => void }) {
 /** Checking a skill's new parts: what it takes, before it starts. */
 function CheckDialog({ skill, at, onClose, onDone }: { skill: SkillView; at: string; onClose: () => void; onDone: (s: Said) => void }) {
   const [error, setError] = useState('')
-  const { parts, tasks, runs } = skill.offer
+  const { parts, tasks, runs, held, when } = skill.offer
+  if (parts.length === 0 && held)
+    return (
+      <Dialog title={when === 'never' ? 'Checks are off' : 'This week’s check runs are used'} onClose={onClose} actions={<Btn kind="primary" onClick={onClose}>Close</Btn>}>
+        <p>{held}</p>
+      </Dialog>
+    )
   if (parts.length === 0)
     return (
       <Dialog title="Every part is checked" onClose={onClose} actions={<Btn kind="primary" onClick={onClose}>Close</Btn>}>
@@ -411,6 +426,7 @@ function CheckDialog({ skill, at, onClose, onDone }: { skill: SkillView; at: str
         ))}
       </ul>
       <p>About {runs} runs of your agent. Your own work isn’t touched.</p>
+      {held && <p>{held}</p>}
       {error && <p className="sk-error" role="alert">{error}</p>}
     </Dialog>
   )

@@ -172,14 +172,17 @@ test('a check can be stopped, and its parts wait to be checked again', async ({ 
   await expect(note(page, 'Name tests as sentences')).toContainText('Not checked yet')
 })
 
-test('Fits you shows two results of past work blind, then which was yours', async ({ page }) => {
+test('Fits you, from Your agent, shows two results of past work blind, then which was yours', async ({ page }) => {
   const agent = me()
   await agent.hello()
   await agent.work()
   skill(fresh('fits'), 'Fits', ['### Comment what the code is for\nSo the next person knows.'])
   await signIn(page)
   pastTask('Say what main is for.')
-  await page.goto('/#/agent/fits')
+  await page.goto('/#/agent')
+  const fits = page.getByRole('region', { name: 'Fits you' })
+  await fits.getByRole('link', { name: 'Pick between two results' }).click()
+  await expect(page).toHaveURL(/#\/agent\/fits$/)
   // Pairs left from before are picked first.
   const ask = page.getByRole('heading', { level: 1, name: 'Which would you rather keep?' })
   const start = page.getByRole('heading', { level: 1, name: 'Fits you' })
@@ -197,4 +200,8 @@ test('Fits you shows two results of past work blind, then which was yours', asyn
   await page.getByRole('button', { name: a.includes('with your skills') ? 'Keep A' : 'Keep B' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'You picked your agent' })).toBeVisible()
   await expect(page.getByText('Yours came 100% close to what you kept; the standard one, 0%.')).toBeVisible()
+
+  // Back on Your agent, the pick counts.
+  await page.getByRole('link', { name: 'Your agent' }).last().click()
+  await expect(fits).toContainText(/You picked your agent in \d+ of \d+ blind tests/)
 })

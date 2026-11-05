@@ -10,8 +10,8 @@ use kelve_core::Timestamp;
 use kelve_core::character::Move;
 use kelve_core::skills::work::WorkKind;
 use kelve_core::views::{
-    HomeAsk, HomeAskKind, HomeDay, HomeState, HomeView, ServerEvent, TimelineAct, TimelineItem,
-    TimelineKind,
+    ChecksWhen, HomeAsk, HomeAskKind, HomeDay, HomeState, HomeView, ServerEvent, TimelineAct,
+    TimelineItem, TimelineKind,
 };
 
 use crate::error::ApiResult;
@@ -127,7 +127,16 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
     let scored = kelve_store::hosted::scored_since(&mut conn, since, 10).await?;
     let research = kelve_store::home::research_waiting(&mut conn).await?;
     let explaining = kelve_store::home::explanations_waiting(&mut conn).await?;
-    let unchecked = kelve_store::home::unchecked(&mut conn).await?;
+    // Checks are offered only when the person agrees to each, and while
+    // this week's runs last.
+    let unchecked = if app.settings().checks == ChecksWhen::Ask
+        && crate::skill_checks::runs_left(app).await? >= 2
+    {
+        kelve_store::home::unchecked(&mut conn).await?
+    } else {
+        Vec::new()
+    };
+    let fits_ready = kelve_store::checking::pairs_ready(&mut conn).await?;
     let heard = kelve_store::home::hook_heard(&mut conn).await?;
     let ever = !debriefs.is_empty()
         || !small.is_empty()
@@ -213,6 +222,24 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
             ),
             action: Some(if *n == 1 { "Check it" } else { "Check them" }.into()),
             to: Some(format!("skills/{skill}")),
+            main: false,
+            alt: None,
+        });
+    }
+    if fits_ready > 0 {
+        asks.push(HomeAsk {
+            id: "fits".into(),
+            kind: HomeAskKind::Fits,
+            text: if fits_ready == 1 {
+                "I redid a past task twice, once with your skills. Which would you rather keep?".into()
+            } else {
+                format!(
+                    "I redid {} past tasks twice, once with your skills. Which would you rather keep?",
+                    counted(fits_ready as usize).to_lowercase()
+                )
+            },
+            action: Some("Pick one".into()),
+            to: Some("agent/fits".into()),
             main: false,
             alt: None,
         });

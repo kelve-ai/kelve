@@ -58,7 +58,7 @@ function skill(id: string, name: string, title: string, intro: string, descripti
     lines: lines.length,
     mostLines: 150,
     problems: [],
-    offer: { parts: unchecked.map((p) => ({ key: p.key, heading: p.heading })), tasks: 2, runs: unchecked.length * 4 },
+    offer: { parts: unchecked.map((p) => ({ key: p.key, heading: p.heading })), tasks: 2, runs: unchecked.length * 4, when: 'ask', left: 10, waiting: 0, held: null },
     running: null,
   }
 }

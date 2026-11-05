@@ -3,4 +3,4 @@
 /**
  * What a request in the agent's bubble is about, for its icon.
  */
-export type HomeAskKind = "debrief" | "check" | "hook" | "stalled";
+export type HomeAskKind = "debrief" | "check" | "fits" | "hook" | "stalled";

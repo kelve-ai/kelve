@@ -742,11 +742,21 @@ pub struct SkillView {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CheckOffer {
+    /// The parts a check would take now: those not checked yet, as many as
+    /// this week's runs allow.
     pub parts: Vec<OfferedPart>,
     /// The past tasks each part is redone on.
     pub tasks: u32,
     /// Runs of the agent it takes: two a part on each task.
     pub runs: u32,
+    /// When checks run, as the person set it.
+    pub when: ChecksWhen,
+    /// Runs of the agent left this week, of the most the person allows.
+    pub left: u32,
+    /// Parts not checked yet that wait, because checks are off or this
+    /// week's runs are used, and why, in a sentence.
+    pub waiting: u32,
+    pub held: Option<String>,
 }
 
 /// A part a check would redo past work with.
@@ -1261,6 +1271,8 @@ pub struct HomeView {
 pub enum HomeAskKind {
     Debrief,
     Check,
+    /// Fits you has two results to pick between.
+    Fits,
     /// kelve's hook is gone from an agent's settings.
     Hook,
     /// The agent stopped before it finished.
@@ -1447,10 +1459,12 @@ pub struct DrawingView {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum ChecksWhen {
-    /// kelve asks on home before each one.
-    Ask,
-    /// When the person's agent has nothing else to do.
+    /// kelve asks on home before each one: checks run only when the person
+    /// agrees (docs/skills.md).
     #[default]
+    Ask,
+    /// When the person's agent has nothing else to do: new and changed parts
+    /// are checked without asking, within the week's runs.
     WhenFree,
     /// Never: parts stay not checked.
     Never,
@@ -1512,6 +1526,10 @@ pub struct YourAgentView {
     pub knows: Vec<KnowsRow>,
     /// How often the person picked their agent, blind, on their past work.
     pub fits: Option<FitsYou>,
+    /// Fits you's results ready to pick between.
+    pub fits_ready: u32,
+    /// Whether there's past work Fits you can redo, or is redoing.
+    pub fits_open: bool,
     /// Verified scores, and whether each is on their page.
     pub scores: Vec<ScoreRow>,
     /// Their page, once it's published.

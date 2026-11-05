@@ -17,6 +17,14 @@ knows: Array<KnowsRow>,
  */
 fits: FitsYou | null, 
 /**
+ * Fits you's results ready to pick between.
+ */
+fitsReady: number, 
+/**
+ * Whether there's past work Fits you can redo, or is redoing.
+ */
+fitsOpen: boolean, 
+/**
  * Verified scores, and whether each is on their page.
  */
 scores: Array<ScoreRow>, 

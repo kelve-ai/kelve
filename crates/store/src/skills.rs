@@ -159,6 +159,8 @@ pub struct Part {
     pub kept: bool,
     pub seen_at: i64,
     pub removed_at: Option<i64>,
+    /// The hash of the text its check was last started for.
+    pub tried: Option<String>,
 }
 
 /// A part as it's read from the file.
@@ -171,7 +173,7 @@ pub struct SeenPart<'a> {
 }
 
 const PART: &str = "select id, skill, key, heading, section, body_hash, state, checked_at, note,
-     wording, kept, seen_at, removed_at from parts";
+     wording, kept, seen_at, removed_at, tried from parts";
 
 /// The parts of a skill as its file reads now: each kept, by its key, with
 /// its id; one whose text changed is to be checked again, and one no
@@ -259,6 +261,16 @@ pub async fn checked(
     .bind(id)
     .execute(&mut *conn)
     .await?;
+    Ok(())
+}
+
+/// A part's check started, for its text as it is: when checks run by
+/// themselves, it isn't started again till the text changes.
+pub async fn tried(conn: &mut Conn, id: i64) -> Result<()> {
+    sqlx::query("update parts set tried = body_hash where id = ?")
+        .bind(id)
+        .execute(&mut *conn)
+        .await?;
     Ok(())
 }
 

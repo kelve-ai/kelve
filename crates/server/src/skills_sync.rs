@@ -7,6 +7,8 @@
 //! (`store::skills::seen`); a part taken out is kept as removed, with what
 //! its checks found, so putting it back brings them back. Nothing here ever
 //! writes a skill: a skill edited by hand is reread, never changed back.
+//! When checks run by themselves, new and changed parts are checked once
+//! they're read (`skill_checks::auto`).
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -74,7 +76,15 @@ pub async fn sync(app: &Shared) -> pipeline::Result<()> {
             sync_root(app, &root).await?;
         }
     }
+    checks_follow(app).await;
     Ok(())
+}
+
+/// Checks new and changed parts, when checks run by themselves.
+async fn checks_follow(app: &Shared) {
+    if let Err(e) = crate::skill_checks::auto(app).await {
+        tracing::warn!(error = %e.message, "couldn't start checking new parts of skills");
+    }
 }
 
 /// Reads the skills of one place, the person's own ('') or a project's.
@@ -111,7 +121,11 @@ pub async fn sync_skill(app: &Shared, root: &str, name: &str) -> pipeline::Resul
     let text = skills_home::read(&dir_of(app, root), name)
         .map_err(|e| pipeline::Failed::Other(format!("couldn't read a skill: {e}")))?;
     match text {
-        Some(text) => Ok(Some(keep(app, root, name, &text).await?)),
+        Some(text) => {
+            let id = keep(app, root, name, &text).await?;
+            checks_follow(app).await;
+            Ok(Some(id))
+        }
         None => {
             let mut conn = app.db.acquire().await?;
             if let Some(s) = kept::by_name(&mut conn, root, name).await?

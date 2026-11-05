@@ -45,6 +45,8 @@ export const EXAMPLE_AGENT: YourAgentView = {
     { name: 'fetch', title: 'fetch', kind: 'project', parts: parts('wwwnn') },
   ],
   fits: { picked: 9, of: 11, tests: [true, true, true, true, true, true, true, true, true, false, false] },
+  fitsReady: 0,
+  fitsOpen: true,
   scores: [],
   page: null,
 }

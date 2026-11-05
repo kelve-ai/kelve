@@ -3,12 +3,15 @@
 
 use crate::{Conn, Result};
 
-/// How many checks were asked for since `since`, in ms, whatever came of them.
+/// How many checks were asked for since `since`, in ms, whatever came of
+/// them, but for those stopped before they were done.
 pub async fn checks_since(conn: &mut Conn, since: i64) -> Result<i64> {
     Ok(
-        sqlx::query_scalar("select count(*) from checks where asked_at >= ?")
-            .bind(since)
-            .fetch_one(&mut *conn)
-            .await?,
+        sqlx::query_scalar(
+            "select count(*) from checks where asked_at >= ? and state != 'stopped'",
+        )
+        .bind(since)
+        .fetch_one(&mut *conn)
+        .await?,
     )
 }

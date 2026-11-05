@@ -87,6 +87,7 @@
 .ya-fits > div:first-child { flex: 1 1 360px; display: flex; flex-direction: column; gap: 8px; }
 .ya-fits p { margin: 0; font-size: 16px; line-height: 25px; color: var(--ink-2); }
 .ya-fits strong { font-weight: 700; color: var(--ink); }
+.ya-fits p.ya-go { font-size: 15px; line-height: 23px; color: var(--soft); }
 .ya-tests { flex: 1 1 440px; display: grid; gap: 6px; }
 .ya-tests span { display: block; height: 34px; border-radius: 7px; background: var(--same); }
 .ya-tests span.yes { background: var(--better); }

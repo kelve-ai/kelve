@@ -189,6 +189,33 @@ pub struct KindChoice {
     /// What the tasks are like.
     pub about: String,
     pub tasks: u32,
+    /// Retired tasks, as examples of what the live ones are like.
+    pub examples: Vec<ExampleTaskView>,
+}
+
+/// A retired task, shown as an example: what the agent was asked, the files
+/// it started with, and how it was checked.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ExampleTaskView {
+    pub name: String,
+    /// The request, as the agent got it.
+    pub request: String,
+    /// The starting files' paths: its hidden tests aren't among them.
+    pub files: Vec<String>,
+    /// Its hidden checks, each by its kind and what it looks for.
+    pub checks: Vec<ExampleCheckView>,
+}
+
+/// One of an example task's hidden checks.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ExampleCheckView {
+    /// `test`, `static` or `judge`.
+    pub kind: String,
+    pub about: String,
 }
 
 /// An agent both runs can be, and the models it runs on.
