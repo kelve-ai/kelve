@@ -1,0 +1,294 @@
+/* kelve's look, in one stylesheet, for every page outside the app: kelve.ai
+   (kelve-site) and the pages kelve-graph serves there (/@sam, /s/<id>).
+   The canvas's tokens (STYLE.css) under the app's names (web/src/styles/
+   app.css), light and dark; type; the controls; the squares; the site's
+   header and footer; and how characters move, as kelve-core draws them.
+   It loads no fonts: each page loads Geist, Geist Mono and Pixelify Sans
+   its own way, and falls back to the system's until they come. */
+
+:root {
+  /* Paper, and what sits on it. */
+  --page: #fbfaf7;
+  --raised: #f7f5f0;
+  --well: #f1eee8;
+  --well-2: #f4f1eb;
+  --well-3: #ebe6de;
+  --white: #ffffff;
+  /* Words, each step clearly softer than the one before, all readable. */
+  --ink: #1d1c1a;
+  --ink-2: #2f2d29;
+  --text: #3d3a35;
+  --soft: #5e5952;
+  --quiet: #6e6960;
+  /* Only for text 13px and up. */
+  --faint: #8a847b;
+  --dim: #a8a195;
+  --rule: #ece7df;
+  --rule-2: #f1eee8;
+  --edge: #e2dcd2;
+  --shadow: 29, 28, 26;
+  /* kelve's red: the logo's square; the one main action, a soft tint with a
+     key-cap edge, never solid; and what's on. */
+  --logo: #cf4a2f;
+  --accent: #c8452c;
+  --accent-ink: #a8361f;
+  --accent-ink-2: #8a2c18;
+  --accent-rgb: 168, 54, 31;
+  --accent-tint: #fdf0ec;
+  --accent-tint-2: #fbe6df;
+  --accent-press: #f9dfd7;
+  --accent-key: #f6dcd3;
+  --accent-edge: #f0c4b8;
+  --accent-edge-2: #eab3a5;
+  --accent-focus: #e09a86;
+  /* A white key: the secondary button, a field, a switch at rest. */
+  --key-hover: #fdfcfa;
+  --key-press: #f6f3ee;
+  --key-edge: #ddd6cb;
+  --key-edge-2: #cfc7ba;
+  --key-under: #efeae2;
+  --hi: 255, 255, 255;
+  /* Kinds of event: a colour, a tint behind it, and an ink to read on it. */
+  --ev-debrief: #c8452c; --ev-debrief-tint: #fbe6df; --ev-debrief-ink: #a8361f;
+  --ev-check: #7c5cd6; --ev-check-tint: #efe9fb; --ev-check-ink: #5b3fb8; --ev-check-edge: #d9cff5;
+  --ev-skill: #2e8a5a; --ev-skill-tint: #e3f2e8; --ev-skill-ink: #23704a;
+  --ev-score: #b8801a; --ev-score-tint: #fbf0d8; --ev-score-ink: #8a5a12;
+  --ev-part: #d6457f; --ev-part-tint: #fbe5ee; --ev-part-ink: #a1286a;
+  --ev-done: #6e6960; --ev-done-tint: #efece6; --ev-done-ink: #5e5952;
+  /* A task's result: better, the same, worse; and a part that makes no difference. */
+  --better: #2e8a5a; --same: #d6d0c5; --worse: #e58a3c; --no-difference: #d39a2c;
+  /* Words that agree, and lines added and taken out. */
+  --agreed: #2c7539; --added-ink: #2c7539; --removed-ink: #a24f37;
+  /* Markdown shown as written: its headings, its front matter's keys, its code. */
+  --md-key: #6b2dab; --code: #2b2925;
+  --sans: 'Geist Variable', 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* An agent's name, and nothing else: pixels, like the character it names. */
+  --pixel: 'Pixelify Sans Variable', 'Pixelify Sans', var(--sans);
+  color-scheme: light;
+}
+
+/* Dark: chosen with the switch, or following the system until then. */
+:root[data-theme='dark'] {
+  --page: #1b1a18; --raised: #1f1d1b; --well: #26241f; --well-2: #26241f; --well-3: #302d29; --white: #2a2824;
+  --ink: #ece8e0; --ink-2: #d6d0c6; --text: #c2bbb0; --soft: #b0a99e; --quiet: #a39d93; --faint: #8f897f; --dim: #6f6a62;
+  --rule: #302d29; --rule-2: #26241f; --edge: #3a3732; --shadow: 0, 0, 0;
+  --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
+  --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22;
+  --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
+  --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
+  --ev-debrief: #e27862; --ev-debrief-tint: #3d241e; --ev-debrief-ink: #ef8f7a;
+  --ev-check: #a991f0; --ev-check-tint: #2a2440; --ev-check-ink: #b9a5f5; --ev-check-edge: #3d3460;
+  --ev-skill: #6cc28f; --ev-skill-tint: #1e3227; --ev-skill-ink: #7cc48a;
+  --ev-score: #e0b04f; --ev-score-tint: #382e1a; --ev-score-ink: #d6a659;
+  --ev-part: #ee7fae; --ev-part-tint: #3a2230; --ev-part-ink: #ee8fb8;
+  --ev-done: #a39d93; --ev-done-tint: #2a2824; --ev-done-ink: #b0a99e;
+  --better: #6cc28f; --same: #4a4640; --worse: #f0a060; --no-difference: #d6a659;
+  --agreed: #7cc48a; --added-ink: #7cc48a; --removed-ink: #d9917a;
+  --md-key: #c3a6e6; --code: #ddd8cf;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --page: #1b1a18; --raised: #1f1d1b; --well: #26241f; --well-2: #26241f; --well-3: #302d29; --white: #2a2824;
+    --ink: #ece8e0; --ink-2: #d6d0c6; --text: #c2bbb0; --soft: #b0a99e; --quiet: #a39d93; --faint: #8f897f; --dim: #6f6a62;
+    --rule: #302d29; --rule-2: #26241f; --edge: #3a3732; --shadow: 0, 0, 0;
+    --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
+    --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22;
+    --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
+    --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
+    --ev-debrief: #e27862; --ev-debrief-tint: #3d241e; --ev-debrief-ink: #ef8f7a;
+    --ev-check: #a991f0; --ev-check-tint: #2a2440; --ev-check-ink: #b9a5f5; --ev-check-edge: #3d3460;
+    --ev-skill: #6cc28f; --ev-skill-tint: #1e3227; --ev-skill-ink: #7cc48a;
+    --ev-score: #e0b04f; --ev-score-tint: #382e1a; --ev-score-ink: #d6a659;
+    --ev-part: #ee7fae; --ev-part-tint: #3a2230; --ev-part-ink: #ee8fb8;
+    --ev-done: #a39d93; --ev-done-tint: #2a2824; --ev-done-ink: #b0a99e;
+    --better: #6cc28f; --same: #4a4640; --worse: #f0a060; --no-difference: #d6a659;
+    --agreed: #7cc48a; --added-ink: #7cc48a; --removed-ink: #d9917a;
+    --md-key: #c3a6e6; --code: #ddd8cf;
+    color-scheme: dark;
+  }
+}
+
+/* The page. */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 26px;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--ink); }
+button, input, textarea, select { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: rgba(var(--accent-rgb), 0.16); }
+[hidden] { display: none !important; }
+/* For screen readers only: labels the design shows another way. */
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* An agent's name. */
+.pixel { font-family: var(--pixel); font-weight: 700; }
+.mono { font-family: var(--mono); }
+
+/* Buttons: one main action a screen (btn-p), white keys (btn-s), quiet ones
+   (btn-g), and a toggle that's on (btn-on). */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; font-size: 14.5px; font-weight: 600; line-height: 20px; padding: 9px 15px; border-radius: 9px; text-decoration: none; cursor: pointer; white-space: nowrap; transition: background .12s ease, box-shadow .12s ease, border-color .12s ease, transform .06s ease; }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-p, .btn-on { color: var(--accent-ink); background: var(--accent-tint); border: 1px solid var(--accent-edge); box-shadow: inset 0 -2px 0 var(--accent-key); }
+.btn-p:hover { background: var(--accent-tint-2); border-color: var(--accent-edge-2); }
+.btn-p:active { background: var(--accent-press); box-shadow: inset 0 1px 2px rgba(var(--accent-rgb), .18); }
+.btn-s { color: var(--ink); background: var(--white); border: 1px solid var(--key-edge); box-shadow: inset 0 -2px 0 var(--key-under), 0 1px 2px rgba(var(--shadow), .05); }
+.btn-s:hover { background: var(--key-hover); border-color: var(--key-edge-2); }
+.btn-s:active { background: var(--key-press); box-shadow: inset 0 1px 2px rgba(var(--shadow), .12); }
+.btn-g { color: var(--soft); background: transparent; border: 1px solid transparent; }
+.btn-g:hover { background: var(--well); color: var(--ink); }
+.btn-sm { font-size: 13.5px; padding: 6px 11px; border-radius: 9px; }
+.btn-lg { font-size: 16px; padding: 12px 22px; border-radius: 11px; }
+.btn-icon { padding: 8px; }
+.btn[disabled], .btn[aria-disabled='true'] { opacity: .5; cursor: not-allowed; }
+/* A red text link, and a button that reads as one. */
+.lk { color: var(--accent-ink); text-decoration: none; font-weight: 600; }
+.lk:hover { color: var(--accent-ink-2); }
+.lkb { all: unset; cursor: pointer; color: var(--accent-ink); font-weight: 600; font-size: 13.5px; line-height: 19px; border-radius: 4px; }
+.lkb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* A segmented control: buttons with aria-pressed. */
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 11px; background: var(--well); }
+.seg button { font-family: inherit; font-size: 13.5px; font-weight: 600; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; background: transparent; color: var(--quiet); }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed='true'] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(var(--shadow), .08), 0 0 0 1px var(--rule); }
+
+/* A field, and a switch. */
+.in { font-family: inherit; font-size: 16px; padding: 10px 13px; border: 1px solid var(--key-edge); border-radius: 10px; background: var(--white); color: var(--ink); box-shadow: inset 0 1px 2px rgba(var(--shadow), .04); }
+.in::placeholder { color: var(--faint); }
+.in:focus { outline: 2px solid var(--accent-edge); border-color: var(--accent-focus); }
+.sw { position: relative; width: 40px; height: 24px; border-radius: 999px; border: 0; background: var(--key-edge); cursor: pointer; flex: none; padding: 0; }
+.sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--white); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: left .15s ease; }
+.sw[aria-checked='true'] { background: var(--accent); }
+.sw[aria-checked='true']::after { left: 19px; }
+
+/* A well: a command or a line to copy, in mono. `.cmd` has its Copy button
+   at the end. */
+.well { font-family: var(--mono); font-size: 14px; line-height: 22px; padding: 12px 14px; border-radius: 10px; background: var(--well); color: var(--ink); white-space: pre-wrap; word-break: break-all; }
+.cmd { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; }
+.cmd code { flex: 1; min-width: 0; text-align: left; word-break: normal; overflow-wrap: anywhere; font-family: var(--mono); font-size: 14px; line-height: 22px; }
+.cmd .btn { font-family: var(--sans); word-break: normal; }
+.cmd .btn .ok { color: var(--better); }
+kbd { font-family: var(--mono); font-size: 11.5px; line-height: 16px; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(var(--shadow), .14); background: rgba(var(--hi), .7); color: inherit; }
+
+/* Waiting: a small spinner. */
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--accent-edge); border-top-color: var(--accent); animation: k-spin .8s linear infinite; flex: none; }
+@keyframes k-spin { to { transform: rotate(360deg); } }
+.chip { display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+
+/* The only raised things: a dialog over the page, and a toast. */
+.scrim { position: fixed; inset: 0; background: rgba(var(--shadow), .28); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 10; }
+.sheet { width: 100%; max-width: 520px; background: var(--white); border-radius: 18px; box-shadow: 0 0 0 1px rgba(var(--shadow), .06), 0 24px 60px -20px rgba(var(--shadow), .45); padding: 28px; display: flex; flex-direction: column; gap: 18px; }
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--ink); color: var(--page); font-size: 15px; box-shadow: 0 12px 30px -10px rgba(0, 0, 0, .4); z-index: 20; }
+
+/* A small pixel picture on a tint, for a kind of thing. */
+.tile { flex: none; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.tile.sm { width: 28px; height: 28px; border-radius: 8px; }
+.tile svg { display: block; }
+
+/* A state, said with a dot and a word: works, checking now, not checked yet,
+   makes no difference, failed. */
+.st { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; line-height: 19px; font-weight: 600; color: var(--text); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot-works { background: var(--better); }
+.dot-fresh { border: 2px solid var(--dim); }
+.dot-checking { width: 10px; height: 10px; border: 2px solid var(--ev-check-edge); border-top-color: var(--ev-check); animation: k-spin .8s linear infinite; }
+.dot-anyway { background: var(--no-difference); }
+.dot-failed { background: var(--accent); }
+.dot-working { background: var(--accent); }
+.chev { color: var(--dim); transition: transform .12s ease, color .12s ease; flex: none; }
+
+/* What a character says. */
+.bub { position: relative; background: var(--white); border: 1px solid var(--rule); border-radius: 18px; padding: 12px 16px; font-size: 17px; line-height: 25px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); box-shadow: 0 1px 0 var(--key-under), 0 14px 30px -24px rgba(var(--shadow), .35); }
+.bub.you { background: var(--well); border-color: var(--well); box-shadow: none; font-weight: 500; color: var(--ink-2); }
+
+/* Squares: one a task, better, the same or worse than a standard agent. */
+.sqs { display: grid; gap: 6px; }
+.sqs > i, .sq { display: block; border-radius: 9px; }
+.better { background: var(--better); }
+.same { background: var(--same); }
+.worse { background: var(--worse); }
+
+/* The site's header, on every page of kelve.ai: the name, its places, what
+   the page offers, and light or dark. */
+.sh { display: flex; align-items: center; gap: 16px 28px; padding: 14px 40px; flex-wrap: wrap; background: var(--page); }
+.sh .logo { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 650; text-decoration: none; color: var(--ink); }
+.logo i { width: 11px; height: 11px; background: var(--logo); border-radius: 3px; display: inline-block; }
+.snav { display: flex; gap: 4px; font-size: 14.5px; }
+.snav a { text-decoration: none; padding: 6px 10px; border-radius: 8px; color: var(--quiet); font-weight: 500; }
+.snav a:hover { color: var(--ink); background: var(--well); }
+.snav a[aria-current='page'] { color: var(--ink); font-weight: 600; background: var(--well); }
+.sgrow { flex: 1; }
+.sright { display: flex; align-items: center; gap: 6px; }
+.tsw { all: unset; cursor: pointer; display: inline-flex; padding: 8px; border-radius: 8px; }
+.tsw:hover { background: var(--well); }
+.tsw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tsw i { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--quiet); background: linear-gradient(90deg, var(--quiet) 50%, transparent 50%); display: block; box-sizing: border-box; }
+.tsw:hover i { border-color: var(--ink); background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); }
+/* The site's footer. */
+.foot { border-top: 1px solid var(--rule); padding: 28px 40px 40px; display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; font-size: 14px; line-height: 22px; color: var(--quiet); }
+.foot .logo { display: flex; align-items: center; gap: 8px; font-weight: 650; color: var(--ink); }
+.foot nav { display: flex; gap: 20px; flex-wrap: wrap; }
+.foot a { color: var(--soft); text-decoration: none; }
+.foot a:hover { color: var(--ink); }
+.foot .src a { text-decoration: underline; }
+@media (max-width: 760px) {
+  .sh { padding: 12px 16px; }
+  .sh .hide-phone { display: none; }
+  .foot { padding: 24px 16px 32px; }
+}
+
+/* A character, standing on the page: never in a box. Its SVG is
+   kelve_core::character's, 24 pixels wide and 27 tall. */
+.char { display: inline-block; flex: none; line-height: 0; }
+.char svg { display: block; width: 100%; height: auto; }
+
+/* How every character moves: kelve_core::character::CSS, as it is there
+   (kelve-core's tests hold this copy to it). */
+.px *{transform-box:view-box}
+.px .ec,.px .al-u,.px .ar-u,.px .zz{opacity:0}
+.a-idle .up,.a-wave .up{animation:px-bob 1.6s steps(1) infinite}
+.a-idle .light{animation:px-glow 2.4s steps(1) infinite}
+.a-idle .eo,.a-wave .eo,.a-work .eo{animation:px-blink-o 4.2s steps(1) infinite}
+.a-idle .ec,.a-wave .ec,.a-work .ec{animation:px-blink-c 4.2s steps(1) infinite}
+.a-wave .ar-u{animation:px-a .8s steps(1) infinite}
+.a-wave .ar-d{animation:px-b .8s steps(1) infinite}
+.a-wave .light{animation:px-glow .8s steps(1) infinite}
+.a-work .al-u{animation:px-a .5s steps(1) infinite}
+.a-work .al-d{animation:px-b .5s steps(1) infinite}
+.a-work .ar-u{animation:px-b .5s steps(1) infinite}
+.a-work .ar-d{animation:px-a .5s steps(1) infinite}
+.a-work .light{animation:px-glow .4s steps(1) infinite}
+.a-happy .all{animation:px-jump .7s steps(1) infinite}
+.a-happy .al-u,.a-happy .ar-u{opacity:1}
+.a-happy .al-d,.a-happy .ar-d{opacity:0}
+.a-happy .light{animation:px-glow .35s steps(1) infinite}
+.a-sleep .up{animation:px-bob 3.2s steps(1) infinite}
+.a-sleep .eo{opacity:0}
+.a-sleep .ec{opacity:1}
+.a-sleep .light{opacity:.3}
+.a-sleep .zz{animation:px-zz 2.4s steps(4) infinite}
+.px .flame{animation:px-glow .3s steps(1) infinite}
+@keyframes px-bob{0%{transform:translateY(0)}50%{transform:translateY(1px)}}
+@keyframes px-jump{0%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes px-glow{0%{opacity:1}50%{opacity:.4}}
+@keyframes px-blink-o{0%{opacity:1}93%{opacity:0}97%{opacity:1}}
+@keyframes px-blink-c{0%{opacity:0}93%{opacity:1}97%{opacity:0}}
+@keyframes px-a{0%{opacity:1}50%{opacity:0}}
+@keyframes px-b{0%{opacity:0}50%{opacity:1}}
+@keyframes px-zz{0%{opacity:0;transform:translate(0,2px)}25%{opacity:1}100%{opacity:1;transform:translate(2px,-2px)}}
+@media (prefers-reduced-motion: reduce){.px *{animation:none !important}}
+
+/* Less motion, for anyone whose computer asks for it. */
+@media (prefers-reduced-motion: reduce) {
+  .btn, .chev, .sw::after { transition: none; }
+  .spin, .dot-checking { animation: none; }
+}
