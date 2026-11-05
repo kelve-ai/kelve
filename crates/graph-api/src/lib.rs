@@ -17,6 +17,7 @@ pub mod openapi;
 #[cfg(feature = "stand-in")]
 pub mod stand_in;
 pub mod tokens;
+pub mod v2;
 
 use std::collections::BTreeMap;
 
