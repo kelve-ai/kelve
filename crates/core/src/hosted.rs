@@ -355,6 +355,9 @@ pub struct ScoreView {
     pub gain: f64,
     pub gain_low: f64,
     pub gain_high: f64,
+    /// Whether the judge counted throughout: when it didn't, the score can't
+    /// be verified, and it isn't that your skills made no difference.
+    pub judge_counted: bool,
     /// Whether the difference is clear enough to call verified; otherwise
     /// there's no clear difference.
     pub verified: bool,

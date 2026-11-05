@@ -1535,6 +1535,10 @@
             "type": "number",
             "format": "double"
           },
+          "judge_counted": {
+            "type": "boolean",
+            "description": "Whether the judge counted throughout. When it didn't, the score can't\nbe verified whatever the gain, and it says that instead."
+          },
           "kind": {
             "type": "string"
           },
@@ -1580,7 +1584,7 @@
           },
           "verified": {
             "type": "boolean",
-            "description": "Whether the bank-level test passed at p < 0.05. Otherwise the score\nsays \"no clear difference\"."
+            "description": "Whether the bank-level test passed at p < 0.05, with a gain large\nenough to say so. Otherwise the score says \"no clear difference\"."
           }
         }
       },

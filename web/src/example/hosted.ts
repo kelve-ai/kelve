@@ -31,7 +31,7 @@ function score(id: string, run: string, kindName: string, modelName: string, pat
   const sq = squares(pattern)
   const better = sq.filter((s) => s === 'better').length
   const gain = Math.round((better * 18) / sq.length)
-  return { id, run, link: `https://kelve.ai/s/${id}`, shown, kindName, agentName: 'Claude Code', modelName, bank: `${kindName.toLowerCase()}-1`, squares: sq, better, of: sq.length, gain, gainLow: gain - 9, gainHigh: gain + 9, verified, at: AT }
+  return { id, run, link: `https://kelve.ai/s/${id}`, shown, kindName, agentName: 'Claude Code', modelName, bank: `${kindName.toLowerCase()}-1`, squares: sq, better, of: sq.length, gain, gainLow: gain - 9, gainHigh: gain + 9, verified, judgeCounted: true, at: AT }
 }
 
 function run(id: string, state: RunView['state'], pattern: string, s: ScoreView | null, paused?: boolean): RunView {

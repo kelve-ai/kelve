@@ -106,7 +106,7 @@ function Live({ h, scores, example, reload, say }: { h: HostedView; scores: Scor
           <div className="hs-srow" key={s.id}>
             <div className="k">
               <a href={hrefOf(`agent/score/${encodeURIComponent(s.run)}`, example)}>{s.kindName}</a>
-              <span>{s.modelName}{s.verified ? '' : ', no clear difference'}</span>
+              <span>{s.modelName}{s.verified ? '' : s.judgeCounted ? ', no clear difference' : ', not verified'}</span>
             </div>
             <div className="sq-at">
               <Squares squares={s.squares} small dim={!(on(s) && h.public)} label={saidOf(s.squares)} />

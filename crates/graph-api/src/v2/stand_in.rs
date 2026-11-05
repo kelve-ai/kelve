@@ -736,6 +736,7 @@ fn result_of(r: &Run) -> RunResult {
         gain_low: gain - 9.0,
         gain_high: gain + 9.0,
         verified: better * 2 > n,
+        judge_counted: true,
         finished: Timestamp::now(),
     }
 }

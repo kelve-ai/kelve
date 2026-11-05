@@ -35,6 +35,11 @@ better: number, of: number,
  */
 gain: number, gainLow: number, gainHigh: number, 
 /**
+ * Whether the judge counted throughout: when it didn't, the score can't
+ * be verified, and it isn't that your skills made no difference.
+ */
+judgeCounted: boolean, 
+/**
  * Whether the difference is clear enough to call verified; otherwise
  * there's no clear difference.
  */

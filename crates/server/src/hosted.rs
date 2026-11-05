@@ -408,6 +408,7 @@ pub fn score_view(s: &v2::Score) -> ScoreView {
         gain: r.gain,
         gain_low: r.gain_low,
         gain_high: r.gain_high,
+        judge_counted: r.judge_counted,
         verified: r.verified,
         at: r.finished,
     }

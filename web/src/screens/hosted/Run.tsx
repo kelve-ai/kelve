@@ -98,6 +98,9 @@ function at(when: Date) {
 function gainOf(s: ScoreView) {
   const n = (x: number) => Math.round(x)
   if (s.verified) return <><b>Verified.</b> Your agent passed about {n(s.gain)} more of every 100 hidden checks, between {n(s.gainLow)} and {n(s.gainHigh)}.</>
+  if (!s.judgeCounted) {
+    return <><b>Not verified.</b> The judge that scores what tests can’t got too many known answers wrong in this run, so it can’t be verified. That isn’t about your skills. Try another run, or publish this one, and your page says so.</>
+  }
   // Better on more tasks than worse, but too few, or by too little, to be sure.
   if (s.better > s.squares.filter((q) => q === 'worse').length) {
     return <><b>No clear difference</b> from a standard agent: it did better, but not by enough to be sure, so it isn’t verified. You can still publish it, and your page says so.</>

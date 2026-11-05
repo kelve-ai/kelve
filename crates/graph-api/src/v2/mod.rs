@@ -521,10 +521,18 @@ pub struct RunResult {
     pub gain: f64,
     pub gain_low: f64,
     pub gain_high: f64,
-    /// Whether the bank-level test passed at p < 0.05. Otherwise the score
-    /// says "no clear difference".
+    /// Whether the bank-level test passed at p < 0.05, with a gain large
+    /// enough to say so. Otherwise the score says "no clear difference".
     pub verified: bool,
+    /// Whether the judge counted throughout. When it didn't, the score can't
+    /// be verified whatever the gain, and it says that instead.
+    #[serde(default = "judge_counted")]
+    pub judge_counted: bool,
     pub finished: Timestamp,
+}
+
+fn judge_counted() -> bool {
+    true
 }
 
 impl RunResult {
