@@ -55,7 +55,14 @@ bun dev/kelve.ts down            # stops all of it, as Ctrl C in up's terminal d
 
 **Stand-in, the default.** No keys anywhere: `up` takes every model's key out of what it starts. Verified runs use the example bank, `dev-rust-0` (two small Rust tasks), the stand-in agent, which makes a partial fix, or the whole one when the `standin-expert` skill reaches it through the real delivery path, the stand-in model behind the gateway, and the stand-in judge, with 4 standard runs and 2 with your skills a task. A run takes a few minutes and ends with a real result: better on both tasks with `standin-expert`, no better without it. Two tasks are too few to be sure, so it always says no clear difference rather than verified; that takes 5 tasks or more. It costs nothing.
 
-**`--real`.** kelve.ai's side runs on `ANTHROPIC_API_KEY` from your environment: the standard runs and the judging. It's given only to the gateway and the runner, as they start, and never written anywhere. Runs use `rust-1` (made live in the sandbox's database alone, while it's still being built) and Claude Code on Sonnet 5.5. You give your own API key, or a Claude subscription's token from `claude setup-token`, in the app, as anyone would: this kelve.ai takes a subscription, since it's yours alone. It costs money, and `up` says how much: the standard runs once for the bank and profile, about 10 tasks × 20 runs × $0.40, so around $80 (`--ci` makes it 4 runs a task, around $16), judging within $25 a day, and your own runs, which the app estimates before anything starts.
+**`--real`.** Real Claude Code on `rust-1` (made live in the sandbox's database alone, while it's still being built), on Sonnet 5.5. kelve.ai's side, the standard runs and the judging, goes on one of two things, given only to the gateway and the runner, as they start, and never written anywhere:
+
+- **Your Claude plan.** A token from `claude setup-token`, in `~/.config/kelve-bench-token` (or `CLAUDE_CODE_OAUTH_TOKEN`). The provider takes that token only from Claude Code, so here the judge is Claude Code too, run for each question with no tools, no settings and nothing of yours (`KELVE_BENCH_JUDGE=claude-code`). When the plan's limit is reached, trials wait for it to reset and carry on. The judge is then the same family as the agent, which the runner warns of.
+- **An API key.** `ANTHROPIC_API_KEY`, which wins if both are there. It costs money, and `up` says how much, working from the profile's estimate. Judging is within $25 a day.
+
+You give your own API key or token for your own runs in the app, as anyone would: this kelve.ai takes a subscription, since it's yours alone. `--ci` makes it 4 standard runs a task instead of 20, which shows that it works but isn't a score to rely on.
+
+`bun dev/kelve.ts trial [task] [--skills <folder>]`, with `up --real` going, runs one real trial of a `rust-1` task, in its container and through the gateway, and prints what it used and each hidden check. Nothing is kept. Use it to try the agent, its image or a skill for the price of one trial.
 
 ### What to try first
 

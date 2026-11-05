@@ -8,8 +8,9 @@
 //
 //   bun dev/kelve.ts up              build what's stale, then start it all; Ctrl C or `down` stops it
 //        --stand-in                  no keys anywhere: the stand-in model, agent and judge (the default)
-//        --real                      ANTHROPIC_API_KEY for kelve.ai's standard runs and judging, rust-1,
-//                                    and Claude Code; you give your own key or token in the app
+//        --real                      rust-1 and Claude Code, for real: kelve.ai's standard runs and judging go on
+//                                    ANTHROPIC_API_KEY, or on your Claude plan with a token from claude setup-token
+//                                    in ~/.config/kelve-bench-token; you give your own key or token in the app
 //        --ci                        4 standard runs and 2 with skills a task, whatever the bank says
 //        --keep                      keep the stores from last time
 //        --images                    build the benchmark's images again, after changing kelve-graph or kelve's hook
@@ -32,6 +33,7 @@
 //                                    out better with); and, with the stand-in for kelve.ai, finish a
 //                                    run at once, someone else has an address, or how many runs a day
 //   bun dev/kelve.ts example         record the app's own example, for the states gallery, from a fresh sandbox
+//   bun dev/kelve.ts trial [task] [--skills <folder>]   with `up --real` going: one real Claude Code trial of a rust-1 task
 //   bun dev/kelve.ts newcomer        be someone new: ask a Claude Code of their own to install kelve
 //                                    from the installer served here, and see what it set up
 //        --agent                     Claude Code installs it, unattended, and what it set up is checked
@@ -46,6 +48,7 @@ import { randomBytes } from 'node:crypto'
 import { cpSync, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createServer, request } from 'node:http'
 import { connect } from 'node:net'
+import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { answer, type Job } from './example/agent'
 import { changeFiles, exampleChange, git, makeLedger, writeChange } from './example/make'
@@ -336,9 +339,14 @@ async function up() {
     process.exit(1)
   }
   const mode: Mode = flag('--real') ? 'real' : 'stand-in'
-  const key = process.env.ANTHROPIC_API_KEY?.trim()
+  // An API key if there is one, or else a Claude plan's token, kept in a file so
+  // it's never on a command line. Only ever read here: never written or logged.
+  const tokenFile = join(homedir(), '.config/kelve-bench-token')
+  const token = existsSync(tokenFile) ? readFileSync(tokenFile, 'utf8').replace(/\s/g, '') : ''
+  const key = process.env.ANTHROPIC_API_KEY?.trim() || process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() || token
+  const onPlan = !!key?.startsWith('sk-ant-oat')
   if (mode === 'real' && !key) {
-    say('--real needs ANTHROPIC_API_KEY set where you run this: kelve.ai’s standard runs and judging go on it. Or leave --real off for the stand-ins, which need no key.')
+    say(`--real needs something for kelve.ai’s standard runs and judging to go on: ANTHROPIC_API_KEY where you run this, or a token from claude setup-token in ${tokenFile}. Or leave --real off for the stand-ins, which need no key.`)
     process.exit(1)
   }
   const withGraph = existsSync(join(graphDir, 'Cargo.toml'))
@@ -487,7 +495,10 @@ async function up() {
         ...bench,
         KELVE_BENCH_WORKERS: '4',
         ...(mode === 'real'
-          ? { KELVE_GRAPH_JUDGE_PROVIDER: 'anthropic', KELVE_GRAPH_JUDGE_KEY: key!, KELVE_GRAPH_CEILING: '25' }
+          ? onPlan
+            ? // A plan's token works only from Claude Code, so Claude Code judges.
+              { KELVE_BENCH_JUDGE: 'claude-code', KELVE_BENCH_JUDGE_TOKEN: key! }
+            : { KELVE_GRAPH_JUDGE_PROVIDER: 'anthropic', KELVE_GRAPH_JUDGE_KEY: key!, KELVE_GRAPH_CEILING: '25' }
           : { KELVE_BENCH_JUDGE: 'stand-in' }),
       }, graphDir),
       undefined,
@@ -536,7 +547,14 @@ async function up() {
             'Nothing costs anything: no keys anywhere. Verified runs are on dev-rust-0, with the stand-in agent, model and judge,',
             `and take a few minutes: ${p!.live} tasks, ${p!.stdRuns} standard runs and ${p!.skillsMax} with your skills each. Any key does in the app, but sk-refused, which is turned away as a provider would.`,
           ]
-        : [
+        : onPlan
+          ? [
+              `This uses your Claude plan. kelve.ai’s side goes on the token in ${tokenFile}, which only the gateway and the runner are given, in memory:`,
+              `  the first run’s standard runs, once for the bank and profile: ${p!.live} tasks × ${p!.stdRuns} runs${ci ? '' : ' (--ci makes it 4 runs a task)'}, and Claude Code judging them, on ${'claude-sonnet-5-5'}.`,
+              'When the plan’s limit is reached, trials wait for it to reset and carry on. The judge is the same family as the agent here: with an API key for another family, it needn’t be.',
+              `Your runs’ skills trials go on the key or Claude token you give in the app: up to ${p!.live} × ${p!.skillsMax} runs.`,
+            ]
+          : [
             `This costs money. kelve.ai’s side pays on ANTHROPIC_API_KEY, which only the gateway and the runner are given, in memory:`,
             `  the first run’s standard runs, once for the bank and profile: ${p!.live} tasks × ${p!.stdRuns} runs × about $${p!.perRun.toFixed(2)} ≈ $${(p!.live * p!.stdRuns * p!.perRun).toFixed(0)}${ci ? '' : ' (--ci makes it 4 runs a task)'},`,
             '  and judging, about $0.02 a judged check, within a ceiling of $25 a day.',
@@ -1195,6 +1213,34 @@ switch (command) {
   case 'hosted':
     await hostedSays(rest[0], rest[1])
     break
+  case 'trial': {
+    // One real trial, through the running sandbox's gateway and forwarder.
+    const { seal, gateway } = hostedSecrets()
+    const given = process.argv.slice(3)
+    const at = given.indexOf('--skills')
+    const skills = at >= 0 ? ['--skills', given[at + 1]] : []
+    const task = given[0] && !given[0].startsWith('--') ? given[0] : 'wordfreq-top'
+    const done = spawnSync(
+      graphBin,
+      ['bench', 'trial', join(graphDir, 'bench/banks/rust-1'), task, join(graphDir, 'bench/profiles/claude-code-sonnet-5-5.toml'), ...skills],
+      {
+        cwd: graphDir,
+        stdio: 'inherit',
+        env: {
+          ...keyless(),
+          KELVE_GRAPH_RUNS_SEAL: seal,
+          KELVE_BENCH_STORE: join(home, 'bench'),
+          KELVE_BENCH_GATEWAY_SECRET: gateway,
+          KELVE_BENCH_GATEWAY_URL: `http://127.0.0.1:${ports.gatewayAdmin}`,
+          KELVE_BENCH_GATEWAY_PROXY: `http://host.docker.internal:${ports.gatewayProxy}`,
+          // A forwarder of its own: the runner clears any trial of its own it isn't holding.
+          KELVE_BENCH_FORWARDER: 'kelve-dev-one-forwarder',
+        },
+      },
+    )
+    docker('rm', '-f', 'kelve-dev-one-forwarder')
+    process.exit(done.status ?? 1)
+  }
   case 'moment': {
     need()
     if (!rest[0]) {
