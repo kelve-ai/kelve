@@ -1,8 +1,8 @@
 // Your agent's list: what it's doing now, what's next for what you have
 // open, what you asked for in other things, and what's ready for you. One
 // line each, kelve's square saying where each stands; Do next and Take off on
-// the row you point at. Notes for your agent are the list: the way to add to
-// it is to leave one.
+// the row you point at. What's on it is what you sent back from a debrief, to
+// have it another way.
 
 import { useContext, useEffect, useRef, useState } from 'react'
 import { doWaiting, OpenContext, toDo } from '../agentList'
@@ -11,7 +11,7 @@ import type { AgentList, ListItem } from '../api/types'
 import { State } from '../ui/ui'
 import { agentName } from '../words'
 
-const KIND: Record<string, string> = { note: 'Note' }
+const KIND: Record<string, string> = { redo: 'Redo' }
 
 function Row({ item, state, onOpen, onFirst, onOff, meta }: {
   item: ListItem
@@ -43,13 +43,11 @@ function Row({ item, state, onOpen, onFirst, onOff, meta }: {
   )
 }
 
-export function ListPane({ list, agent, onOpen, newNote, close }: {
+export function ListPane({ list, agent, onOpen, close }: {
   list: AgentList | undefined
   /** Your agent, as people say it: "Claude Code". */
   agent: string
   onOpen: (item: ListItem) => void
-  /** Starts a note for your agent. */
-  newNote: () => void
   close: () => void
 }) {
   const [said, setSaid] = useState<string>()
@@ -84,7 +82,7 @@ export function ListPane({ list, agent, onOpen, newNote, close }: {
       <section aria-label="Next">
         <p className="lgroup"><b>Next</b>{list && list.next.length > 0 && <span>{list.next.length}</span>}</p>
         <div role="list">{list?.next.map((i) => <Row key={i.key} item={i} state="queued" onOpen={onOpen} onFirst={first} onOff={(it) => off({ asks: it.asks })} />)}</div>
-        <button type="button" className="ladd" onClick={newNote}>Note for {agent}</button>
+        {list && list.next.length === 0 && <p className="side-none">Nothing’s next.</p>}
       </section>
       {list && list.elsewhere.length > 0 && (
         <section aria-label="Asked for in other things">

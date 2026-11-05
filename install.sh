@@ -12,8 +12,8 @@
 #
 # It downloads the build for this computer from GitHub Releases, checks it
 # against the release's checksums, and puts it in ~/.local/bin, or in
-# KELVE_INSTALL_DIR. Then it sets kelve up: connects your agent, adds its
-# hook for your notes and skills, and how much kelve marks for you.
+# KELVE_INSTALL_DIR. Then it sets kelve up: connects your agent, and adds its
+# hook for your skills.
 set -eu
 
 repo=kelve-ai/kelve
@@ -68,9 +68,8 @@ case ":$PATH:" in
   *) echo "Add $dir to your PATH, so your agent and your terminal find kelve." ;;
 esac
 
-# Set it up: connect the agent, add its hook, and how much kelve marks. A
-# person in a terminal is asked; an agent running this is left one word to
-# choose.
+# Set it up: connect the agent, and add its hook. A person in a terminal is
+# asked; an agent running this was asked to install kelve, which is their yes.
 if [ -t 1 ] && (exec </dev/tty) 2>/dev/null; then
   "$dir/kelve" setup </dev/tty || true
 else

@@ -17,7 +17,7 @@ pub async fn next(agent: &str, model: Option<&str>, only: Option<i64>) -> anyhow
     let kelve = Kelve::new(Duration::from_secs(120))?;
     let job = kelve
         .send(kelve.post("/api/agent/next").json(
-            &json!({ "agent": agent, "model": model, "path": crate::notes::here(), "for": only, "saysPreparing": true }),
+            &json!({ "agent": agent, "model": model, "path": crate::hook::here(), "for": only, "saysPreparing": true }),
         ))
         .await?;
     if job["preparing"] == true {
@@ -52,7 +52,7 @@ pub async fn done(
     let kelve = Kelve::new(Duration::from_secs(120))?;
     let got = kelve
         .send(kelve.post("/api/agent/answer").json(&json!({
-            "job": job, "answer": answer, "agent": agent, "model": model, "path": crate::notes::here(), "for": only,
+            "job": job, "answer": answer, "agent": agent, "model": model, "path": crate::hook::here(), "for": only,
         })))
         .await?;
     anstream::println!("{}", serde_json::to_string_pretty(&got)?);

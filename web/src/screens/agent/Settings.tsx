@@ -1,19 +1,18 @@
 // Settings' sections (board Settings), but the account's, which signing in to
-// kelve.ai brings: your agent, the agents connected, and notes; skill checks;
-// reading, with what kelve marks for you; privacy; and about. A row for each choice, its line under it, the
-// choice on the right.
+// kelve.ai brings: your agent and the agents connected; skill checks; reading,
+// with the ideas you know; privacy; and about. A row for each choice, its line
+// under it, the choice on the right.
 
 import { type ReactNode, useEffect, useState } from 'react'
 import { changed, del, post } from '../../api/client'
-import type { AgentSettings, AgentSettingsIn, ChecksWhen, CountsView, DebriefsWhen, Highlighting, MarksView, Picked, Place, Problem, Settings, SettingsIn, Size, UpdateView } from '../../api/types'
+import type { AgentSettings, AgentSettingsIn, ChecksWhen, CountsView, DebriefsWhen, Highlighting, Problem, Settings, SettingsIn, Size, UpdateView } from '../../api/types'
 import { EXAMPLE_CHARACTER, EXAMPLE_SETTINGS } from '../../example/agent'
 import { hrefOf, type Section } from '../../routes'
 import { getTheme, onTheme, setTheme, type Theme } from '../../theme'
 import { Character, useMyCharacter } from '../../ui/Character'
 import { Btn, CopyLine, Segmented, Toggle, useToast } from '../../ui/kit'
 import { useLoad } from '../../useLoad'
-import { agentKindName, roughly } from '../../words'
-import { MarksEditor, writtenBy } from '../Marks'
+import { roughly } from '../../words'
 import { useAgentLoad } from './looks'
 
 /** One setting: what it is, a line on what it does, and the choice. */
@@ -106,50 +105,8 @@ function AgentSection({ example }: { example?: boolean }) {
       <Opt stack title="Connect another agent" what="Run this in your terminal.">
         <CopyLine text="kelve setup" />
       </Opt>
-      <NotesOpts example={example} />
       {said && <p className="warn" role="alert">{said}</p>}
       {toast}
-    </>
-  )
-}
-
-/** Where your own notes are kept, and who a new note is for. */
-function NotesOpts({ example }: { example?: boolean }) {
-  const { s, set, said } = useSettings(example)
-  const [failed, setFailed] = useState<string>()
-  const agent = agentKindName(s.agent)
-  const choose = async () => {
-    setFailed(undefined)
-    if (example) return
-    try {
-      const { path } = await post<Picked>('/api/pick', { what: 'folder' })
-      if (path) await set({ notesDir: path })
-    } catch (e) {
-      setFailed((e as Error).message)
-    }
-  }
-  const show = () => {
-    setFailed(undefined)
-    if (!example) void post('/api/notes/show').catch((e: Error) => setFailed(e.message))
-  }
-  const places: Array<{ value: Place; label: string }> = [
-    { value: 'you', label: 'Just you' },
-    { value: 'work', label: 'With the work' },
-    { value: 'agent', label: `For ${agent}` },
-  ]
-  return (
-    <>
-      <Opt stack title="Your own notes" what={<>Kept in <span className="mono">{s.notesDir ?? '~/Notes'}</span>{s.notesChosen ? '' : ', kelve’s own folder'}, a folder for each project. Changing it moves the notes you have. Notes with the work are kept in the project’s .kelve/notes.</>}>
-        <div className="row">
-          <Btn size="small" onClick={() => void choose()} disabled={example}>Choose a folder</Btn>
-          <Btn kind="quiet" size="small" onClick={show} disabled={example}>Show the folder</Btn>
-          {s.notesChosen && <Btn kind="quiet" size="small" onClick={() => void set({ notesDir: '' })}>Use kelve’s own folder</Btn>}
-        </div>
-      </Opt>
-      <Opt stack title="A new note is">
-        <Segmented label="Who a new note is for" value={s.newNote ?? 'you'} onChange={(newNote) => void set({ newNote })} options={places} />
-      </Opt>
-      {(said || failed) && <p className="warn" role="alert">{said ?? failed}</p>}
     </>
   )
 }
@@ -230,14 +187,13 @@ function Preview() {
 
 function ReadingSection({ example }: { example?: boolean }) {
   const { s, set, said } = useSettings(example)
-  const marks = useLoad<MarksView>(example ? null : '/api/marks', ['spec'])
+  const knownNow = useLoad<string[]>(example ? null : '/api/known', ['spec'])
   const [theme, setShown] = useState<Theme>(getTheme)
-  const [editing, setEditing] = useState(false)
   useEffect(() => onTheme(() => setShown(getTheme())), [])
-  const known = example ? ['Exponential backoff', 'Result and the ? operator', 'async and await'] : (marks.data?.spec.never ?? [])
+  const known = example ? ['Exponential backoff', 'Result and the ? operator', 'async and await'] : (knownNow.data ?? [])
   const forget = async (idea: string) => {
-    if (example || !marks.data) return
-    await post<MarksView>('/api/marks', { ...marks.data.spec, never: marks.data.spec.never.filter((i) => i !== idea) }).then(() => changed('spec'), () => {})
+    if (example) return
+    await post<string[]>('/api/known/forget', { idea }).then(() => changed('spec'), () => {})
   }
   return (
     <>
@@ -264,14 +220,7 @@ function ReadingSection({ example }: { example?: boolean }) {
         ) : (
           <p className="snone">None yet. Press “I know this” on an idea in a debrief.</p>
         )}
-        <div className="row"><Btn size="small" pressed={editing} onClick={() => setEditing(!editing)} disabled={example || !marks.data}>{editing ? 'Done' : 'Edit marks.md'}</Btn></div>
       </Opt>
-      {editing && marks.data && (
-        <>
-          <p className="lede">{writtenBy(marks.data, agentKindName(s.agent))} Kept in <span className="mono">{marks.data.file}</span>, so you or your agent can change it there too.</p>
-          <MarksEditor view={marks.data} />
-        </>
-      )}
       {said && <p className="warn" role="alert">{said}</p>}
     </>
   )
@@ -338,7 +287,7 @@ function PrivacySection({ example }: { example?: boolean }) {
           </div>
         </Opt>
       )}
-      <Opt title="Delete everything" what={sure ? 'It can’t be undone. Your skills and notes stay.' : 'Everything kelve keeps. Your skills and notes stay.'}>
+      <Opt title="Delete everything" what={sure ? 'It can’t be undone. Your skills stay.' : 'Everything kelve keeps. Your skills stay.'}>
         {sure ? (
           <div className="row">
             <Btn size="small" onClick={example ? () => setSure(false) : everything}><span className="danger">Delete everything</span></Btn>

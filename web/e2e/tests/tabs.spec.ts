@@ -2,10 +2,9 @@
 // browser to the front with it shown, and a kelve tab already showing the
 // same thing gives it its place, where you were in it, and closes. A tab
 // you've moved around in can't close itself: it says it's open in a newer tab.
-// One holding a note you haven't kept stays as it is.
 
 import { expect, test, type Page } from '@playwright/test'
-import { me, newLink, openFile, repo, selectLines, shown, signIn, world } from '../world'
+import { me, newLink, openFile, repo, shown, signIn, world } from '../world'
 
 /** The agent shows something, as its `open` tool does: what's open, and the link kelve gave the person. */
 async function show(what: Record<string, unknown>) {
@@ -68,26 +67,4 @@ test('a tab you moved around in says it’s open in a newer tab, and shows it he
 
   await page.getByRole('button', { name: 'Show it here instead' }).click()
   await expect(page.locator('.fv-name')).toContainText('src/retry.rs')
-})
-
-test('a tab holding a note you haven’t kept stays as it is', async ({ page }) => {
-  await signIn(page)
-  const root = repo()
-  const first = await show({ ...RETRIES, path: root })
-  const old = await newTab(page, first.link)
-  await old.evaluate((id) => location.replace(`#/o/${id}?f=src%2Fretry.rs`), first.id)
-  await expect(old.locator('.fv-name')).toContainText('src/retry.rs')
-  await expect(old.locator('.cm-line').filter({ hasText: '200 * 2u64' })).toBeVisible()
-  await selectLines(old, 'pub fn wait', '200 * 2u64')
-  await old.getByRole('button', { name: 'Note', exact: true }).click()
-  await old.locator('.nbox').getByRole('textbox').fill('Cap the wait at 30 seconds.')
-
-  const again = await show({ ...RETRIES, path: root, said: 'Each retry now waits a little at random too.' })
-  const fresh = await newTab(page, again.link)
-  await expect(fresh.locator('.reader .title')).toBeVisible()
-  // Long enough for it to have gone, had it gone.
-  await fresh.waitForTimeout(500)
-  expect(old.isClosed()).toBe(false)
-  await expect(old.locator('.nbox').getByRole('textbox')).toHaveValue('Cap the wait at 30 seconds.')
-  await expect(old.getByText('This is open in a newer tab.')).toHaveCount(0)
 })

@@ -55,33 +55,14 @@ export function Example() {
       list.open ??= fixture.opened
       list.elsewhere ??= []
       const as = new URLSearchParams(location.hash.split('?')[1] ?? '').get('as')
-      // Several things next, your agent not working: notes left for it.
+      // Several things next, your agent not working: decisions to redo.
       if (as === 'next') {
-        const note = (id: string, title: string, sub: string, ask: number): ListItem => ({ key: `note:${id}`, kind: 'note', title, sub, opened: fixture.opened, note: id, askedIn: null, asks: [ask] })
+        const redo = (n: number, title: string, sub: string, ask: number): ListItem => ({ key: `redo:1:${n}`, kind: 'redo', title, sub, opened: fixture.opened, askedIn: null, asks: [ask] })
         list.working = false
         list.next = [
-          note('agent/say-what-a-retry-costs.md', 'Say what a retry costs the bank', 'On src/retry.rs 12–28', 16),
-          note('agent/name-the-backoff.md', 'Name the backoff after what it waits for', 'On src/retry.rs 30–34', 17),
+          redo(1, 'Say what a retry costs the bank', 'On src/retry.rs 12–28', 16),
+          redo(2, 'Name the backoff after what it waits for', 'On src/retry.rs 30–34', 17),
         ]
-      }
-      // What kelve marks for the person, as their agent wrote it.
-      fixture.answers['/api/marks'] = {
-        spec: {
-          mark: 'working',
-          areas: [
-            { area: 'rust', level: 'deep' },
-            { area: 'distributed systems', level: 'new' },
-            { area: 'postgresql', level: 'learning' },
-            { area: 'sql', level: 'learning' },
-          ],
-          always: ['Idempotency keys'],
-          never: [],
-          words: 'I came to backend from frontend work. Mark anything about how money moves.',
-          by: 'agent',
-          at: '2026-10-22',
-        },
-        kept: true,
-        file: '~/notes/marks.md',
       }
       // kelve.ai: Sam signed in, with a page and scores on it.
       Object.assign(fixture.answers, hostedAnswers(as))

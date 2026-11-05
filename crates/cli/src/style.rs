@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn a_command_in_backticks_is_never_split() {
-        let text = "✓ Notes and skills: one hook in Claude Code’s settings. `kelve hook remove claude` takes it out.";
+        let text = "✓ Skills: one hook in Claude Code’s settings. `kelve hook remove claude` takes it out.";
         let lines = wrap(text, 64);
         assert!(
             lines

@@ -3,10 +3,10 @@
 
 mod client;
 mod config;
+mod hook;
 mod jobs;
 mod mcp;
 mod moment;
-mod notes;
 mod open;
 mod setup;
 mod skills_setup;
@@ -45,9 +45,9 @@ enum Command {
     },
     /// Open a folder or a file in kelve
     ///
-    /// kelve opens in your browser on it, marking the ideas it's built on,
-    /// starting first if it isn't running. With no path, it opens kelve
-    /// itself. Either way, with a new link that signs you in, once.
+    /// kelve opens in your browser on it, starting first if it isn't
+    /// running. With no path, it opens kelve itself. Either way, with a new
+    /// link that signs you in, once.
     #[command(verbatim_doc_comment)]
     Open {
         /// A folder or a file: `.` for this folder.
@@ -70,7 +70,7 @@ enum Command {
     ///
     ///   claude mcp add --scope user kelve -- kelve mcp
     ///
-    /// Then ask your agent to show you something in kelve.
+    /// Then ask your agent: Open kelve.
     #[command(verbatim_doc_comment)]
     Mcp,
     /// Take kelve's next job, for an agent without MCP
@@ -94,23 +94,9 @@ enum Command {
     },
     /// What's kept for your agent to do
     Kept,
-    /// The notes you left for your agent in kelve, waiting here
-    ///
-    ///   kelve notes                     every note waiting, for an agent without MCP
-    ///   kelve notes --waiting           one line if any wait: what kelve's hook runs
-    ///   kelve notes done <id> <version> "<did>"
-    ///                                   say one is done, and what you did
-    #[command(verbatim_doc_comment)]
-    Notes {
-        #[command(subcommand)]
-        done: Option<NotesCommand>,
-        /// Print one line if notes are waiting, and nothing otherwise.
-        #[arg(long)]
-        waiting: bool,
-    },
     /// What kelve has for your agent now: what its hook runs
     ///
-    /// Reads the event your agent gives it, and prints the notes waiting,
+    /// Reads the event your agent gives it, and prints what you want redone,
     /// your skills as they apply, or nothing.
     Moment {
         /// The agent whose hook this is: claude, codex, cursor, copilot,
@@ -126,38 +112,25 @@ enum Command {
         #[arg(long, value_name = "SKILLS")]
         bench: Option<std::path::PathBuf>,
     },
-    /// Set kelve up: connect your agent, add its hook, and say what kelve marks
+    /// Set kelve up: connect your agent, and add its hook
     ///
     /// The installer runs this. It connects the agent running it, or the one
-    /// installed, adds kelve's hook so it picks up your notes and skills,
-    /// and sets how much kelve marks: new, learning, working or deep. In a
-    /// terminal it asks; run by your agent, it leaves your agent to choose.
+    /// installed, and adds kelve's hook so it gets your skills as it works.
     ///
     ///   kelve setup
-    ///   kelve setup --agent codex --level working
+    ///   kelve setup --agent codex
     ///   kelve setup --remove
     #[command(verbatim_doc_comment)]
     Setup {
         /// The agent to connect: claude, codex, cursor or gemini.
         #[arg(long)]
         agent: Option<String>,
-        /// How much kelve marks: new, learning, working or deep.
-        #[arg(long)]
-        level: Option<String>,
         /// Take out what setup put in: kelve's hook, and the links to your
         /// skills in each agent's skills folder.
         #[arg(long)]
         remove: bool,
     },
-    /// What kelve marks for you
-    ///
-    ///   kelve marks set working     how much: new, learning, working or deep
-    #[command(verbatim_doc_comment)]
-    Marks {
-        #[command(subcommand)]
-        what: MarksCommand,
-    },
-    /// Tell your agent of notes you leave it, and your skills as it works
+    /// Give your agent your skills as it works
     ///
     /// Adds kelve's hook to your agent's settings, or takes it out, and
     /// leaves the rest of the file as it was. For claude, codex, cursor,
@@ -199,31 +172,6 @@ enum Command {
     Status,
     /// Stop kelve
     Stop,
-}
-
-#[derive(Debug, Subcommand)]
-enum NotesCommand {
-    /// Say a note is done, and what you did, in a line
-    Done {
-        /// The note's id, as `kelve notes` gave it.
-        note: String,
-        /// Its version, as `kelve notes` gave it: a note changed since
-        /// isn't marked done.
-        version: String,
-        /// What you did, in one line.
-        did: String,
-    },
-}
-
-#[derive(Debug, Subcommand)]
-enum MarksCommand {
-    /// How much kelve marks: new (every idea), learning (all but the
-    /// basics), working (advanced and specialist ideas) or deep
-    /// (specialist ideas only)
-    Set {
-        /// new, learning, working or deep.
-        level: String,
-    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -295,25 +243,14 @@ async fn main() -> std::process::ExitCode {
             ..
         } => jobs::done(job, &agent, model.as_deref(), only).await,
         Command::Kept => jobs::kept().await,
-        Command::Notes { waiting: true, .. } => notes::waiting().await,
-        Command::Notes {
-            done: Some(NotesCommand::Done { note, version, did }),
-            ..
-        } => notes::done(&note, &version, &did).await,
-        Command::Notes { done: None, .. } => notes::list().await,
         Command::Setup { remove: true, .. } => skills_setup::remove().await,
-        Command::Setup { agent, level, .. } => {
-            setup::setup(agent.as_deref(), level.as_deref()).await
-        }
-        Command::Marks {
-            what: MarksCommand::Set { level },
-        } => setup::marks_set(&level).await,
+        Command::Setup { agent, .. } => setup::setup(agent.as_deref()).await,
         Command::Hook {
             what: HookCommand::Install { agent },
-        } => notes::hook(true, &agent).await,
+        } => hook::hook(true, &agent).await,
         Command::Hook {
             what: HookCommand::Remove { agent },
-        } => notes::hook(false, &agent).await,
+        } => hook::hook(false, &agent).await,
         Command::Moment { agent, on, bench } => {
             moment::run(agent.as_deref(), on.as_deref(), bench.as_deref()).await
         }

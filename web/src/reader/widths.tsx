@@ -1,12 +1,12 @@
 // How wide the panes beside the work are, each as wide as what's in it
-// reads best at: an entry, the one before it, a note's page, your agent's
-// list; and the side panel. Drag a pane's left
+// reads best at: an entry, the one before it, your agent's list; and the
+// side panel. Drag a pane's left
 // edge, or the side panel's right edge, to change it; what you set is kept
 // in this browser, for every pane of its kind.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type PaneKind = 'entry' | 'back' | 'note' | 'side' | 'list'
+export type PaneKind = 'entry' | 'back' | 'side' | 'list'
 
 // Each fits beside the side panel and the work on a laptop of 1440: an
 // entry, the side panel and the least the work needs come to 1420.
@@ -15,8 +15,6 @@ const DEFAULTS: Record<PaneKind, number> = {
   entry: 600,
   // Glanced at, not read.
   back: 440,
-  // What you write, at the measure of what you read.
-  note: 600,
   // One line each: a kind, a path, where it stands.
   list: 480,
   side: 340,

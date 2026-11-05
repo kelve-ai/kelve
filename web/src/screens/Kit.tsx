@@ -105,7 +105,7 @@ export function Kit() {
           </div>
           <div className="kit-field">
             <CopyLine text="claude mcp add --scope user kelve -- kelve mcp" />
-            <CopyLine words text="Show me what you did in kelve." />
+            <CopyLine words text="Open kelve." />
           </div>
         </section>
 

@@ -34,7 +34,7 @@ On Windows, `install.ps1` does the same in PowerShell, into `%LOCALAPPDATA%\kelv
 irm https://kelve.ai/install.ps1 | iex
 ```
 
-Then each runs `kelve setup`, which connects the person's agent, adds kelve's hook to its settings, and sets how much kelve marks: in a terminal it asks, and run by an agent it leaves the agent one word to choose.
+Then each runs `kelve setup`, which connects the person's agent and adds kelve's hook to its settings: in a terminal it asks, and run by an agent, which is the person's yes, it just does it. Its last lines say what to ask the agent first: “Open kelve.”
 
 Both need the repository and its releases to be public. `KELVE_INSTALL_DIR` puts `kelve` somewhere else, and, for `install.sh`, `KELVE_RELEASES` installs from another address, such as the release `bun dev/kelve.ts newcomer` serves. Once a release is out, the release workflow installs it with each script, on macOS, Linux and Windows, and checks the version it says.
 

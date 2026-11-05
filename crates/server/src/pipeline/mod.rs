@@ -1,6 +1,6 @@
 //! kelve's background work, as jobs in the local store (`store::jobs`):
 //! the agent loop's debriefs, research, explanations and learning, skill
-//! checks, notes done, and keeping the store tidy (docs/architecture.md).
+//! checks, and keeping the store tidy (docs/architecture.md).
 //! Where the work needs a model, it asks the person's agent (`agent`) and
 //! stops; the agent's answer runs it again. Two workers share the jobs; a
 //! job that fails is tried again later, with a growing wait.
@@ -181,7 +181,7 @@ async fn run(app: &Shared, job: jobs::Job) {
 async fn dispatch(app: &Shared, job: &jobs::Job) -> Result<Then> {
     match job.kind.as_str() {
         SWEEP => sweep(app).await,
-        crate::list::NOTE_DONE => crate::list::note_done_job(app, &job.payload).await,
+        crate::list::REDO_DONE => Ok(Then::Done),
         crate::v2jobs::DEBRIEF => crate::agent_loop::debrief::job(app, &job.payload).await,
         crate::v2jobs::RESEARCH => crate::agent_loop::research::job(app, &job.payload).await,
         crate::v2jobs::EXPLAIN => crate::agent_loop::explain::job(app, &job.payload).await,

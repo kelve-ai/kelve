@@ -11,7 +11,7 @@ export type Job = { job: number; kind: string; about: string; material: Record<s
 /** How the example's agent answers a job. */
 export function answer(job: Job): unknown {
   switch (job.kind) {
-    case 'note': return { did: 'Did what the note asked.' }
+    case 'redo': return { did: 'Redid the decision as the person asked.' }
     case 'debrief': return loop.debrief(job)
     case 'research': return loop.research(job)
     case 'explain': return loop.explain(job)

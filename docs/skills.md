@@ -56,7 +56,7 @@ It opens when your agent hands over its work. It's one page, built to read the s
 3. **What it decided.** Every decision that matters, each with:
    - where it came from: its own call, something you said, or your edit after it handed over;
    - what it chose, as a sentence, and why, with what else it could have done;
-   - your call: **Agree**, **Do it differently** (a note to your agent), or **Look into it** (research, below);
+   - your call: **Agree**, **Do it differently** (you say how, and your agent redoes it), or **Look into it** (research, below);
    - its own lines of code, folded away until you open them.
 
    On a large change, decisions are grouped by the part of the change they belong to.
@@ -88,22 +88,22 @@ kelve never starts your agent. It works through what your agent already has: kel
 
 **On its own, your agent:**
 1. gets your skills as it works, through the hook;
-2. reads the notes you left before it starts anything you ask;
+2. redoes any decision you sent back from a debrief, before it starts what you ask next;
 3. hands over finished work, once;
 4. writes the debrief, when one is due.
 
-**From kelve, you can ask it for more.** Each becomes a job or a note that waits for your agent:
+**From kelve, you can ask it for more.** Each becomes a job that waits for your agent:
 
 | In kelve | What your agent does |
 |---|---|
-| **Change it**, on a decision | Redoes that part your way, as a note, before your next request |
+| **Change it**, on a decision | Redoes that part your way, before your next request |
 | **Look into it** | Researches the question, and answers under the decision |
 | **Explain** | Writes a short explanation of an idea |
 | **Send**, with what you'd want every time | Adds parts to your skills |
 | **Check it**, on a skill | Redoes past tasks with and without the part, only once you've started it, because it costs runs |
 | **Make me a part**, on your agent | Draws a part or a character |
 
-**When it does them:** notes go first, as part of your next request, because they change the work. Jobs wait until your agent finishes what it's doing: as it hands back, kelve's hook gives it what's waiting, and it does them before going quiet. You can also tell it "do what's waiting in kelve". Home shows what's waiting, and says so in your agent's words: "I'll look into it when I finish this." If your agent isn't running, nothing is lost: it all waits.
+**When it does them:** a decision to redo goes first, as part of your next request, because it changes the work: it's a job of its own (`redo`), and kelve's hook says it's waiting as you send your next message. Other jobs wait until your agent finishes what it's doing: as it hands back, kelve's hook gives it what's waiting, and it does them before going quiet. You can also tell it "do what's waiting in kelve". Home shows what's waiting, and says so in your agent's words: "I'll look into it when I finish this." If your agent isn't running, nothing is lost: it all waits.
 
 #### The format: plain markdown
 
@@ -422,12 +422,13 @@ kelve's rules (`AGENTS.md`) change in four places. They need deciding and writin
 | Pairing your browser with kelve | **Keep** | Stops other websites and programs reading through kelve's local address |
 | The job queue and the agent's list | **Keep** | Every new job runs on it |
 | `crates/graph-api`, the client and stand-in for the hosted service | **Keep, changed** | Gains the benchmark's and the page's API; the graph's goes |
-| `kelve mcp`, `kelve setup`, the installer | **Keep, changed** | One new tool, `skills`. Setup also offers to put your skills in each agent's skills folder |
+| `kelve mcp`, `kelve setup`, the installer | **Keep, changed** | One new tool, `skills`, and `open` with `what: home`, what "Open kelve" means. Setup also offers to put your skills in each agent's skills folder, asks nothing about marks, and ends by saying to ask your agent: "Open kelve." |
 | The hook (`kelve moment`) | **Keep, changed** | Catches corrections as you send messages, delivers skills, and knows which worktree is a test run |
 | Showing work as it's finished (handoff) | **Keep, changed** | Opens the debrief, and now records what was handed over, to compare with what you commit |
-| Notes for the agent | **Keep** | "Redo it now" sends one |
+| Notes: with the work, just for you, and for the agent | **Drop** | They don't fit the app. "Redo it now" is its own job, `redo`, and the agent's list shows those |
 | Reading changes from git, reading files with secrets masked, fencing | **Keep** | The material for every job |
-| `marks.md` | **Keep** | Says which ideas are new to you, when research explains them |
+| `marks.md` | **Keep, changed** | Kept by kelve, never asked for: "I know this" adds to it, and it says which ideas are new to you, when research explains them. Taken to be `working` until told more |
+| `kelve marks`, the `marks` and `set_marks` tools, the What kelve marks page | **Drop** | Nothing asks how much to mark any more. Settings still lists the ideas you know, to take one back |
 | The store, SQLite | **Keep, changed** | New tables for candidates, lines, tests and scores |
 | Reading jobs, the way in, reading plainly | **Drop** | The debrief needs none of it |
 | Signing in to the hosted service, with GitHub or Google | **Keep, changed** | Now for your account, verified runs and your page |

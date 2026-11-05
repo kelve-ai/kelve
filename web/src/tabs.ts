@@ -30,11 +30,6 @@ function showing(hash: string): number | null {
   return m ? Number(m[1]) : null
 }
 
-/** Whether this tab holds writing not sent yet, which closing would lose: a note or a flag, or a note page you're in. */
-function holdsWriting() {
-  return [...document.querySelectorAll('textarea')].some((t) => t.value.trim() !== '') || (document.activeElement as HTMLElement | null)?.isContentEditable === true
-}
-
 /** Whether this tab says it's open in a newer tab. */
 export const isMoved = () => moved
 
@@ -86,7 +81,7 @@ export function joinTabs() {
   channel.onmessage = (message: MessageEvent<Said>) => {
     const said = message.data
     const here = moved ? null : showing(location.hash)
-    if (said.kind === 'where' && said.from !== me && said.opened === here && !holdsWriting())
+    if (said.kind === 'where' && said.from !== me && said.opened === here)
       say({ kind: 'here', opened: here, to: said.from, from: me, hash: location.hash, seen: document.hidden ? seen : Date.now() })
     else if (said.kind === 'here' && said.to === me && asking?.opened === said.opened) {
       // Where you were in the one you saw last, while this tab is still settling.

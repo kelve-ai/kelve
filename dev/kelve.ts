@@ -90,7 +90,7 @@ const env = {
   KELVE_SECRET_FILE: join(home, 'secret'),
   KELVE_GRAPH_URL: graphUrl,
   KELVE_UTC_OFFSET_MINUTES: '0',
-  // The sandbox's own Claude Code settings, so the notes hook never touches yours.
+  // The sandbox's own Claude Code settings, so kelve's hook never touches yours.
   KELVE_CLAUDE_DIR: join(home, 'claude'),
   // And a home of its own for other agents' hooks.
   KELVE_AGENTS_HOME: join(home, 'home'),
@@ -740,12 +740,6 @@ async function newcomer() {
     )
     const mcp = existsSync(config) && !!(JSON.parse(readFileSync(config, 'utf8')) as { mcpServers?: Record<string, unknown> }).mcpServers?.kelve
     const hook = existsSync(join(claude, 'settings.json')) && readFileSync(join(claude, 'settings.json'), 'utf8').includes('kelve moment')
-    let level = ''
-    if (existsSync(theirs.KELVE_SECRET_FILE)) {
-      const res = await fetch('http://127.0.0.1:4690/api/agent/marks', { headers: { authorization: `Bearer ${readFileSync(theirs.KELVE_SECRET_FILE, 'utf8').trim()}` } }).catch(() => null)
-      const m = res?.ok ? ((await res.json()) as { kept: boolean; spec: { mark?: string } }) : null
-      level = m?.kept ? (m.spec.mark ?? '') : ''
-    }
     const tick = (ok: boolean, what: string) => `  ${ok ? '✓' : '✗'} ${what}`
     say(
       '',
@@ -753,7 +747,6 @@ async function newcomer() {
       tick(existsSync(join(them, 'bin/kelve')), 'kelve installed'),
       tick(mcp, 'Claude Code connected to kelve'),
       tick(hook, 'kelve’s hook in Claude Code’s settings'),
-      tick(!!level, level ? `kelve marks at ${level}, as Claude Code chose` : 'how much kelve marks, chosen'),
       '',
     )
     spawnSync(join(them, 'bin/kelve'), ['stop'], { env, stdio: 'ignore' })
@@ -772,7 +765,9 @@ async function newcomer() {
     '',
     'It installs kelve and sets it up. Start Claude Code again, so it has kelve’s tools, and ask it:',
     '',
-    '  > Show me this repo in kelve.',
+    '  > Open kelve.',
+    '',
+    'Your first debrief comes when it next hands over work.',
     '',
     `Their kelve runs on 4690, beside a stand-in hosted service on 4691 where they've no account yet. Logs: .sandbox/newcomer-graph.log, and kelve's in ${join(them, 'data')}.`,
     'Ctrl C stops the installer’s server and the hosted service; stop their kelve with `kelve stop` in that shell.',
@@ -860,7 +855,7 @@ function person(cookie: string) {
  * for the debrief, and it writes it. Then the person, through the app's own
  * calls, agrees with one decision and wants it every time, has one looked
  * into, an idea explained, and one changed, and sends it; the agent answers
- * each, does the note, and turns what was sent into parts of their skills.
+ * each, redoes the decision, and turns what was sent into parts of their skills.
  * They check a part, which the agent does by redoing past work with and
  * without it, and ask it to draw a hat. Jobs go through the calls `kelve
  * mcp`'s next_job and hand_in make, since the example's agent reads their
@@ -929,16 +924,14 @@ async function story() {
   say(`  Your agent looked into it and explained it: ${jobs(done)}.`)
   if (third) {
     await me.post(`/api/debriefs/${id}/decide`, { n: third.n, choice: 'change', note: 'Claim the key in the same transaction as the charge.' })
-    say(`  Change it: “${third.title}”, with a note.`)
+    say(`  Change it: “${third.title}”, saying how.`)
   }
   await me.post(`/api/debriefs/${id}/agree-rest`, {})
   d = await me.post(`/api/debriefs/${id}/send`, {})
   say('  Sent to your agent.')
 
-  step('Your agent does the note, and turns what you sent into parts of your skills.')
-  // The note it was left comes to it as one of kelve's jobs, beside the learning.
-  const notes = await mcp.call('notes', {})
-  say(`  notes → ${[...notes.matchAll(/Note (\S+) \(version/g)].map((m) => m[1]).join(', ') || 'none'}`)
+  step('Your agent redoes the decision, and turns what you sent into parts of your skills.')
+  // What to redo comes to it as one of kelve's jobs, beside the learning.
   say(`  ${jobs(await work(live))}.`)
   // You keep the work: commit it. kelve doesn't keep past work for checks
   // by itself yet, so this keeps it as one, as the end-to-end tests do.
@@ -1022,7 +1015,7 @@ async function recordExample() {
     const keep = async (path: string) => (answers[path] = await asMe(path))
     await keep('/api/me')
     const settings = (await keep('/api/settings')) as { hints: string[] }
-    settings.hints = ['notes', 'met']
+    settings.hints = ['met']
     await keep(`/api/opened/${id}`)
     const ch = (await keep(`/api/opened/${id}/change`)) as { files: Array<{ path: string }> }
     await keep(`/api/opened/${id}/folder?list=true`)
@@ -1030,7 +1023,6 @@ async function recordExample() {
     await keep('/api/opened')
     await keep('/api/list')
     answers['/api/problems'] = []
-    answers[`/api/opened/${id}/notes`] = []
     for (const f of ch.files) await keep(`/api/opened/${id}/diff?path=${encodeURIComponent(f.path)}`)
     // Every file, so any of them opens: what the change left as it was opens whole.
     const all = (answers[`/api/opened/${id}/folder?list=true`] as { files: Array<{ path: string }> }).files.map((f) => f.path)
@@ -1207,7 +1199,7 @@ switch (command) {
       'with this environment:',
       ...Object.entries(env).map(([k, v]) => `  ${k}=${v}`),
       '',
-      'Then ask it to show you something in kelve, and to do kelve’s work.',
+      'Then ask it: Open kelve. Your first debrief comes when it next hands over work.',
     )
     break
   case 'hosted':

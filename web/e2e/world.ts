@@ -15,13 +15,11 @@ export interface World {
   /** The secret kelve shares with its command line, and `kelve mcp`. */
   secretFile: string
   kelve: string
-  /** What the stand-in for the system's picker chooses next. */
-  pickFile: string
   /** Where kelve writes what it says, as its person sees it where `kelve serve` runs. */
   logFile: string
   /** The stand-in for kelve's hosted service. */
   graph: string
-  /** The tests' own Claude Code folder, where the notes hook goes. */
+  /** The tests' own Claude Code folder, where kelve's hook goes. */
   claudeDir: string
   /** The person's own skills, as this kelve reads them. */
   skillsDir: string
@@ -33,11 +31,6 @@ export const WORLD_FILE = new URL('./.world.json', import.meta.url)
 
 export function world(): World {
   return JSON.parse(readFileSync(WORLD_FILE, 'utf8')) as World
-}
-
-/** The path the system's picker, standing in, chooses next: "" closes it. */
-export function picks(path: string) {
-  writeFileSync(world().pickFile, path)
 }
 
 export function secret(w: Pick<World, 'secretFile'> = world()): string {
@@ -121,41 +114,12 @@ export async function open(page: Page, what: Record<string, unknown>, opts: { wo
   return opened
 }
 
-/** Shows the Files tab, if the Notes tab is showing. */
-export async function toFiles(page: Page) {
-  const tab = page.getByRole('complementary', { name: 'What’s open' }).getByRole('tab', { name: 'Files' })
-  if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click()
-}
-
 /** Opens a file from the side panel's tree, opening the folders on its way. */
 export async function openFile(page: Page, path: string) {
   const side = page.getByRole('complementary', { name: 'What’s open' })
-  await toFiles(page)
   const name = path.split('/').pop()!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   await side.getByRole('treeitem', { name: new RegExp(`^${name}\\b`) }).first().click()
   await expect(page.locator('.fv-name')).toContainText(path)
-}
-
-/**
- * Selects lines of the file shown, from the first through the last, by their
- * text, as a person does: a drag from the start of the first to the end of
- * the last. The editor takes a drag as it goes; a selection made on the page
- * behind its back is read only when the browser says it changed, and is lost
- * when the editor draws the file again before then.
- */
-export async function selectLines(page: Page, first: string, last: string) {
-  const line = (text: string) => page.locator('.cm-line').filter({ hasText: text }).first()
-  // Both drawn first: the editor draws the file a little after it's shown,
-  // and draws it again as it settles.
-  await expect(line(first)).toBeVisible()
-  await expect(line(last)).toBeVisible()
-  const from = await line(first).boundingBox()
-  const to = await line(last).boundingBox()
-  if (!from || !to) throw new Error(`The lines from ${first} to ${last} aren’t shown.`)
-  await page.mouse.move(from.x + 1, from.y + from.height / 2)
-  await page.mouse.down()
-  await page.mouse.move(to.x + to.width - 1, to.y + to.height / 2, { steps: 4 })
-  await page.mouse.up()
 }
 
 const LEDGER = `use sqlx::PgPool;

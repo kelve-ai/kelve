@@ -1,5 +1,5 @@
 /* The reader (boards X-1 to X-6, R-1 to R-4): the top bar, the side panel,
-   the whole file, and a note or your agent's list as a pane beside the
+   the whole file, and your agent's list as a pane beside the
    work. No borders where space will do. */
 
 .reader { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
@@ -53,13 +53,8 @@
 /* ---------------------------------------------------------------- the view */
 .view { flex: 1; min-height: 0; display: flex; margin-top: 4px; position: relative; }
 
-/* The side panel: Files and Notes. */
+/* The side panel: the files. */
 .side { flex: none; width: 288px; display: flex; flex-direction: column; padding: 0 0 0 16px; min-height: 0; }
-.tabs { display: flex; gap: 4px; padding-right: 16px; }
-.tabs button { all: unset; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; height: 30px; border-radius: 7px; font-size: 13px; color: var(--quiet); }
-.tabs button:hover { color: var(--ink); }
-.tabs button.on { background: var(--well); color: var(--ink); font-weight: 500; }
-.tabs button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
 .filter { display: flex; align-items: center; gap: 8px; height: 32px; margin: 10px 16px 12px 2px; padding: 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--rule); color: var(--placeholder); }
 .filter input { flex: 1; min-width: 0; border: 0; background: none; font: 13px var(--sans); color: var(--ink); outline: none; }
 .filter input::placeholder { color: var(--placeholder); }
@@ -67,7 +62,7 @@
 .filter:focus-within { box-shadow: inset 0 0 0 1px var(--edge); color: var(--quiet); }
 .side .opts { margin: 8px 16px 6px 2px; }
 /* The first heading in a tab sits close under the filter or the tabs. */
-.side-list > .lgroup:first-child, .notes-tab > section:first-child > .lgroup { margin-top: 10px; }
+.side-list > .lgroup:first-child { margin-top: 10px; }
 .side-none { margin: 8px 4px; font-size: 13px; line-height: 20px; color: var(--quiet); }
 .side-list { flex: 1; min-height: 0; overflow: auto; padding-right: 12px; padding-bottom: 24px; scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .tr { all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%; display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 6px; height: 28px; padding-right: 10px; border-radius: 7px; font-size: 13px; color: var(--ink-2); }
@@ -131,7 +126,7 @@
 .fv .cm-editor .cm-selectionBackground, .fv .cm-editor.cm-focused .cm-selectionBackground { background: var(--selection); }
 .fv .cm-editor .cm-activeLine { background: none; }
 
-/* Text read as text: a block a row, and notes under it. */
+/* Text read as text: a block a row. */
 .pv { padding-top: 4px; }
 .prow { display: grid; grid-template-columns: 56px minmax(0, 680px); margin: 0 0 16px; }
 .pg { position: relative; }
@@ -153,7 +148,7 @@
 .ptx th, .ptx td { padding: 6px 14px 6px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
 .ptx th { font-weight: 500; color: var(--ink); }
 
-/* ---------------------------------------------------------------- a pane beside the work: a note, or your agent's list */
+/* ---------------------------------------------------------------- a pane beside the work: your agent's list */
 .pane { position: relative; flex: none; width: 600px; max-width: calc(100vw - 420px); min-height: 0; border-left: 1px solid var(--rule); background: var(--page); }
 /* A pane's left edge, to drag it wider or narrower. */
 .pane-grip { position: absolute; z-index: 6; left: -5px; top: 0; bottom: 0; width: 9px; cursor: col-resize; touch-action: none; }
@@ -166,65 +161,14 @@
 body.resizing { cursor: col-resize; user-select: none; }
 .pane-in { height: 100%; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 
-/* ---------------------------------------------------------------- notes (N-1 to N-8) */
-.note-key { position: absolute; z-index: 5; }
 .fv-code { position: relative; }
-.cm-slot { padding: 2px 0 6px; font-family: var(--sans); }
-.nwell { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 2px; width: min(680px, 100%); margin: 2px 0 2px 12px; padding: 10px 14px; border-radius: 9px; background: var(--well-2); font: 14.5px/22px var(--sans); color: var(--ink); white-space: normal; }
-.nwell small { font-size: 12.5px; line-height: 18px; color: var(--quiet); }
-.nwell .did { font-size: 13.5px; color: var(--soft); }
-.nwell.done > span:first-of-type { color: var(--soft); }
-.nwell:hover { box-shadow: inset 0 0 0 1px var(--rule); }
-.nwell:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.nwell.still { cursor: default; margin: 8px 0 0; width: auto; }
-.nwell.still:hover { box-shadow: none; }
-.nwell.still p { margin: 0 0 6px; }
-.nwell.still p:last-child { margin: 0; }
-/* The box that writes a note (Q-4): the note, then one quiet line: who it's for, and Keep. */
-.nbox { display: flex; flex-direction: column; width: min(600px, calc(100% - 12px)); margin: 4px 0 6px 12px; border-radius: 12px; background: var(--white); box-shadow: 0 0 0 1px var(--edge), 0 12px 32px rgba(var(--shadow), 0.1); font-family: var(--sans); white-space: normal; }
-.nbox textarea { box-sizing: border-box; width: 100%; min-height: 76px; border: 0; padding: 14px 16px 12px; border-radius: 12px 12px 0 0; background: none; font: 14.5px/22px var(--sans); color: var(--ink); caret-color: var(--ink); resize: vertical; outline: none; }
-.nbox textarea::placeholder { color: var(--placeholder); }
-.nbox .foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 8px 8px 8px 10px; border-top: 1px solid var(--rule); }
-.nbox .foot .sp { flex: 1; }
-.nbox .foot .quiet-link { font-size: 13px; }
-.nbox .foot .track button .at { font-style: normal; font-weight: 400; color: var(--quiet); }
-.nbox .where { margin: 0; padding: 0 16px 10px; font-size: 12.5px; line-height: 18px; color: var(--quiet); }
-.pnote { grid-column: 2; margin-top: 8px; }
-.pnote .nwell, .pnote .nbox { margin-left: 0; }
 .pv { position: relative; }
-/* The Notes tab (L-2): a group for each place, with how many; a row a note. */
-.notes-tab ul { list-style: none; margin: 0; padding: 0; }
-.notes-tab .lrow { padding: 7px 8px; }
-.notes-tab .lrow small code { font-size: 11.5px; font-weight: 400; }
-.notes-tab .ladd { margin-top: 10px; }
-/* Not a screen of its own: none of `.page`'s room at the bottom (app.css), which left a band under a note. */
+/* Not a screen of its own: none of `.page`'s room at the bottom (app.css), which left a band under the list. */
 .pane.page { width: 600px; padding-bottom: 0; }
-.np { display: flex; flex-direction: column; min-height: 100%; padding: 18px 44px 60px; }
-.np-top { display: flex; align-items: center; gap: 14px; }
-.np-top .sp { flex: 1; }
-.np-file { font: 12.5px var(--mono); color: var(--quiet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
-.np-saved { font-size: 12.5px; color: var(--quiet); }
 .np-close { all: unset; cursor: pointer; display: inline-flex; padding: 6px; border-radius: 6px; color: var(--quiet); }
 .np-close:hover { background: var(--well); color: var(--ink); }
-.np-where { margin: 10px 0 0; font-size: 12.5px; line-height: 18px; color: var(--quiet); }
-.np-state { margin: 16px 0 0; padding: 10px 14px; border-radius: 9px; background: var(--well-2); font-size: 14px; line-height: 21px; color: var(--soft); }
-.np-state b { font-weight: 500; color: var(--ink); }
-.np-state p { margin: 4px 0; }
-.np-state a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--mute); text-underline-offset: 3px; }
-.np .md-view { flex: 1; margin-top: 22px; display: flex; flex-direction: column; }
-/* The whole of the note's space is somewhere to write, not a blank below it. */
-.np .md-view > .cm-editor { flex: 1; }
-.np .md-view .cm-editor { min-height: 360px; background: none; }
-.np .md-view .cm-editor.cm-focused { outline: none; }
-.np .md-view .cm-scroller { font: var(--text-size)/var(--text-line) var(--sans); }
-.np .md-view .cm-content { padding: 0; color: var(--ink-2); caret-color: var(--ink); }
-.np .md-view .cm-line { padding: 0; }
-.np .md-view .cm-placeholder { color: var(--quiet); }
-.np .cm-idea-link, .np .cm-line-ref { text-decoration: underline; text-decoration-color: var(--mute); text-underline-offset: 4px; color: var(--ink); }
-.np-delete { margin: 24px 0 0; font-size: 13.5px; color: var(--soft); }
 @media (max-width: 760px) {
   .pane.page { width: 100%; max-width: none; }
-  .np { padding: 14px 16px 60px; }
 }
 
 /* ---------------------------------------------------------------- a phone */
@@ -249,17 +193,11 @@ body.resizing { cursor: col-resize; user-select: none; }
   .pg .padd { left: 0; }
 }
 
-.tabs button { white-space: nowrap; }
 /* Your agent at work on something: a dial, in ink, a third full a stage. */
-/* The buttons at the end of lines chosen. */
-.sel-keys { display: inline-flex; gap: 6px; }
 .tr.dir .ch { all: unset; cursor: pointer; display: flex; justify-content: center; align-items: center; height: 28px; color: var(--quiet); }
 .tr.dir .nm { all: unset; cursor: pointer; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; color: var(--ink); }
 .tr.dir .ch:focus-visible, .tr.dir .nm:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-radius: 3px; }
 .tr.dir { cursor: pointer; }
-
-.np-state-do { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; margin-top: 4px; }
-.np-state-do:empty { display: none; }
 
 .lpane .mono { font-family: var(--mono); font-size: 0.86em; font-weight: 500; padding: 1px 5px; border-radius: 5px; background: var(--well); }
 

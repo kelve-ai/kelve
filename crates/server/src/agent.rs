@@ -22,7 +22,7 @@ use crate::error::{ApiError, ApiResult};
 use crate::pipeline;
 use crate::state::Shared;
 
-pub use kelve_core::instructions::{DEBRIEF, EXPLAIN, LEARN, NOTE, RESEARCH};
+pub use kelve_core::instructions::{DEBRIEF, EXPLAIN, LEARN, REDO, RESEARCH};
 
 /// How soon a job is wanted.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -200,8 +200,8 @@ pub struct Caller {
     pub model: Option<String>,
     #[serde(default)]
     pub plan: Option<String>,
-    /// The folder it works in, when it says: it's given only the notes of
-    /// the project that folder is in.
+    /// The folder it works in, when it says: it's given only what's to redo
+    /// in the project that folder is in.
     #[serde(default)]
     pub path: Option<String>,
     /// What's open the person asked it to do what's waiting for, by its
@@ -268,20 +268,16 @@ pub async fn next_after(
     after: asks::After<'_>,
 ) -> ApiResult<Option<Job>> {
     hello(app, caller).await?;
-    // Notes left for it come as jobs, like the rest of its list.
-    crate::list::sync_notes(app).await?;
-    // Only the notes of the project it works in, when it says where.
-    let notes = caller
-        .path
-        .as_deref()
-        .map(str::trim)
-        .filter(|p| !p.is_empty())
-        .map(|p| crate::list::notes_of(&crate::reader::root_of_notes(app, Path::new(p))));
+    // Only what's to redo in the project it works in, when it says where.
+    let redos = match caller.path.as_deref().map(str::trim) {
+        Some(p) if !p.is_empty() => Some(crate::list::redos_in(app, Path::new(p)).await?),
+        _ => None,
+    };
     let mut conn = app.db.acquire().await?;
     let Some(row) = asks::take_for(
         &mut conn,
         &caller.name(),
-        notes.as_deref(),
+        redos.as_deref(),
         caller.only,
         after,
     )
@@ -450,7 +446,7 @@ fn shape(kind: &str, material: &Value, value: &Value) -> Result<(), String> {
         return Err("The answer must be one JSON object, in the shape the job gives.".into());
     }
     match kind {
-        NOTE => crate::list::note_shape(value),
+        REDO => crate::list::redo_shape(value),
         DEBRIEF => crate::agent_loop::debrief::shape(material, value),
         RESEARCH => crate::agent_loop::research::shape(value),
         EXPLAIN => crate::agent_loop::explain::shape(value),

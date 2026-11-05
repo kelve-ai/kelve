@@ -156,17 +156,17 @@ pub struct After<'a> {
     pub idea: Option<&'a str>,
 }
 
-/// Takes the next job, as `take` does, but a note's only when its key
-/// starts with `notes`: an agent is given the notes of the project it
-/// works in, never another's. After a job it answered, the next job for
+/// Takes the next job, as `take` does, but a decision to redo only when its
+/// key starts with `redos`: an agent is given what's to redo in the project
+/// it works in, never another's. After a job it answered, the next job for
 /// the same file, or the same idea, comes first, so one agent takes a piece
 /// of work straight on (Nathan, 29 October). An agent asked to do what's
 /// waiting for one thing opened, by its number, takes only its jobs, and
-/// the notes of its project.
+/// what's to redo in its project.
 pub async fn take_for(
     conn: &mut Conn,
     agent: &str,
-    notes: Option<&str>,
+    redos: Option<&str>,
     only: Option<i64>,
     after: After<'_>,
 ) -> Result<Option<Ask>> {
@@ -182,14 +182,14 @@ pub async fn take_for(
     Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "update asks set state = 'taken', taken_at = ?1, agent = ?2
           where id = (select id from asks where state = 'waiting'
-                         and (?3 is null or kind != 'note' or substr(key, 1, length(?3)) = ?3)
-                         and (?6 is null or opened = ?6 or kind = 'note')
+                         and (?3 is null or kind != 'redo' or substr(key, 1, length(?3)) = ?3 or opened = ?6)
+                         and (?6 is null or opened = ?6 or kind = 'redo')
                        order by {order} limit 1)
           returning {COLUMNS}"
     )))
     .bind(now)
     .bind(agent)
-    .bind(notes)
+    .bind(redos)
     .bind(after.resume_key.and_then(file_of))
     .bind(after.idea)
     .bind(only)
@@ -318,67 +318,42 @@ pub async fn let_go_of_first(conn: &mut Conn) -> Result<()> {
     Ok(())
 }
 
-/// Puts aside the jobs whose keys start with `prefix`, but `keep`: a note
-/// done another way, or changed since. Those the agent has taken only with
-/// `taken`: else the job stays with it, and its answer still finds it open.
-pub async fn drop_like(
-    conn: &mut Conn,
-    prefix: &str,
-    keep: Option<&str>,
-    taken: bool,
-) -> Result<bool> {
+/// Keeps that an agent's hook told it of a job: whether it hadn't been told
+/// of it yet.
+pub async fn tell(conn: &mut Conn, agent: &str, job: i64) -> Result<bool> {
     let done = sqlx::query(
-        "update asks set state = 'dropped', taken_at = null
-          where (state = 'waiting' or (?3 and state = 'taken'))
-            and substr(key, 1, length(?1)) = ?1
-            and (?2 is null or key != ?2)",
-    )
-    .bind(prefix)
-    .bind(keep)
-    .bind(taken)
-    .execute(&mut *conn)
-    .await?;
-    Ok(done.rows_affected() > 0)
-}
-
-/// Asks again for a job answered before `before`, in milliseconds: a note
-/// done for these words, then for others, and now back to these. Whether
-/// it was.
-pub async fn reopen_answered_before(conn: &mut Conn, key: &str, before: i64) -> Result<bool> {
-    let done = sqlx::query(
-        "update asks set state = 'waiting', answer = null, tries = 0, last_error = null,
-                taken_at = null, answered_at = null
-          where key = ?1 and state = 'answered' and answered_at < ?2",
-    )
-    .bind(key)
-    .bind(before)
-    .execute(&mut *conn)
-    .await?;
-    Ok(done.rows_affected() > 0)
-}
-
-/// Keeps that an agent's hook told it of a note, at a version: whether it
-/// hadn't been told of it as it is.
-pub async fn tell(
-    conn: &mut Conn,
-    agent: &str,
-    root: &str,
-    note: &str,
-    version: &str,
-) -> Result<bool> {
-    let done = sqlx::query(
-        "insert into notes_told (agent, root, note, version, at) values (?1, ?2, ?3, ?4, ?5)
-         on conflict (agent, root, note) do update set version = excluded.version, at = excluded.at
-           where notes_told.version != excluded.version",
+        "insert into redos_told (agent, job, at) values (?1, ?2, ?3)
+         on conflict (agent, job) do nothing",
     )
     .bind(agent)
-    .bind(root)
-    .bind(note)
-    .bind(version)
+    .bind(job)
     .bind(now())
     .execute(&mut *conn)
     .await?;
     Ok(done.rows_affected() > 0)
+}
+
+/// The jobs of a kind answered since a time, in milliseconds, the latest first.
+pub async fn answered_since(conn: &mut Conn, kind: &str, since: i64) -> Result<Vec<Ask>> {
+    Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select {COLUMNS} from asks where kind = ?1 and state = 'answered' and answered_at > ?2
+          order by answered_at desc, id desc"
+    )))
+    .bind(kind)
+    .bind(since)
+    .fetch_all(&mut *conn)
+    .await?)
+}
+
+/// The folders of what's open that jobs of a kind, not yet answered, are for.
+pub async fn roots_of(conn: &mut Conn, kind: &str) -> Result<Vec<String>> {
+    Ok(sqlx::query_scalar(
+        "select distinct opened.root from asks join opened on opened.id = asks.opened
+          where asks.kind = ?1 and asks.state in ('waiting', 'taken')",
+    )
+    .bind(kind)
+    .fetch_all(&mut *conn)
+    .await?)
 }
 
 /// Every job not yet answered, the most wanted first.
@@ -411,6 +386,9 @@ pub async fn sweep(conn: &mut Conn) -> Result<()> {
     .bind(now() - KEEP_OFF_MS)
     .execute(&mut *conn)
     .await?;
+    sqlx::query("delete from redos_told where job not in (select id from asks)")
+        .execute(&mut *conn)
+        .await?;
     Ok(())
 }
 
@@ -691,37 +669,32 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_notes_jobs_go_to_its_project_and_stay_with_the_agent_that_took_them() {
+    async fn a_decision_to_redo_goes_to_its_project() {
         let pool = crate::memory().await.unwrap();
         let mut conn = pool.acquire().await.unwrap();
-        let note = |key: &str| New {
-            kind: "note".into(),
-            opened: None,
+        let redo = |key: &str| New {
+            kind: "redo".into(),
             ..new(key, 0)
         };
-        add(&mut conn, &note("note:aaa:agent/x.md:v1"))
-            .await
-            .unwrap();
-        add(&mut conn, &note("note:bbb:agent/y.md:v1"))
-            .await
-            .unwrap();
-        // An agent in project B is given B's note, never A's.
+        add(&mut conn, &redo("redo:aaa:1:2")).await.unwrap();
+        add(&mut conn, &redo("redo:bbb:3:1")).await.unwrap();
+        // An agent in project B is given B's, never A's.
         let b = take_for(
             &mut conn,
             "codex",
-            Some("note:bbb:"),
+            Some("redo:bbb:"),
             None,
             After::default(),
         )
         .await
         .unwrap()
         .unwrap();
-        assert_eq!(b.key, "note:bbb:agent/y.md:v1");
+        assert_eq!(b.key, "redo:bbb:3:1");
         assert!(
             take_for(
                 &mut conn,
                 "codex",
-                Some("note:bbb:"),
+                Some("redo:bbb:"),
                 None,
                 After::default()
             )
@@ -729,73 +702,33 @@ mod tests {
             .unwrap()
             .is_none()
         );
+        // An agent that doesn't say where it works is given any.
         let a = take(&mut conn, "claude-code").await.unwrap().unwrap();
-        assert_eq!(a.key, "note:aaa:agent/x.md:v1");
-        // The note changes while A's job is taken: its job stays with the
-        // agent, and only waiting ones go.
-        add(&mut conn, &note("note:aaa:agent/x.md:v2"))
-            .await
-            .unwrap();
-        drop_like(&mut conn, "note:aaa:agent/x.md:", None, false)
-            .await
-            .unwrap();
-        let kept = by_key(&mut conn, &a.key).await.unwrap().unwrap();
-        assert_eq!(kept.state, "taken");
-        let v2 = by_key(&mut conn, "note:aaa:agent/x.md:v2")
-            .await
-            .unwrap()
-            .unwrap();
-        assert_eq!(v2.state, "dropped");
-        // Done another way, all of them go.
-        drop_like(&mut conn, "note:aaa:agent/x.md:", None, true)
-            .await
-            .unwrap();
-        let gone = by_key(&mut conn, &a.key).await.unwrap().unwrap();
-        assert_eq!(gone.state, "dropped");
-        // Answered, then done for other words since: asked again.
+        assert_eq!(a.key, "redo:aaa:1:2");
+        // What it did stays for a while, the latest first.
         answer(&mut conn, b.id, "{}", None, "codex").await.unwrap();
+        let done = answered_since(&mut conn, "redo", now() - 1_000)
+            .await
+            .unwrap();
+        assert_eq!(done.len(), 1);
+        assert_eq!(done[0].id, b.id);
         assert!(
-            !reopen_answered_before(&mut conn, &b.key, 0).await.unwrap(),
-            "answered after it was last done: kept"
-        );
-        assert!(
-            reopen_answered_before(&mut conn, &b.key, now() + 1_000)
+            answered_since(&mut conn, "redo", now() + 1_000)
                 .await
                 .unwrap()
+                .is_empty()
         );
-        let again = by_key(&mut conn, &b.key).await.unwrap().unwrap();
-        assert_eq!((again.state.as_str(), again.answer), ("waiting", None));
     }
 
     #[tokio::test]
-    async fn an_agent_is_told_of_a_note_once_a_version() {
+    async fn an_agent_is_told_of_a_job_once() {
         let pool = crate::memory().await.unwrap();
         let mut conn = pool.acquire().await.unwrap();
-        assert!(
-            tell(&mut conn, "claude", "/p", "agent/x.md", "v1")
-                .await
-                .unwrap()
-        );
-        assert!(
-            !tell(&mut conn, "claude", "/p", "agent/x.md", "v1")
-                .await
-                .unwrap()
-        );
-        assert!(
-            tell(&mut conn, "codex", "/p", "agent/x.md", "v1")
-                .await
-                .unwrap()
-        );
-        assert!(
-            tell(&mut conn, "claude", "/p", "agent/x.md", "v2")
-                .await
-                .unwrap()
-        );
-        assert!(
-            tell(&mut conn, "claude", "/q", "agent/x.md", "v2")
-                .await
-                .unwrap()
-        );
+        add(&mut conn, &new("a.rs", 0)).await.unwrap();
+        let a = by_key(&mut conn, "a.rs").await.unwrap().unwrap();
+        assert!(tell(&mut conn, "claude", a.id).await.unwrap());
+        assert!(!tell(&mut conn, "claude", a.id).await.unwrap());
+        assert!(tell(&mut conn, "codex", a.id).await.unwrap());
     }
 
     #[tokio::test]

@@ -1,10 +1,10 @@
-//! The person's settings: how things look, their notes, what kelve marks
-//! for them, and the weekly count they may share.
+//! The person's settings: how things look, the ideas they know, and the
+//! weekly count they may share.
 
 use axum::Json;
 use axum::extract::State;
-use kelve_core::spec::Spec;
-use kelve_core::views::{CountsView, MarksView, ServerEvent, Settings, SettingsIn};
+use kelve_core::views::{CountsView, ServerEvent, Settings, SettingsIn};
+use serde::Deserialize;
 
 use crate::auth::Me;
 use crate::error::{ApiError, ApiResult};
@@ -14,12 +14,10 @@ pub async fn get(State(app): State<Shared>, _me: Me) -> ApiResult<Json<Settings>
     Ok(Json(view(&app)))
 }
 
-/// The settings as the page shows them: where notes kept only for you go,
-/// kelve's own folder when none's chosen.
+/// The settings as the page shows them.
 fn view(app: &Shared) -> Settings {
     let mut view = app.settings().view();
-    view.notes_dir = crate::reader::shown(&crate::reader::own_notes(app));
-    view.notes_hook = hook_installed(app);
+    view.hook = hook_installed(app);
     view.hooks_elsewhere = hooks_elsewhere(app);
     view.counts_off = app.config.counts_off.clone();
     view
@@ -61,7 +59,7 @@ fn hook_installed(app: &Shared) -> bool {
 fn set_hook(app: &Shared, on: bool) -> ApiResult<()> {
     let Some(agent) = hook_agent(app) else {
         return Err(ApiError::bad_request(
-            "kelve has no hook for that agent. It checks for notes, and reads your skills, as kelve's instructions ask.",
+            "kelve has no hook for that agent. It reads your skills as kelve's instructions ask.",
         ));
     };
     crate::hooks::set(agent, on, &app.config.agents_home, &app.config.claude_dir)
@@ -77,28 +75,13 @@ pub async fn post(
     _me: Me,
     Json(change): Json<SettingsIn>,
 ) -> ApiResult<Json<Settings>> {
-    if let Some(on) = change.notes_hook {
+    if let Some(on) = change.hook {
         set_hook(&app, on)?;
     }
     let mut settings = (*app.settings()).clone();
     settings.apply(change).map_err(ApiError::bad_request)?;
-    // Notes kept only for you go with you to a folder you choose.
-    let (from, to) = (
-        crate::reader::own_notes(&app),
-        crate::reader::own_notes_in(&app, &settings),
-    );
-    if from != to {
-        crate::reader::move_own_notes(&from, &to).map_err(|e| {
-            tracing::warn!(error = %e, "couldn't move notes kept only for the person");
-            ApiError::bad_request(format!(
-                "kelve couldn't move your notes to {}: {e}. Check you can write there, and try again.",
-                crate::reader::shown(&to)
-            ))
-        })?;
-    }
     app.save_settings(settings).await?;
     app.publish(ServerEvent::Settings);
-    app.publish(ServerEvent::Notes);
     Ok(Json(view(&app)))
 }
 
@@ -108,26 +91,26 @@ pub async fn counts(State(app): State<Shared>, _me: Me) -> ApiResult<Json<Counts
     Ok(Json(crate::counts::view(&app).await?))
 }
 
-/// What kelve marks for the person, as settings and the reader show it.
-pub fn marks_view(app: &Shared) -> MarksView {
-    MarksView {
-        spec: crate::spec::read(app),
-        kept: crate::spec::exists(app),
-        file: crate::reader::shown(&crate::spec::path(app)),
-    }
+/// The ideas the person said they know, from a debrief.
+pub async fn known(State(app): State<Shared>, _me: Me) -> ApiResult<Json<Vec<String>>> {
+    Ok(Json(crate::spec::read(&app).never))
 }
 
-pub async fn marks(State(app): State<Shared>, _me: Me) -> ApiResult<Json<MarksView>> {
-    Ok(Json(marks_view(&app)))
+#[derive(Debug, Deserialize)]
+pub struct Known {
+    idea: String,
 }
 
-/// Keeps what the person changed in what kelve marks for them.
-pub async fn set_marks(
+/// Takes back "I know this": the idea is new to them again.
+pub async fn forget_known(
     State(app): State<Shared>,
     _me: Me,
-    Json(spec): Json<Spec>,
-) -> ApiResult<Json<MarksView>> {
-    crate::spec::save(&app, crate::spec::checked(spec)?, "you")?;
+    Json(known): Json<Known>,
+) -> ApiResult<Json<Vec<String>>> {
+    let mut spec = crate::spec::read(&app);
+    spec.never.retain(|i| *i != known.idea);
+    let spec = crate::spec::save(&app, spec)?;
     app.publish(ServerEvent::Spec);
-    Ok(Json(marks_view(&app)))
+    app.publish(ServerEvent::Debriefs);
+    Ok(Json(spec.never))
 }

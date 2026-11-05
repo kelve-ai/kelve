@@ -4,10 +4,8 @@
 //! this computer's secret.
 //!
 //! The tools: `open`, to show the person something; `next_job` and
-//! `hand_in`, to do kelve's work; `kept`, to see what's waiting; `notes`
-//! and `note_done`, for the notes the person leaves it; `marks` and
-//! `set_marks`, for what kelve marks for the person; `skills`, for the
-//! person's skills when kelve's hook didn't give them; and `update`, to
+//! `hand_in`, to do kelve's work; `kept`, to see what's waiting; `skills`, for
+//! the person's skills when kelve's hook didn't give them; and `update`, to
 //! update kelve once the person says yes. When a newer kelve is out, the
 //! end of one tool's answer says so, once for each version.
 
@@ -24,7 +22,7 @@ use crate::client::Kelve;
 const VERSIONS: [&str; 4] = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 
 /// What the agent is told of kelve when it connects.
-const INSTRUCTIONS: &str = "kelve turns what the person you're working with knows into skills their agents use, and shows them what you did and why. Use kelve's tools to hand over your work when you've finished it, to do the jobs kelve keeps for you, and for the notes they leave you. When you've finished what they asked, and it changed files they'd want to see, yours or a subagent's, hand it over in kelve, once, before you hand back to them, without being asked: open, with what: worktree and the branch it'll merge into as base, in a worktree or not; or, in a folder that isn't in a git repository, what: files, with every file you've changed. Give it a short title, and a line on what you changed and why that names any call you made. Hand over once, at the end of your turn: not after each edit, and not when you stop to ask them something. open starts kelve if it isn't running, and opens it in a new browser tab: never start or open kelve another way as well, such as `kelve serve`, `kelve open` or `kelve diff`. It's the same work in kelve each time, brought up to date, so hand it over again only when it has changed since: committing it, pushing it or opening a pull request changes nothing in it. When they ask to see something else, such as a folder, a file or the whole repository, open that. When open says a debrief is due, write it straight away, before you hand back to them, while you remember why you did each thing: take the job with next_job, giving for the number open gave, write it as the job says, and hand it in with hand_in, giving for too. When they ask for a debrief, as \"debrief this\", hand the work over with debrief: true. kelve's other jobs wait until you've finished what you're doing: looking into a decision, explaining an idea, and adding what the person showed they want to their skills. When kelve's hook says jobs are waiting, or they ask you to do what's waiting in kelve, take them with next_job, do each as it says, and hand each in with hand_in, until there are none: for one thing, with its number, give that number as for; with none, leave for out. When kelve says it's still preparing the next part, call next_job again with the same for. The person's skills come to you through kelve's hook as you work: follow them as theirs. When the hook didn't give them, or names one there was no room for, read them with skills. Before you start anything they ask, check notes; do what each note asks as part of their work, mark each done with note_done, its version and a line on what you did, then open what you changed. When a note asks you to find something out, write what you found as a note with their work: a markdown file in the project's `.kelve/notes/`, titled on its first line, so they read it in kelve. What kelve keeps in the project's `.kelve/`, its notes and the project's skills, goes with the work: commit it with what you changed, and never add it to `.gitignore`. When they ask you to write or update what kelve marks for them, read it with marks, then write it with set_marks. When they ask about kelve itself, such as what it does, how to set it up or what it keeps, read https://kelve.ai/llms.txt, which lists every page of kelve's docs as Markdown, then the pages that answer it, and answer from them. Then tell them, in a sentence, what you did.";
+const INSTRUCTIONS: &str = "kelve turns what the person you're working with knows into skills their agents use, and shows them what you did and why. Use kelve's tools to hand over your work when you've finished it, and to do the jobs kelve keeps for you. When you've finished what they asked, and it changed files they'd want to see, yours or a subagent's, hand it over in kelve, once, before you hand back to them, without being asked: open, with what: worktree and the branch it'll merge into as base, in a worktree or not; or, in a folder that isn't in a git repository, what: files, with every file you've changed. Give it a short title, and a line on what you changed and why that names any call you made. Hand over once, at the end of your turn: not after each edit, and not when you stop to ask them something. open starts kelve if it isn't running, and opens it in a new browser tab: never start or open kelve another way as well, such as `kelve serve`, `kelve open` or `kelve diff`. It's the same work in kelve each time, brought up to date, so hand it over again only when it has changed since: committing it, pushing it or opening a pull request changes nothing in it. When they ask to see something else, such as a folder, a file or the whole repository, open that. When they say \"Open kelve\", or ask to see kelve itself, use open with what: home and nothing else: it opens kelve at home, and the first time they'll meet it there. When open says a debrief is due, write it straight away, before you hand back to them, while you remember why you did each thing: take the job with next_job, giving for the number open gave, write it as the job says, and hand it in with hand_in, giving for too. When they ask for a debrief, as \"debrief this\", hand the work over with debrief: true. kelve's other jobs wait until you've finished what you're doing: looking into a decision, explaining an idea, and adding what the person showed they want to their skills. When kelve's hook says jobs are waiting, or they ask you to do what's waiting in kelve, take them with next_job, do each as it says, and hand each in with hand_in, until there are none: for one thing, with its number, give that number as for; with none, leave for out. When kelve says it's still preparing the next part, call next_job again with the same for. The person's skills come to you through kelve's hook as you work: follow them as theirs. When the hook didn't give them, or names one there was no room for, read them with skills. Before you start anything they ask, check kept: a line starting \"Redo in\" the project you're working in is a decision in your work they want another way, and it comes first, because it changes the work. Kelve's hook says so too. Take it with next_job, do it, hand it in with hand_in, then open what you changed. What kelve keeps in the project's `.kelve/`, the project's skills, goes with the work: commit it with what you changed, and never add it to `.gitignore`. When they ask about kelve itself, such as what it does, how to set it up or what it keeps, read https://kelve.ai/llms.txt, which lists every page of kelve's docs as Markdown, then the pages that answer it, and answer from them. Then tell them, in a sentence, what you did.";
 
 /// How long a call to kelve may take: handing in an answer runs the work
 /// it was for.
@@ -231,14 +229,14 @@ fn tools() -> Value {
         {
             "name": "open",
             "title": "Show the person something in kelve",
-            "description": "Hands your work over to the person in kelve, or opens what they asked to see, in a new browser tab, starting kelve if it isn't running. Use it once you've finished what they asked and it changed files they'd want to see, committed or not, without being asked, as what: worktree with the branch it'll merge into as base, or what: files with every file you've changed outside a git repository, and again only when that work has changed since; and when they ask to see something in kelve, once each time. Never start or open kelve another way as well. When it says a debrief is due, write it at once: take the job with next_job, giving for the number it gave.",
+            "description": "Hands your work over to the person in kelve, or opens what they asked to see, in a new browser tab, starting kelve if it isn't running. Use it once you've finished what they asked and it changed files they'd want to see, committed or not, without being asked, as what: worktree with the branch it'll merge into as base, or what: files with every file you've changed outside a git repository, and again only when that work has changed since; and when they ask to see something in kelve, once each time. When they say \"Open kelve\", use what: home, and nothing else. Never start or open kelve another way as well. When it says a debrief is due, write it at once: take the job with next_job, giving for the number it gave.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "what": {
                         "type": "string",
-                        "enum": ["change", "worktree", "folder", "files", "file"],
-                        "description": "change: what isn't committed, a branch against a base, or one commit. worktree: everything on your branch since it left its base, committed or not, in a worktree or not: how to show your own work. folder: a folder, or the whole repository. files: some files. file: one file.",
+                        "enum": ["change", "worktree", "folder", "files", "file", "home"],
+                        "description": "change: what isn't committed, a branch against a base, or one commit. worktree: everything on your branch since it left its base, committed or not, in a worktree or not: how to show your own work. folder: a folder, or the whole repository. files: some files. file: one file. home: kelve itself, where the person starts: what \"Open kelve\" means. It takes nothing else.",
                     },
                     "path": { "type": "string", "description": "The folder or file, from the root: the folder you're working in, for a change or a worktree." },
                     "paths": { "type": "array", "items": { "type": "string" }, "description": "For files: each file, from the root." },
@@ -255,7 +253,7 @@ fn tools() -> Value {
         {
             "name": "next_job",
             "title": "Take kelve's next job",
-            "description": "Takes the next of kelve's jobs: writing the debrief of work you handed over, looking into a decision in it, explaining an idea it rests on, turning what the person corrected, changed or sent into parts of their skills, or doing what a note asks. Do it as its instructions say, then hand in the answer with hand_in, in exactly the shape it gives. Says so when there's no more, and when kelve is still preparing the next part, to call it again.",
+            "description": "Takes the next of kelve's jobs: writing the debrief of work you handed over, looking into a decision in it, explaining an idea it rests on, turning what the person corrected, changed or sent into parts of their skills, or redoing a decision they want another way. Do it as its instructions say, then hand in the answer with hand_in, in exactly the shape it gives. Says so when there's no more, and when kelve is still preparing the next part, to call it again.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -291,45 +289,6 @@ fn tools() -> Value {
             "inputSchema": { "type": "object", "properties": {} },
         },
         {
-            "name": "notes",
-            "title": "Read the notes left for you",
-            "description": "The notes the person left you in kelve, waiting, in the project you're working in: each with its id and version, what it asks, the file and lines it's on as they are now, other notes on the same lines, and the ideas on them; for one you did before, what it said then, what you did, and what's been added since, so you do only what's new. Check before you start anything they ask. When one asks you to find something out, write what you found as a markdown file in the project's .kelve/notes/, titled on its first line, so it shows in kelve with their work.",
-            "inputSchema": { "type": "object", "properties": {} },
-        },
-        {
-            "name": "marks",
-            "title": "Read what kelve marks for the person",
-            "description": "What kelve marks for the person, from what they told it: how much to mark overall, how well they know each area (new, learning, working or deep), ideas it always and never marks, and their own words. kelve gives it to you when you explain an idea, so you know what's new to them. Read it before you change it with set_marks.",
-            "inputSchema": { "type": "object", "properties": {} },
-        },
-        {
-            "name": "set_marks",
-            "title": "Write what kelve marks for the person",
-            "description": "Writes what kelve marks for the person, in place of what was there: only when they ask you to write or update it. Draw on what you know of them and their work, such as their own commits; ask them two or three things if you need to. Levels: new marks every idea, the basics too; learning, all but the basics; working, advanced and specialist ideas; deep, specialist ideas only. Then tell them, in a sentence, what you wrote, and that they can change it in kelve, under What kelve marks.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "mark": { "type": "string", "enum": ["new", "learning", "working", "deep"], "description": "How much to mark, anywhere not named in areas." },
-                    "areas": {
-                        "type": "array",
-                        "description": "How well they know each area: a language, a field, a kind of system. A few, not every one.",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "area": { "type": "string", "description": "The area, in a word or two: rust, databases, distributed systems." },
-                                "level": { "type": "string", "enum": ["new", "learning", "working", "deep"] },
-                            },
-                            "required": ["area", "level"],
-                        },
-                    },
-                    "always": { "type": "array", "items": { "type": "string" }, "description": "Ideas to always mark, by name." },
-                    "never": { "type": "array", "items": { "type": "string" }, "description": "Ideas never to mark, by name." },
-                    "words": { "type": "string", "description": "Anything else, in their own words, on what they want marked: a line or two." },
-                },
-                "required": ["mark", "areas", "always", "never", "words"],
-            },
-        },
-        {
             "name": "skills",
             "title": "Read the person's skills",
             "description": "The person's skills, their own and the project's you're working in: with no name, each by name, with what it's for and when to use it; with a name, that skill whole. kelve's hook gives them to you as you work: read them here when it didn't, or when it names one there was no room for. Follow them as theirs.",
@@ -345,20 +304,6 @@ fn tools() -> Value {
             "title": "Update kelve",
             "description": "Updates kelve to its newest version: downloads it, checks it, puts it in place, and restarts kelve if it's running. Call it only after the person has said yes to updating kelve, never on your own. It says what it did in a sentence: tell them.",
             "inputSchema": { "type": "object", "properties": {} },
-        },
-        {
-            "name": "note_done",
-            "title": "Say a note is done",
-            "description": "Marks a note done, with one line on what you did: if you wrote up what you found as a note with their work, say so, and where. Then open what you changed, so the person sees it beside their note.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "note": { "type": "string", "description": "The note's id, as notes gave it." },
-                    "version": { "type": "string", "description": "The note's version, as notes gave it: a note changed since you read it isn't marked done." },
-                    "did": { "type": "string", "description": "What you did, in one line, at most 300 characters, in plain words." },
-                },
-                "required": ["note", "version", "did"],
-            },
         },
     ])
 }
@@ -503,6 +448,15 @@ fn opened_text(o: &Value) -> String {
     text
 }
 
+/// What the agent is told of opening kelve at home: whether a browser opened.
+fn home_text(answer: &Value) -> String {
+    if answer["opened"].as_bool().unwrap_or(false) {
+        "kelve is open in the person's browser, at home. Tell them, in a sentence, that it's there, and that their first debrief comes when you next hand over work.".into()
+    } else {
+        "kelve couldn't open a browser, so it showed a link where it runs. Tell them, in a sentence, to run `kelve open` in a terminal.".into()
+    }
+}
+
 /// What the agent is told of work it handed over when a debrief is due: to
 /// write it now, by the number of what it opened, which kelve's hook reads
 /// back (`core::hook::opened_in`).
@@ -577,11 +531,17 @@ fn skills_text(v: &Value, one: bool) -> String {
 async fn call(kelve: &Kelve, agent: &str, params: &Value) -> Value {
     let args = &params["arguments"];
     let model = args["model"].as_str();
-    let here = crate::notes::here();
+    let here = crate::hook::here();
     let only = args["for"].as_i64();
     let who =
         json!({ "agent": agent, "model": model, "path": here, "for": only, "saysPreparing": true });
     match params["name"].as_str().unwrap_or_default() {
+        "open" if args["what"] == "home" => {
+            match kelve.send(kelve.post("/api/signin-link")).await {
+                Ok(a) => said(home_text(&a), false),
+                Err(e) => said(format!("{e:#}"), true),
+            }
+        }
         "open" => {
             let mut body = args.clone();
             if let Some(o) = body.as_object_mut() {
@@ -673,10 +633,6 @@ async fn call(kelve: &Kelve, agent: &str, params: &Value) -> Value {
             Ok(_) => said("Nothing's kept for you.", false),
             Err(e) => said(format!("{e:#}"), true),
         },
-        "notes" => match crate::notes::waiting_here(kelve).await {
-            Ok(notes) => said(crate::notes::notes_text(&notes), false),
-            Err(e) => said(format!("{e:#}"), true),
-        },
         "skills" => {
             let name = args["name"]
                 .as_str()
@@ -691,54 +647,6 @@ async fn call(kelve: &Kelve, agent: &str, params: &Value) -> Value {
                 .await
             {
                 Ok(v) => said(skills_text(&v, name.is_some()), false),
-                Err(e) => said(format!("{e:#}"), true),
-            }
-        }
-        "marks" => match kelve.send(kelve.get("/api/agent/marks")).await {
-            Ok(v) => {
-                let spec: kelve_core::spec::Spec =
-                    serde_json::from_value(v["spec"].clone()).unwrap_or_default();
-                let file = v["file"].as_str().unwrap_or("marks.md");
-                if v["kept"].as_bool().unwrap_or(false) {
-                    said(
-                        format!(
-                            "What kelve marks for the person, from {file}:\n\n{}",
-                            kelve_core::spec::write(&spec)
-                        ),
-                        false,
-                    )
-                } else {
-                    said(
-                        "They haven't said yet, so kelve marks every idea but the basics. Write it with set_marks when they ask.",
-                        false,
-                    )
-                }
-            }
-            Err(e) => said(format!("{e:#}"), true),
-        },
-        "set_marks" => {
-            let body = json!({ "spec": args });
-            match kelve.send(kelve.post("/api/agent/marks").json(&body)).await {
-                Ok(v) => said(
-                    format!(
-                        "Kept in {}. Tell them, in a sentence, what you wrote, and that they can change it in kelve, under What kelve marks.",
-                        v["file"].as_str().unwrap_or("marks.md")
-                    ),
-                    false,
-                ),
-                Err(e) => said(format!("{e:#}"), true),
-            }
-        }
-        "note_done" => {
-            let body = json!({ "path": here, "note": args["note"], "version": args["version"], "did": args["did"] });
-            match kelve
-                .send(kelve.post("/api/agent/note-done").json(&body))
-                .await
-            {
-                Ok(_) => said(
-                    "Done. Now open what you changed, so the person sees it beside their note.",
-                    false,
-                ),
                 Err(e) => said(format!("{e:#}"), true),
             }
         }
@@ -791,18 +699,7 @@ mod tests {
         let names: Vec<&str> = listed.iter().filter_map(|t| t["name"].as_str()).collect();
         assert_eq!(
             names,
-            [
-                "open",
-                "next_job",
-                "hand_in",
-                "kept",
-                "notes",
-                "marks",
-                "set_marks",
-                "skills",
-                "update",
-                "note_done"
-            ]
+            ["open", "next_job", "hand_in", "kept", "skills", "update"]
         );
         for t in listed {
             assert_eq!(t["inputSchema"]["type"], "object", "{}", t["name"]);
@@ -822,7 +719,14 @@ mod tests {
             said["instructions"]
                 .as_str()
                 .unwrap_or_default()
-                .contains("Before you start anything they ask, check notes")
+                .contains("use open with what: home")
+        );
+        // What the person sent back from a debrief reaches an agent with no hook too.
+        assert!(
+            said["instructions"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("Before you start anything they ask, check kept")
         );
         // Asked about kelve itself, the agent reads kelve's docs.
         assert!(
@@ -874,6 +778,29 @@ mod tests {
                 && again.contains("call next_job again, giving for: 12")
         );
         assert!(!again.contains("no more"));
+    }
+
+    #[test]
+    fn open_kelve_opens_it_at_home_and_says_nothing_of_a_number() {
+        let tools = tools();
+        let open = tools
+            .as_array()
+            .and_then(|t| t.iter().find(|t| t["name"] == "open"))
+            .cloned()
+            .unwrap_or_default();
+        assert!(
+            open["inputSchema"]["properties"]["what"]["enum"]
+                .as_array()
+                .is_some_and(|e| e.contains(&json!("home")))
+        );
+        let text = home_text(&json!({ "opened": true }));
+        assert!(text.contains("at home"), "{text}");
+        // Nothing for kelve's hook to read back: no work was handed over.
+        assert_eq!(
+            kelve_core::hook::opened_in(&json!([{ "type": "text", "text": text }])),
+            None
+        );
+        assert!(home_text(&json!({ "opened": false })).contains("`kelve open`"));
     }
 
     #[test]

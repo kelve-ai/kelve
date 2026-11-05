@@ -52,13 +52,7 @@ export async function startKelve(port: number, graph: string, opts: { log?: stri
   if (!existsSync(kelve)) throw new Error(`There's no kelve at ${kelve}. Build it with cargo build -p kelve, or set KELVE_BIN.`)
   const dir = mkdtempSync(join(tmpdir(), 'kelve-e2e-'))
   const secretFile = join(dir, 'secret')
-  // A stand-in for the system's picker: it chooses whatever path a test
-  // last wrote for it (world.ts, `picks`).
-  const pickFile = join(dir, 'next-pick')
   const claudeDir = join(dir, 'claude')
-  const picker = join(dir, 'pick.sh')
-  writeFileSync(pickFile, '')
-  writeFileSync(picker, `#!/bin/sh\ncat '${pickFile}'\n`, { mode: 0o755 })
   const base = `http://localhost:${port}`
   const logFile = opts.log ?? 'e2e/.server.log'
   const log = createWriteStream(join(web, logFile))
@@ -71,8 +65,7 @@ export async function startKelve(port: number, graph: string, opts: { log?: stri
       KELVE_SECRET_FILE: secretFile,
       KELVE_UTC_OFFSET_MINUTES: '0',
       KELVE_GRAPH_URL: graph,
-      KELVE_PICKER: picker,
-      // Its own Claude Code settings: the notes hook never touches the person's.
+      // Its own Claude Code settings: kelve's hook never touches the person's.
       KELVE_CLAUDE_DIR: claudeDir,
       KELVE_AGENTS_HOME: join(claudeDir, '..', 'home'),
       // Its own skills folder: never the person's.
@@ -90,7 +83,7 @@ export async function startKelve(port: number, graph: string, opts: { log?: stri
     server.kill()
     throw e
   }
-  return { base, secretFile, kelve, pickFile, logFile, claudeDir, skillsDir: join(dir, 'skills'), dataDir: join(dir, 'data'), stop: () => server.kill() }
+  return { base, secretFile, kelve, logFile, claudeDir, skillsDir: join(dir, 'skills'), dataDir: join(dir, 'data'), stop: () => server.kill() }
 }
 
 export default async function stack() {

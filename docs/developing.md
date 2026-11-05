@@ -104,7 +104,7 @@ Each answer taken comes back with the next job. `open` says the number of what i
 
   They're all one session of the agent's; `SANDBOX_SESSION` names another. A message that corrects the agent becomes a `learn` job, and the skill for a kind of work comes the first time a file of that kind is read.
 - **A verified run, with the stand-in for kelve.ai** (no kelve-graph beside this repo). Sign in from Your agent or Settings, Account: the stand-in sends the browser straight back. It takes any key starting `sk-test`, as an API key or a subscription's token. A run moves on a task each time its page asks; `hosted finish <run>` finishes it at once, `hosted taken <address>` gives an address to someone else, and `hosted runs <n>` sets how many runs a day. With kelve-graph, runs move by themselves, in Docker, and it allows 20 a day.
-- **Notes for the agent.** Leave a note for your agent, then read it as the agent would, from the example project: `bun dev/kelve.ts call notes`, and say it's done with `bun dev/kelve.ts call note_done '{"note":"agent/…","version":"…","did":"…"}'`. The sandbox has a Claude Code folder of its own (`.sandbox/claude`) and a home of its own for other agents' settings (`.sandbox/home`), so turning on kelve's hook never touches yours.
+- **Redoing a decision.** Change a decision in a debrief and send it, then take the job as the agent would, from the example project: `bun dev/kelve.ts call next_job`. The sandbox has a Claude Code folder of its own (`.sandbox/claude`) and a home of its own for other agents' settings (`.sandbox/home`), so turning on kelve's hook never touches yours.
 - `bun dev/kelve.ts link` signs a browser in again.
 
 ## Someone new
@@ -113,9 +113,9 @@ Each answer taken comes back with the next job. `open` says the number of what i
 bun dev/kelve.ts newcomer
 ```
 
-To try kelve's onboarding as someone new meets it: they ask their agent to install kelve, it does and sets it up, and the first thing they open shows kelve. This serves the installer (`install.sh`) and this kelve, packed as a release, on 4692, beside a stand-in hosted service. Then it prints the line that makes another terminal theirs: a kelve on 4690 with a store of its own, and a Claude Code of their own (`.newcomer-claude`), so yours are never touched. Log that Claude Code in once, the first time; it stays logged in, and kelve's connection and hook in it start again each run. In it, ask: "Install kelve from http://127.0.0.1:4692/install.sh". Then start it again, so it has kelve's tools, and ask it to show you something.
+To try kelve's onboarding as someone new meets it: they ask their agent to install kelve, it does and sets it up, and the first thing they open shows kelve. This serves the installer (`install.sh`) and this kelve, packed as a release, on 4692, beside a stand-in hosted service. Then it prints the line that makes another terminal theirs: a kelve on 4690 with a store of its own, and a Claude Code of their own (`.newcomer-claude`), so yours are never touched. Log that Claude Code in once, the first time; it stays logged in, and kelve's connection and hook in it start again each run. In it, ask: "Install kelve from http://127.0.0.1:4692/install.sh". Then start it again, so it has kelve's tools, and ask it: "Open kelve."
 
-`--agent` has that Claude Code install kelve unattended, then checks what it set up: kelve installed, connected, its hook, and how much kelve marks.
+`--agent` has that Claude Code install kelve unattended, then checks what it set up: kelve installed, connected, and its hook.
 
 ## The example
 

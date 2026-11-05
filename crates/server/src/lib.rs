@@ -1,7 +1,7 @@
 //! kelve's local service: it keeps what the person's agent handed over and
 //! asks it for a debrief (`agent_loop`), learns the person's skills from
 //! what they correct (`agent_loop::learn`), hands those skills to their
-//! agents through the hook (`moment`), keeps their notes, and serves the
+//! agents through the hook (`moment`), and serves the
 //! web app, on the person's own computer (docs/architecture.md).
 
 pub mod agent;
@@ -20,7 +20,6 @@ pub mod hooks;
 pub mod hosted;
 pub mod list;
 pub mod moment;
-pub mod pick;
 pub mod pipeline;
 pub mod problems;
 pub mod reader;
@@ -94,6 +93,7 @@ pub fn router(app: Shared) -> Router {
 async fn start(config: Config) -> Result<Shared, ServeError> {
     let db = kelve_store::open(&config.store).await?;
     kelve_store::migrate_file(&db, &config.store).await?;
+    spec::settle(&config.data);
     let app = App::new(config, db).await?;
     problems::watch(&app.config.data);
     pipeline::start(&app);

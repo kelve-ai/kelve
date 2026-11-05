@@ -5,7 +5,7 @@
  */
 export type Kept = { id: number, 
 /**
- * `note`, `debrief`, `learn`, `research`, `explain`, `compare` or `draw`.
+ * `redo`, `debrief`, `learn`, `research`, `explain`, `compare` or `draw`.
  */
 kind: string, 
 /**

@@ -21,18 +21,14 @@
   "/api/settings": {
    "shareCounts": false,
    "countsOff": null,
-   "notesDir": "~/.kelve/data/notes",
-   "notesChosen": false,
    "agent": "claudeCode",
    "codeSize": "medium",
    "textSize": "medium",
    "highlighting": "full",
-   "newNote": "you",
    "hints": [
-    "notes",
     "met"
    ],
-   "notesHook": false,
+   "hook": false,
    "hooksElsewhere": []
   },
   "/api/opened/1": {
@@ -399,7 +395,6 @@
    "ready": []
   },
   "/api/problems": [],
-  "/api/opened/1/notes": [],
   "/api/opened/1/diff?path=Cargo.toml": {
    "path": "Cargo.toml",
    "lang": "ini",

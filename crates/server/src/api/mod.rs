@@ -3,9 +3,8 @@
 //! or kelve's own command line on this computer (`Agent`), which `kelve
 //! mcp` speaks for the person's coding agent. It can ask kelve to open
 //! something and learn whether the person sees it, take kelve's jobs and
-//! hand in their answers, see what's kept for it, read the person's
-//! skills, and say a note left for it is done. It never reads the person's
-//! other notes, or what kelve keeps beyond a job's material.
+//! hand in their answers, see what's kept for it, and read the person's
+//! skills. It never reads what kelve keeps beyond a job's material.
 
 pub mod agent;
 pub mod agent_loop;
@@ -30,7 +29,8 @@ pub fn router() -> Router<Shared> {
         .route("/settings", get(settings::get).post(settings::post))
         .merge(your_agent::router())
         .route("/counts", get(settings::counts))
-        .route("/marks", get(settings::marks).post(settings::set_marks))
+        .route("/known", get(settings::known))
+        .route("/known/forget", post(settings::forget_known))
         .route("/hosted", get(hosted::account))
         .route("/hosted/signin", post(hosted::sign_in))
         .route("/hosted/signin/stop", post(hosted::stop_signing_in))
@@ -60,10 +60,7 @@ pub fn router() -> Router<Shared> {
         .route("/agent/next", post(agent::next))
         .route("/agent/answer", post(agent::answer))
         .route("/agent/kept", get(agent::kept))
-        .route("/agent/notes", get(agent::notes))
-        .route("/agent/notes/new", post(agent::notes_new))
-        .route("/agent/note-done", post(agent::note_done))
-        .route("/agent/marks", get(agent::marks).post(agent::set_marks))
+        .route("/agent/redos/new", post(agent::redos_new))
         .route("/agent/hook", post(agent::hook_changed))
         .route("/agent/moment", post(crate::moment::moment))
         .route("/agent/skills", get(agent_loop::skills))
@@ -74,8 +71,6 @@ pub fn router() -> Router<Shared> {
         .route("/list/off", post(reader::list_off))
         .route("/kept/{id}", delete(agent::put_aside))
         .route("/open", post(reader::open))
-        .route("/pick", post(reader::pick))
-        .route("/notes/show", post(reader::show_notes))
         .route("/opened", get(reader::lately))
         .route("/opened/{id}", get(reader::one))
         .route("/opened/{id}/again", post(reader::open_again))
@@ -84,13 +79,6 @@ pub fn router() -> Router<Shared> {
         .route("/opened/{id}/image", get(reader::image))
         .route("/opened/{id}/change", get(reader::change))
         .route("/opened/{id}/diff", get(reader::diff))
-        .route(
-            "/opened/{id}/notes",
-            get(reader::notes)
-                .post(reader::keep_note)
-                .delete(reader::forget_note),
-        )
-        .route("/opened/{id}/note", get(reader::note))
         .route("/home", get(debriefs::home))
         .route("/home/later", post(debriefs::later))
         .route("/debriefs/{id}", get(debriefs::one))

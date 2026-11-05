@@ -158,14 +158,10 @@ async fn a_browser_signs_in_once_and_the_secret_only_asks_for_links() {
 async fn settings_change_and_deleting_everything_puts_them_back() {
     let mut k = Kelve::new().await;
     k.sign_in().await;
-    let mut settings = k.json("GET", "/api/settings", None).await;
-    // Notes kept only for you: kelve's own folder, until another's chosen.
-    assert!(std::path::Path::new(settings["notesDir"].as_str().unwrap()).ends_with("notes"));
-    assert_eq!(settings["notesChosen"], false);
-    settings.as_object_mut().unwrap().remove("notesDir");
+    let settings = k.json("GET", "/api/settings", None).await;
     assert_eq!(
         settings,
-        json!({ "shareCounts": false, "countsOff": null, "notesChosen": false, "agent": "claudeCode", "codeSize": "medium", "textSize": "medium", "highlighting": "full", "newNote": "you", "hints": [], "notesHook": false, "hooksElsewhere": [] })
+        json!({ "shareCounts": false, "countsOff": null, "agent": "claudeCode", "codeSize": "medium", "textSize": "medium", "highlighting": "full", "hints": [], "hook": false, "hooksElsewhere": [] })
     );
     let changed = k
         .json(
@@ -174,22 +170,10 @@ async fn settings_change_and_deleting_everything_puts_them_back() {
             Some(json!({ "codeSize": "large" })),
         )
         .await;
-    let mut changed = changed;
-    changed.as_object_mut().unwrap().remove("notesDir");
     assert_eq!(
         changed,
-        json!({ "shareCounts": false, "countsOff": null, "notesChosen": false, "agent": "claudeCode", "codeSize": "large", "textSize": "medium", "highlighting": "full", "newNote": "you", "hints": [], "notesHook": false, "hooksElsewhere": [] })
+        json!({ "shareCounts": false, "countsOff": null, "agent": "claudeCode", "codeSize": "large", "textSize": "medium", "highlighting": "full", "hints": [], "hook": false, "hooksElsewhere": [] })
     );
-    let (status, bytes, _) = k
-        .call(
-            "POST",
-            "/api/settings",
-            Some(json!({ "notesDir": "/no/such/folder" })),
-            false,
-        )
-        .await;
-    assert_eq!(status, StatusCode::BAD_REQUEST);
-    assert!(String::from_utf8_lossy(&bytes).contains("folder"));
     // Deleting everything puts the settings back, and keeps the browser in.
     let (status, _, _) = k.call("DELETE", "/api/everything", None, false).await;
     assert_eq!(status, StatusCode::NO_CONTENT);
@@ -211,7 +195,7 @@ async fn the_weekly_count_goes_only_when_shared_and_only_once() {
     let tuesday = (week + chrono::Duration::days(1)).to_string();
     {
         let mut conn = k.app.db.acquire().await.unwrap();
-        for what in ["opened.change", "opened.change", "notes.agent"] {
+        for what in ["opened.change", "opened.change", "jobs.done"] {
             kelve_store::counts::add(&mut conn, &tuesday, what)
                 .await
                 .unwrap();
@@ -240,7 +224,7 @@ async fn the_weekly_count_goes_only_when_shared_and_only_once() {
     assert_eq!(got.len(), 1);
     assert_eq!((got[0].days, got[0].deep_days), (1, 0));
     assert_eq!(got[0].counts["opened.change"], 2);
-    assert_eq!(got[0].counts["notes.agent"], 1);
+    assert_eq!(got[0].counts["jobs.done"], 1);
     assert!(!got[0].counts.contains_key("links.followed"));
     assert_eq!(
         got[0].by_day[&tuesday]["opened.change"], 2,

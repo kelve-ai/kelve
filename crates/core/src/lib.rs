@@ -1,7 +1,7 @@
 //! Everything in kelve that's pure: skills and their parts, the debrief and
 //! when one is due, learning from what the person corrected, your agent's
-//! character, the hook for each agent, notes, what kelve marks for the
-//! person, what agents are told for each job, secret stripping and fencing,
+//! character, the hook for each agent, what the person knows already, what
+//! agents are told for each job, secret stripping and fencing,
 //! versions and checksums for updating, and the shapes the API sends. No
 //! IO, and nothing panics on bad input.
 //!
@@ -23,11 +23,9 @@ pub mod hosted;
 pub mod ideas;
 pub mod instructions;
 pub mod learn;
-pub mod lens;
 pub mod lesson;
 pub mod matching;
 pub mod md;
-pub mod notes;
 pub mod problems;
 pub mod redact;
 pub mod relations;

@@ -1,7 +1,7 @@
 //! The weekly count of how kelve was used, which the person may choose to share
 //! with kelve's hosted service. kelve counts a few things a day, here, whether
-//! or not it's shared: what was opened, by kind; notes written, by where
-//! they're kept; jobs the agent did; and the day an agent first said hello.
+//! or not it's shared: what was opened, by kind; jobs the agent did; and the
+//! day an agent first said hello.
 //! Only numbers: never what was opened, read or written, and nothing that says
 //! who. What goes with them is the install's random ID, made when the person
 //! says yes and deleted when they stop, so kelves can be counted and seen to
@@ -25,9 +25,6 @@ pub const KINDS: &[&str] = &[
     "opened.folder",
     "opened.file",
     "opened.change",
-    "notes.you",
-    "notes.work",
-    "notes.agent",
     "jobs.done",
     "agent.connected",
 ];

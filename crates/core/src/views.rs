@@ -1,5 +1,5 @@
 //! What kelve's local API sends and takes: home, debriefs, skills, your
-//! agent, what's open, notes and settings. Plain data, exported to TypeScript for the web app
+//! agent, what's open and settings. Plain data, exported to TypeScript for the web app
 //! (`web/src/api/gen`), so the two never disagree.
 
 use serde::{Deserialize, Serialize};
@@ -63,26 +63,19 @@ pub struct Settings {
     /// What turned counts off where kelve runs, whatever was chosen:
     /// `DO_NOT_TRACK` or `KELVE_TELEMETRY`. None when nothing did.
     pub counts_off: Option<String>,
-    /// Where notes kept only for you go, a folder for each project, as the
-    /// person would write it: `~/Notes`.
-    pub notes_dir: String,
-    /// Whether that's a folder the person chose, rather than kelve's own.
-    pub notes_chosen: bool,
     /// The coding agent the person uses: named in what kelve says, and in
     /// the line that connects it.
     pub agent: AgentKind,
-    /// How large code is drawn, and prose: debriefs, skills, notes.
+    /// How large code is drawn, and prose: debriefs and skills.
     pub code_size: Size,
     pub text_size: Size,
     /// Which parts of code have colours of their own.
     pub highlighting: Highlighting,
-    /// Who a new note is for, until the person says otherwise.
-    pub new_note: Place,
-    /// The hints the person has seen, each shown once: `squares`, `notes`.
+    /// The hints the person has seen, each shown once: `hook`, `met`.
     pub hints: Vec<String>,
-    /// Whether Claude Code's settings have kelve's hook, which tells it of
-    /// notes left for it as the person sends it a message.
-    pub notes_hook: bool,
+    /// Whether the agent's settings have kelve's hook, which gives it the
+    /// person's skills as it works.
+    pub hook: bool,
     /// The other agents whose settings have kelve's hook, as people name
     /// them: "Codex".
     pub hooks_elsewhere: Vec<String>,
@@ -135,9 +128,6 @@ pub enum AgentKind {
 pub struct SettingsIn {
     #[ts(optional)]
     pub share_counts: Option<bool>,
-    /// A folder for notes kept only for you; "" for kelve's own.
-    #[ts(optional)]
-    pub notes_dir: Option<String>,
     #[ts(optional)]
     pub agent: Option<AgentKind>,
     #[ts(optional)]
@@ -146,14 +136,12 @@ pub struct SettingsIn {
     pub text_size: Option<Size>,
     #[ts(optional)]
     pub highlighting: Option<Highlighting>,
-    #[ts(optional)]
-    pub new_note: Option<Place>,
     /// A hint the person has now seen.
     #[ts(optional)]
     pub hint_seen: Option<String>,
     /// Add kelve's hook to Claude Code's settings, or take it out.
     #[ts(optional)]
-    pub notes_hook: Option<bool>,
+    pub hook: Option<bool>,
 }
 
 // ---------------------------------------------------------------- counts
@@ -198,7 +186,6 @@ pub enum ServerEvent {
     Settings,
     /// Something was opened.
     Opened,
-    Notes,
     /// What's waiting for the person's agent changed.
     Asks,
     /// An agent called kelve.
@@ -208,7 +195,7 @@ pub enum ServerEvent {
     Page {
         build: String,
     },
-    /// What kelve marks for the person (`marks.md`) changed.
+    /// The ideas the person knows (`marks.md`) changed.
     Spec,
     /// The person's skills, their checks, or Fits you changed.
     Skills,
@@ -224,7 +211,7 @@ pub enum ServerEvent {
 pub struct Kept {
     #[ts(type = "number")]
     pub id: i64,
-    /// `note`, `debrief`, `learn`, `research`, `explain`, `compare` or `draw`.
+    /// `redo`, `debrief`, `learn`, `research`, `explain`, `compare` or `draw`.
     pub kind: String,
     /// What it's for: "Debriefing kelve since main".
     pub about: String,
@@ -268,19 +255,17 @@ pub struct AgentList {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ListItem {
-    /// Steady while it's on the list: `note:…`.
+    /// Steady while it's on the list: `redo:…`.
     pub key: String,
-    /// `note`.
+    /// `redo`.
     pub kind: String,
-    /// What it's about: what a note says.
+    /// What it's about: the decision to redo.
     pub title: String,
-    /// A line under it: where a note is, what the agent did.
+    /// A line under it: where the decision is, what the agent did.
     pub sub: Option<String>,
     /// What was opened it's for.
     #[ts(type = "number | null")]
     pub opened: Option<i64>,
-    /// A note, by its id.
-    pub note: Option<String>,
     /// The title of what it was asked for in, when that isn't what's open.
     pub asked_in: Option<String>,
     /// The jobs it is, to move it up the list.
@@ -445,94 +430,6 @@ pub struct DiffView {
     pub skip: Option<String>,
 }
 
-/// What to choose with the system's picker, to open.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub enum PickWhat {
-    Folder,
-    File,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct PickIn {
-    pub what: PickWhat,
-}
-
-/// What the person chose: none when they closed the picker.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct Picked {
-    pub path: Option<String>,
-}
-
-/// Who a note is for, which says where it's kept.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub enum Place {
-    /// Just the person: in their own notes folder, outside the project.
-    #[default]
-    You,
-    /// Everyone on the work: in the project, `.kelve/notes/`, committed
-    /// with it.
-    Work,
-    /// The person's agent, to pick up: in their own notes folder, until
-    /// the agent has done it.
-    Agent,
-}
-
-/// A note, by where it's kept.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct NoteRef {
-    /// Its place and file name: `work/ledger.md`.
-    pub id: String,
-    pub title: String,
-    pub place: Place,
-    /// Where it is, as the person would write it.
-    pub file: String,
-    /// The ideas it's about, by key.
-    pub ideas: Vec<String>,
-    /// The lines it's on, if it's on a passage.
-    pub on: Option<NoteOn>,
-    /// For the person's agent: whether it's waiting for it, or done.
-    pub state: Option<NoteState>,
-    /// What the agent did, in its own line, once it's done.
-    pub did: String,
-    /// When the agent said it was done.
-    pub done_at: Option<crate::Timestamp>,
-    /// What the agent opened when it was done.
-    pub opened: Option<i64>,
-}
-
-/// Where a note for the person's agent has got.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub enum NoteState {
-    /// Waiting for the person's next message to their agent.
-    Waiting,
-    Done,
-}
-
-/// The lines a note is on, in a file of what's open: where its passage is
-/// now, or where it was, when its text has changed.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct NoteOn {
-    pub path: String,
-    pub start: u32,
-    pub end: u32,
-    /// Whether its passage is still there, unchanged.
-    pub found: bool,
-}
-
 /// A report of something that went wrong, kept for the person and sent
 /// nowhere: shown as it is, with an issue it could make.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -556,58 +453,6 @@ pub struct Problem {
 pub struct PageProblem {
     pub message: String,
     pub stack: String,
-}
-
-/// Lines of a file, from 1, to write a note on.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct LinesIn {
-    pub path: String,
-    pub start: u32,
-    pub end: u32,
-}
-
-/// A note, in markdown: its body, without the front matter kelve keeps.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct Note {
-    #[serde(flatten)]
-    #[ts(flatten)]
-    pub note: NoteRef,
-    pub text: String,
-}
-
-/// A note to keep: a new one by its place, or one there is by its id.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct NoteIn {
-    pub id: Option<String>,
-    pub place: Place,
-    pub text: String,
-    /// For a new note: the lines it's on.
-    #[serde(default)]
-    #[ts(optional)]
-    pub on: Option<LinesIn>,
-    /// For a new note: the ideas it's about, by key.
-    #[serde(default)]
-    #[ts(optional)]
-    pub ideas: Option<Vec<String>>,
-}
-
-/// What kelve marks for the person (`spec::Spec`), as settings show it.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct MarksView {
-    pub spec: crate::spec::Spec,
-    /// Whether it's been written yet: until it is, kelve marks every idea
-    /// but the basics.
-    pub kept: bool,
-    /// Where it's kept, as the person would write it.
-    pub file: String,
 }
 
 // ---------------------------------------------------------------- skills
@@ -915,7 +760,7 @@ pub enum DebriefState {
 #[ts(export)]
 pub enum DecisionChoice {
     Agree,
-    /// Change it: a note for the agent, to redo it their way.
+    /// Change it: the agent redoes it their way.
     Change,
     /// Look into it: research.
     LookInto,
@@ -1015,7 +860,7 @@ pub struct DecisionView {
     pub rests_on: Vec<String>,
     pub choice: Option<DecisionChoice>,
     pub status: DecisionStatus,
-    /// The note for the agent, when the person chose to change it.
+    /// How they want it, when they chose to change it.
     pub note: String,
     /// The question, when they asked their agent to look into it, and its
     /// answer.
@@ -1179,7 +1024,7 @@ pub struct SendLine {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum SendKind {
-    /// The agent redoes decisions, as notes.
+    /// The agent redoes decisions.
     Redo,
     /// Research still running.
     Research,
