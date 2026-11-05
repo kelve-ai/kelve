@@ -15,9 +15,10 @@
 //! running. Never an error.
 
 use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use kelve_core::hook::{Agent, moment, reply};
+use kelve_core::hook::{Agent, Moment, Skill, bench, moment, reply, skill};
 use serde_json::Value;
 
 use crate::client::Kelve;
@@ -42,7 +43,11 @@ fn which(agent: Option<&str>, on: Option<&str>, event: &Value) -> (Agent, String
 }
 
 /// `kelve moment`.
-pub async fn run(agent: Option<&str>, on: Option<&str>) -> anyhow::Result<()> {
+pub async fn run(
+    agent: Option<&str>,
+    on: Option<&str>,
+    bench: Option<&Path>,
+) -> anyhow::Result<()> {
     let mut input = String::new();
     if std::io::stdin().read_to_string(&mut input).is_err() {
         return Ok(());
@@ -52,6 +57,14 @@ pub async fn run(agent: Option<&str>, on: Option<&str>) -> anyhow::Result<()> {
     let Some(m) = moment(agent, &on, &event) else {
         return Ok(());
     };
+    if let Some(folder) = bench {
+        let given = given_file(&m.session);
+        let text = benched(&m, folder, &given);
+        if let Some(out) = reply(agent, &on, &text) {
+            anstream::println!("{out}");
+        }
+        return Ok(());
+    }
     let wait = if matches!(m.what.as_str(), "end" | "opened") {
         END_WAIT
     } else {
@@ -96,6 +109,47 @@ pub async fn run(agent: Option<&str>, on: Option<&str>) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Where a benchmark run's hook keeps the skills it has handed over in a
+/// session: `KELVE_BENCH_GIVEN`, or a file in the temporary folder, named for
+/// the session.
+fn given_file(session: &str) -> PathBuf {
+    if let Some(file) = std::env::var_os("KELVE_BENCH_GIVEN") {
+        return PathBuf::from(file);
+    }
+    let session: String = session
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .take(64)
+        .collect();
+    std::env::temp_dir().join(format!("kelve-bench-given-{session}.json"))
+}
+
+/// What a benchmark run's hook says, from the skills in `folder`, one
+/// folder each with its `SKILL.md`, keeping what it handed over in `given`.
+/// Nothing leaves the computer it runs on: no kelve, no network.
+fn benched(m: &Moment, folder: &Path, given: &Path) -> String {
+    let mut skills: Vec<Skill> = std::fs::read_dir(folder)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|entry| {
+            let name = entry.file_name().to_string_lossy().to_string();
+            let text = std::fs::read_to_string(entry.path().join("SKILL.md")).ok()?;
+            Some(skill(&name, &text))
+        })
+        .collect();
+    skills.sort_by(|a, b| a.name.cmp(&b.name));
+    let before: Vec<String> = std::fs::read_to_string(given)
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or_default();
+    let (text, now) = bench(m, &skills, &before);
+    if now != before {
+        let _ = std::fs::write(given, serde_json::to_string(&now).unwrap_or_default());
+    }
+    text
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,5 +165,39 @@ mod tests {
         assert_eq!((agent, on.as_str()), (Agent::Claude, "PostToolUseFailure"));
         let (agent, on) = which(Some("cursor"), Some("postToolUse"), &json!({}));
         assert_eq!((agent, on.as_str()), (Agent::Cursor, "postToolUse"));
+    }
+
+    #[test]
+    fn a_benchmark_run_reads_its_skills_from_a_folder() {
+        let dir = std::env::temp_dir().join(format!("kelve-bench-test-{}", std::process::id()));
+        let skills = dir.join("skills");
+        std::fs::create_dir_all(skills.join("standin-expert")).unwrap();
+        std::fs::create_dir_all(skills.join("rust")).unwrap();
+        std::fs::create_dir_all(skills.join("empty")).unwrap();
+        std::fs::write(
+            skills.join("standin-expert/SKILL.md"),
+            "---\nname: standin-expert\ndescription: Expert work\n---\nDo it well.\n",
+        )
+        .unwrap();
+        std::fs::write(
+            skills.join("rust/SKILL.md"),
+            "---\nname: rust\n---\nOne error enum.\n",
+        )
+        .unwrap();
+        let given = dir.join("given.json");
+        let event = json!({ "session_id": "s1", "cwd": "/workspace", "prompt": "Add a flag" });
+        let m = moment(Agent::Claude, "UserPromptSubmit", &event).unwrap();
+        let said = benched(&m, &skills, &given);
+        assert!(said.contains("`standin-expert`: Expert work"), "{said}");
+        assert_eq!(benched(&m, &skills, &given), "");
+        let read = json!({
+            "session_id": "s1", "cwd": "/workspace", "tool_name": "Read",
+            "tool_input": { "file_path": "/workspace/src/lib.rs" }
+        });
+        let m = moment(Agent::Claude, "PostToolUse", &read).unwrap();
+        assert!(benched(&m, &skills, &given).contains("One error enum."));
+        // A folder that isn't there says nothing.
+        assert_eq!(benched(&m, &dir.join("none"), &dir.join("g2.json")), "");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
