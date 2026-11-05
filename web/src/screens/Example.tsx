@@ -35,6 +35,7 @@ import { answerFromExample, type Fixture } from '../api/client'
 import type { AgentList, Block, IdeaPage, ListItem, Me, Opened, PlainlyView, Reading, SentToday, Settings, UpdateView, Way } from '../api/types'
 import { BACKOFF as BACKOFF_DIAGRAMS, UNIQUE_KEYS } from '../example/diagrams'
 import { changeWaiting, folderWaiting } from '../example/plainly'
+import { skillsExample } from '../example/skills'
 import { Loading } from '../Loader'
 import { Reader } from '../reader/Reader'
 import { routeOf } from '../routes'
@@ -361,13 +362,16 @@ export function Example() {
         ? { version: '0.2.1', newer: { version: '0.3.0', line: 'Your agent can update kelve for you, once you say yes.' } }
         : { version: '0.2.1', newer: null }
       fixture.answers['/api/update'] = update
+      // Your skills, and Fits you.
+      Object.assign(fixture.answers, skillsExample(as))
       answerFromExample(fixture)
       setF(fixture)
     })
   }, [screen])
-  // kelve's screens under its header, and its controls, need nothing from the example.
+  // kelve's screens under its header are answered from the example once it's
+  // loaded; its controls need nothing from it.
   const route = OWN.includes(screen) ? null : routeOf(hash.split('?')[0].replace(/^#\//, '').split('/').slice(1).map((p) => decodeURIComponent(p)))
-  if (route) return <Screen route={route} example />
+  if (route) return f ? <Screen route={route} example /> : <Loading />
   if (screen === 'kit') return <Kit />
   if (!f) return <Loading />
   const me = f.answers['/api/me'] as Me

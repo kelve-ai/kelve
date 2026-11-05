@@ -4,8 +4,11 @@
 //   change/<id>                 a change, file by file
 //   skills, skills/<name>       your skills, and one of them
 //   skills/<name>/edit          editing one
+//   skills/new                  writing a new one
+//   skills/suggested/<id>       a skill kelve suggests
 //   agent                       your agent
 //   agent/look                  changing how it looks
+//   agent/fits                  Fits you: picking between two results, blind
 //   agent/score/new             getting a verified score
 //   agent/score/<id>            a verified score
 //   settings/<section>          settings: agent, account, checks, reading, privacy, about
@@ -22,6 +25,9 @@ export type Route =
   | { screen: 'skills' }
   | { screen: 'skill'; name: string }
   | { screen: 'skill-edit'; name: string }
+  | { screen: 'skill-new' }
+  | { screen: 'skill-suggested'; id: string }
+  | { screen: 'fits' }
   | { screen: 'agent' }
   | { screen: 'look' }
   | { screen: 'score-new' }
@@ -37,10 +43,13 @@ export function routeOf(parts: string[]): Route | null {
   if (a === 'debrief' && b && none(c)) return { screen: 'debrief', id: b }
   if (a === 'change' && b && none(c)) return { screen: 'change', id: b }
   if (a === 'skills' && none(b)) return { screen: 'skills' }
+  if (a === 'skills' && b === 'new' && none(c)) return { screen: 'skill-new' }
+  if (a === 'skills' && b === 'suggested' && c && none(d)) return { screen: 'skill-suggested', id: c }
   if (a === 'skills' && b && none(c)) return { screen: 'skill', name: b }
   if (a === 'skills' && b && c === 'edit' && none(d)) return { screen: 'skill-edit', name: b }
   if (a === 'agent' && none(b)) return { screen: 'agent' }
   if (a === 'agent' && b === 'look' && none(c)) return { screen: 'look' }
+  if (a === 'agent' && b === 'fits' && none(c)) return { screen: 'fits' }
   if (a === 'agent' && b === 'score' && c === 'new' && none(d)) return { screen: 'score-new' }
   if (a === 'agent' && b === 'score' && c && none(d)) return { screen: 'score', id: c }
   if (a === 'settings' && none(b)) return { screen: 'settings', section: 'agent' }
@@ -68,9 +77,12 @@ export function placeOf(route: Route): 'home' | 'skills' | 'agent' | 'settings' 
     case 'skills':
     case 'skill':
     case 'skill-edit':
+    case 'skill-new':
+    case 'skill-suggested':
       return 'skills'
     case 'agent':
     case 'look':
+    case 'fits':
     case 'score-new':
     case 'score':
       return 'agent'
