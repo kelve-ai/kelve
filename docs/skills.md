@@ -213,7 +213,7 @@ Skills are standard skill folders, following the [Agent Skills format](https://a
 |---|---|---|
 | **How you like it** | Your defaults for a kind of work: Rust, the words in an app, docs, or everywhere | kelve's hook hands it over whenever your agent touches that kind of work, so it never depends on the agent remembering to load it |
 | **How you do something** | A procedure for a task: adding a command-line flag, retrying network calls, releasing a version | Its description says when it applies, and the agent loads it when the task matches, in any language and any project |
-| **One project** | What only matters in one repository: its ports, its release script, its odd corners | Kept in the project, in `.kelve/skills/`, for anyone who works on it, if you choose to share it |
+| **One project** | What only matters in one repository: its ports, its release script, its odd corners | Kept in the project, in `.kelve/skills/`, so they go with the work when it’s committed, for anyone who works on it |
 
 **One skill is one folder.**
 
