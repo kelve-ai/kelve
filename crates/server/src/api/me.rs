@@ -65,9 +65,9 @@ pub async fn stop(State(app): State<Shared>, _who: Who) -> StatusCode {
     StatusCode::ACCEPTED
 }
 
-/// Deletes everything kelve keeps: settings, the graph's key, and work in
-/// hand. Notes are the person's own files, and stay. It can't be undone;
-/// the settings page says so.
+/// Deletes everything kelve keeps: settings, keys, skills' evidence,
+/// debriefs, and work in hand. Skills and notes are the person's own files,
+/// and stay. It can't be undone; the settings page says so.
 pub async fn everything(State(app): State<Shared>, _me: Me) -> ApiResult<StatusCode> {
     let mut tx = app.db.begin().await?;
     kelve_store::delete_everything(&mut tx).await?;

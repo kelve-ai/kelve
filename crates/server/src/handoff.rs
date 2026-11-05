@@ -6,10 +6,6 @@
 //! since it was last edited is shown: a commit changes nothing in it. The
 //! agent shows its work as its branch since its base, committed or not, so
 //! showing it again brings the same thing up to date, never another.
-//!
-//! And what it shows is read: as its turn ends, having opened something in
-//! kelve whose reading isn't finished, its hook says to take that thing's
-//! jobs until there are none, unless the person asked it not to.
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -30,10 +26,6 @@ static TOLD: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);
 /// The edit each session was last told, as a turn ended, to show the work
 /// of: it's told once for each.
 static TOLD_DONE: LazyLock<Mutex<HashMap<String, i64>>> = LazyLock::new(Default::default);
-
-/// What each session opened was last told, as a turn ended, to finish
-/// reading, by when it opened it: it's told once each time it opens it.
-static TOLD_READING: LazyLock<Mutex<HashMap<(String, i64), i64>>> = LazyLock::new(Default::default);
 
 /// A folder as the hook gives it, with a `~` for the home folder put right.
 pub fn at_home(path: &str) -> PathBuf {
@@ -66,7 +58,7 @@ pub async fn after(app: &Shared, session: &str, handover: &Handover) -> ApiResul
     // or asking for it to be merged changes nothing the person hasn't seen.
     let edit = {
         let mut conn = app.db.acquire().await?;
-        kelve_store::lessons::last_edit(&mut conn, session).await?
+        kelve_store::moments::last_edit(&mut conn, session).await?
     };
     if let Some((root, edited)) = edit
         && overlap(Path::new(&root), &at)
@@ -104,7 +96,7 @@ pub async fn after(app: &Shared, session: &str, handover: &Handover) -> ApiResul
 pub async fn done(app: &Shared, session: &str) -> ApiResult<String> {
     let edit = {
         let mut conn = app.db.acquire().await?;
-        kelve_store::lessons::last_edit(&mut conn, session).await?
+        kelve_store::moments::last_edit(&mut conn, session).await?
     };
     let Some((root, edited)) = edit else {
         return Ok(String::new());
@@ -128,74 +120,6 @@ pub async fn done(app: &Shared, session: &str) -> ApiResult<String> {
     Ok(format!(
         "You've changed files and haven't shown them in kelve since. If you've finished what you were doing and the person would want to see it, show them it in kelve now, {show} If you haven't finished, or it isn't worth showing, carry on."
     ))
-}
-
-/// Keeps that the agent opened something in kelve in a session, as its hook
-/// saw it: only what an agent opened.
-pub async fn opened(app: &Shared, session: &str, id: i64) -> ApiResult<()> {
-    let mut conn = app.db.acquire().await?;
-    if kelve_store::reader::get(&mut conn, id)
-        .await?
-        .is_some_and(|o| !o.agent.is_empty())
-    {
-        kelve_store::lessons::keep_opened(&mut conn, session, id).await?;
-    }
-    Ok(())
-}
-
-/// What kelve says as the agent's turn ends, or, for an agent that can't say
-/// so, as the person writes again: when it opened things in kelve whose
-/// reading isn't finished, to take their jobs until there are none, unless
-/// the person asked it not to, naming each and its number; once for each
-/// time it opened one. Else nothing.
-pub async fn reading(app: &Shared, session: &str) -> ApiResult<String> {
-    let opened = {
-        let mut conn = app.db.acquire().await?;
-        kelve_store::lessons::opened_in(&mut conn, session).await?
-    };
-    let mut left: Vec<(String, i64)> = Vec::new();
-    for (id, at) in opened {
-        if !crate::agent::unfinished(app, id).await? {
-            continue;
-        }
-        let row = {
-            let mut conn = app.db.acquire().await?;
-            kelve_store::reader::get(&mut conn, id).await?
-        };
-        let Some(row) = row else {
-            continue;
-        };
-        if TOLD_READING
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .insert((session.to_string(), id), at)
-            == Some(at)
-        {
-            continue;
-        }
-        let title = match row.title.trim() {
-            "" => "what you opened".to_string(),
-            t => t.to_string(),
-        };
-        left.push((title, id));
-    }
-    const SHARE: &str = "When there are many, such as a dozen files or more to read, and you can start subagents, share them: start several at once, each doing the same with the same for.";
-    Ok(match left.as_slice() {
-        [] => String::new(),
-        [(title, id)] => format!(
-            "You opened {title} in kelve (number {id}), and its reading isn't finished. Unless the person asked you not to, take its jobs now with next_job, giving for: {id}, do each as it says, and hand in each answer with hand_in, giving for too, until there are none. {SHARE}"
-        ),
-        [rest @ .., (last, last_id)] => {
-            let rest: Vec<String> = rest
-                .iter()
-                .map(|(title, id)| format!("{title} (number {id})"))
-                .collect();
-            format!(
-                "You opened these in kelve, and their reading isn't finished: {} and {last} (number {last_id}). Unless the person asked you not to, take each one's jobs now with next_job, giving for its number, do each as it says, and hand in each answer with hand_in, giving for too, until there are none. {SHARE}",
-                rest.join(", ")
-            )
-        }
-    })
 }
 
 /// Whether anything was opened in kelve in `root`, or a folder around it,

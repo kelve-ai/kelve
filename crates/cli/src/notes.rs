@@ -195,7 +195,7 @@ pub async fn hook(install: bool, agent: &str) -> anyhow::Result<()> {
             .map(|a| a.name())
             .collect();
         bail!(
-            "kelve has hooks for {}. Other agents check for notes, and ask for lessons, as kelve's instructions ask.",
+            "kelve has hooks for {}. Other agents check for notes, and read your skills, as kelve's instructions ask.",
             names.join(", ")
         );
     };

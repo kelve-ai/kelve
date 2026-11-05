@@ -1,6 +1,6 @@
 [package]
 name = "kelve-graph-api"
-description = "The shared knowledge graph's open API: its shapes, and the one client for it."
+description = "kelve's hosted service's open API: its shapes, the one client for it, and a stand-in for tests."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -33,7 +33,6 @@ pub type Rich = String;
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct Entry {
     /// The idea it's about.
     pub idea: IdeaRef,
@@ -57,7 +56,7 @@ pub struct Entry {
 /// to. The graph matched the idea; the model only named it.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export, rename = "EntryLink")]
+#[ts(rename = "EntryLink")]
 pub struct Link {
     /// The words as the prose has them, without the brackets.
     pub term: String,
@@ -69,7 +68,6 @@ pub struct Link {
 /// One block of an entry: one of kelve's components.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Block {
     /// Unique within its entry, and kept from one revision to the next:
     /// `b1`, `b2`. A block added later gets an id no block had.
@@ -105,7 +103,6 @@ impl Block {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Part {
     /// What it is, in a few sentences that make sense alone: always shown.
     Lead,
@@ -154,7 +151,6 @@ impl Part {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Fold {
     /// One case worked through, with real numbers.
     Example,
@@ -212,7 +208,6 @@ impl Fold {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[ts(export)]
 pub enum Body {
     /// A paragraph of two or three sentences. `quiet` for an aside.
     Paragraph { text: Rich, quiet: bool },
@@ -370,7 +365,7 @@ impl Body {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export, rename = "ExcerptLine")]
+#[ts(rename = "ExcerptLine")]
 pub struct Line {
     /// Its line number in the real thing, when it has one.
     pub n: Option<u32>,
@@ -384,7 +379,6 @@ pub struct Line {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Layout {
     /// Left to right: a path, a pipeline.
     Row,
@@ -398,7 +392,7 @@ pub enum Layout {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export, rename = "DiagramNode")]
+#[ts(rename = "DiagramNode")]
 pub struct Node {
     pub id: String,
     pub label: String,
@@ -409,7 +403,7 @@ pub struct Node {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export, rename = "DiagramEdge")]
+#[ts(rename = "DiagramEdge")]
 pub struct Edge {
     pub from: String,
     pub to: String,
@@ -419,7 +413,7 @@ pub struct Edge {
 /// One step of a step-through: a caption, and the nodes it marks.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export, rename = "DiagramStep")]
+#[ts(rename = "DiagramStep")]
 pub struct Frame {
     pub caption: String,
     pub marks: Vec<String>,
@@ -430,7 +424,6 @@ pub struct Frame {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Formula {
     /// A loan's monthly payment: `principal`, `rate` (% a year), `years`.
     LoanPayment,
@@ -450,7 +443,7 @@ pub enum Formula {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
-#[ts(export, rename = "ExplorableInput")]
+#[ts(rename = "ExplorableInput")]
 pub struct Input {
     /// The formula's name for it: `principal`, `rate`.
     pub name: String,
@@ -464,7 +457,6 @@ pub struct Input {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Bar {
     pub label: String,
     /// From 0 to 100, how long the bar is.
@@ -477,7 +469,6 @@ pub struct Bar {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Side {
     pub title: String,
     pub points: Vec<Rich>,
@@ -485,7 +476,6 @@ pub struct Side {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Square {
     pub red: bool,
     pub text: Rich,
@@ -493,7 +483,6 @@ pub struct Square {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Moment {
     /// Rough times only: "Friday afternoon", "9 October".
     pub when: String,
@@ -504,7 +493,6 @@ pub struct Moment {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Mark {
     None,
     Ink,
@@ -513,7 +501,6 @@ pub enum Mark {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Said {
     pub who: String,
     pub text: Rich,
@@ -522,7 +509,6 @@ pub struct Said {
 /// One arrow in a sequence: from one actor to another, by name.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct SequenceMessage {
     pub from: String,
     pub to: String,
@@ -534,7 +520,6 @@ pub struct SequenceMessage {
 /// One stage of a walk-through.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct StepCard {
     pub title: String,
     pub text: Rich,
@@ -543,7 +528,6 @@ pub struct StepCard {
 /// An axis of a quadrant: what its low and high ends mean.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct QuadrantAxis {
     pub low: String,
     pub high: String,
@@ -551,7 +535,6 @@ pub struct QuadrantAxis {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct QuadrantPoint {
     pub label: String,
     /// From 0, the low end, to 100, the high end.
@@ -562,7 +545,6 @@ pub struct QuadrantPoint {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct SpectrumPoint {
     pub label: String,
     /// From 0, the low end, to 100, the high end.
@@ -573,7 +555,6 @@ pub struct SpectrumPoint {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct TrendSeries {
     pub label: String,
     /// One for each of the trend's labels.
@@ -584,7 +565,6 @@ pub struct TrendSeries {
 /// A branch of a tree: the question at the top has no parent.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct TreeBranch {
     pub id: String,
     pub label: String,
@@ -599,7 +579,6 @@ pub struct TreeBranch {
 /// in (with `from`), or lines written to show the idea (without).
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Version {
     pub label: String,
     pub from: Option<String>,
@@ -611,7 +590,6 @@ pub struct Version {
 /// A note pinned to a line of an annotated excerpt.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct CodeNote {
     /// Where the line is among the excerpt's lines, from 0.
     pub line: u16,
@@ -620,7 +598,6 @@ pub struct CodeNote {
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct FunnelStage {
     pub label: String,
     /// How many reach it, in any unit, the same for every stage.
@@ -634,7 +611,6 @@ pub struct FunnelStage {
 /// session it heard. Numbered as the margin shows them.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Source {
     pub n: u8,
     pub title: String,

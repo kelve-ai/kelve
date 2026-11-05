@@ -18,8 +18,8 @@ pub struct Config {
     pub url: String,
     pub bind: SocketAddr,
     /// The local store: one SQLite file, in the data folder unless
-    /// `KELVE_STORE` says otherwise: one for each shared graph
-    /// (`store_name`).
+    /// `KELVE_STORE` says otherwise: one for each address of kelve's hosted
+    /// service (`store_name`).
     pub store: PathBuf,
     /// Seals the keys pasted in the app before they're stored.
     pub key: Key,
@@ -28,18 +28,11 @@ pub struct Config {
     /// The secret kelve and its command line share (`kelve open`, `kelve
     /// diff`), in a file only its owner can read.
     pub secret_file: PathBuf,
-    /// Keys the install is handed in its environment. They win over keys
-    /// pasted in the app.
-    pub env: EnvKeys,
-    /// Where kelve reaches each provider: their own APIs, unless a gateway
-    /// (or a test's stand-in) is set.
+    /// Where kelve reaches its hosted service: kelve.ai's, unless a test's
+    /// stand-in or another is set.
     pub endpoints: Endpoints,
     /// The person's time zone, as an offset from UTC: what "today" means.
     pub offset: FixedOffset,
-    /// Whether a development build may add to the real shared graph
-    /// (`KELVE_WRITE_REAL_GRAPH=1`). Without it, one built from a checkout
-    /// only reads the real graph, so trying kelve out never adds to it.
-    pub write_real_graph: bool,
     /// Claude Code's folder, whose settings hold the hook that tells it of
     /// notes left for it (`KELVE_CLAUDE_DIR`, else Claude Code's own
     /// `CLAUDE_CONFIG_DIR`, else `~/.claude`).
@@ -51,19 +44,6 @@ pub struct Config {
     /// (`KELVE_SKILLS`, else `~/.kelve/skills`). A project's skills are in
     /// its own `.kelve/skills/`.
     pub skills_dir: PathBuf,
-    /// How often a lesson that fits is held back from the agent, to measure
-    /// the lessons, in thousandths (`KELVE_HOLD_BACK`, else 50: one in
-    /// twenty), once it's been given `hold_back_from` times across everyone.
-    /// Tests and the example's recording turn it off.
-    pub hold_back: i64,
-    /// How many times a lesson must have been given, across every account,
-    /// before it's ever held back: a new or rare lesson's every use is
-    /// evidence of its own (100; tests may lower it).
-    pub hold_back_from: u32,
-    /// How long a lesson the agent wrote waits before it leaves for the
-    /// shared graph, so the person can stop it, in seconds
-    /// (`KELVE_LESSON_HOLD`, else a day). For trying lessons out.
-    pub lesson_hold: i64,
     /// Where kelve asks for its newest release, once a day: GitHub's
     /// newest release of its repository, or `KELVE_UPDATES`'s address.
     /// None with `KELVE_UPDATES=off`, and for a development build that
@@ -75,7 +55,7 @@ pub struct Config {
     pub counts_off: Option<String>,
 }
 
-/// The shared graph people use.
+/// kelve's hosted service.
 pub const REAL_GRAPH: &str = "https://graph.kelve.ai";
 
 impl std::fmt::Debug for Config {
@@ -87,33 +67,18 @@ impl std::fmt::Debug for Config {
     }
 }
 
-/// Keys the install is handed in its environment.
-#[derive(Clone, Default)]
-pub struct EnvKeys {
-    /// The key kelve adds to the shared graph with. Signing in, which
-    /// gives a person's kelve one, comes with hosting.
-    pub graph: Option<String>,
-}
-
-impl std::fmt::Debug for EnvKeys {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("EnvKeys")
-            .field("graph", &self.graph.is_some())
-            .finish()
-    }
-}
-
 /// Where kelve reaches each service.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Endpoints {
-    /// The shared knowledge graph; empty for none.
+    /// kelve's hosted service (`KELVE_GRAPH_URL`, named for the shared
+    /// graph it once was); empty for none.
     pub graph: String,
 }
 
 impl Default for Endpoints {
     fn default() -> Self {
         Endpoints {
-            // A build can say where the graph is when it's made.
+            // A build can say where the service is when it's made.
             // `KELVE_GRAPH_URL` still wins.
             graph: option_env!("KELVE_DEFAULT_GRAPH_URL")
                 .unwrap_or(REAL_GRAPH)
@@ -182,7 +147,7 @@ impl Config {
             .map(PathBuf::from)
             .unwrap_or_else(secret_path);
         let mut endpoints = Endpoints::default();
-        // `off` uses no shared graph: kelve shows only what it has kept.
+        // `off` uses no hosted service: no verified runs, no page.
         if let Some(value) = var("KELVE_GRAPH_URL") {
             endpoints.graph = if value == "off" {
                 String::new()
@@ -217,29 +182,6 @@ impl Config {
                 .join(".kelve")
                 .join("skills")
         });
-        let hold_back = match var("KELVE_HOLD_BACK") {
-            Some(v) => v
-                .parse::<i64>()
-                .ok()
-                .filter(|n| (0..=1000).contains(n))
-                .ok_or(ConfigError::Invalid {
-                    name: "KELVE_HOLD_BACK",
-                    why: "use a whole number of thousandths, from 0 to 1000, like 50".into(),
-                })?,
-            None => 50,
-        };
-        let lesson_hold = match var("KELVE_LESSON_HOLD") {
-            Some(v) => v
-                .parse::<i64>()
-                .ok()
-                .filter(|n| (0..=30 * 24 * 60 * 60).contains(n))
-                .ok_or(ConfigError::Invalid {
-                    name: "KELVE_LESSON_HOLD",
-                    why: "use a whole number of seconds, from 0 to 30 days, like 86400 for a day"
-                        .into(),
-                })?,
-            None => kelve_core::lesson::HOLD_SECS,
-        };
         let updates = crate::updates::source(var("KELVE_UPDATES").as_deref()).map_err(|why| {
             ConfigError::Invalid {
                 name: "KELVE_UPDATES",
@@ -252,9 +194,6 @@ impl Config {
             claude_dir,
             agents_home,
             skills_dir,
-            hold_back,
-            hold_back_from: kelve_core::lesson::HOLD_BACK_FROM,
-            lesson_hold,
             url,
             bind,
             store: var("KELVE_STORE")
@@ -263,17 +202,9 @@ impl Config {
             key,
             data,
             secret_file,
-            env: env_keys()?,
             endpoints,
             offset,
-            write_real_graph: var("KELVE_WRITE_REAL_GRAPH").as_deref() == Some("1"),
         })
-    }
-
-    /// Whether kelve may add to the shared graph it reads: always, but for
-    /// a development build pointed at the real one, unless it's told to.
-    pub fn may_write_graph(&self) -> bool {
-        !cfg!(debug_assertions) || self.write_real_graph || !is_real_graph(&self.endpoints.graph)
     }
 
     /// The host people see in links: `kelve.localhost:4600`.
@@ -321,13 +252,6 @@ fn counts_off(dnt: Option<String>, telemetry: Option<String>) -> Option<String> 
     } else {
         None
     }
-}
-
-/// The keys in the environment.
-fn env_keys() -> Result<EnvKeys, ConfigError> {
-    Ok(EnvKeys {
-        graph: var("KELVE_GRAPH_KEY"),
-    })
 }
 
 /// Where kelve keeps its files: `KELVE_DATA`, or beside the secret
@@ -480,35 +404,28 @@ pub fn test_config() -> Config {
         key: Key::generate(),
         secret_file: data.join("secret"),
         data: data.clone(),
-        env: EnvKeys::default(),
-        // Tests never reach the real shared graph.
+        // Tests never reach the real hosted service.
         endpoints: Endpoints {
             graph: String::new(),
         },
         offset: FixedOffset::east_opt(0)
             .unwrap_or_else(|| *chrono::Utc::now().fixed_offset().offset()),
-        write_real_graph: false,
         // Never the person's own Claude Code settings.
         claude_dir: data.join("claude"),
         agents_home: data.join("home"),
         // Never the person's own skills.
         skills_dir: data.join("skills"),
-        hold_back: 0,
-        hold_back_from: kelve_core::lesson::HOLD_BACK_FROM,
-        lesson_hold: kelve_core::lesson::HOLD_SECS,
         // Never GitHub.
         updates: None,
         counts_off: None,
     }
 }
 
-/// Whether an address is the real shared graph's.
-/// The store's file in the data folder for a shared graph's address:
-/// `kelve.db` for the graph a build reads unless told otherwise, and
+/// The store's file in the data folder for the hosted service's address:
+/// `kelve.db` for the one a build uses unless told otherwise, and
 /// `kelve-<host>-<port>.db` for any other, or `kelve-off.db` for none. Each
-/// graph has its own sign-in and its own ideas, entries and lessons, so
-/// changing `KELVE_GRAPH_URL` changes graphs whole, and changing it back
-/// finds everything as it was.
+/// has its own sign-in, so changing `KELVE_GRAPH_URL` changes everything
+/// whole, and changing it back finds everything as it was.
 pub fn store_name(graph: &str) -> String {
     let same = |a: &str, b: &str| {
         a.trim_end_matches('/')
@@ -550,31 +467,10 @@ pub fn store_name(graph: &str) -> String {
     }
 }
 
-fn is_real_graph(url: &str) -> bool {
-    let host = |url: &str| url::Url::parse(url).ok()?.host_str().map(str::to_string);
-    host(url).is_some_and(|h| Some(h) == host(REAL_GRAPH))
-}
-
 #[cfg(test)]
 mod tests {
     #![allow(clippy::expect_used)]
     use super::*;
-
-    #[test]
-    fn a_development_build_writes_to_the_real_graph_only_when_told() {
-        let mut config = test_config();
-        config.endpoints.graph = "http://127.0.0.1:4620".into();
-        assert!(
-            config.may_write_graph(),
-            "a graph of one's own is always fine"
-        );
-        config.endpoints.graph = REAL_GRAPH.into();
-        assert_eq!(config.may_write_graph(), !cfg!(debug_assertions));
-        config.endpoints.graph = "https://graph.kelve.ai/".into();
-        assert_eq!(config.may_write_graph(), !cfg!(debug_assertions));
-        config.write_real_graph = true;
-        assert!(config.may_write_graph());
-    }
 
     #[test]
     fn each_graph_has_a_store_of_its_own() {

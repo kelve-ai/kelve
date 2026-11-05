@@ -1,16 +1,17 @@
 //! The weekly count of how kelve was used, which the person may choose to share
-//! with the shared graph. kelve counts a few things a day, here, whether or not
-//! it's shared: what was opened, by kind; entries read, and how many came from
-//! the shared graph; links followed, and how many led to an entry already
-//! written; notes written, by where they're kept; jobs the agent did; files
-//! read plainly; how lessons went; and the day an agent first said hello. Only
-//! numbers: never what was opened, read or written, and nothing that says who.
-//! What goes with them is the install's random ID, made when the person says
-//! yes and deleted when they stop, so kelves can be counted and seen to come
-//! back; never with the graph's key or a reading token. Nothing goes until the
-//! person says yes, or ever with `DO_NOT_TRACK` or `KELVE_TELEMETRY=off`; the
-//! settings page shows exactly what would go, and each week sent is kept, as
-//! sent, for them to read.
+//! with kelve's hosted service. kelve counts a few things a day, here, whether
+//! or not it's shared: what was opened, by kind; notes written, by where
+//! they're kept; jobs the agent did; and the day an agent first said hello.
+//! Only numbers: never what was opened, read or written, and nothing that says
+//! who. What goes with them is the install's random ID, made when the person
+//! says yes and deleted when they stop, so kelves can be counted and seen to
+//! come back; never with their account's key. Nothing goes until the person
+//! says yes, or ever with `DO_NOT_TRACK` or `KELVE_TELEMETRY=off`; the settings page shows exactly what would go, and
+//! each week sent is kept, as sent, for them to read.
+//!
+//! The counts go to version 1 of the hosted service's API (`/v1/counts`), as
+//! they did when it was the shared graph, until it has somewhere newer for
+//! them.
 
 use chrono::{Datelike, Duration, NaiveDate};
 use kelve_core::views::{CountSent, CountsView};
@@ -24,25 +25,12 @@ pub const KINDS: &[&str] = &[
     "opened.folder",
     "opened.file",
     "opened.change",
-    "entries.read",
-    "links.followed",
-    "links.written",
     "notes.you",
     "notes.work",
     "notes.agent",
-    "entries.graph",
     "jobs.done",
-    "files.plainly",
-    "lessons.asked",
-    "lessons.written",
-    "lessons.given",
-    "lessons.held",
-    "lessons.didnt",
     "agent.connected",
 ];
-
-/// How many links in a day make a deep one.
-const DEEP: i64 = 3;
 
 /// How often kelve looks for a week to send.
 const EVERY: std::time::Duration = std::time::Duration::from_secs(6 * 60 * 60);
@@ -103,16 +91,12 @@ pub async fn report(app: &Shared, week: NaiveDate) -> ApiResult<Counts> {
     let first = kelve_store::counts::first_day(&mut conn)
         .await?
         .and_then(|d| d.parse::<NaiveDate>().ok());
-    let mut deep = std::collections::BTreeSet::new();
     let mut counts = std::collections::BTreeMap::new();
     let mut by_day: std::collections::BTreeMap<String, std::collections::BTreeMap<String, u32>> =
         std::collections::BTreeMap::new();
     for (day, what, n) in rows {
         if !KINDS.contains(&what.as_str()) {
             continue;
-        }
-        if what == "links.followed" && n >= DEEP {
-            deep.insert(day.clone());
         }
         let n = u32::try_from(n).unwrap_or(u32::MAX);
         *counts.entry(what.clone()).or_insert(0u32) += n;
@@ -129,8 +113,9 @@ pub async fn report(app: &Shared, week: NaiveDate) -> ApiResult<Counts> {
         platform: platform().into(),
         weeks_in,
         days: u8::try_from(by_day.len()).unwrap_or(7),
-        deep_days: u8::try_from(deep.len()).unwrap_or(7),
-        contributing: app.settings().contribute,
+        // What only the shared graph counted: deep reading, and adding to it.
+        deep_days: 0,
+        contributing: false,
         counts,
         by_day,
     })
@@ -173,8 +158,8 @@ pub async fn send_due(app: &Shared) -> ApiResult<Option<String>> {
         let fortnight = (today - Duration::days(14)).to_string();
         kelve_store::counts::forget_keys(&mut conn, &fortnight).await?;
     }
-    // Only once the person has joined the graph, and never with their key.
-    let (Some(graph), true) = (app.graph.clone(), app.graph_reader().is_some()) else {
+    // Never with the key of their account on kelve.ai.
+    let Some(graph) = app.graph.clone() else {
         return Ok(None);
     };
     let settings = app.settings();

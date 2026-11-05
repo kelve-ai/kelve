@@ -480,7 +480,7 @@ pub async fn view(app: &Shared, id: i64) -> ApiResult<DebriefView> {
             return Ok(view);
         }
         None => {
-            view.folders = folders(&l, &[]);
+            view.folders = folders(&l.files, &l.yours, &[]);
             return Ok(view);
         }
     };
@@ -592,7 +592,7 @@ pub async fn view(app: &Shared, id: i64) -> ApiResult<DebriefView> {
         });
     }
 
-    view.folders = folders(&l, &decisions);
+    view.folders = folders(&l.files, &l.yours, &decisions);
     view.decisions = decisions;
     view.on_send = on_send(&view, view.state == DebriefState::Sent);
     Ok(view)
@@ -620,9 +620,13 @@ async fn latest_research(
 
 /// Every file of the change, by folder: the folders with decisions first,
 /// the top folder last.
-fn folders(l: &Loaded, decisions: &[DecisionView]) -> Vec<DebriefFolder> {
+fn folders(
+    handed: &[HandedFile],
+    yours: &HashSet<String>,
+    decisions: &[DecisionView],
+) -> Vec<DebriefFolder> {
     let mut by: BTreeMap<String, Vec<DebriefFile>> = BTreeMap::new();
-    for f in &l.files {
+    for f in handed {
         let folder = match f.path.rsplit_once('/') {
             Some((dir, _)) => format!("{dir}/"),
             None => String::new(),
@@ -637,7 +641,7 @@ fn folders(l: &Loaded, decisions: &[DecisionView]) -> Vec<DebriefFolder> {
             path: f.path.clone(),
             added: u32::try_from(f.added).unwrap_or(0),
             removed: u32::try_from(f.removed).unwrap_or(0),
-            yours: l.yours.contains(&f.path),
+            yours: yours.contains(&f.path),
             decisions: ns,
             shown: f.skip.is_none(),
         });
@@ -651,7 +655,7 @@ fn folders(l: &Loaded, decisions: &[DecisionView]) -> Vec<DebriefFolder> {
         })
         .collect();
     out.sort_by_key(|(with, name, _)| (!with, name.is_empty(), name.clone()));
-    let all = l.files.len() <= OPEN_FOLDERS;
+    let all = handed.len() <= OPEN_FOLDERS;
     out.into_iter()
         .enumerate()
         .map(|(i, (_, name, mut files))| {
@@ -1160,13 +1164,17 @@ pub async fn change(app: &Shared, id: i64) -> ApiResult<DebriefChangeView> {
         files: v.files,
         added: v.added,
         removed: v.removed,
-        folders: all_folders(&l, &v.decisions),
+        folders: all_folders(&l.files, &l.yours, &v.decisions),
     })
 }
 
 /// Every file, by folder, none left out: the change view lists them all.
-fn all_folders(l: &Loaded, decisions: &[DecisionView]) -> Vec<DebriefFolder> {
-    let mut out = folders(l, decisions);
+fn all_folders(
+    handed: &[HandedFile],
+    yours: &HashSet<String>,
+    decisions: &[DecisionView],
+) -> Vec<DebriefFolder> {
+    let mut out = folders(handed, yours, decisions);
     // Listed in full, past what the debrief shows.
     for f in &mut out {
         if f.files.len() < f.count as usize {
@@ -1175,8 +1183,7 @@ fn all_folders(l: &Loaded, decisions: &[DecisionView]) -> Vec<DebriefFolder> {
             } else {
                 f.name.clone()
             };
-            let mut all: Vec<DebriefFile> = l
-                .files
+            let mut all: Vec<DebriefFile> = handed
                 .iter()
                 .filter(|h| match h.path.rsplit_once('/') {
                     Some((dir, _)) => format!("{dir}/") == name,
@@ -1186,7 +1193,7 @@ fn all_folders(l: &Loaded, decisions: &[DecisionView]) -> Vec<DebriefFolder> {
                     path: h.path.clone(),
                     added: u32::try_from(h.added).unwrap_or(0),
                     removed: u32::try_from(h.removed).unwrap_or(0),
-                    yours: l.yours.contains(&h.path),
+                    yours: yours.contains(&h.path),
                     decisions: decisions
                         .iter()
                         .filter(|d| d.path.as_deref() == Some(h.path.as_str()))
@@ -1213,7 +1220,43 @@ pub async fn diff(app: &Shared, id: i64, path: &str) -> ApiResult<DebriefDiffVie
         .iter()
         .find(|f| f.path == path)
         .ok_or_else(|| ApiError::not_found("That file isn't in this change."))?;
-    let yours = l.yours.contains(path);
+    Ok(file_diff(file, l.yours.contains(path), |lines| {
+        let mut notes = Vec::new();
+        for d in v.decisions.iter() {
+            let Some(p) = parsed_decision(&l, d.n) else {
+                continue;
+            };
+            let Some(first) = p
+                .lines
+                .iter()
+                .find(|x| x.path == path)
+                .and_then(|x| x.ranges.first().map(|r| r.from).or(Some(1)))
+            else {
+                continue;
+            };
+            let at = lines
+                .iter()
+                .position(|x| x.kind != DebriefLineKind::Removed && x.n.is_some_and(|n| n >= first))
+                .unwrap_or(0);
+            notes.push(DiffNote {
+                at: u32::try_from(at + 1).unwrap_or(1),
+                n: d.n,
+                title: d.title.clone(),
+                status: d.status,
+            });
+        }
+        notes
+    }))
+}
+
+/// A file as handed over, for the change view: whole, with the lines it
+/// took out where they were, the person's own edits after as theirs, and
+/// the notes beside its lines.
+fn file_diff(
+    file: &HandedFile,
+    yours: bool,
+    notes: impl FnOnce(&[DebriefLine]) -> Vec<DiffNote>,
+) -> DebriefDiffView {
     let kind = if yours {
         "your edit"
     } else {
@@ -1225,33 +1268,10 @@ pub async fn diff(app: &Shared, id: i64, path: &str) -> ApiResult<DebriefDiffVie
     };
     let shown = file.skip.is_none();
     let lines = if shown { whole(file) } else { Vec::new() };
-    let mut notes = Vec::new();
-    for d in v.decisions.iter() {
-        let Some(p) = parsed_decision(&l, d.n) else {
-            continue;
-        };
-        let Some(first) = p
-            .lines
-            .iter()
-            .find(|x| x.path == path)
-            .and_then(|x| x.ranges.first().map(|r| r.from).or(Some(1)))
-        else {
-            continue;
-        };
-        let at = lines
-            .iter()
-            .position(|x| x.kind != DebriefLineKind::Removed && x.n.is_some_and(|n| n >= first))
-            .unwrap_or(0);
-        notes.push(DiffNote {
-            at: u32::try_from(at + 1).unwrap_or(1),
-            n: d.n,
-            title: d.title.clone(),
-            status: d.status,
-        });
-    }
-    Ok(DebriefDiffView {
-        path: path.to_string(),
-        lang: kelve_core::code::language(path).map(str::to_string),
+    let notes = notes(&lines);
+    DebriefDiffView {
+        path: file.path.clone(),
+        lang: kelve_core::code::language(&file.path).map(str::to_string),
         kind: kind.into(),
         shown,
         lines: lines
@@ -1264,7 +1284,53 @@ pub async fn diff(app: &Shared, id: i64, path: &str) -> ApiResult<DebriefDiffVie
             })
             .collect(),
         notes,
+    }
+}
+
+/// What was handed over, as kept, while there's no debrief of it: its
+/// files, and those the person changed after.
+async fn handed(app: &Shared, id: i64) -> ApiResult<(Handover, Vec<HandedFile>, HashSet<String>)> {
+    let mut conn = app.db.acquire().await?;
+    let h = handovers::get(&mut conn, id).await?.ok_or_else(|| {
+        ApiError::not_found("There's no such change. Go back to home to see your agent's work.")
+    })?;
+    let files = handovers::files(&mut conn, id).await?;
+    let yours = kelve_store::candidates::edits_after(&mut conn, id)
+        .await?
+        .into_iter()
+        .map(|e| e.path)
+        .collect();
+    Ok((h, files, yours))
+}
+
+/// What was handed over, file by file, while there's no debrief of it:
+/// the change view's list, with no decisions.
+pub async fn handover_change(app: &Shared, id: i64) -> ApiResult<DebriefChangeView> {
+    let (h, files, yours) = handed(app, id).await?;
+    let count = |n: i64| u32::try_from(n).unwrap_or(0);
+    let title = [h.title.as_str(), h.change.as_str()]
+        .into_iter()
+        .find(|t| !t.trim().is_empty())
+        .unwrap_or("Your agent's work")
+        .to_string();
+    Ok(DebriefChangeView {
+        id: id.to_string(),
+        title,
+        files: count(h.files),
+        added: count(h.added),
+        removed: count(h.removed),
+        folders: all_folders(&files, &yours, &[]),
     })
+}
+
+/// One file of what was handed over, while there's no debrief of it.
+pub async fn handover_diff(app: &Shared, id: i64, path: &str) -> ApiResult<DebriefDiffView> {
+    let (_, files, yours) = handed(app, id).await?;
+    let file = files
+        .iter()
+        .find(|f| f.path == path)
+        .ok_or_else(|| ApiError::not_found("That file isn't in this change."))?;
+    Ok(file_diff(file, yours.contains(path), |_| Vec::new()))
 }
 
 /// A file as handed over, whole: its text with the lines its hunks took out

@@ -27,7 +27,6 @@ use super::{Block, Body, Entry, Fold, Part};
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum RevisionKind {
     /// Only the blocks found wrong, replaced or removed.
     Fix,
@@ -51,7 +50,7 @@ impl RevisionKind {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
 #[serde(tag = "op", rename_all = "camelCase")]
-#[ts(export, rename = "BlockOp")]
+#[ts(rename = "BlockOp")]
 pub enum Op {
     /// The block with this block's id, replaced by it.
     Replace { block: Block },
@@ -79,7 +78,6 @@ impl Op {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum AskKind {
     /// It needs a worked example.
     Example,

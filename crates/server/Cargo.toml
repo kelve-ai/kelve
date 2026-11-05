@@ -1,6 +1,6 @@
 [package]
 name = "kelve-server"
-description = "kelve's local service: marking what the person opens, writing the entries it leads to, the reader's API, signing in, and the web app itself."
+description = "kelve's local service: the agent's jobs, debriefs, skills and learning, the hook, notes, the API, signing in, and the web app itself."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

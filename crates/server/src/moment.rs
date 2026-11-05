@@ -6,12 +6,10 @@
 //! so kelve knows what work it did. As it opens something in kelve: that
 //! its session did, and the handover made then is its session's. As it
 //! commits: what the person changed in work it handed over (`handover`).
-//! As it hands work over, or its turn ends: to show the work in kelve, and
-//! to finish reading what it opened there (`handoff`). For an agent that
-//! can't be given text at the moment (Antigravity), what's kept for it.
-//!
-//! Lessons (`lessons`) hang off the same moments: each is one call below,
-//! marked as lessons', so they can be taken out whole.
+//! As it hands work over, or its turn ends: to show the work in kelve
+//! (`handoff`). Through it all, the person's skills, as they apply
+//! (`agent_loop::deliver`). For an agent that can't be given text at the
+//! moment (Antigravity), what's kept for it.
 
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
@@ -22,7 +20,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::auth::Agent;
 use crate::error::{ApiError, ApiResult};
-use crate::lessons;
 use crate::state::Shared;
 
 /// A moment in the agent's work, as its hook saw it.
@@ -50,12 +47,6 @@ pub struct MomentIn {
     /// The agent can't be given text now: keep it until its next `next`.
     #[serde(default)]
     pub hold: bool,
-    /// For an edit: what was written, to match what it's about.
-    #[serde(default)]
-    pub written: Option<String>,
-    /// For an edit: the text it replaced, when the agent's tool says.
-    #[serde(default)]
-    pub replaced: Option<String>,
     /// Work the command handed over, when it did.
     #[serde(default)]
     pub handover: Option<kelve_core::hook::Handover>,
@@ -99,7 +90,6 @@ pub async fn moment(
     // It opened something in kelve: kept for its session, and nothing more.
     if m.what == "opened" {
         if let Some(id) = m.opened {
-            crate::handoff::opened(&app, session, id).await?;
             crate::handover::of_session(&app, id, session).await?;
             // The agent loop's: the debrief and the past task are its session's.
             if let Err(e) = crate::agent_loop::debrief::in_session(&app, id, session).await {
@@ -118,28 +108,25 @@ pub async fn moment(
         .and_then(kelve_engine::git::root_of)
         .map(|r| r.display().to_string())
         .unwrap_or_else(|| m.cwd.clone());
-    // The folder the agent works in, as kelve knows it: one the person
-    // opened, else one walked for what its files import, else one walked
-    // now, in the background, the first time the hook meets it. Never one
-    // around the repository it's in, as a worktree inside the project is:
-    // what other agents write there isn't this one's work.
+    // The folder the agent works in, as kelve knows it: one opened in
+    // kelve, else the repository it's in. Never one around the repository
+    // it's in, as a worktree inside the project is: what other agents
+    // write there isn't this one's work.
     let repo = kelve_engine::git::root_of(Path::new(&cwd));
-    let read = {
+    let known = {
         let mut conn = app.db.acquire().await?;
         kelve_store::reader::root_of(&mut conn, &cwd)
             .await?
             .filter(|k| !holds_another(k, repo.as_deref()))
     };
-    let read_root = match read {
-        Some(root) => Some(root),
-        // Lessons'.
-        None => lessons::walked_root(&app, &cwd, repo.as_deref()).await?,
-    };
+    let read_root = known.or_else(|| repo.as_ref().map(|r| r.display().to_string()));
+    // Files it reads or edits anywhere else are its work in the folder it
+    // works in.
     let root = read_root.clone().unwrap_or_else(|| cwd.clone());
     let agent = m.agent.as_deref().unwrap_or_default().trim();
     let before = {
         let mut conn = app.db.acquire().await?;
-        kelve_store::lessons::moment_now(&mut conn, session).await?
+        kelve_store::moments::moment_now(&mut conn, session).await?
     };
     // The agent loop's: what was committed since the last handover here,
     // however it was, is compared with it.
@@ -150,22 +137,9 @@ pub async fn moment(
         "read" | "edit" => match &m.file {
             Some(file) => {
                 let edit = m.what == "edit";
-                touch(&app, session, file, edit, read_root.as_deref()).await?;
-                // The agent loop's: the skill for this kind of work, once.
-                let skills = crate::agent_loop::deliver::on_file(&app, session, &cwd, file).await?;
-                // Lessons'.
-                let lessons = lessons::on_file(
-                    &app,
-                    session,
-                    agent,
-                    file,
-                    edit,
-                    m.written.as_deref(),
-                    m.replaced.as_deref(),
-                    read_root.as_deref(),
-                )
-                .await?;
-                joined([skills, lessons])
+                touch(&app, session, file, edit, Some(&root)).await?;
+                // The skill for this kind of work, once.
+                crate::agent_loop::deliver::on_file(&app, session, &cwd, file).await?
             }
             None => String::new(),
         },
@@ -173,21 +147,16 @@ pub async fn moment(
             Some(command) => {
                 // What the command wrote, first: a command that writes a file
                 // and runs the tests, as agents' do, passes with it.
-                let wrote =
-                    shell_writes(&app, session, agent, read_root.as_deref(), before).await?;
+                shell_writes(&app, session, read_root.as_deref(), before).await?;
                 if command.contains("git commit") {
                     crate::handover::on_commit(&app, session, &cwd).await?;
                 }
-                // Lessons'.
-                let given = lessons::on_ran(&app, session, agent, &root, command).await?;
-                joined([wrote, given])
+                String::new()
             }
             None => String::new(),
         },
         // The turn ends, or, for an agent that can't say so, the person
-        // writes again: what the stretch taught, asked once (lessons'); work
-        // it did, to show if it's done; and what it opened, to finish
-        // reading.
+        // writes again: work it did, to show if it's done.
         "end" | "prompt" => {
             if let Some(said) = m.prompt.as_deref().filter(|_| m.what == "prompt") {
                 kept_message(&app, session, agent, &cwd, said).await?;
@@ -201,32 +170,16 @@ pub async fn moment(
                 "prompt" => crate::agent_loop::deliver::at_prompt(&app, session, &cwd).await?,
                 _ => crate::agent_loop::deliver::waiting(&app, session).await?,
             };
-            joined([
-                skills,
-                lessons::at_turn_end(&app, session).await?,
-                crate::handoff::done(&app, session).await?,
-                crate::handoff::reading(&app, session).await?,
-            ])
+            joined([skills, crate::handoff::done(&app, session).await?])
         }
         "failed" => {
-            let command = m.command.clone().unwrap_or_default();
-            let wrote = shell_writes(&app, session, agent, read_root.as_deref(), before).await?;
-            // Lessons'.
-            let failed = lessons::on_failed(
-                &app,
-                session,
-                agent,
-                &root,
-                &command,
-                m.problem.as_deref().unwrap_or_default(),
-            )
-            .await?;
-            joined([wrote, failed])
+            shell_writes(&app, session, read_root.as_deref(), before).await?;
+            String::new()
         }
         // About to call its model: what was kept for it.
         "next" => {
             let mut conn = app.db.acquire().await?;
-            kelve_store::lessons::take_held(&mut conn, session)
+            kelve_store::moments::take_held(&mut conn, session)
                 .await?
                 .join("\n\n")
         }
@@ -239,7 +192,7 @@ pub async fn moment(
     };
     if m.hold && !text.is_empty() {
         let mut conn = app.db.acquire().await?;
-        kelve_store::lessons::hold_for(&mut conn, session, &text).await?;
+        kelve_store::moments::hold_for(&mut conn, session, &text).await?;
         return Ok(Json(MomentOut::default()));
     }
     Ok(Json(MomentOut { text }))
@@ -288,20 +241,9 @@ pub(crate) fn new_in(root: &str, file: &str) -> Option<String> {
     (!rel.is_empty() && kelve_engine::walk::by_name(&rel).is_none()).then_some(rel)
 }
 
-/// Where a file is, as kelve knows it: in a folder it read, or a new one in
-/// the folder the agent works in.
-async fn place(
-    app: &Shared,
-    file: &str,
-    in_root: Option<&str>,
-) -> ApiResult<Option<(String, String)>> {
-    let read = {
-        let mut conn = app.db.acquire().await?;
-        kelve_store::reader::read_at(&mut conn, file).await?
-    };
-    Ok(read
-        .map(|(root, path, _)| (root, path))
-        .or_else(|| Some((in_root?.to_string(), new_in(in_root?, file)?))))
+/// Where a file is: in the folder the agent works in, by its path there.
+fn place(file: &str, in_root: Option<&str>) -> Option<(String, String)> {
+    Some((in_root?.to_string(), new_in(in_root?, file)?))
 }
 
 /// The agent read or edited a file: kept for its session, a day, with when
@@ -313,9 +255,9 @@ async fn touch(
     edit: bool,
     in_root: Option<&str>,
 ) -> ApiResult<()> {
-    if let Some((root, path)) = place(app, file, in_root).await? {
+    if let Some((root, path)) = place(file, in_root) {
         let mut conn = app.db.acquire().await?;
-        kelve_store::lessons::touch(&mut conn, session, &root, &path, edit).await?;
+        kelve_store::moments::touch(&mut conn, session, &root, &path, edit).await?;
     }
     Ok(())
 }
@@ -325,22 +267,20 @@ static CUT_SHORT: LazyLock<Mutex<std::collections::HashSet<String>>> =
     LazyLock::new(Default::default);
 
 /// What the agent wrote through its shell since its last moment, however it
-/// wrote it: each file git sees changed, or, in a folder that isn't a
-/// repository, each file kelve walks, written since. Each is a file the
-/// agent wrote over whole, as an edit is, unless only its whitespace
-/// changed, as a formatter changes it. The person writing in the same
-/// moment can't be told apart.
+/// wrote it: each file git sees changed, or, in a folder opened in kelve
+/// that isn't a repository, each file kelve walks, written since. Each is
+/// kept as edited. The person writing in the same moment can't be told
+/// apart.
 async fn shell_writes(
     app: &Shared,
     session: &str,
-    agent: &str,
     root: Option<&str>,
     since: Option<i64>,
-) -> ApiResult<String> {
-    // Only in a folder kelve has read: an agent working anywhere else costs
+) -> ApiResult<()> {
+    // Only in a folder kelve knows: an agent working anywhere else costs
     // no walk.
     let (Some(root), Some(since)) = (root, since) else {
-        return Ok(String::new());
+        return Ok(());
     };
     let dir = std::path::PathBuf::from(root);
     let found = tokio::task::spawn_blocking(move || kelve_engine::git::written_since(&dir, since))
@@ -350,7 +290,7 @@ async fn shell_writes(
         Ok(found) => found,
         Err(e) => {
             tracing::debug!(error = %e, "couldn't look for what the shell wrote");
-            return Ok(String::new());
+            return Ok(());
         }
     };
     if found.more
@@ -364,40 +304,16 @@ async fn shell_writes(
             "a folder has more files than kelve looks through for what the shell wrote; the rest aren't seen"
         );
     }
-    let mut said = Vec::new();
     for file in found.files {
         let file = file.display().to_string();
-        // Files kelve has read, and new ones the agent made in the folder;
-        // never kelve's own, as what it keeps of what it read.
-        let Some((at, path)) = place(app, &file, Some(root)).await? else {
+        // New files the agent made in the folder too; never kelve's own.
+        let Some((_, path)) = place(&file, Some(root)) else {
             continue;
         };
         if crate::reader::is_kelves(&path) {
             continue;
         }
-        let Ok(now) = kelve_engine::read::read(Path::new(&at), &path) else {
-            continue;
-        };
-        // Lessons'.
-        if lessons::reformatted(app, session, &at, &path, &now.text).await? {
-            continue;
-        }
         touch(app, session, &file, true, Some(root)).await?;
-        // Lessons'.
-        let text = lessons::on_file(
-            app,
-            session,
-            agent,
-            &file,
-            true,
-            Some(&now.text),
-            None,
-            Some(root),
-        )
-        .await?;
-        if !text.is_empty() {
-            said.push(text);
-        }
     }
-    Ok(said.join("\n"))
+    Ok(())
 }

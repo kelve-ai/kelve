@@ -3,7 +3,7 @@
 //! scores, the person's provider keys, and verified runs, from the offer
 //! to the score. Only the person asks: every route takes `Me`.
 //!
-//! Signing in is as for the shared graph (`api::graph`, RFC 8252): kelve
+//! Signing in follows RFC 8252, as signing in to the shared graph did: kelve
 //! listens on a port of its own for one sign-in, sends the person's
 //! browser to kelve.ai with a PKCE challenge, and swaps the code that
 //! comes back, with the verifier only it holds, for a key of its own.
@@ -20,7 +20,7 @@ use kelve_core::hosted::{
     AgentChoice, CredentialKind, EstimateView, HandleView, HostedView, KindChoice, ModelChoice,
     OfferView, RunState, RunView, ScoreView, TaskSquare, credential_problem, provider_name,
 };
-use kelve_core::views::{GraphSignIn, ServerEvent};
+use kelve_core::views::{HostedSignIn, ServerEvent};
 use kelve_graph_api::v2::client::Client;
 use kelve_graph_api::v2::{self as v2, handle, tar};
 use kelve_graph_api::{SignInCode, pkce_challenge};
@@ -50,7 +50,7 @@ pub async fn sign_in(
     State(app): State<Shared>,
     _me: Me,
     with: Option<Json<SignInWith>>,
-) -> ApiResult<Json<GraphSignIn>> {
+) -> ApiResult<Json<HostedSignIn>> {
     let provider = with.and_then(|Json(w)| w.provider);
     if let Some(p) = provider.as_deref()
         && !matches!(p, "github" | "google")
@@ -107,7 +107,7 @@ pub async fn sign_in(
         old.abort();
     }
     app.publish(ServerEvent::Settings);
-    Ok(Json(GraphSignIn { address }))
+    Ok(Json(HostedSignIn { address }))
 }
 
 /// Stops waiting for a sign-in the person gave up on.

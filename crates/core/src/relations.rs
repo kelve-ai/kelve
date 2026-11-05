@@ -12,7 +12,6 @@ use crate::ideas::key;
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum RelationKind {
     /// To understand how this works, you need that first: going down.
     RestsOn,
@@ -75,7 +74,6 @@ impl RelationKind {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum RelationState {
     /// Sent, not yet reviewed.
     #[default]

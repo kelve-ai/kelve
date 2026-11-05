@@ -12,17 +12,12 @@ pub mod checking;
 pub mod checks;
 pub mod counts;
 pub mod debriefs;
-pub mod entries;
-pub mod follows;
 pub mod handovers;
 pub mod home;
 pub mod hosted;
 pub mod jobs;
-pub mod lessons;
-pub mod marks;
+pub mod moments;
 pub mod reader;
-pub mod relations;
-pub mod sends;
 pub mod settings;
 pub mod skills;
 pub mod updates;
@@ -205,7 +200,7 @@ async fn copy_aside(pool: &Pool, path: &Path) -> Result<()> {
 
 /// What Delete everything empties: every table but those in [`KEPT`].
 /// Children before what they point at.
-const EVERYTHING: [&str; 57] = [
+const EVERYTHING: [&str; 30] = [
     "skill_edits",
     "skills_given",
     "hosted_runs",
@@ -224,42 +219,15 @@ const EVERYTHING: [&str; 57] = [
     "parts",
     "skills",
     "jobs",
-    "marks",
-    "entries",
-    "ideas",
-    "idea_relations",
     "opened",
-    "read_files",
-    "built_on",
     "secrets",
     "counts",
     "counted",
     "counts_sent",
-    "ideas_read",
-    "sends",
-    "graph_held",
-    "walked_roots",
-    "walked_files",
-    "kept_way",
-    "plainly",
-    "asked",
     "asks",
     "agents",
-    "follows",
-    "uses",
-    "libraries",
-    "lesson_ideas",
-    "lessons",
-    "lessons_fetched",
-    "learned",
-    "given",
     "held_for_agent",
-    "failed",
-    "files_seen",
     "touched",
-    "opened_in",
-    "replaced",
-    "written",
     "moments",
     "notes_told",
     "sign_in_links",
@@ -272,8 +240,8 @@ const EVERYTHING: [&str; 57] = [
 #[cfg(test)]
 const KEPT: [&str; 3] = ["instance", "browser_sessions", "updates"];
 
-/// Deletes everything kelve keeps: settings, keys, marks, ideas, entries,
-/// lessons, readings and work in hand. The browsers signed in stay signed
+/// Deletes everything kelve keeps: settings, keys, skills and their
+/// evidence, debriefs, what was handed over, and work in hand. The browsers signed in stay signed
 /// in.
 pub async fn delete_everything(conn: &mut Conn) -> Result<()> {
     for table in EVERYTHING {

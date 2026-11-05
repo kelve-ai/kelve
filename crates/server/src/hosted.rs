@@ -1,6 +1,6 @@
 //! kelve.ai from the app (docs/skills.md, "Proof: two scores"): the
 //! person's account there, their page, and the verified runs that put
-//! scores on it. kelve signs in as it does to the shared graph, and keeps
+//! scores on it. kelve signs in as it once did to the shared graph, and keeps
 //! what signing in gives sealed with the install's key: the account's key,
 //! and, once a run first needs it, the person's own key for the model's
 //! provider, which goes nowhere but a run's confirm.

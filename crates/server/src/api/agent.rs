@@ -4,8 +4,8 @@
 //! reader asks about the agent, as the person.
 //!
 //! The agent never reads what kelve keeps beyond a job's material: not the
-//! person's notes, except those they leave for it, not what was read before,
-//! not the shared graph's key.
+//! person's notes, except those they leave for it, not their skills' evidence,
+//! not the hosted service's key.
 
 use std::path::{Path, PathBuf};
 
@@ -65,20 +65,14 @@ pub struct OpenIn {
     pub caller: Caller,
 }
 
-/// What opening came to, for the agent: what's open, how much of it needs
-/// reading, and whether the person sees it.
+/// What opening came to, for the agent: what's open, and whether the
+/// person sees it.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Opened {
     /// Its number: what the agent gives next_job, as `for`, to take only its jobs.
     pub id: i64,
     pub title: String,
-    pub files: u32,
-    /// How many of its folders are read plainly with it, each a page.
-    pub folders: u32,
-    /// How many of its files, and of its pages, need reading: its folders'
-    /// and a change's own.
-    pub to_read: u32,
     pub shown: bool,
     /// Work handed over: whether a debrief is due, and, when it is, its
     /// number, for the agent to write it now.
@@ -184,16 +178,10 @@ pub async fn open(
             }
         }
     }
-    // The debrief, asked first, comes before reading the change, which
-    // goes on as it did until the debrief replaces it.
-    let (files, to_read, folders) = to_read(&app, &open).await?;
     let shown = show(&app, id).await?;
     Ok(Json(Opened {
         id,
         title: open.row.title.clone(),
-        files,
-        folders,
-        to_read,
         shown,
         debrief,
     }))
@@ -236,8 +224,8 @@ fn files_in_folder(paths: &[String]) -> ApiResult<(PathBuf, Vec<String>)> {
     Ok((root, rels))
 }
 
-/// Files outside a repository, in the folder kelve knows them in, read or
-/// walked, when it holds them: the same folder whichever of them are shown,
+/// Files outside a repository, in the folder kelve knows them in, opened
+/// or worked in by the agent, when it holds them: the same folder whichever of them are shown,
 /// so showing them again is the same thing in kelve, brought up to date.
 async fn in_known_folder(
     app: &Shared,
@@ -252,7 +240,7 @@ async fn in_known_folder(
         let mut conn = app.db.acquire().await?;
         match kelve_store::reader::root_of(&mut conn, &at).await? {
             Some(known) => Some(known),
-            None => kelve_store::lessons::walked_root_of(&mut conn, &at).await?,
+            None => kelve_store::moments::touched_root_of(&mut conn, &at).await?,
         }
     };
     let Some(known) = known.map(PathBuf::from) else {
@@ -279,85 +267,6 @@ async fn in_known_folder(
     Ok((known, rels))
 }
 
-/// How many files what's open has, how many of them and of its pages need
-/// reading, their ideas checked and read plainly, and how many of its
-/// folders are read plainly with it: asking for them to be read.
-async fn to_read(app: &Shared, open: &reader::Open) -> ApiResult<(u32, u32, u32)> {
-    match open.kind() {
-        kelve_core::views::OpenKind::Change => {
-            let change = reader::change(open)?;
-            // No way in yet: the agent's first job is to find one
-            // (`reader::mark_change`), which its reading then follows.
-            let reading = reader::mark_change(app, open, &change).await?;
-            let pages = crate::plainly::pages(app, open, Some(&change), true).await?;
-            Ok((
-                change.files.len() as u32,
-                reading.of - reading.read + pages.left,
-                pages.folders,
-            ))
-        }
-        _ => {
-            // What's been read is kept in the project too: known first, so
-            // it isn't counted as needing reading.
-            crate::read::load(app, open).await;
-            let walked = kelve_engine::walk::walk(&open.root)
-                .map_err(|e| ApiError::bad_request(e.to_string()))?;
-            let only = open.only();
-            let read = reader::files_read(app, open).await?;
-            // Read counts only if read under the instructions used now,
-            // looking for all that's wanted now.
-            let version = crate::pipeline::mark::read_version(app).await;
-            let (wanted, _) = crate::pipeline::mark::lens_for(app);
-            let under = reader::read_under(&version, &wanted);
-            let written = crate::plainly::read_so_far(app).await?;
-            let mut files = 0;
-            let mut todo: Vec<(&str, bool)> = Vec::new();
-            for f in walked.files.iter().filter(|f| {
-                f.skip.is_none()
-                    && !reader::is_kelves(&f.rel)
-                    && only.as_ref().is_none_or(|o| o.contains(&f.rel))
-                    && (open.row.path.is_empty() || open.row.path == f.rel)
-            }) {
-                files += 1;
-                let r = read.get(&f.rel);
-                let read_now = r.is_some_and(|r| {
-                    r.skip.is_some() || r.hash.as_ref().is_some_and(|h| h.starts_with(&under))
-                });
-                todo.push((
-                    &f.rel,
-                    if read_now {
-                        r.is_some_and(|r| reader::read_through(r, &f.rel, &written))
-                    } else if crate::read::kept_as_is(open, &f.rel, &version, &wanted) {
-                        // Read in the project, as it is now: read plainly too?
-                        !written.wanted(&f.rel)
-                            || kelve_engine::read::read(&open.root, &f.rel)
-                                .is_ok_and(|t| written.read(&f.rel, &reader::text_hash(&t.text)))
-                    } else {
-                        false
-                    },
-                ));
-            }
-            // No way in yet: the agent's first job is to find one, with its
-            // folders' lines, though much of it is read already; only the
-            // way in is read, until the person asks for more.
-            let left = todo.iter().filter(|(_, done)| !done).count();
-            crate::way::ask_way_first(app, open).await?;
-            let left = match crate::way::to_read_now(app, open).await {
-                // Finding it: the way in is about as long as it'll be.
-                Some(now) if now.is_empty() => left.min(crate::way::MOST_FOUND),
-                Some(now) => todo
-                    .iter()
-                    .filter(|(p, done)| !done && now.contains(*p))
-                    .count(),
-                None => left,
-            };
-            reader::read_ahead(app, open).await?;
-            let pages = crate::plainly::pages(app, open, None, true).await?;
-            Ok((files, left as u32 + pages.left, pages.folders))
-        }
-    }
-}
-
 /// Says the agent is here: what settings show as connected.
 pub async fn hello(
     State(app): State<Shared>,
@@ -378,10 +287,6 @@ pub struct NextIn {
     /// none then, as before.
     #[serde(default)]
     pub says_preparing: bool,
-    /// The lesson job kelve named to the agent as its turn ended: that job,
-    /// and no other.
-    #[serde(default)]
-    pub lesson: Option<String>,
 }
 
 /// The next job, or, for one thing opened, that kelve is still preparing
@@ -400,10 +305,6 @@ pub async fn next(
     _agent: Agent,
     Json(asked): Json<NextIn>,
 ) -> ApiResult<Json<Option<Next>>> {
-    if let Some(name) = asked.lesson.as_deref().filter(|n| !n.trim().is_empty()) {
-        let job = agent::lesson(&app, &asked.caller, name).await?;
-        return Ok(Json(Some(Next::Job(Box::new(job)))));
-    }
     let wait = match asked.caller.only {
         Some(_) => PREPARING,
         None => std::time::Duration::ZERO,
@@ -448,10 +349,6 @@ pub struct Answered {
     /// of what the agent asked for by its number: it asks again.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub preparing: bool,
-    /// It was a lesson: handed in as its turn ended, or as it asked, so no
-    /// other job comes with it.
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub lesson: bool,
 }
 
 /// The most kelve waits, as an answer comes in, for work running then to
@@ -459,9 +356,8 @@ pub struct Answered {
 const LINGER: std::time::Duration = std::time::Duration::from_secs(5);
 
 /// The most kelve waits for the next part of one thing opened, asked for by
-/// its number, while its own work runs: the next part of its way in, or a
-/// folder's page once its files are read, comes a little after the answer
-/// before it. Inside the two minutes the command line waits for a reply
+/// its number, while its own work runs: a debrief's next job comes a little
+/// after the answer before it. Inside the two minutes the command line waits for a reply
 /// (`kelve mcp`), with `SPEND` before it.
 const PREPARING: std::time::Duration = std::time::Duration::from_secs(45);
 
@@ -499,17 +395,6 @@ pub async fn answer(
                     .await
                     .map_err(ApiError::internal)?;
             }
-            // A lesson is the agent's own, handed in as its turn ended, or as
-            // it asked: kept now, and no other job comes with it.
-            if answered.as_ref().is_some_and(|a| a.kind == agent::LESSON) {
-                return Ok(Json(Answered {
-                    handed_in,
-                    next: None,
-                    left: None,
-                    preparing: false,
-                    lesson: true,
-                }));
-            }
             for _ in 0..20 {
                 if std::time::Instant::now() >= spent
                     || crate::pipeline::run_once(&app)
@@ -528,12 +413,10 @@ pub async fn answer(
                     next: None,
                     left: Some(left),
                     preparing: false,
-                    lesson: false,
                 }));
             }
-            // Work running in the background as the answer came, such as
-            // a folder's reading that waited on this file, may ask for
-            // something in a moment: wait for it, rather than telling the
+            // Work running in the background as the answer came may ask
+            // for something in a moment: wait for it, rather than telling the
             // agent there's nothing more, so it stops. A little, for any
             // job; for one thing's, asked for by its number, while that
             // thing's next part is prepared.
@@ -550,7 +433,6 @@ pub async fn answer(
         next,
         left: None,
         preparing,
-        lesson: false,
     }))
 }
 
@@ -640,11 +522,9 @@ pub async fn kept_for_me(State(app): State<Shared>, _me: Me) -> ApiResult<Json<V
 
 async fn kept_list(app: &Shared) -> ApiResult<Vec<Kept>> {
     let mut conn = app.db.acquire().await?;
-    // Not lessons: each waits for the agent it was named for, alone.
     Ok(kelve_store::asks::open(&mut conn)
         .await?
         .into_iter()
-        .filter(|a| a.kind != agent::LESSON)
         .map(|a| Kept {
             id: a.id,
             kind: a.kind,

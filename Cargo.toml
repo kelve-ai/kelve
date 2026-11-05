@@ -54,7 +54,7 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "serd
 regex = "1"
 # Line diffs for the lines a piece of work changed.
 similar = "3"
-# The shared graph's OpenAPI document, from the types its API speaks.
+# The hosted service's OpenAPI documents, from the types its API speaks.
 utoipa = "6.0.0"
 ts-rs = { version = "12", features = ["chrono-impl", "uuid-impl", "serde-json-impl", "no-serde-warnings"] }
 

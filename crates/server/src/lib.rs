@@ -1,7 +1,8 @@
-//! kelve's local service: it shows the person what their work is built on, from
-//! what their own agent read and wrote for it (`agent`), keeps their notes,
-//! adds what the agent learned to the shared knowledge graph, and serves the
-//! reader, on the person's own computer (docs/architecture.md).
+//! kelve's local service: it keeps what the person's agent handed over and
+//! asks it for a debrief (`agent_loop`), learns the person's skills from
+//! what they correct (`agent_loop::learn`), hands those skills to their
+//! agents through the hook (`moment`), keeps their notes, and serves the
+//! web app, on the person's own computer (docs/architecture.md).
 
 pub mod agent;
 pub mod agent_loop;
@@ -12,22 +13,17 @@ pub mod counts;
 pub mod crypto;
 pub mod debriefs;
 pub mod error;
-pub mod follows;
 pub mod handoff;
 pub mod handover;
 pub mod home;
 pub mod hooks;
 pub mod hosted;
-pub mod lessons;
 pub mod list;
 pub mod moment;
 pub mod pick;
 pub mod pipeline;
-pub mod plainly;
 pub mod problems;
-pub mod read;
 pub mod reader;
-pub mod ready;
 pub mod settings;
 pub mod skill_checks;
 pub mod skills_home;
@@ -36,7 +32,6 @@ pub mod spec;
 pub mod state;
 pub mod updates;
 pub mod v2jobs;
-pub mod way;
 pub mod web;
 pub mod your_agent;
 
@@ -103,8 +98,6 @@ async fn start(config: Config) -> Result<Shared, ServeError> {
     problems::watch(&app.config.data);
     pipeline::start(&app);
     counts::start(&app);
-    follows::start(&app);
-    lessons::start(&app);
     updates::start(&app);
     skills_sync::start(&app);
     hooks::up_to_date(&app.config.agents_home, &app.config.claude_dir);
@@ -132,11 +125,6 @@ pub async fn serve(
         .map_err(|e| ServeError::Start(e.message))?;
     app.hand_off(&link);
     tracing::info!(url = %app.config.url, %bind, "kelve is running");
-    if !app.config.may_write_graph() {
-        tracing::info!(
-            "a development build reads the real shared graph but adds nothing to it; set KELVE_WRITE_REAL_GRAPH=1 to add to it"
-        );
-    }
     let stopping = app.clone();
     let server = axum::serve(listener, router(app.clone()))
         .with_graceful_shutdown(async move {

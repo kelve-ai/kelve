@@ -1,5 +1,5 @@
-//! The person's settings: the daily ceiling, whether kelve adds to the
-//! shared knowledge graph, and the weekly count they may share.
+//! The person's settings: how things look, their notes, what kelve marks
+//! for them, and the weekly count they may share.
 
 use axum::Json;
 use axum::extract::State;
@@ -61,7 +61,7 @@ fn hook_installed(app: &Shared) -> bool {
 fn set_hook(app: &Shared, on: bool) -> ApiResult<()> {
     let Some(agent) = hook_agent(app) else {
         return Err(ApiError::bad_request(
-            "kelve has no hook for that agent. It checks for notes, and asks for lessons, as kelve's instructions ask.",
+            "kelve has no hook for that agent. It checks for notes, and reads your skills, as kelve's instructions ask.",
         ));
     };
     crate::hooks::set(agent, on, &app.config.agents_home, &app.config.claude_dir)

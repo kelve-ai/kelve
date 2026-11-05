@@ -122,6 +122,18 @@ pub async fn get(conn: &mut Conn, id: i64) -> Result<Option<Handover>> {
     )
 }
 
+/// The latest handover kept for something opened, and the debrief of it,
+/// when there is one.
+pub async fn latest_for(conn: &mut Conn, opened: i64) -> Result<Option<(i64, Option<i64>)>> {
+    Ok(sqlx::query_as(
+        "select h.id, (select d.id from debriefs d where d.handover = h.id order by d.id desc limit 1)
+           from handovers h where h.opened = ? order by h.id desc limit 1",
+    )
+    .bind(opened)
+    .fetch_optional(&mut *conn)
+    .await?)
+}
+
 /// The files of a handover, by path.
 pub async fn files(conn: &mut Conn, id: i64) -> Result<Vec<HandedFile>> {
     Ok(sqlx::query_as(
@@ -168,7 +180,7 @@ pub async fn of_session(conn: &mut Conn, opened: i64, session: &str) -> Result<u
 }
 
 /// The files the agent edited in a session since a time, each with the
-/// folder it's in, as its hook saw them (`lessons::touch`): its own work
+/// folder it's in, as its hook saw them (`moments::touch`): its own work
 /// after a handover, not the person's.
 pub async fn edited_since(
     conn: &mut Conn,
@@ -351,10 +363,10 @@ mod tests {
                 .expect("read")
                 .is_none()
         );
-        crate::lessons::touch(&mut conn, "s1", "/w", "src/retry.rs", true)
+        crate::moments::touch(&mut conn, "s1", "/w", "src/retry.rs", true)
             .await
             .expect("touched");
-        crate::lessons::touch(&mut conn, "s1", "/w", "README.md", false)
+        crate::moments::touch(&mut conn, "s1", "/w", "README.md", false)
             .await
             .expect("touched");
         assert_eq!(

@@ -263,31 +263,10 @@ async fn ask_to_open(path: &std::path::Path, change: Option<&str>) -> anyhow::Re
 }
 
 /// What opening came to, for the agent: "kelve is showing the person
-/// ledger: 2 files, both to read." Its folders are read plainly with it,
-/// each one more to read: "12 files in 3 folders, 5 to read."
+/// ledger."
 pub(crate) fn opened_line(o: &serde_json::Value) -> String {
-    let files = o["files"].as_u64().unwrap_or_default();
-    let folders = o["folders"].as_u64().unwrap_or_default();
-    let to_read = o["toRead"].as_u64().unwrap_or_default();
-    let mut count = if files == 1 {
-        "1 file".to_string()
-    } else {
-        format!("{files} files")
-    };
-    match folders {
-        0 => {}
-        1 => count.push_str(" in 1 folder"),
-        n => count.push_str(&format!(" in {n} folders")),
-    }
-    let reading = match (files + folders, to_read) {
-        (_, 0) => "all read before".to_string(),
-        (1, 1) if folders == 0 => "to read".to_string(),
-        (2, 2) if folders == 0 => "both to read".to_string(),
-        (all, r) if r >= all => "all to read".to_string(),
-        (_, r) => format!("{r} to read"),
-    };
     format!(
-        "kelve is showing the person {}: {count}, {reading}.",
+        "kelve is showing the person {}.",
         o["title"].as_str().unwrap_or("what you opened")
     )
 }
@@ -318,27 +297,14 @@ mod tests {
     }
 
     #[test]
-    fn the_agent_is_told_what_needs_reading_with_its_folders() {
-        let line = |files: u64, folders: u64, to_read: u64| {
-            opened_line(&serde_json::json!({
-                "title": "ledger", "files": files, "folders": folders, "toRead": to_read,
-            }))
-        };
+    fn the_agent_is_told_what_kelve_shows() {
         assert_eq!(
-            line(2, 0, 2),
-            "kelve is showing the person ledger: 2 files, both to read."
+            opened_line(&serde_json::json!({ "title": "ledger" })),
+            "kelve is showing the person ledger."
         );
         assert_eq!(
-            line(12, 3, 16),
-            "kelve is showing the person ledger: 12 files in 3 folders, all to read."
-        );
-        assert_eq!(
-            line(12, 3, 5),
-            "kelve is showing the person ledger: 12 files in 3 folders, 5 to read."
-        );
-        assert_eq!(
-            line(1, 1, 0),
-            "kelve is showing the person ledger: 1 file in 1 folder, all read before."
+            opened_line(&serde_json::json!({})),
+            "kelve is showing the person what you opened."
         );
     }
 

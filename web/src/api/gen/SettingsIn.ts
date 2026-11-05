@@ -7,11 +7,11 @@ import type { Size } from "./Size";
 /**
  * A change to your settings: only what's given changes.
  */
-export type SettingsIn = { contribute?: boolean, shareCounts?: boolean, 
+export type SettingsIn = { shareCounts?: boolean, 
 /**
  * A folder for notes kept only for you; "" for kelve's own.
  */
-notesDir?: string, agent?: AgentKind, codeSize?: Size, textSize?: Size, highlighting?: Highlighting, keepReadInRepo?: boolean, newNote?: Place, 
+notesDir?: string, agent?: AgentKind, codeSize?: Size, textSize?: Size, highlighting?: Highlighting, newNote?: Place, 
 /**
  * A hint the person has now seen.
  */
@@ -19,8 +19,4 @@ hintSeen?: string,
 /**
  * Add kelve's hook to Claude Code's settings, or take it out.
  */
-notesHook?: boolean, 
-/**
- * The person said no to adding what their agent wrote, this time.
- */
-keepToMyself?: boolean, };
+notesHook?: boolean, };

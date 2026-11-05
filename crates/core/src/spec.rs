@@ -5,9 +5,8 @@
 //! ```text
 //! ---
 //! mark: working
-//! read: as code
 //! areas:
-//!   rust: new, plainly
+//!   rust: new
 //!   distributed systems: new
 //! always: Idempotency keys
 //! never: Async functions, Pattern matching
@@ -17,9 +16,8 @@
 //! I came to backend from frontend work. Mark anything about how money moves.
 //! ```
 //!
-//! How files read, as code or plainly, is in it too, overall and by area: it
-//! changes how a file opens, never what's read or marked, so it's no part of
-//! the lens.
+//! kelve gives it to the person's agent as it explains an idea, so it knows
+//! what's new to them; and "I know this" in a debrief adds to it.
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -28,30 +26,14 @@ use ts_rs::TS;
 use crate::ideas::norm;
 use crate::lens::{self, Depth, Lens, Level};
 
-/// How a code file opens: plainly, each part as a sentence on what it
-/// does, unless the person said as code.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub enum ReadAs {
-    Code,
-    #[default]
-    Plainly,
-}
-
-/// An area and how well the person knows it; and, when they said, how its
-/// files read. An area is a file's when it's the file's language, as kelve
-/// names it (`core::code::language`).
+/// An area and how well the person knows it. An area is a file's when it's
+/// the file's language, as kelve names it (`core::code::language`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct AreaLevel {
     pub area: String,
     pub level: Level,
-    /// How its files read; none for as files read overall.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub read: Option<ReadAs>,
 }
 
 /// What kelve marks for the person.
@@ -61,8 +43,6 @@ pub struct AreaLevel {
 pub struct Spec {
     /// How much to mark, anywhere not named in `areas`.
     pub mark: Level,
-    /// How code files read, in any area that doesn't say.
-    pub read: ReadAs,
     /// How well they know each area, as they listed them.
     pub areas: Vec<AreaLevel>,
     /// Ideas always looked for and marked, by name.
@@ -96,27 +76,6 @@ fn level_word(l: Level) -> &'static str {
         Level::Learning => "learning",
         Level::Working => "working",
         Level::Deep => "deep",
-    }
-}
-
-fn read_as(word: &str) -> Option<ReadAs> {
-    match word
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .to_lowercase()
-        .as_str()
-    {
-        "as code" | "code" => Some(ReadAs::Code),
-        "plainly" => Some(ReadAs::Plainly),
-        _ => None,
-    }
-}
-
-fn read_word(r: ReadAs) -> &'static str {
-    match r {
-        ReadAs::Code => "as code",
-        ReadAs::Plainly => "plainly",
     }
 }
 
@@ -160,16 +119,13 @@ pub fn parse(text: &str) -> Spec {
             continue;
         };
         if in_areas && indented {
-            // `rust: new`, or with how its files read, `rust: new, plainly`.
-            let (lv, read) = value.split_once(',').unwrap_or((value, ""));
+            // `rust: new`; anything after a comma, as how its files once
+            // read (`rust: new, plainly`), is left out.
+            let lv = value.split_once(',').map_or(value, |(lv, _)| lv);
             if let Some(l) = level(lv) {
                 let area = lens::area(key);
                 if !area.is_empty() {
-                    spec.areas.push(AreaLevel {
-                        area,
-                        level: l,
-                        read: read_as(read),
-                    });
+                    spec.areas.push(AreaLevel { area, level: l });
                 }
             }
             continue;
@@ -177,7 +133,6 @@ pub fn parse(text: &str) -> Spec {
         in_areas = false;
         match key.trim() {
             "mark" => spec.mark = level(value).unwrap_or_default(),
-            "read" => spec.read = read_as(value).unwrap_or_default(),
             "areas" => in_areas = true,
             "always" => spec.always = list(value),
             "never" => spec.never = list(value),
@@ -194,16 +149,11 @@ pub fn parse(text: &str) -> Spec {
 pub fn write(spec: &Spec) -> String {
     let mut out = String::from("---\n");
     out.push_str(&format!("mark: {}\n", level_word(spec.mark)));
-    out.push_str(&format!("read: {}\n", read_word(spec.read)));
     if !spec.areas.is_empty() {
         out.push_str("areas:\n");
         for a in &spec.areas {
-            let read = a
-                .read
-                .map(|r| format!(", {}", read_word(r)))
-                .unwrap_or_default();
             out.push_str(&format!(
-                "  {}: {}{read}\n",
+                "  {}: {}\n",
                 lens::area(&a.area),
                 level_word(a.level)
             ));
@@ -258,18 +208,6 @@ impl Spec {
         }
     }
 
-    /// How a file of this language reads (`core::code::language`): as its
-    /// area says, else as files read overall.
-    pub fn reads(&self, language: Option<&str>) -> ReadAs {
-        language
-            .and_then(|l| {
-                let l = lens::area(l);
-                self.areas.iter().find(|a| lens::area(&a.area) == l)
-            })
-            .and_then(|a| a.read)
-            .unwrap_or(self.read)
-    }
-
     /// Whether an idea of this area and depth, by this name, is marked for
     /// the person: what they asked for, less what they never want.
     pub fn shows(&self, area: &str, depth: Depth, name: &str) -> bool {
@@ -294,26 +232,18 @@ mod tests {
                 AreaLevel {
                     area: "rust".into(),
                     level: Level::Deep,
-                    read: Some(ReadAs::Code),
                 },
                 AreaLevel {
                     area: "distributed systems".into(),
                     level: Level::New,
-                    read: None,
                 },
                 AreaLevel {
                     area: "sql".into(),
                     level: Level::New,
-                    read: Some(ReadAs::Plainly),
                 },
             ],
             "an area with no level kelve knows is left out"
         );
-        assert_eq!(spec.read, ReadAs::Plainly, "plainly, unless it says");
-        assert_eq!(parse("---\nread: as code\n---\n").read, ReadAs::Code);
-        assert_eq!(spec.reads(Some("rust")), ReadAs::Code, "as its area says");
-        assert_eq!(spec.reads(Some("python")), ReadAs::Plainly, "else overall");
-        assert_eq!(spec.reads(None), ReadAs::Plainly);
         assert_eq!(spec.always, ["Idempotency keys", "Exactly-once delivery"]);
         assert_eq!(spec.never, ["Async functions", "Pattern matching"]);
         assert_eq!(spec.by.as_deref(), Some("Claude Code"));
@@ -331,11 +261,6 @@ mod tests {
     fn the_spec_says_what_is_looked_for_and_what_is_shown() {
         let spec = parse(HAND);
         let lens = spec.lens();
-        let code = Spec {
-            read: ReadAs::Code,
-            ..spec.clone()
-        };
-        assert_eq!(code.lens(), lens, "how files read is no part of the lens");
         assert_eq!(lens.level_of("Rust"), Level::Deep);
         assert_eq!(lens.level_of("payments"), Level::Working);
         assert_eq!(lens.words.len(), 1, "the words go in as a print");

@@ -1,13 +1,9 @@
-//! kelve's engine: reading what the person opens, a folder, a file or a
-//! change, into passages kelve can mark. It runs nothing from what it reads:
+//! kelve's engine: reading what the person's agent hands over, a change or
+//! some files, from git's own files and the folder. It runs nothing from what it reads:
 //! no builds, no hooks, no git (it reads git's files itself), nothing a
 //! repo configures to run. Every secret is masked as a file is read.
 
-pub mod candidates;
-pub mod central;
-pub mod context;
 pub mod git;
-pub mod passages;
 pub mod read;
 pub mod walk;
 
@@ -50,19 +46,18 @@ mod itself {
         let root = crate::git::root_of(here).expect("a repo");
         let started = std::time::Instant::now();
         let walked = crate::walk::walk(&root).expect("walked");
-        let (mut read, mut skipped, mut passages, mut lines) = (0, 0, 0, 0);
+        let (mut read, mut skipped, mut lines) = (0, 0, 0);
         for file in &walked.files {
             match crate::read::read(&root, &file.rel) {
                 Ok(text) => {
                     read += 1;
                     lines += text.text.lines().count();
-                    passages += crate::passages::passages(&file.rel, &text.text).len();
                 }
                 Err(_) => skipped += 1,
             }
         }
         println!(
-            "{} files: {read} read, {skipped} not; {lines} lines in {passages} passages, in {:?}",
+            "{} files: {read} read, {skipped} not; {lines} lines, in {:?}",
             walked.files.len(),
             started.elapsed()
         );

@@ -10,15 +10,14 @@ use kelve_graph_api::stand_in::StandIn;
 use kelve_server::agent::{self, Caller, HandedIn, Job};
 use kelve_server::config::test_config;
 use kelve_server::state::{App, Shared};
-use serde_json::{Value, json};
+use serde_json::Value;
 
-/// A kelve with a store of its own, reading the stand-in graph when there
-/// is one, and adding to it as the person signed in.
+/// A kelve with a store of its own, using the stand-in hosted service when
+/// there is one.
 pub async fn kelve(graph: Option<&StandIn>) -> Shared {
     let mut config = test_config();
     if let Some(g) = graph {
         config.endpoints.graph = g.url.clone();
-        config.env.graph = Some(kelve_graph_api::stand_in::TOKEN.into());
     }
     let pool = kelve_store::open(&config.store).await.unwrap();
     kelve_store::migrate(&pool).await.unwrap();
@@ -95,29 +94,6 @@ pub async fn work(app: &Shared, answer: impl Fn(&Job) -> Value) -> Vec<Job> {
     panic!("the agent's work never stopped");
 }
 
-/// The lesson job kelve named to the agent in what it said, as next_job's
-/// `lesson` takes it.
-pub fn named(said: &str) -> String {
-    said.split("giving lesson: \"")
-        .nth(1)
-        .and_then(|rest| rest.split('"').next())
-        .unwrap_or_else(|| panic!("no lesson job named in: {said}"))
-        .to_string()
-}
-
-/// The agent takes the lesson job kelve named to it in what it said, at
-/// once, and hands in `answer`; then kelve keeps what it wrote.
-pub async fn lesson(app: &Shared, said: &str, answer: impl Fn(&Job) -> Value) -> Job {
-    let job = agent::lesson(app, &caller(), &named(said)).await.unwrap();
-    assert_eq!(job.kind, "lesson");
-    let handed = agent::hand_in(app, &caller(), job.job, answer(&job))
-        .await
-        .unwrap();
-    assert_eq!(handed, HandedIn::Yes, "the lesson wasn't taken");
-    jobs(app).await;
-    job
-}
-
 /// The text of a fenced material string, without its tags.
 pub fn unfenced(text: &Value) -> String {
     let text = text.as_str().unwrap_or_default();
@@ -126,71 +102,4 @@ pub fn unfenced(text: &Value) -> String {
         .map(|(b, _)| b)
         .unwrap_or(body)
         .to_string()
-}
-
-/// The stand-in agent's plainly, for a file, a folder or a change: valid,
-/// and no more. A file's parts are its runs of lines between blank ones.
-pub fn plainly(kind: &str, material: &Value) -> Option<Value> {
-    Some(match kind {
-        "plainly" => {
-            let count = material["lineCount"].as_u64().unwrap_or(0);
-            let blank: Vec<u64> = material["blankLines"]
-                .as_array()
-                .map(|b| b.iter().filter_map(Value::as_u64).collect())
-                .unwrap_or_default();
-            let mut parts: Vec<(u64, u64)> = Vec::new();
-            for n in 1..=count {
-                if blank.contains(&n) {
-                    continue;
-                }
-                match parts.last_mut() {
-                    Some((_, to)) if *to + 1 == n => *to = n,
-                    _ => parts.push((n, n)),
-                }
-            }
-            let parts: Vec<Value> = parts
-                .into_iter()
-                .map(|(from, to)| serde_json::json!({ "from": from, "to": to, "goal": "Does its part", "says": "Does what these lines say." }))
-                .collect();
-            serde_json::json!({ "what": "What the file is for.", "parts": parts })
-        }
-        "plainlyFolder" => {
-            let parts: Vec<Value> = material["parts"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .take(7)
-                .map(|p| serde_json::json!({ "part": p["path"], "goal": "Holds a part", "says": "What it holds." }))
-                .collect();
-            serde_json::json!({ "what": "What the folder is for.", "shape": "parts", "parts": parts })
-        }
-        "plainlyChange" => {
-            let first = material["files"][0]["path"].clone();
-            serde_json::json!({
-                "what": "What the change does.", "kind": "updates",
-                "parts": [{ "mark": "changed", "goal": "Changes a file", "says": "It changes.", "files": [first] }],
-            })
-        }
-        _ => return None,
-    })
-}
-
-/// The stand-in agent's way in: every file it's given, in the order kelve
-/// lists them, the ones the rest lean on first, up to the most a way in
-/// has; no parts, and a line for each folder.
-pub fn way(material: &Value) -> Value {
-    let order: Vec<Value> = material["files"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .take(40)
-        .map(|p| json!({ "path": p, "why": "Where it fits." }))
-        .collect();
-    let folders: Vec<Value> = material["folders"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .map(|p| json!({ "path": p, "line": "What it holds." }))
-        .collect();
-    json!({ "order": order, "parts": [], "folders": folders })
 }

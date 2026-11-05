@@ -5,11 +5,11 @@
  */
 export type Kept = { id: number, 
 /**
- * `read`, `choose`, `builtOn`, `relate`, `write` or `fix`.
+ * `note`, `debrief`, `learn`, `research`, `explain`, `compare` or `draw`.
  */
 kind: string, 
 /**
- * What it's for: "Writing the entry for Jitter".
+ * What it's for: "Debriefing kelve since main".
  */
 about: string, 
 /**

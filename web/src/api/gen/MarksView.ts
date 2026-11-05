@@ -2,8 +2,7 @@
 import type { MarksSpec } from "./MarksSpec";
 
 /**
- * What kelve marks for the person (`spec::Spec`), as settings and the
- * reader show it.
+ * What kelve marks for the person (`spec::Spec`), as settings show it.
  */
 export type MarksView = { spec: MarksSpec, 
 /**

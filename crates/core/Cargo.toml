@@ -1,6 +1,6 @@
 [package]
 name = "kelve-core"
-description = "What's pure in kelve: entries and their checks, ideas, marks, lessons, agents' hooks and instructions, redaction, and the API's shapes. No IO."
+description = "What's pure in kelve: skills, debriefs, your agent's character, agents' hooks and instructions, notes, redaction, and the API's shapes. No IO."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -19,7 +19,7 @@ ts-rs = { workspace = true }
 utoipa = { workspace = true, optional = true }
 
 [features]
-# Schemas for the shared graph's OpenAPI document.
+# Schemas for the hosted service's OpenAPI documents.
 openapi = ["dep:utoipa"]
 
 [lints]
