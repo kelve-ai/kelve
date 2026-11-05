@@ -330,6 +330,7 @@ pub async fn offer(State(app): State<Shared>, _me: Me) -> ApiResult<Json<OfferVi
     let c = hosted::signed_in(&app).await?;
     let (offer, account) = tokio::join!(c.offer(), c.account());
     let (offer, account) = (offer.map_err(said)?, account.map_err(said)?);
+    let accepts = hosted::accepts(&offer.agents);
     let files = hosted::skills(&app.config.skills_dir).map_err(ApiError::internal)?;
     Ok(Json(OfferView {
         kinds: offer
@@ -362,7 +363,7 @@ pub async fn offer(State(app): State<Shared>, _me: Me) -> ApiResult<Json<OfferVi
             .collect(),
         skills: hosted::listed(&files),
         runs: hosted::runs_left(&account.runs),
-        accepts: hosted::accepts(&app, None),
+        accepts,
     }))
 }
 
@@ -428,7 +429,7 @@ pub async fn estimate(
         )
         .await?;
     }
-    let accepts = hosted::accepts(&app, Some(&e.provider));
+    let accepts = hosted::accepts([agent]);
     let mut kept = Vec::new();
     for kind in &accepts {
         if hosted::provider_key(&app, &e.provider, *kind)
@@ -494,7 +495,9 @@ pub async fn confirm(
     let run = kept_run(&app, &id).await?;
     let Json(confirm) = confirm.unwrap_or_default();
     let kind = confirm.kind;
-    if !hosted::accepts(&app, Some(&run.provider)).contains(&kind) {
+    let offer = c.offer().await.map_err(said)?;
+    let agents = offer.agents.iter().filter(|a| a.agent == run.agent);
+    if !hosted::accepts(agents).contains(&kind) {
         return Err(ApiError::bad_request(
             "kelve.ai takes an API key for this run. Paste one to start it.",
         )
@@ -519,9 +522,7 @@ pub async fn confirm(
                 .with(serde_json::json!({ "key": true }))
             })?,
     };
-    // TODO: send `kind` with the credential once the hosted service's v2
-    // `Confirm` carries it.
-    let status = match c.confirm(&id, &key).await {
+    let status = match c.confirm_paying(&id, &key, kind.into()).await {
         Ok(s) => s,
         Err(v2::client::Error::Refused { status: 422, said }) => {
             // The key, most likely: ask for it again.
@@ -627,8 +628,9 @@ async fn run_view(
             })
             .collect(),
         minutes_left: s.minutes_left,
-        // TODO: from the run's status once the hosted service's v2 shapes
-        // say a run paused for a subscription's limit.
+        // kelve.ai's run status doesn't say yet when a run paused for a
+        // subscription's limit goes on (graph-api v2 `RunStatus`): none till
+        // it does.
         paused_until: None,
         why: s.why,
         score,

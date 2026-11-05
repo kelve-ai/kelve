@@ -145,6 +145,11 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
         Some(h) => handovers::files(&mut conn, h).await?,
         None => Vec::new(),
     };
+    // What the work was opened as: "do what's waiting for it" takes this too.
+    let opened = match d.handover {
+        Some(h) => handovers::get(&mut conn, h).await?.and_then(|h| h.opened),
+        None => None,
+    };
     drop(conn);
     // The decision as the debrief has it: its fields and why.
     let written = d
@@ -183,7 +188,7 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
                 kelve_core::text::clip(&decision.title, 80)
             ),
             idea: None,
-            opened: None,
+            opened,
             material,
             schema: schema(),
             priority: Priority::Now,

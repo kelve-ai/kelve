@@ -4,8 +4,8 @@
 // way, have your agent look into one, ask for an idea to be explained or
 // say you know it, and send it, which leaves your agent a note. A small
 // change can be debriefed anyway. The change shows each file, each
-// decision beside its lines. Until the stand-in agent writes debriefs, they
-// are kept as its answers would keep them (e2e/debriefs.ts).
+// decision beside its lines. The stand-in agent writes the debriefs, the
+// research and the explanations, as kelve asks (e2e/debriefs.ts).
 
 import { expect, type Page, test } from '@playwright/test'
 import { debriefed, explained, handOver, researched } from '../debriefs'
@@ -53,7 +53,7 @@ test('home asks you to read the debrief, and you answer it and send it', async (
   const backoff = page.locator('.db-idea').filter({ hasText: 'Exponential backoff.' })
   await backoff.getByRole('button', { name: 'Explain' }).click()
   await expect(backoff.getByText('Your agent is writing this.')).toBeVisible()
-  explained(id, 'Exponential backoff', 'In this change, `wait()` doubles each wait: 200, 400, 800 milliseconds.')
+  await explained(id, 'Exponential backoff', 'In this change, `wait()` doubles each wait: 200, 400, 800 milliseconds.')
   await page.reload()
   await backoff.getByRole('button', { name: 'Explain' }).click()
   await expect(backoff.getByText('doubles each wait')).toBeVisible()
@@ -105,7 +105,7 @@ test('your agent looks into a decision, with your question, and you redo it its 
   await page.goto('/#/')
   await expect(page.getByRole('region', { name: 'From your agent' })).toContainText('I’ll look into your')
 
-  researched(id, 2, '#### What your agent found\n\nStart from **half a second**: a blip passes, and nobody waits long.\n\n| Option | For | Against |\n|---|---|---|\n| 200 milliseconds | Quick | Often too soon |\n| **Half a second** | Rides out a blip | A little slower |\n\n**It suggests** starting from half a second.\n\nSources: [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110)')
+  await researched(id, 2, '#### What your agent found\n\nStart from **half a second**: a blip passes, and nobody waits long.\n\n| Option | For | Against |\n|---|---|---|\n| 200 milliseconds | Quick | Often too soon |\n| **Half a second** | Rides out a blip | A little slower |\n\n**It suggests** starting from half a second.\n\nSources: [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110)')
   await page.goto(`/#/debrief/${id}`)
   await expect(start.getByText('Research ready', { exact: true })).toBeVisible()
   await expect(start.getByRole('table')).toContainText('Rides out a blip')

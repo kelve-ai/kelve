@@ -177,6 +177,20 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
         }
         (None, None) => "",
     };
+    // What the work was opened as: "do what's waiting for it" takes this too.
+    let opened = match e.debrief {
+        Some(d) => {
+            let mut conn = app.db.acquire().await?;
+            match kelve_store::debriefs::get(&mut conn, d)
+                .await?
+                .and_then(|d| d.handover)
+            {
+                Some(h) => handovers::get(&mut conn, h).await?.and_then(|h| h.opened),
+                None => None,
+            }
+        }
+        None => None,
+    };
     let material = json!({
         "idea": e.idea,
         "lines": (!lines.is_empty()).then(|| fence("lines", lines)),
@@ -189,7 +203,7 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
             kind: kelve_core::instructions::EXPLAIN,
             about: format!("Explaining {}", kelve_core::text::clip(&e.idea, 80)),
             idea: None,
-            opened: None,
+            opened,
             material,
             schema: schema(),
             priority: Priority::Now,
