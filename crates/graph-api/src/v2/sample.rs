@@ -3,7 +3,7 @@
 //! agents and models on offer, the skill that makes a run come out better,
 //! and the provider keys they take.
 
-use super::{AgentOffer, KindOffer, ModelOffer, Offer};
+use super::{AgentOffer, Credential, KindOffer, ModelOffer, Offer};
 
 /// The skill that makes a stand-in's runs come out better, as the runner's
 /// stand-in agent does.
@@ -56,11 +56,13 @@ pub fn the_offer() -> Offer {
                     model("claude-sonnet-5-6", "Sonnet 5.6"),
                     model("claude-opus-5-5", "Opus 5.5"),
                 ],
+                credentials: vec![Credential::ApiKey, Credential::Subscription],
             },
             AgentOffer {
                 agent: "codex".into(),
                 name: "Codex".into(),
                 models: vec![model("gpt-5.5", "GPT-5.5")],
+                credentials: vec![Credential::ApiKey],
             },
         ],
     }
