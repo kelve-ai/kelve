@@ -413,14 +413,16 @@ pub async fn setup(agent: Option<&str>) -> anyhow::Result<()> {
 
     let then = if fresh {
         format!(
-            "{} has kelve’s tools from its next session; then ask it:",
+            "Start {} again, so it has kelve’s tools, and ask it:",
             chosen.shown
         )
     } else {
         format!("Ask {}:", chosen.shown)
     };
+    style::line(&format!("kelve is set up. {then} “Open kelve.”"));
     style::line(&format!(
-        "kelve is set up. {then} “Show me what you did in kelve.”"
+        "Your first debrief comes when {} next hands over work.",
+        chosen.shown
     ));
     Ok(())
 }

@@ -765,7 +765,9 @@ async function newcomer() {
     '',
     'It installs kelve and sets it up. Start Claude Code again, so it has kelve’s tools, and ask it:',
     '',
-    '  > Show me this repo in kelve.',
+    '  > Open kelve.',
+    '',
+    'Your first debrief comes when it next hands over work.',
     '',
     `Their kelve runs on 4690, beside a stand-in hosted service on 4691 where they've no account yet. Logs: .sandbox/newcomer-graph.log, and kelve's in ${join(them, 'data')}.`,
     'Ctrl C stops the installer’s server and the hosted service; stop their kelve with `kelve stop` in that shell.',
@@ -1197,7 +1199,7 @@ switch (command) {
       'with this environment:',
       ...Object.entries(env).map(([k, v]) => `  ${k}=${v}`),
       '',
-      'Then ask it to show you something in kelve, and to do kelve’s work.',
+      'Then ask it: Open kelve. Your first debrief comes when it next hands over work.',
     )
     break
   case 'hosted':

@@ -70,7 +70,7 @@ enum Command {
     ///
     ///   claude mcp add --scope user kelve -- kelve mcp
     ///
-    /// Then ask your agent to show you something in kelve.
+    /// Then ask your agent: Open kelve.
     #[command(verbatim_doc_comment)]
     Mcp,
     /// Take kelve's next job, for an agent without MCP
