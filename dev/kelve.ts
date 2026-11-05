@@ -33,7 +33,8 @@
 //                                    out better with); and, with the stand-in for kelve.ai, finish a
 //                                    run at once, someone else has an address, or how many runs a day
 //   bun dev/kelve.ts example         record the app's own example, for the states gallery, from a fresh sandbox
-//   bun dev/kelve.ts trial [task] [--skills <folder>]   with `up --real` going: one real Claude Code trial of a rust-1 task
+//   bun dev/kelve.ts trial [task] [--bank b] [--profile p] [--skills <folder>]   with `up --real` going: one trial of a task
+//   bun dev/kelve.ts calibrate [--bank b] [--tasks a,b] [--runs n] [--skill-runs k]   with `up --real` going: a bank's tasks against the gates
 //   bun dev/kelve.ts newcomer        be someone new: ask a Claude Code of their own to install kelve
 //                                    from the installer served here, and see what it set up
 //        --agent                     Claude Code installs it, unattended, and what it set up is checked
@@ -1205,6 +1206,50 @@ switch (command) {
   case 'hosted':
     await hostedSays(rest[0], rest[1])
     break
+  case 'calibrate': {
+    // Each task of a bank on real Claude Code, through the running sandbox.
+    const { seal, gateway } = hostedSecrets()
+    const given = process.argv.slice(3)
+    const value = (name: string) => (given.includes(name) ? given[given.indexOf(name) + 1] : undefined)
+    const tokenFile = join(homedir(), '.config/kelve-bench-token')
+    const token = process.env.ANTHROPIC_API_KEY?.trim() || (existsSync(tokenFile) ? readFileSync(tokenFile, 'utf8').replace(/\s/g, '') : '')
+    if (!token) {
+      say(`Calibrating needs real Claude Code to judge with: ANTHROPIC_API_KEY, or a token from claude setup-token in ${tokenFile}.`)
+      process.exit(1)
+    }
+    const done = spawnSync(
+      graphBin,
+      [
+        'bench', 'calibrate',
+        join(graphDir, `bench/banks/${value('--bank') ?? 'rust-2'}`),
+        join(graphDir, 'bench/profiles/claude-code-sonnet-5-5.toml'),
+        value('--skills') ?? join(graphDir, 'bench/skills/expert'),
+        '--runs', value('--runs') ?? '4',
+        '--skill-runs', value('--skill-runs') ?? '2',
+        ...(value('--tasks') ? ['--tasks', value('--tasks')!] : []),
+      ],
+      {
+        cwd: graphDir,
+        stdio: 'inherit',
+        env: {
+          ...keyless(),
+          KELVE_GRAPH_DATABASE_URL: `postgres://graph:graph@127.0.0.1:${ports.postgres}/graph`,
+          KELVE_GRAPH_RUNS_SEAL: seal,
+          KELVE_BENCH_STORE: join(home, 'bench'),
+          KELVE_BENCH_GATEWAY_SECRET: gateway,
+          KELVE_BENCH_GATEWAY_URL: `http://127.0.0.1:${ports.gatewayAdmin}`,
+          KELVE_BENCH_GATEWAY_PROXY: `http://host.docker.internal:${ports.gatewayProxy}`,
+          // A forwarder of its own: the runner clears any trial of its own it isn't holding.
+          KELVE_BENCH_FORWARDER: 'kelve-dev-one-forwarder',
+          ...(token.startsWith('sk-ant-oat')
+            ? { KELVE_BENCH_JUDGE: 'claude-code', KELVE_BENCH_JUDGE_TOKEN: token }
+            : { KELVE_GRAPH_JUDGE_PROVIDER: 'anthropic', KELVE_GRAPH_JUDGE_KEY: token }),
+        },
+      },
+    )
+    docker('rm', '-f', 'kelve-dev-one-forwarder')
+    process.exit(done.status ?? 1)
+  }
   case 'trial': {
     // One real trial, through the running sandbox's gateway and forwarder.
     const { seal, gateway } = hostedSecrets()
@@ -1212,9 +1257,12 @@ switch (command) {
     const at = given.indexOf('--skills')
     const skills = at >= 0 ? ['--skills', given[at + 1]] : []
     const task = given[0] && !given[0].startsWith('--') ? given[0] : 'wordfreq-top'
+    const named = (name: string) => (given.includes(name) ? given[given.indexOf(name) + 1] : undefined)
+    // Each trial's forwarder is its own, so trials can run side by side.
+    const one = `kelve-dev-one-${process.pid}-forwarder`
     const done = spawnSync(
       graphBin,
-      ['bench', 'trial', join(graphDir, 'bench/banks/rust-1'), task, join(graphDir, 'bench/profiles/claude-code-sonnet-5-5.toml'), ...skills],
+      ['bench', 'trial', join(graphDir, `bench/banks/${named('--bank') ?? 'rust-1'}`), task, join(graphDir, `bench/profiles/${named('--profile') ?? 'claude-code-sonnet-5-5'}.toml`), ...skills],
       {
         cwd: graphDir,
         stdio: 'inherit',
@@ -1226,11 +1274,11 @@ switch (command) {
           KELVE_BENCH_GATEWAY_URL: `http://127.0.0.1:${ports.gatewayAdmin}`,
           KELVE_BENCH_GATEWAY_PROXY: `http://host.docker.internal:${ports.gatewayProxy}`,
           // A forwarder of its own: the runner clears any trial of its own it isn't holding.
-          KELVE_BENCH_FORWARDER: 'kelve-dev-one-forwarder',
+          KELVE_BENCH_FORWARDER: one,
         },
       },
     )
-    docker('rm', '-f', 'kelve-dev-one-forwarder')
+    docker('rm', '-f', one)
     process.exit(done.status ?? 1)
   }
   case 'moment': {
