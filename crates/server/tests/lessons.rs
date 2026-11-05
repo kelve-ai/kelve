@@ -15,7 +15,8 @@ use kelve_core::lesson::{Lesson, Record, seen_as};
 use kelve_graph_api::LessonState;
 use kelve_graph_api::stand_in::StandIn;
 use kelve_server::auth::Agent;
-use kelve_server::lessons::{self, MomentIn};
+use kelve_server::lessons;
+use kelve_server::moment::MomentIn;
 use kelve_server::state::Shared;
 use serde_json::json;
 
@@ -26,7 +27,7 @@ async fn moment(app: &Shared, what: &str, f: impl FnOnce(&mut MomentIn)) -> Stri
         ..MomentIn::default()
     };
     f(&mut m);
-    lessons::moment(State(app.clone()), Agent, Json(m))
+    kelve_server::moment::moment(State(app.clone()), Agent, Json(m))
         .await
         .unwrap()
         .0
@@ -127,7 +128,7 @@ async fn a_lesson_reaches_the_agent_holds_and_what_it_learns_waits_then_leaves()
 
     // An agent that can't be given text as a tool runs (Antigravity) is
     // given it as it next calls its model.
-    let held = lessons::moment(
+    let held = kelve_server::moment::moment(
         State(app.clone()),
         Agent,
         Json(MomentIn {
@@ -145,7 +146,7 @@ async fn a_lesson_reaches_the_agent_holds_and_what_it_learns_waits_then_leaves()
     .0
     .text;
     assert_eq!(held, "", "kept for later");
-    let next = lessons::moment(
+    let next = kelve_server::moment::moment(
         State(app.clone()),
         Agent,
         Json(MomentIn {
@@ -432,13 +433,13 @@ async fn a_lesson_held_back_is_neither_given_nor_shown_but_what_came_of_it_goes(
         }
         m
     };
-    let text = lessons::moment(State(app.clone()), Agent, Json(failed("failed")))
+    let text = kelve_server::moment::moment(State(app.clone()), Agent, Json(failed("failed")))
         .await
         .unwrap()
         .0
         .text;
     assert_eq!(text, "", "held back");
-    let passed = lessons::moment(State(app.clone()), Agent, Json(failed("ran")))
+    let passed = kelve_server::moment::moment(State(app.clone()), Agent, Json(failed("ran")))
         .await
         .unwrap()
         .0
@@ -763,7 +764,7 @@ async fn replaced_work_asks_for_a_better_way_given_as_the_usual_way_is_written_a
     let say = |m: MomentIn| {
         let app = app.clone();
         async move {
-            lessons::moment(State(app), Agent, Json(m))
+            kelve_server::moment::moment(State(app), Agent, Json(m))
                 .await
                 .unwrap()
                 .0
@@ -1038,7 +1039,7 @@ async fn shell_writes_in(repository: bool) {
     let say = |m: MomentIn| {
         let app = app.clone();
         async move {
-            lessons::moment(State(app), Agent, Json(m))
+            kelve_server::moment::moment(State(app), Agent, Json(m))
                 .await
                 .unwrap()
                 .0
@@ -1174,7 +1175,7 @@ async fn only_a_lesson_given_a_hundred_times_is_ever_held_back_and_then_one_time
         let root_s = root_s.clone();
         async move {
             for n in from..to {
-                let _said = lessons::moment(
+                let _said = kelve_server::moment::moment(
                     State(app.clone()),
                     Agent,
                     Json(MomentIn {
@@ -1271,7 +1272,7 @@ async fn a_folder_nobody_opened_is_walked_for_its_imports_and_lessons_reach_the_
     };
     // The hook's first moment there walks the repository, in the background:
     // the moment answers at once.
-    let said = lessons::moment(State(app.clone()), Agent, Json(at("prompt", "w")))
+    let said = kelve_server::moment::moment(State(app.clone()), Agent, Json(at("prompt", "w")))
         .await
         .unwrap()
         .0
@@ -1338,7 +1339,7 @@ async fn a_folder_nobody_opened_is_walked_for_its_imports_and_lessons_reach_the_
     let mut edit = at("edit", "w");
     edit.file = Some(file.display().to_string());
     edit.written = Some(written.into());
-    let given = lessons::moment(State(app.clone()), Agent, Json(edit))
+    let given = kelve_server::moment::moment(State(app.clone()), Agent, Json(edit))
         .await
         .unwrap()
         .0
@@ -1346,7 +1347,7 @@ async fn a_folder_nobody_opened_is_walked_for_its_imports_and_lessons_reach_the_
     assert!(given.contains(&theirs), "{given}");
     assert!(given.contains("Instead of"), "{given}");
     // Walked once: a second session there doesn't walk it again.
-    let _said = lessons::moment(State(app.clone()), Agent, Json(at("prompt", "x")))
+    let _said = kelve_server::moment::moment(State(app.clone()), Agent, Json(at("prompt", "x")))
         .await
         .unwrap();
     let mut conn = app.db.acquire().await.unwrap();
@@ -1467,7 +1468,7 @@ async fn lessons_about_the_tools_an_agent_runs_reach_it_with_no_file_read() {
             ..MomentIn::default()
         };
         async move {
-            lessons::moment(State(app), Agent, Json(m))
+            kelve_server::moment::moment(State(app), Agent, Json(m))
                 .await
                 .unwrap()
                 .0

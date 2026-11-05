@@ -16,7 +16,7 @@ test('connect your agent, with the example beside it; then what to say to it', a
   const fresh = await startKelve(port, world().graph, { log: `e2e/.fresh-${browserName}.log` })
   try {
     await signIn(page, fresh, { new: true })
-    await page.goto(`${fresh.base}/`)
+    await page.goto(`${fresh.base}/#/start`)
     await expect(page.getByRole('heading', { name: 'Understand what your agent did.' })).toBeVisible()
     await expect(page.getByText('claude mcp add --scope user kelve -- kelve mcp')).toBeVisible()
     await page.getByRole('radio', { name: 'Codex' }).click()
@@ -76,7 +76,7 @@ test('connect your agent, with the example beside it; then what to say to it', a
     await expect(page.getByRole('heading', { level: 1, name: 'Another look' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'kelve is set up.' })).toHaveCount(0)
     // And the start page leads with what was opened lately: what was set up is done with.
-    await page.goto(`${fresh.base}/`)
+    await page.goto(`${fresh.base}/#/start`)
     // Each says what kind it is, so a folder reads apart from a change.
     await expect(page.getByRole('navigation', { name: 'Opened lately' }).getByRole('link', { name: /Another look/ })).toContainText('Folder Another look')
     await expect(page.getByRole('heading', { name: 'kelve is set up.' })).toHaveCount(0)

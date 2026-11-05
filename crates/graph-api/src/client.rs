@@ -254,7 +254,21 @@ impl Client {
     }
 
     fn url(&self, path: &str) -> String {
-        format!("{}/{}{path}", self.base, crate::API)
+        self.url_at(crate::API, path)
+    }
+
+    /// The address of `path` in version `api` of the API.
+    pub(crate) fn url_at(&self, api: &str, path: &str) -> String {
+        format!("{}/{api}{path}", self.base)
+    }
+
+    /// The account's key, when the person signed in.
+    pub(crate) fn key(&self) -> Option<&str> {
+        self.token.as_deref()
+    }
+
+    pub(crate) fn http(&self) -> &reqwest::Client {
+        &self.http
     }
 
     /// What the graph is.
@@ -818,7 +832,7 @@ impl Client {
 
     /// Sends a request as `send` does; with `reading` false, never with a
     /// reading token.
-    async fn send_as<T: DeserializeOwned>(
+    pub(crate) async fn send_as<T: DeserializeOwned>(
         &self,
         build: impl Fn() -> reqwest::RequestBuilder,
         reading: bool,
@@ -992,7 +1006,7 @@ impl Client {
 }
 
 /// What the graph said, from its problem details.
-async fn said(res: reqwest::Response, status: reqwest::StatusCode) -> String {
+pub(crate) async fn said(res: reqwest::Response, status: reqwest::StatusCode) -> String {
     said_in(problem(res).await, status)
 }
 

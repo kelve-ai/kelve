@@ -280,7 +280,7 @@ async fn what_another_agent_writes_around_a_worktree_isnt_this_ones_work() {
     use axum::Json;
     use axum::extract::State;
     use kelve_server::auth::Agent;
-    use kelve_server::lessons::{self, MomentIn};
+    use kelve_server::moment::MomentIn;
 
     let main = common::folder(&[("README.md", "# Ledger\n")]);
     let main = std::fs::canonicalize(&main).unwrap();
@@ -320,7 +320,7 @@ async fn what_another_agent_writes_around_a_worktree_isnt_this_ones_work() {
         };
         let app = app.clone();
         async move {
-            lessons::moment(State(app), Agent, Json(m))
+            kelve_server::moment::moment(State(app), Agent, Json(m))
                 .await
                 .unwrap()
                 .0
@@ -352,7 +352,7 @@ async fn an_agent_that_opened_something_is_asked_once_to_finish_reading_it() {
     use axum::Json;
     use axum::extract::State;
     use kelve_server::auth::Agent;
-    use kelve_server::lessons::{self, MomentIn};
+    use kelve_server::moment::MomentIn;
 
     let root = common::folder(&[("src/retry.rs", "pub fn again() {}\n")]);
     let root_s = root.display().to_string();
@@ -404,7 +404,7 @@ async fn an_agent_that_opened_something_is_asked_once_to_finish_reading_it() {
         };
         let app = app.clone();
         async move {
-            lessons::moment(State(app), Agent, Json(m))
+            kelve_server::moment::moment(State(app), Agent, Json(m))
                 .await
                 .unwrap()
                 .0

@@ -11,7 +11,7 @@
 //! never the problem, the command, the file or anything else from the work.
 
 use std::collections::{BTreeMap, HashMap};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 use std::time::Instant;
@@ -28,12 +28,13 @@ use kelve_core::views::{
 };
 use kelve_graph_api::{LessonPage, LessonState};
 use kelve_store::lessons as store;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{Value, json};
 
 use crate::agent::{self, Ask, Priority, Resume};
 use crate::auth::{Agent, Me};
 use crate::error::{ApiError, ApiResult};
+use crate::moment::MomentOut;
 use crate::pipeline::{self, Then};
 use crate::state::Shared;
 
@@ -56,12 +57,6 @@ const LISTED: usize = 5;
 struct Touched {
     paths: Vec<String>,
     edited: Option<String>,
-}
-
-async fn touch(app: &Shared, session: &str, root: &str, path: &str, edit: bool) -> ApiResult<()> {
-    let mut conn = app.db.acquire().await?;
-    store::touch(&mut conn, session, root, path, edit).await?;
-    Ok(())
 }
 
 async fn touched(app: &Shared, session: &str) -> ApiResult<Touched> {
@@ -405,219 +400,98 @@ fn file_text(file: &str) -> String {
     }
 }
 
-/// A moment in the agent's work, as its hook saw it.
-#[derive(Debug, Clone, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct MomentIn {
-    /// `read`, `edit`, `ran`, `failed`, `prompt`, `next`, `opened` or `end`.
-    pub what: String,
-    pub session: String,
-    /// The folder it works in.
-    pub cwd: String,
-    /// The file it read or edited, absolute.
-    #[serde(default)]
-    pub file: Option<String>,
-    /// The command it ran, or the tool and what it was given, as a key for
-    /// knowing when the same thing passes.
-    #[serde(default)]
-    pub command: Option<String>,
-    /// What failed, as the tool said it.
-    #[serde(default)]
-    pub problem: Option<String>,
-    /// The agent, as its hook names it.
-    #[serde(default)]
-    pub agent: Option<String>,
-    /// The agent can't be given text now: keep it until its next `next`.
-    #[serde(default)]
-    pub hold: bool,
-    /// For an edit: what was written, to match what it's about.
-    #[serde(default)]
-    pub written: Option<String>,
-    /// For an edit: the text it replaced, when the agent's tool says.
-    #[serde(default)]
-    pub replaced: Option<String>,
-    /// Work the command handed over, when it did.
-    #[serde(default)]
-    pub handover: Option<kelve_core::hook::Handover>,
-    /// What it opened in kelve, by its number.
-    #[serde(default)]
-    pub opened: Option<i64>,
+/// The folder walked for what its files import that holds `cwd`, unless it
+/// holds `repo`, another repository; else the folder to walk for an agent
+/// working in `cwd`, walked now, in the background, the first time the
+/// hook meets it (`moment`).
+pub(crate) async fn walked_root(
+    app: &Shared,
+    cwd: &str,
+    repo: Option<&Path>,
+) -> ApiResult<Option<String>> {
+    let mut conn = app.db.acquire().await?;
+    if let Some(root) = store::walked_root_of(&mut conn, cwd)
+        .await?
+        .filter(|k| !crate::moment::holds_another(k, repo))
+    {
+        return Ok(Some(root));
+    }
+    let Some(folder) = walk_folder(cwd) else {
+        return Ok(None);
+    };
+    if store::start_walk(&mut conn, &folder).await? {
+        walk_soon(app, folder.clone());
+    }
+    Ok(Some(folder))
 }
 
-/// What kelve has for the agent at a moment: text to put before it, or
-/// nothing.
-#[derive(Debug, Clone, Default, Serialize)]
-pub struct MomentOut {
-    pub text: String,
+/// The agent ran a command, and it passed (`moment`): what failed under it
+/// before has passed; lessons given as it wrote the usual way are settled
+/// by a commit; the tools it runs are kept; and a lesson about one of them,
+/// if one helps now.
+pub(crate) async fn on_ran(
+    app: &Shared,
+    session: &str,
+    agent: &str,
+    root: &str,
+    command: &str,
+) -> ApiResult<String> {
+    {
+        let mut conn = app.db.acquire().await?;
+        store::passed_now(&mut conn, session).await?;
+    }
+    on_pass(app, session, command).await?;
+    if command.contains("git commit") {
+        on_commit(app, session).await?;
+    }
+    notice_tools(app, root, command).await?;
+    on_command(app, session, agent, root, command).await
 }
 
-/// A moment in the agent's work: the lesson that helps now, if one does;
-/// what came of lessons given before it; when something that failed passes,
-/// a job to write what it learned; when it hands work over, to show it in
-/// kelve; and, as its turn ends, to finish reading what it opened there.
-pub async fn moment(
-    State(app): State<Shared>,
-    _agent: Agent,
-    Json(mut m): Json<MomentIn>,
-) -> ApiResult<Json<MomentOut>> {
-    m.cwd = crate::handoff::at_home(&m.cwd).display().to_string();
-    let session = m.session.trim();
-    if session.is_empty() {
-        return Ok(Json(MomentOut::default()));
+/// Something the agent ran failed (`moment`): the tools it runs are kept,
+/// and the lesson that answers it, if there is one.
+pub(crate) async fn on_failed(
+    app: &Shared,
+    session: &str,
+    agent: &str,
+    root: &str,
+    command: &str,
+    problem: &str,
+) -> ApiResult<String> {
+    let problem = lesson::seen_as(problem);
+    notice_tools(app, root, command).await?;
+    on_failure(app, session, agent, root, command, &problem).await
+}
+
+/// The turn ends, or the person writes again (`moment`): what a hard
+/// stretch taught, asked once.
+pub(crate) async fn at_turn_end(app: &Shared, session: &str) -> ApiResult<String> {
+    ask_stretch(app, session).await
+}
+
+/// Whether a file the shell wrote only had its whitespace changed since
+/// kelve last saw it in a session, as a formatter changes it: if so, it's
+/// kept as it is now, and isn't an edit (`moment`).
+pub(crate) async fn reformatted(
+    app: &Shared,
+    session: &str,
+    root: &str,
+    path: &str,
+    now: &str,
+) -> ApiResult<bool> {
+    let mut conn = app.db.acquire().await?;
+    let before = store::seen_text(&mut conn, session, root, path).await?;
+    if before.is_some_and(|b| lesson::only_whitespace(&b, now)) {
+        store::keep_seen(&mut conn, session, root, path, now).await?;
+        return Ok(true);
     }
-    // It opened something in kelve: kept for its session, and nothing more.
-    if m.what == "opened" {
-        if let Some(id) = m.opened {
-            crate::handoff::opened(&app, session, id).await?;
-        }
-        return Ok(Json(MomentOut::default()));
-    }
-    // Where it works: a file it reads or edits outside the folder it
-    // started in, as in another worktree, is in that file's repository.
-    let cwd = m
-        .file
-        .as_deref()
-        .filter(|f| !Path::new(f).starts_with(&m.cwd))
-        .and_then(|f| Path::new(f).parent())
-        .and_then(kelve_engine::git::root_of)
-        .map(|r| r.display().to_string())
-        .unwrap_or_else(|| m.cwd.clone());
-    // The folder the agent works in, as kelve knows it: one the person
-    // opened, else one walked for what its files import, else one walked
-    // now, in the background, the first time the hook meets it. Never one
-    // around the repository it's in, as a worktree inside the project is:
-    // what other agents write there isn't this one's work.
-    let repo = kelve_engine::git::root_of(Path::new(&cwd));
-    let own = |known: Option<String>| known.filter(|k| !holds_another(k, repo.as_deref()));
-    let read_root = {
-        let mut conn = app.db.acquire().await?;
-        match own(kelve_store::reader::root_of(&mut conn, &cwd).await?) {
-            Some(root) => Some(root),
-            None => match own(store::walked_root_of(&mut conn, &cwd).await?) {
-                Some(root) => Some(root),
-                None => match walk_folder(&cwd) {
-                    Some(folder) => {
-                        if store::start_walk(&mut conn, &folder).await? {
-                            walk_soon(&app, folder.clone());
-                        }
-                        Some(folder)
-                    }
-                    None => None,
-                },
-            },
-        }
-    };
-    let root = read_root.clone().unwrap_or_else(|| cwd.clone());
-    let agent = m.agent.as_deref().unwrap_or_default().trim();
-    let before = {
-        let mut conn = app.db.acquire().await?;
-        store::moment_now(&mut conn, session).await?
-    };
-    let text = match m.what.as_str() {
-        "read" | "edit" => match &m.file {
-            Some(file) => {
-                let edit = m.what == "edit";
-                on_file(
-                    &app,
-                    session,
-                    agent,
-                    file,
-                    edit,
-                    m.written.as_deref(),
-                    m.replaced.as_deref(),
-                    read_root.as_deref(),
-                )
-                .await?
-            }
-            None => String::new(),
-        },
-        "ran" => match &m.command {
-            Some(command) => {
-                // What the command wrote, first: a command that writes a file
-                // and runs the tests, as agents' do, passes with it.
-                let wrote =
-                    shell_writes(&app, session, agent, read_root.as_deref(), before).await?;
-                {
-                    let mut conn = app.db.acquire().await?;
-                    store::passed_now(&mut conn, session).await?;
-                }
-                on_pass(&app, session, command).await?;
-                if command.contains("git commit") {
-                    on_commit(&app, session).await?;
-                }
-                notice_tools(&app, &root, command).await?;
-                let given = on_command(&app, session, agent, &root, command).await?;
-                [wrote, given]
-                    .into_iter()
-                    .filter(|t| !t.is_empty())
-                    .collect::<Vec<_>>()
-                    .join("\n")
-            }
-            None => String::new(),
-        },
-        // The turn ends, or, for an agent that can't say so, the person
-        // writes again: what the stretch taught, asked once; work it did,
-        // to show if it's done; and what it opened, to finish reading.
-        "end" | "prompt" => [
-            ask_stretch(&app, session).await?,
-            crate::handoff::done(&app, session).await?,
-            crate::handoff::reading(&app, session).await?,
-        ]
-        .into_iter()
-        .filter(|t| !t.is_empty())
-        .collect::<Vec<_>>()
-        .join("\n"),
-        "failed" => {
-            let command = m.command.clone().unwrap_or_default();
-            let problem = lesson::seen_as(m.problem.as_deref().unwrap_or_default());
-            let wrote = shell_writes(&app, session, agent, read_root.as_deref(), before).await?;
-            notice_tools(&app, &root, &command).await?;
-            let failed = on_failure(&app, session, agent, &root, &command, &problem).await?;
-            [wrote, failed]
-                .into_iter()
-                .filter(|t| !t.is_empty())
-                .collect::<Vec<_>>()
-                .join("\n")
-        }
-        // About to call its model: what was kept for it.
-        "next" => {
-            let mut conn = app.db.acquire().await?;
-            store::take_held(&mut conn, session).await?.join("\n\n")
-        }
-        _ => String::new(),
-    };
-    // Work handed over: shown in kelve, if it hasn't been.
-    let text = match &m.handover {
-        Some(h) => [text, crate::handoff::after(&app, session, h).await?]
-            .into_iter()
-            .filter(|t| !t.is_empty())
-            .collect::<Vec<_>>()
-            .join("\n"),
-        None => text,
-    };
-    if m.hold && !text.is_empty() {
-        let mut conn = app.db.acquire().await?;
-        store::hold_for(&mut conn, session, &text).await?;
-        return Ok(Json(MomentOut::default()));
-    }
-    Ok(Json(MomentOut { text }))
+    Ok(false)
 }
 
 /// How many lessons were given in a session, and which.
 async fn given_so_far(app: &Shared, session: &str) -> ApiResult<Vec<store::Given>> {
     let mut conn = app.db.acquire().await?;
     Ok(store::given_in(&mut conn, session).await?)
-}
-
-/// Whether `known`, a folder kelve knows, holds `repo`, a repository of its
-/// own, rather than being it or in it.
-fn holds_another(known: &str, repo: Option<&Path>) -> bool {
-    let Some(repo) = repo else {
-        return false;
-    };
-    let known = std::fs::canonicalize(known).unwrap_or_else(|_| PathBuf::from(known));
-    let repo = std::fs::canonicalize(repo).unwrap_or_else(|_| repo.to_path_buf());
-    repo != known && repo.starts_with(&known)
 }
 
 /// The most files a walk for imports looks through.
@@ -768,115 +642,11 @@ pub async fn walk(app: &Shared, root: &str) -> ApiResult<()> {
     look_up(app, &names).await
 }
 
-/// A file's path in a folder, `/` between its parts, when it's in it and
-/// kelve would read it by its name.
-fn new_in(root: &str, file: &str) -> Option<String> {
-    let rel = Path::new(file).strip_prefix(root).ok()?;
-    let rel: Vec<String> = rel
-        .components()
-        .map(|c| c.as_os_str().to_string_lossy().into_owned())
-        .collect();
-    let rel = rel.join("/");
-    (!rel.is_empty() && kelve_engine::walk::by_name(&rel).is_none()).then_some(rel)
-}
-
-/// Folders whose walk for shell writes was cut short, logged once each.
-static CUT_SHORT: LazyLock<Mutex<std::collections::HashSet<String>>> =
-    LazyLock::new(Default::default);
-
-/// What the agent wrote through its shell since its last moment, however it
-/// wrote it: each file git sees changed, or, in a folder that isn't a
-/// repository, each file kelve walks, written since. Each is a file the
-/// agent wrote over whole, as an edit is, unless only its whitespace
-/// changed, as a formatter changes it. The person writing in the same
-/// moment can't be told apart.
-async fn shell_writes(
-    app: &Shared,
-    session: &str,
-    agent: &str,
-    root: Option<&str>,
-    since: Option<i64>,
-) -> ApiResult<String> {
-    // Only in a folder kelve has read: an agent working anywhere else costs
-    // no walk.
-    let (Some(root), Some(since)) = (root, since) else {
-        return Ok(String::new());
-    };
-    let dir = std::path::PathBuf::from(root);
-    let found = tokio::task::spawn_blocking(move || kelve_engine::git::written_since(&dir, since))
-        .await
-        .map_err(ApiError::internal)?;
-    let found = match found {
-        Ok(found) => found,
-        Err(e) => {
-            tracing::debug!(error = %e, "couldn't look for what the shell wrote");
-            return Ok(String::new());
-        }
-    };
-    if found.more
-        && CUT_SHORT
-            .lock()
-            .map(|mut cut| cut.insert(root.to_string()))
-            .unwrap_or(false)
-    {
-        tracing::info!(
-            most = kelve_engine::git::WRITTEN_WALK,
-            "a folder has more files than kelve looks through for what the shell wrote; the rest aren't seen"
-        );
-    }
-    let mut said = Vec::new();
-    for file in found.files {
-        let file = file.display().to_string();
-        let read = {
-            let mut conn = app.db.acquire().await?;
-            kelve_store::reader::read_at(&mut conn, &file).await?
-        };
-        // Files kelve has read, and new ones the agent made in the folder;
-        // never kelve's own, as what it keeps of what it read.
-        let Some((at, path)) = read
-            .map(|(at, path, _)| (at, path))
-            .or_else(|| new_in(root, &file).map(|rel| (root.to_string(), rel)))
-        else {
-            continue;
-        };
-        if crate::reader::is_kelves(&path) {
-            continue;
-        }
-        let Ok(now) = kelve_engine::read::read(Path::new(&at), &path) else {
-            continue;
-        };
-        let before = {
-            let mut conn = app.db.acquire().await?;
-            store::seen_text(&mut conn, session, &at, &path).await?
-        };
-        if before.is_some_and(|b| lesson::only_whitespace(&b, &now.text)) {
-            let mut conn = app.db.acquire().await?;
-            store::keep_seen(&mut conn, session, &at, &path, &now.text).await?;
-            continue;
-        }
-        let text = on_file(
-            app,
-            session,
-            agent,
-            &file,
-            true,
-            Some(&now.text),
-            None,
-            Some(root),
-        )
-        .await?;
-        if !text.is_empty() {
-            said.push(text);
-        }
-    }
-    Ok(said.join("\n"))
-}
-
 /// The agent read or edited a file: a lesson about the ideas kelve marked in
 /// it, only if one fits the work and matters here (`core::matching`):
 /// most reads and edits give nothing.
 #[allow(clippy::too_many_arguments)]
-async fn on_file(
+pub(crate) async fn on_file(
     app: &Shared,
     session: &str,
     agent: &str,
@@ -894,13 +664,12 @@ async fn on_file(
     // A file kelve hasn't read, in a folder it knows: one the agent made, or
     // one in a folder walked for its imports, nothing marked in it.
     let found = read.or_else(|| {
-        let rel = new_in(in_root?, file)?;
+        let rel = crate::moment::new_in(in_root?, file)?;
         Some((in_root?.to_string(), rel, "[]".to_string()))
     });
     let Some((root, path, ideas)) = found else {
         return Ok(String::new());
     };
-    touch(app, session, &root, &path, edit).await?;
     // What a file kelve hasn't read imports, as it is now: so a file made
     // or changed since a walk is found by its libraries too.
     if edit && unread {

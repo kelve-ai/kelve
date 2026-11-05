@@ -149,6 +149,14 @@ pub async fn open(
         .await?;
     }
     let open = reader::opened(&app, id).await?;
+    // Work shown as a change or a worktree is handed over: kept as it is
+    // now, to compare with what's committed later.
+    if matches!(asked.what, What::Change | What::Worktree)
+        && let Err(e) =
+            crate::handover::record(&app, &open, &asked.caller.agent, &title, &said).await
+    {
+        tracing::warn!(error = %e.message, "couldn't keep what the agent handed over");
+    }
     let (files, to_read, folders) = to_read(&app, &open).await?;
     let shown = show(&app, id).await?;
     Ok(Json(Opened {

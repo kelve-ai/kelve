@@ -57,7 +57,7 @@ pub fn router() -> Router<Shared> {
         .route("/agent/note-done", post(agent::note_done))
         .route("/agent/marks", get(agent::marks).post(agent::set_marks))
         .route("/agent/hook", post(agent::hook_changed))
-        .route("/agent/moment", post(crate::lessons::moment))
+        .route("/agent/moment", post(crate::moment::moment))
         .route("/agent/lessons", post(crate::lessons::know))
         .route("/agent/held", post(crate::lessons::held))
         .route("/lessons", get(crate::lessons::settings))

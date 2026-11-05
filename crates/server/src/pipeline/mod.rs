@@ -336,6 +336,11 @@ async fn sweep(app: &Shared) -> Result<Then> {
     kelve_store::asks::sweep(&mut conn).await?;
     kelve_store::sends::sweep(&mut conn).await?;
     kelve_store::lessons::sweep(&mut conn).await?;
+    // What the person said to their agent is kept a week, and what it
+    // handed over a month, unless a debrief or a past task is of it.
+    const DAY: i64 = 24 * 60 * 60 * 1000;
+    kelve_store::handovers::sweep_messages(&mut conn, kelve_store::now() - 7 * DAY).await?;
+    kelve_store::handovers::sweep(&mut conn, kelve_store::now() - 30 * DAY).await?;
     drop(conn);
     // What was kept only until it could go, such as entries written before
     // the person agreed, goes once it can.

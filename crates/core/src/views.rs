@@ -5,6 +5,11 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::character::{Look, Move, Slot};
+use crate::debrief::{Followed, Origin};
+use crate::skills::{SectionKind, SkillKind, WorkKind};
+use crate::time::Timestamp;
+
 // ---------------------------------------------------------------- you
 
 /// Whether kelve can do anything yet.
@@ -1659,4 +1664,687 @@ pub struct LessonsSettings {
     /// How long what the agent learns waits before it leaves, in seconds.
     #[ts(type = "number")]
     pub hold: i64,
+}
+
+// ---------------------------------------------------------------- skills
+
+/// What a part's checks found.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum PartCheck {
+    /// Not checked yet: it can be.
+    #[default]
+    NotChecked,
+    /// Past tasks are being redone, with it and without.
+    Checking,
+    /// It changes what the agent does: it stays.
+    Works,
+    /// The agent does it anyway: it can go.
+    NoDifference,
+    /// The agent still got it wrong with it: it needs other words.
+    Failed,
+}
+
+/// Where a part came from, as its margin says.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum PartSource {
+    /// What the person told their agent while it worked.
+    Said,
+    /// What they changed after it handed over.
+    Edit,
+    /// A decision they kept, or changed, in a debrief.
+    Debrief,
+    /// What they wrote in the file themselves.
+    ByHand,
+}
+
+/// One piece of a part's evidence.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct PartEvidence {
+    pub source: PartSource,
+    /// What showed it, in a line.
+    pub text: String,
+    pub at: Timestamp,
+    /// The debrief it came from, when it came from one.
+    pub debrief: Option<String>,
+}
+
+/// A skill in the skills page's list.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillItem {
+    /// Its name, as its folder and front matter have it: `rust`.
+    pub name: String,
+    /// Its title, as people read it: "Rust".
+    pub title: String,
+    pub kind: SkillKind,
+    /// The kind of work a "how you like it" skill is for.
+    pub work: Option<WorkKind>,
+    /// The project a project's skill is kept in, by its folder's name.
+    pub project: Option<String>,
+    pub parts: u32,
+    /// How many of its parts failed their checks.
+    pub failed: u32,
+}
+
+/// The skills page's list, in its four groups.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillsView {
+    /// Skills kelve suggests, not made yet.
+    pub suggested: Vec<SuggestedItem>,
+    /// How you like it.
+    pub like: Vec<SkillItem>,
+    /// How you do something.
+    pub doing: Vec<SkillItem>,
+    /// One project.
+    pub project: Vec<SkillItem>,
+}
+
+/// A suggested skill, in the list.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SuggestedItem {
+    pub id: String,
+    pub title: String,
+}
+
+/// One skill, as its page shows it: rendered with its margin, or as its
+/// `SKILL.md`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillView {
+    pub name: String,
+    pub title: String,
+    /// What it's for: the line under its title.
+    pub intro: String,
+    pub description: String,
+    pub kind: SkillKind,
+    pub work: Option<WorkKind>,
+    pub project: Option<String>,
+    /// The `SKILL.md`, as it is.
+    pub markdown: String,
+    pub sections: Vec<SkillSectionView>,
+    /// How many lines it has, and the most it can.
+    pub lines: u32,
+    pub most_lines: u32,
+    /// What's wrong with the file, as sentences that say what to change.
+    pub problems: Vec<String>,
+}
+
+/// A section of a skill, with its parts.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillSectionView {
+    pub title: String,
+    pub kind: Option<SectionKind>,
+    pub parts: Vec<SkillPartView>,
+}
+
+/// A part of a skill, with what its checks found.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillPartView {
+    /// Its key: the skill, and its heading normalised.
+    pub key: String,
+    pub heading: String,
+    /// The part as written, heading and all.
+    pub markdown: String,
+    /// The line its heading is on in the `SKILL.md`, from 1: where its mark
+    /// goes in the markdown view.
+    pub line: u32,
+    pub check: PartCheck,
+    /// What the check found, in a line: "Better on 2 of 2 past tasks".
+    pub hint: String,
+    /// While it's checked: how many past tasks are redone, of how many.
+    pub progress: Option<CheckProgress>,
+    /// When it failed: what happened, and clearer words from the agent.
+    pub failed: Option<PartFailed>,
+    /// Where it came from, the latest first.
+    pub evidence: Vec<PartEvidence>,
+}
+
+/// How far a check has got.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CheckProgress {
+    pub done: u32,
+    pub of: u32,
+}
+
+/// What a failed check found.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct PartFailed {
+    /// What happened, in markdown.
+    pub what: String,
+    /// The part in clearer words, from the agent, in markdown.
+    pub wording: String,
+}
+
+/// A skill kelve suggests making, drafted in full.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SuggestedSkill {
+    pub id: String,
+    pub name: String,
+    pub title: String,
+    pub description: String,
+    pub kind: SkillKind,
+    /// Why it's suggested: "A new skill from five of your decisions."
+    pub why: String,
+    pub markdown: String,
+    pub sections: Vec<SkillSectionView>,
+    /// A skill the person has whose description is close, to add to
+    /// instead.
+    pub close_to: Option<SkillItem>,
+}
+
+// ---------------------------------------------------------------- debriefs
+
+/// Where a debrief is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum DebriefState {
+    /// Waiting for the agent, busy with something else.
+    Waiting,
+    /// The agent is writing it.
+    Writing,
+    /// Ready to read.
+    Ready,
+    /// It failed its checks twice: it can be asked for again.
+    Failed,
+    /// Sent to the agent.
+    Sent,
+}
+
+/// The person's call on a decision.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum DecisionChoice {
+    Agree,
+    /// Change it: a note for the agent, to redo it their way.
+    Change,
+    /// Look into it: research.
+    LookInto,
+}
+
+/// What a decision's margin says.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum DecisionStatus {
+    YourCall,
+    Agreed,
+    Redoing,
+    Researching,
+    ResearchReady,
+}
+
+/// Where a job's answer is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum AnswerState {
+    /// Asked: waiting for the agent, or being written.
+    Asked,
+    Ready,
+    /// It failed its checks twice.
+    Failed,
+}
+
+/// A debrief, as its page shows it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefView {
+    pub id: String,
+    pub title: String,
+    pub state: DebriefState,
+    /// The example, to try: nothing in it changes the person's skills.
+    pub example: bool,
+    /// While it's written: what the agent is doing.
+    pub steps: Vec<WritingStep>,
+    /// How many files the work changed, and lines added and taken out.
+    pub files: u32,
+    pub added: u32,
+    pub removed: u32,
+    /// What it did, and how it works, in markdown.
+    pub did: String,
+    pub how: String,
+    pub decisions: Vec<DecisionView>,
+    /// How many decisions have no answer yet.
+    pub left: u32,
+    /// What it adds to the person's skills, and a new skill if one's worth
+    /// making.
+    pub for_skills: Vec<SkillAddition>,
+    pub suggested: Option<SuggestedItem>,
+    /// What it used from the person's skills.
+    pub used: Vec<UsedPart>,
+    /// What the work rests on.
+    pub ideas: Vec<IdeaView>,
+    /// Every file, by folder.
+    pub folders: Vec<DebriefFolder>,
+    /// What happens when it's sent, a line each.
+    pub on_send: Vec<SendLine>,
+    /// When it failed: what was wrong with it.
+    pub problems: Vec<String>,
+}
+
+/// A step the agent takes as it writes a debrief.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct WritingStep {
+    pub text: String,
+    pub done: bool,
+    /// Whether it's the step the agent is on.
+    pub now: bool,
+}
+
+/// A decision in a debrief.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DecisionView {
+    /// Its number in the debrief, from 1.
+    pub n: u32,
+    pub title: String,
+    /// Why, in markdown.
+    pub why: String,
+    pub from: Origin,
+    /// On a large change, the part of it the decision belongs to.
+    pub group: Option<String>,
+    /// Where it is: "src/fetch.rs, lines 59 to 66".
+    pub place: String,
+    pub could_have: Vec<String>,
+    pub rests_on: Vec<String>,
+    pub choice: Option<DecisionChoice>,
+    pub status: DecisionStatus,
+    /// The note for the agent, when the person chose to change it.
+    pub note: String,
+    /// The question, when they asked their agent to look into it, and its
+    /// answer.
+    pub question: String,
+    pub research: Option<ResearchView>,
+    /// Whether it goes into a skill when the debrief is sent, and which.
+    pub remember: bool,
+    pub skill: Option<SkillTarget>,
+    /// Its own lines of code, folded away until opened.
+    pub code: Vec<DebriefLine>,
+}
+
+/// Research on a decision.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ResearchView {
+    pub state: AnswerState,
+    /// The answer, in markdown, once it's ready.
+    pub markdown: Option<String>,
+}
+
+/// The skill something goes into.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillTarget {
+    pub name: String,
+    pub title: String,
+    /// Whether it's a new skill kelve suggests.
+    pub new: bool,
+}
+
+/// One line of a decision's code.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefLine {
+    pub kind: DebriefLineKind,
+    /// Its number in the file as it is now, or as it was for a line taken
+    /// out; none for a fold.
+    pub n: Option<u32>,
+    pub text: String,
+    /// For a fold: how many lines it hides.
+    pub folded: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum DebriefLineKind {
+    Added,
+    Removed,
+    /// What the person changed after the agent handed over.
+    Yours,
+    Context,
+    /// Lines left out, as before.
+    Fold,
+}
+
+/// A part the debrief adds to a skill.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillAddition {
+    pub skill: SkillTarget,
+    pub heading: String,
+    pub markdown: String,
+    /// The decisions it comes from, by number.
+    pub decisions: Vec<u32>,
+    /// The heading of a part it disagrees with, when it does: the person
+    /// chooses.
+    pub disagrees: Option<String>,
+}
+
+/// A part of the person's skills the work used.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct UsedPart {
+    pub skill: SkillTarget,
+    pub heading: String,
+    pub followed: Followed,
+}
+
+/// An idea the work rests on.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct IdeaView {
+    pub name: String,
+    /// What it is, in a line.
+    pub what: String,
+    /// Whether it's new to the person, by `marks.md`.
+    pub new_to_you: bool,
+    /// Its explanation, once asked for.
+    pub explanation: Option<ExplanationView>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ExplanationView {
+    pub state: AnswerState,
+    pub markdown: Option<String>,
+}
+
+/// A folder of the work's files.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefFolder {
+    /// Its path, or "the top folder".
+    pub name: String,
+    /// How many files it has in the change.
+    pub count: u32,
+    /// Whether it starts open: past about 20 files, folders start closed.
+    pub open: bool,
+    pub files: Vec<DebriefFile>,
+}
+
+/// A file of the work.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefFile {
+    pub path: String,
+    pub added: u32,
+    pub removed: u32,
+    /// Whether the person changed it after the agent handed over.
+    pub yours: bool,
+    /// The decisions in it, by number.
+    pub decisions: Vec<u32>,
+    /// Whether kelve reads it as text, and shows it.
+    pub shown: bool,
+}
+
+/// A line of what happens when a debrief is sent.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SendLine {
+    pub text: String,
+    /// What it leads to, when it leads somewhere.
+    pub action: Option<String>,
+    pub to: Option<String>,
+}
+
+// ---------------------------------------------------------------- home
+
+/// Which of home's states it's in.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum HomeState {
+    /// Things for the person, or nothing.
+    Normal,
+    /// The agent is at work.
+    Working,
+    /// Nothing yet: a new person.
+    Empty,
+    /// Something needs fixing.
+    Attention,
+}
+
+/// Home: the agent's bubble, what it asks, and what's happened.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct HomeView {
+    pub state: HomeState,
+    /// The agent's status, in a few words: "Waiting for you".
+    pub status: String,
+    /// When it started working, for a clock.
+    pub working_since: Option<Timestamp>,
+    /// What the agent says, in its own words.
+    pub say: String,
+    /// How it moves.
+    pub moving: Move,
+    pub asks: Vec<HomeAsk>,
+    pub days: Vec<HomeDay>,
+}
+
+/// What a request in the agent's bubble is about, for its icon.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum HomeAskKind {
+    Debrief,
+    Check,
+    /// kelve's hook is gone from an agent's settings.
+    Hook,
+    /// The agent stopped before it finished.
+    Stalled,
+}
+
+/// Something the agent asks of the person, in its bubble.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct HomeAsk {
+    pub id: String,
+    pub kind: HomeAskKind,
+    /// In the agent's words: "I finished Retry failed downloads. I made 4
+    /// decisions you might want a say in."
+    pub text: String,
+    /// Its button, and where it leads, when it has one.
+    pub action: Option<String>,
+    pub to: Option<String>,
+    /// Whether it's the main thing to do.
+    pub main: bool,
+    /// A second, quieter choice: "Not now".
+    pub alt: Option<String>,
+}
+
+/// A day on home's timeline.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct HomeDay {
+    /// "Today", "Yesterday", or the date.
+    pub label: String,
+    pub items: Vec<TimelineItem>,
+}
+
+/// What a line on the timeline is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum TimelineKind {
+    Debrief,
+    Check,
+    /// A skill was added to, or started.
+    Skill,
+    /// A verified score.
+    Score,
+    /// The agent drew a part or a character.
+    Part,
+    /// A piece of work done, debriefed.
+    Done,
+    /// A small change, with no debrief.
+    Small,
+}
+
+/// What a line on the timeline can do.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum TimelineAct {
+    Undo,
+    DebriefIt,
+    Open,
+    TryItOn,
+    SeeIt,
+}
+
+/// A line on home's timeline.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct TimelineItem {
+    pub id: String,
+    pub kind: TimelineKind,
+    pub title: String,
+    pub at: Timestamp,
+    pub act: Option<TimelineAct>,
+    /// Where it leads.
+    pub to: Option<String>,
+    /// For a score: a square for each task.
+    pub squares: Vec<ScoreSquare>,
+}
+
+/// How the person's agent did on one task, against a standard one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum ScoreSquare {
+    Better,
+    Same,
+    Worse,
+}
+
+// ---------------------------------------------------------------- your agent
+
+/// The person's agent as a character.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CharacterView {
+    /// Its name: the one given, or "Sam's agent".
+    pub name: String,
+    /// Whether the person gave it that name.
+    pub named: bool,
+    pub look: Look,
+    /// It drawn, as an SVG whose layers the app's CSS moves.
+    pub svg: String,
+    /// The parts and characters the agent drew for the person.
+    pub made: Vec<MadeView>,
+}
+
+/// A part or a character the agent drew.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct MadeView {
+    /// What it's known by, in a look.
+    pub key: String,
+    pub name: String,
+    /// The slot a part goes in; none for a whole character.
+    pub slot: Option<Slot>,
+    /// It drawn on its own, as an SVG.
+    pub svg: String,
+    pub at: Timestamp,
+}
+
+/// Your agent: its character, what it knows, and how it scores.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct YourAgentView {
+    pub character: CharacterView,
+    /// A row for each skill: a square for each part, by what its check found.
+    pub knows: Vec<KnowsRow>,
+    /// How often the person picked their agent, blind, on their past work.
+    pub fits: Option<FitsYou>,
+    /// Verified scores, and whether each is on their page.
+    pub scores: Vec<ScoreRow>,
+    /// Their page, once it's published.
+    pub page: Option<String>,
+}
+
+/// A skill, in what the agent knows.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct KnowsRow {
+    pub name: String,
+    pub title: String,
+    pub kind: SkillKind,
+    pub parts: Vec<PartCheck>,
+}
+
+/// Fits you: blind picks between the person's agent and a standard one.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct FitsYou {
+    /// How many times they picked their own agent, of how many.
+    pub picked: u32,
+    pub of: u32,
+    /// Each test, oldest first: whether they picked their own.
+    pub tests: Vec<bool>,
+}
+
+/// A verified score.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ScoreRow {
+    pub id: String,
+    pub work: WorkKind,
+    /// The model it ran on, as people name it: "Sonnet 5.6".
+    pub model: String,
+    pub squares: Vec<ScoreSquare>,
+    pub at: Timestamp,
+    /// Whether it shows on the person's page.
+    pub shown: bool,
+    /// Whether a newer model has come out since.
+    pub stale: bool,
 }
