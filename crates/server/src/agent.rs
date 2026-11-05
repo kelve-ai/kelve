@@ -646,6 +646,7 @@ fn shape(kind: &str, material: &Value, value: &Value) -> Result<(), String> {
         RESEARCH => crate::agent_loop::research::shape(value),
         EXPLAIN => crate::agent_loop::explain::shape(value),
         LEARN => crate::agent_loop::learn::shape(material, value),
+        kelve_core::instructions::COMPARE => crate::skill_checks::shape(material, value),
         _ => Ok(()),
     }
 }

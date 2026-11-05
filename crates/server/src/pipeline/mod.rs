@@ -246,6 +246,8 @@ async fn dispatch(app: &Shared, job: &jobs::Job) -> Result<Then> {
         crate::v2jobs::RESEARCH => crate::agent_loop::research::job(app, &job.payload).await,
         crate::v2jobs::EXPLAIN => crate::agent_loop::explain::job(app, &job.payload).await,
         crate::v2jobs::LEARN => crate::agent_loop::learn::job(app, job).await,
+        crate::v2jobs::CHECK => crate::skill_checks::check_job(app, &job.payload).await,
+        crate::skill_checks::FITS => crate::skill_checks::fits_job(app, &job.payload).await,
         other => {
             tracing::warn!(job = other, "a job of a kind kelve doesn't know; dropped");
             Ok(Then::Done)

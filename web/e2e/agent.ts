@@ -214,6 +214,20 @@ function folderLines(job: Job) {
 }
 
 /** How the stand-in agent answers a job. `quote` is what its entries quote from the page. */
+/**
+ * Redoes a past task twice, as two subagents would: with the part, or every
+ * skill, it does what the skills say; without, it doesn't.
+ */
+export function compare(job: Job) {
+  const part = 'part' in job.material
+  const run = (line: string, followed: boolean) => ({
+    diff: `diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1 +1,2 @@\n fn main() {}\n+${line}\n`,
+    said: `Done, ${followed ? 'as the skills say' : 'as it would anyway'}.`,
+    ...(part ? { followed, shows: line } : {}),
+  })
+  return { with: run('// with your skills', true), without: run('// as a standard agent', false) }
+}
+
 export function answer(job: Job, quote = 'PostgreSQL provides a means for creating locks that have application-defined meanings.'): unknown {
   switch (job.kind) {
     case 'read': return read(job)
@@ -234,6 +248,7 @@ export function answer(job: Job, quote = 'PostgreSQL provides a means for creati
     case 'research': return loop.research(job)
     case 'explain': return loop.explain(job)
     case 'learn': return loop.learn(job)
+    case 'compare': return compare(job)
     default: throw new Error(`a job the stand-in agent doesn't know: ${job.kind}`)
   }
 }

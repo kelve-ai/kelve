@@ -17,7 +17,7 @@ test('the header leads to each place, and says which one you’re in', async ({ 
 
   await nav.getByRole('link', { name: 'Skills' }).click()
   await expect(page).toHaveURL(/#\/skills$/)
-  await expect(page.getByRole('heading', { level: 1, name: 'Skills' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'No skills yet' })).toBeVisible()
   await expect(nav.getByRole('link', { name: 'Skills' })).toHaveAttribute('aria-current', 'page')
 
   await nav.getByRole('link', { name: 'Your agent' }).click()
@@ -54,11 +54,7 @@ test('every screen still being built says what it will show', async ({ page }) =
   const screens: Array<[string, string]> = [
     ['debrief/3', 'Debrief'],
     ['change/3', 'The change'],
-    ['skills/rust', 'A skill'],
-    ['skills/rust/edit', 'Editing a skill'],
     ['agent/look', 'Change how it looks'],
-    ['agent/score/new', 'A verified score'],
-    ['agent/score/7', 'Verified score'],
     ['welcome', 'Meet your agent'],
   ]
   for (const [path, name] of screens) {

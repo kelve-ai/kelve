@@ -36,6 +36,7 @@ pub fn the_offer() -> Offer {
                 scored: "Hidden tests check each task, and a fixed judge scores what tests can’t."
                     .into(),
                 bank: "rust-1".into(),
+                examples: Vec::new(),
             },
             KindOffer {
                 kind: "words".into(),
@@ -44,6 +45,7 @@ pub fn the_offer() -> Offer {
                 tasks: 10,
                 scored: "A fixed judge scores each task against what it looks for.".into(),
                 bank: "words-1".into(),
+                examples: Vec::new(),
             },
         ],
         agents: vec![

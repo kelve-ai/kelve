@@ -7,6 +7,12 @@ import { useEffect } from 'react'
 import { Header } from '../Header'
 import { hrefOf, placeOf, type Route, SECTIONS, type Section } from '../routes'
 import { Character } from '../ui/Character'
+import { AccountSection } from './hosted/Account'
+import { Address } from './hosted/Address'
+import { Run } from './hosted/Run'
+import { RunSetup } from './hosted/RunSetup'
+import { YourPage } from './hosted/YourPage'
+import { isSkillsRoute, SkillsScreens, type SkillsRoute } from './Skills'
 
 /** What each settings section is called. */
 const SECTION_NAMES: Record<Section, string> = {
@@ -29,7 +35,7 @@ const SECTION_LINES: Record<Section, string> = {
 }
 
 /** A stub's name, what it's for, and the address's own part, if it has one. */
-function stubOf(route: Route): { name: string; line: string; what?: string } {
+function stubOf(route: Exclude<Route, SkillsRoute>): { name: string; line: string; what?: string } {
   switch (route.screen) {
     case 'home':
       return { name: 'Home', line: 'Your agent, what it needs from you, and what happened lately, a day at a time.' }
@@ -37,14 +43,10 @@ function stubOf(route: Route): { name: string; line: string; what?: string } {
       return { name: 'Debrief', line: 'What your agent did, how it works and every decision it made. Agree, ask for it another way, or have your agent look into it.', what: `Debrief ${route.id}` }
     case 'change':
       return { name: 'The change', line: 'Every file your agent changed, with each decision beside the lines it holds.', what: `Change ${route.id}` }
-    case 'skills':
-      return { name: 'Skills', line: 'How you like it, how you do things, and what one project needs, with how each part checked out.' }
-    case 'skill':
-      return { name: 'A skill', line: 'This skill, rendered or as markdown, with a note beside each part on how it checked out.', what: route.name }
-    case 'skill-edit':
-      return { name: 'Editing a skill', line: 'Change this skill by hand. A part you add or reword waits to be checked.', what: route.name }
     case 'agent':
       return { name: 'Your agent', line: 'It learns from what you correct, and keeps it as skills. What it knows, and how well it fits you.' }
+    case 'address':
+      return { name: 'Choose your page’s address', line: '' }
     case 'look':
       return { name: 'Change how it looks', line: 'Build your agent from parts, in colours you choose, or ask it to draw itself.' }
     case 'score-new':
@@ -61,7 +63,7 @@ function stubOf(route: Route): { name: string; line: string; what?: string } {
 /** Where the character stands on a stub: the screens that are about your agent. */
 const WITH_CHARACTER: Route['screen'][] = ['home', 'agent', 'look', 'welcome']
 
-function Stub({ route, example }: { route: Route; example?: boolean }) {
+function Stub({ route, example }: { route: Exclude<Route, SkillsRoute>; example?: boolean }) {
   const { name, line, what } = stubOf(route)
   return (
     <div className="stub" data-stub={route.screen}>
@@ -90,8 +92,14 @@ function Settings({ section, example }: { section: Section; example?: boolean })
       </nav>
       <section className="sets-body" aria-label={SECTION_NAMES[section]} data-stub={`settings-${section}`}>
         <h2>{SECTION_NAMES[section]}</h2>
-        <p className="lede">{SECTION_LINES[section]}</p>
-        <p className="stub-soon">This page is still being built.</p>
+        {section === 'account' ? (
+          <AccountSection example={example} />
+        ) : (
+          <>
+            <p className="lede">{SECTION_LINES[section]}</p>
+            <p className="stub-soon">This page is still being built.</p>
+          </>
+        )}
       </section>
     </div>
   )
@@ -107,8 +115,25 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
   return (
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
-      <main className={route.screen === 'settings' ? 'app-main' : 'app-main narrow'}>
-        {route.screen === 'settings' ? <Settings section={route.section} example={example} /> : <Stub route={route} example={example} />}
+      <main className={route.screen === 'settings' || isSkillsRoute(route) ? 'app-main' : 'app-main narrow'}>
+        {route.screen === 'settings' ? (
+          <Settings section={route.section} example={example} />
+        ) : isSkillsRoute(route) ? (
+          <SkillsScreens route={route} example={example} />
+        ) : route.screen === 'address' ? (
+          <Address example={example} />
+        ) : route.screen === 'score-new' ? (
+          <RunSetup example={example} />
+        ) : route.screen === 'score' ? (
+          <Run id={route.id} example={example} />
+        ) : route.screen === 'agent' ? (
+          <>
+            <Stub route={route} example={example} />
+            <YourPage example={example} />
+          </>
+        ) : (
+          <Stub route={route} example={example} />
+        )}
       </main>
     </div>
   )

@@ -15,6 +15,7 @@ pub mod follows;
 pub mod handoff;
 pub mod handover;
 pub mod hooks;
+pub mod hosted;
 pub mod lessons;
 pub mod list;
 pub mod moment;
@@ -26,7 +27,9 @@ pub mod read;
 pub mod reader;
 pub mod ready;
 pub mod settings;
+pub mod skill_checks;
 pub mod skills_home;
+pub mod skills_sync;
 pub mod spec;
 pub mod state;
 pub mod updates;
@@ -100,6 +103,7 @@ async fn start(config: Config) -> Result<Shared, ServeError> {
     follows::start(&app);
     lessons::start(&app);
     updates::start(&app);
+    skills_sync::start(&app);
     hooks::up_to_date(&app.config.agents_home, &app.config.claude_dir);
     // Skills linked into agents' folders, in step with what's on disk now.
     agent_loop::links::keep_in_step(&app);

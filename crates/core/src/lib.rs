@@ -12,6 +12,7 @@ pub mod entry;
 pub mod fence;
 pub mod formula;
 pub mod hook;
+pub mod hosted;
 pub mod ideas;
 pub mod instructions;
 pub mod learn;

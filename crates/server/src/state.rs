@@ -30,6 +30,8 @@ pub struct App {
     /// A sign-in to the shared graph under way, waiting for the browser
     /// to come back.
     pub signing_in: std::sync::Mutex<Option<tokio::task::AbortHandle>>,
+    /// kelve.ai from the app: a sign-in to it under way.
+    pub hosted: crate::hosted::Hosted,
     /// The instructions for the agent's jobs, as the graph lately served
     /// them.
     pub instructions: crate::agent::Instructions,
@@ -123,6 +125,7 @@ impl App {
             http,
             graph,
             signing_in: std::sync::Mutex::new(None),
+            hosted: crate::hosted::Hosted::default(),
             instructions: crate::agent::Instructions::default(),
             none_ahead: std::sync::Mutex::default(),
             secret,

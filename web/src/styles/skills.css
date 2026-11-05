@@ -1,0 +1,156 @@
+/* Your skills (boards Skills, SkillsEmpty, SkillSuggested, SkillEdit,
+   CheckConfirm, CheckRunning) and Fits you: the list down the side, the
+   skill beside it with a note beside each part's heading, its SKILL.md with
+   marks beside its ### lines, the editor and its preview, and two results
+   side by side. Space does the grouping: hairlines, never boxes. */
+
+/* ---------------------------------------------------------------- the page */
+.sk { display: flex; flex-wrap: wrap; gap: 32px 56px; align-items: flex-start; }
+.sk-side { flex: 1 1 200px; max-width: 220px; display: flex; flex-direction: column; gap: 20px; }
+.sk-side > .btn { align-self: flex-start; }
+.sk-group { display: flex; flex-direction: column; gap: 2px; }
+.sk-gh { font-size: 13px; line-height: 18px; font-weight: 600; color: var(--quiet); padding: 0 12px 4px; }
+.sk-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 10px;
+  color: var(--ink-2); font-size: 15px; line-height: 22px;
+}
+.sk-item:hover { background: var(--well); text-decoration: none; }
+.sk-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sk-item[aria-current='page'] { background: var(--white); color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px var(--rule), 0 1px 2px rgba(var(--shadow), 0.05); }
+.sk-item.mono > span:first-child, h1.mono { font-family: var(--mono); }
+.sk-meta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; color: var(--quiet); }
+.sk-meta.red { color: var(--accent-ink); }
+.sk-meta.sk-busy { color: var(--ev-check-ink); }
+
+.sk-doc { flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
+/* A row: what it says, and the margin beside it, as the markdown's rows. */
+.sk-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 240px); column-gap: 40px; align-items: start; }
+.sk-head > div:first-child { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.sk-head h1 { margin: 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.sk-intro { margin: 0; font-size: 19px; line-height: 30px; color: var(--ink-2); }
+.sk-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 6px; }
+.sk-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sk-error { margin: 0; font-size: 14.5px; line-height: 21px; color: var(--accent-ink); }
+ul.sk-error { padding-left: 18px; }
+
+/* What's wrong with the file. */
+.sk-problems { font-size: 15px; line-height: 23px; color: var(--ink-2); border-left: 2px solid var(--accent-edge); padding: 2px 0 2px 16px; max-width: 720px; }
+.sk-problems p { margin: 0 0 6px; font-weight: 600; color: var(--ink); }
+.sk-problems ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+
+/* The skill, rendered: its sections, and each part with its note. */
+.sk-body { display: flex; flex-direction: column; gap: 28px; }
+.sk-body .md .md-row.h2 h3 { font-size: 26px; line-height: 32px; letter-spacing: -0.02em; }
+.sk-body > .sk-row:not(.sk-part) { margin-top: 14px; }
+.sk-body > .sk-row:first-child { margin-top: 0; }
+.sk-part-l { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.sk-part .sk-note { padding-top: 4px; }
+
+/* A part's note: its state, a line on it, and what you can do. */
+.sk-note { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; font-size: 13.5px; line-height: 19px; }
+.sk-hint { color: var(--soft); }
+.sk-note .go { font-size: 13.5px; line-height: 19px; }
+.sk-note .go.quiet { color: var(--soft); }
+.sk-note .go.quiet:hover { color: var(--ink); }
+.sk-running { gap: 10px; }
+.sk-running .char { align-self: flex-start; }
+
+.sk-st { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; line-height: 19px; font-weight: 600; color: var(--ink-2); }
+.sk-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; box-sizing: border-box; background: transparent; }
+.sk-st.notChecked .sk-dot { border: 2px solid var(--quiet); }
+.sk-st.works .sk-dot { background: var(--better); }
+.sk-st.failed .sk-dot { background: var(--accent); }
+.sk-st.noDifference .sk-dot { background: var(--ochre); }
+.sk-dot-spin { width: 10px; height: 10px; border: 2px solid var(--ev-check-tint); border-top-color: var(--ev-check); animation: spin 0.8s linear infinite; }
+
+/* What a failed check found, and clearer words. */
+.sk-fix { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 12px; background: var(--well-2); }
+.sk-own { display: flex; flex-direction: column; gap: 10px; }
+.sk-own label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.sk-ed, .sk-src-ed {
+  display: block; width: 100%; box-sizing: border-box; font: 450 14px/23px var(--mono); padding: 10px 12px; border: 1px solid var(--rule);
+  border-radius: 8px; background: transparent; color: var(--ink); resize: vertical; tab-size: 4;
+}
+.sk-ed:focus, .sk-src-ed:focus { outline: 2px solid var(--accent-edge); border-color: var(--accent-focus); }
+
+/* Checking: the parts a check would redo work with. */
+.sk-offer { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.sk-offer li { display: flex; gap: 10px; align-items: center; font-size: 15.5px; line-height: 22px; font-weight: 600; color: var(--ink); }
+.sk-offer .sk-dot { border: 2px solid var(--quiet); }
+
+/* ---------------------------------------------------------------- SKILL.md, as kelve draws code */
+.sk-src { display: flex; flex-direction: column; font: 450 13.5px/24px var(--mono); color: var(--code); }
+.sk-ln { display: grid; grid-template-columns: 44px minmax(0, 1fr) 240px; align-items: start; }
+.sk-n { text-align: right; padding-right: 14px; font-size: 11.5px; color: var(--line-n, var(--quiet)); user-select: none; }
+.sk-l { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.sk-mk { padding-left: 40px; font-family: var(--sans); }
+.sk-mk .sk-st { line-height: 24px; }
+.sk-src .md-q { color: var(--quiet); }
+.sk-src .md-k { color: var(--c-const); font-weight: 500; }
+.sk-src .md-hm { color: var(--accent-edge-2); font-weight: 600; }
+.sk-src .md-h { color: var(--accent-ink); font-weight: 650; }
+.sk-src .md-b { color: var(--ink); font-weight: 600; }
+.sk-src .md-c { color: var(--c-keyword); }
+.sk-src .md-a { color: var(--c-def); }
+.sk-src .md-code { color: var(--c-string); }
+
+/* ---------------------------------------------------------------- no skills yet */
+.sk-empty { max-width: 720px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding-top: 20px; }
+.sk-empty h1 { margin: 4px 0 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -0.03em; }
+.sk-empty p { margin: 0; font-size: 19px; line-height: 30px; color: var(--ink-2); }
+.sk-empty .sk-acts { padding-top: 6px; }
+
+/* ---------------------------------------------------------------- editing */
+.sk-edit { display: flex; flex-direction: column; gap: 24px; }
+.sk-edit-top { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.sk-edit-top > div:first-child { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sk-edit h1 { margin: 0; font-size: 34px; line-height: 40px; font-weight: 700; letter-spacing: -0.03em; }
+.sk-back { display: inline-flex; align-items: center; gap: 4px; font-size: 14.5px; }
+.sk-status { font-size: 14px; font-weight: 600; color: var(--better); margin-right: 6px; }
+.sk-status.dirty { color: var(--ochre); }
+.sk-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+.sk-pane { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sk-plabel { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; font-size: 13.5px; line-height: 20px; font-weight: 600; color: var(--quiet); }
+.sk-rule { font-weight: 400; color: var(--soft); }
+.sk-rule code { font-family: var(--mono); font-size: 0.95em; }
+.sk-src-ed { height: 760px; padding: 14px 16px; border-radius: 10px; }
+.sk-prev { height: 760px; overflow-y: auto; padding: 14px 4px 40px 0; }
+
+/* ---------------------------------------------------------------- Fits you */
+.fit { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; max-width: 1160px; }
+.fit h1 { margin: 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -0.03em; }
+.fit-line { margin: 0; max-width: 680px; font-size: 19px; line-height: 30px; color: var(--ink-2); }
+.fit-ask { margin: 0; padding-left: 16px; border-left: 2px solid var(--rule); max-width: 760px; font-size: 17px; line-height: 27px; color: var(--ink-2); white-space: pre-wrap; }
+.fit-sides { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; width: 100%; }
+.fit-sides h2 { margin: 0 0 10px; font-size: 22px; line-height: 28px; font-weight: 700; }
+.fit-diff { margin: 0; max-height: 560px; overflow: auto; padding: 12px 14px; border-radius: 10px; background: var(--well-2); font: 450 13px/21px var(--mono); color: var(--code); }
+.fit-diff span { display: block; white-space: pre; }
+.fit-diff .add { background: var(--added-tint); color: var(--added-ink); }
+.fit-diff .del { background: var(--removed-tint); color: var(--brown); }
+.fit-diff .h { color: var(--quiet); }
+.fit-diff .at { color: var(--c-def); }
+.fit-diff:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fit-none { margin: 0; color: var(--quiet); }
+.fit-tally { margin: 0; font-size: 15px; color: var(--soft); }
+.fit-tally strong { color: var(--ink); }
+
+/* ---------------------------------------------------------------- on a phone */
+@media (max-width: 900px) {
+  .sk-row { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .sk-head > div:last-child:empty { display: none; }
+  /* A part's note comes first, above what it's about. */
+  .sk-part > .sk-note { order: -1; padding-top: 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .sk-split, .fit-sides { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .sk-src-ed { height: 480px; }
+  .sk-prev { height: auto; }
+}
+@media (max-width: 760px) {
+  .sk-side { max-width: none; }
+  .sk-head h1, .sk-empty h1, .fit h1 { font-size: 34px; line-height: 40px; }
+  .sk-ln { grid-template-columns: 36px minmax(0, 1fr) 24px; }
+  .sk-mk { padding-left: 8px; }
+  .sk-stw { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-dot-spin { animation: none; }
+}
