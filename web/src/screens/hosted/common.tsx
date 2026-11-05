@@ -34,6 +34,9 @@ export const count = (n: number, one: string, many = `${one}s`) => `${n} ${n ===
 const SAID: Record<TaskSquare, string> = { better: 'Better', same: 'The same', worse: 'Worse', running: 'Running now', waiting: 'Waiting' }
 
 /** A square for each task, in a grid as wide as there are tasks. */
+/** How many squares a row has room for at least: a bank's tasks. */
+const ROW = 12
+
 export function Squares({ squares, small, result, dim, label }: {
   squares: Array<TaskSquare | ScoreSquare>
   small?: boolean
@@ -44,7 +47,8 @@ export function Squares({ squares, small, result, dim, label }: {
   label?: string
 }) {
   const cls = ['hs-sqs', small && 'small', result && 'result', dim && 'dim'].filter(Boolean).join(' ')
-  const style = { gridTemplateColumns: `repeat(${Math.max(squares.length, 1)}, minmax(0, 1fr))` }
+  // Room for a whole bank's squares, so a run of a few keeps them square-sized.
+  const style = { gridTemplateColumns: `repeat(${Math.max(squares.length, ROW)}, minmax(0, 1fr))` }
   if (label) {
     return (
       <div className={cls} style={style} role="img" aria-label={label}>
@@ -163,5 +167,8 @@ export function SignInSheet({ onClose, onDone }: { onClose: () => void; onDone: 
   )
 }
 
-/** Where getting a verified score starts: an address for the page first, if there's none. */
-export const startAt = (h: HostedView | undefined) => (h?.handle ? 'agent/score/new' : 'agent/address')
+/** Where getting a verified score starts. A page's address is needed only to publish one. */
+export const START = 'agent/score/new'
+
+/** Choosing a page's address, then back to `then`, a screen in kelve. */
+export const addressThen = (then: string) => `agent/address?then=${encodeURIComponent(then)}`

@@ -9,7 +9,7 @@ import type { HostedView, ScoreView } from '../../api/types'
 import { hrefOf } from '../../routes'
 import { Btn, Toggle, useToast } from '../../ui/kit'
 import { useLoad } from '../../useLoad'
-import { SignInSheet, Squares, saidOf, send, shortPage, startAt, useHosted } from './common'
+import { SignInSheet, Squares, saidOf, send, shortPage, START, useHosted } from './common'
 
 const LINK = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -25,8 +25,8 @@ export function YourPage({ example }: { example?: boolean }) {
   const [toast, say] = useToast()
   const onSignedIn = useCallback(() => {
     setSigning(false)
-    if (!example) location.hash = hrefOf(startAt(hosted.data), example)
-  }, [example, hosted.data])
+    if (!example) location.hash = hrefOf(START, example)
+  }, [example])
   if (!h) return null
   const list = scores.data ?? []
   if (!h.signedIn || !h.page || list.length === 0) {
@@ -42,7 +42,7 @@ export function YourPage({ example }: { example?: boolean }) {
           <section className="hs-cta" aria-label="Your page">
             <p>A verified score gives your agent a page to share.</p>
             {h.signedIn ? (
-              <Btn kind="primary" size="large" href={hrefOf(startAt(h), example)}>Get a verified score</Btn>
+              <Btn kind="primary" size="large" href={hrefOf(START, example)}>Get a verified score</Btn>
             ) : (
               <Btn kind="primary" size="large" onClick={() => setSigning(true)}>Get a verified score</Btn>
             )}

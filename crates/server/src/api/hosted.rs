@@ -372,6 +372,10 @@ pub struct RunIn {
     kind: String,
     agent: String,
     model: String,
+    /// What pays: what they chose, or else what kelve keeps already, or
+    /// else the first the agent takes.
+    #[serde(default)]
+    credential: Option<CredentialKind>,
 }
 
 /// Sends the person's skills to kelve.ai for a run, and has what it will
@@ -403,8 +407,25 @@ pub async fn estimate(
             "Your skills come to more than a megabyte. Make them shorter, then try again.",
         ));
     }
+    let accepts = hosted::accepts([agent]);
+    let mut kept = Vec::new();
+    for kind in &accepts {
+        if hosted::provider_key(&app, &model.provider, *kind)
+            .await?
+            .is_some()
+        {
+            kept.push(*kind);
+        }
+    }
+    // Estimated for what will pay, so confirming it never finds it was
+    // estimated for something else.
+    let paying = ask
+        .credential
+        .filter(|k| accepts.contains(k))
+        .or_else(|| accepts.iter().copied().find(|k| kept.contains(k)))
+        .unwrap_or(accepts[0]);
     let e = c
-        .estimate(&kind.kind, &agent.agent, &model.model, &skills)
+        .estimate_paying(&kind.kind, &agent.agent, &model.model, &skills, paying.into())
         .await
         .map_err(said)?;
     tracing::info!(kind = %e.kind, model = %e.model, files = files.len(), "sent the person's skills to kelve.ai for an estimate");
@@ -429,16 +450,6 @@ pub async fn estimate(
         )
         .await?;
     }
-    let accepts = hosted::accepts([agent]);
-    let mut kept = Vec::new();
-    for kind in &accepts {
-        if hosted::provider_key(&app, &e.provider, *kind)
-            .await?
-            .is_some()
-        {
-            kept.push(*kind);
-        }
-    }
     Ok(Json(EstimateView {
         run: e.run,
         kind_name: kind.name.clone(),
@@ -454,6 +465,7 @@ pub async fn estimate(
         runs_left: e.runs_left,
         accepts,
         kept,
+        paying,
         skills: e
             .skills
             .into_iter()

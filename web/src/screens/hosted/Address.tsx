@@ -1,6 +1,6 @@
 // Choosing your page's address (board ChooseHandle): kelve.ai/@ and what you
 // type, checked as you type, with others like it when someone has it. Saved,
-// it goes on to getting a verified score.
+// it goes back to where it was asked for: publishing a score, or Your agent.
 
 import { useEffect, useState } from 'react'
 import type { HandleView, HostedView } from '../../api/types'
@@ -53,12 +53,15 @@ export function Address({ example }: { example?: boolean }) {
   }, [value])
   const fresh = check && check.handle === value.trim().replace(/^@/, '').toLowerCase()
   const tone = !value.trim() || !fresh ? 'none' : check.available ? 'ok' : 'no'
+  // Only ever a screen in kelve's own Your agent.
+  const asked = new URLSearchParams(location.hash.split('?')[1] ?? '').get('then')
+  const then = asked && /^agent(\/[a-z0-9/-]+)?$/i.test(asked) ? asked : 'agent'
   const save = () => {
     setSaving(true)
     send<HostedView>('/api/hosted/handle', { handle: value }).then(
       () => {
         hosted.reload()
-        location.hash = hrefOf('agent/score/new', example)
+        location.hash = hrefOf(then, example)
       },
       (e: Error) => {
         setSaid(e.message)

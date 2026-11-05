@@ -11,12 +11,12 @@ import { hrefOf } from '../../routes'
 import { Character } from '../../ui/Character'
 import { Btn } from '../../ui/kit'
 import { useLoad } from '../../useLoad'
-import { SignInSheet, count, send, size, startAt, useHosted } from './common'
+import { SignInSheet, count, send, size, useHosted } from './common'
 
 export function RunSetup({ example }: { example?: boolean }) {
   const hosted = useHosted()
   const h = hosted.data
-  const offer = useLoad<OfferView>(h?.signedIn && h.handle ? '/api/hosted/offer' : null, ['settings'])
+  const offer = useLoad<OfferView>(h?.signedIn ? '/api/hosted/offer' : null, ['settings'])
   const o = offer.data
   const [kind, setKind] = useState<string>()
   const [agent, setAgent] = useState<string>()
@@ -45,31 +45,22 @@ export function RunSetup({ example }: { example?: boolean }) {
       </div>
     )
   }
-  if (h && !h.handle) {
-    return (
-      <div className="hs-screen mid">
-        <Head />
-        <p className="hs-quiet">Your page needs an address first.</p>
-        <div className="hs-acts">
-          <Btn kind="primary" size="large" href={hrefOf(startAt(h), example)}>Choose an address</Btn>
-        </div>
-      </div>
-    )
-  }
   const chosenKind = o?.kinds.find((k) => k.kind === kind) ?? o?.kinds[0]
   const chosenAgent = o?.agents.find((a) => a.agent === agent) ?? o?.agents[0]
   const chosenModel = chosenAgent?.models.find((m) => m.model === model) ?? chosenAgent?.models[0]
   const left = o?.runs.left ?? h?.runs?.left ?? 0
-  const start = () => {
+  const start = (credential?: CredentialKind) => {
     if (!chosenKind || !chosenAgent || !chosenModel) return
     setBusy(true)
-    send<EstimateView>('/api/hosted/runs', { kind: chosenKind.kind, agent: chosenAgent.agent, model: chosenModel.model }).then(
+    send<EstimateView>('/api/hosted/runs', { kind: chosenKind.kind, agent: chosenAgent.agent, model: chosenModel.model, credential }).then(
       (e) => {
         setEstimate(e)
         setSaid(undefined)
         setBusy(false)
       },
       (e: Error) => {
+        // The estimate before was dropped already: start again from here.
+        if (credential) setEstimate(null)
         setSaid(e.message)
         setBusy(false)
       },
@@ -137,13 +128,24 @@ export function RunSetup({ example }: { example?: boolean }) {
             )}
           </div>
           {estimate ? (
-            <Confirm estimate={estimate} example={example} onBack={() => setEstimate(null)} />
+            <Confirm
+              key={estimate.run}
+              estimate={estimate}
+              example={example}
+              onBack={() => setEstimate(null)}
+              onPay={(c) => {
+                // Estimated again for what pays: the one before is dropped,
+                // and kelve.ai deletes the skills it was sent.
+                void del(`/api/hosted/runs/${encodeURIComponent(estimate.run)}`).catch(() => {})
+                start(c)
+              }}
+            />
           ) : (
             <div className="hs-confirm">
               {left > 0 ? <p className="hs-quiet">{count(left, 'run')} left today.</p> : <p className="hs-quiet">You’ve used today’s runs. More come at midnight UTC.</p>}
               {said && <p className="hs-alert" role="alert">{said}</p>}
               <div className="hs-acts">
-                <Btn kind="primary" size="large" disabled={left === 0 || busy} onClick={start}>Start the run</Btn>
+                <Btn kind="primary" size="large" disabled={left === 0 || busy} onClick={() => start()}>Start the run</Btn>
                 <Btn kind="quiet" size="large" href={hrefOf('agent', example)}>Not now</Btn>
               </div>
             </div>
@@ -183,10 +185,9 @@ const KINDS: Record<CredentialKind, { label: string; line: string; field: (provi
 }
 
 /** What the run will take, and what pays for it: then it starts. */
-function Confirm({ estimate: e, example, onBack }: { estimate: EstimateView; example?: boolean; onBack: () => void }) {
-  // What's kept already comes first; otherwise the first it takes.
-  const first = e.accepts.find((k) => e.kept.includes(k)) ?? e.accepts[0] ?? 'apiKey'
-  const [kind, setKind] = useState<CredentialKind>(first)
+function Confirm({ estimate: e, example, onBack, onPay }: { estimate: EstimateView; example?: boolean; onBack: () => void; onPay: (c: CredentialKind) => void }) {
+  // What it was estimated for; choosing another estimates it again.
+  const kind = e.paying
   const [key, setKey] = useState('')
   const [askAgain, setAskAgain] = useState(false)
   const [said, setSaid] = useState<string>()
@@ -210,7 +211,7 @@ function Confirm({ estimate: e, example, onBack }: { estimate: EstimateView; exa
     void del(`/api/hosted/runs/${encodeURIComponent(e.run)}`).catch(() => {})
     onBack()
   }
-  const dollars = e.dollars < 1 ? 'under $1' : `$${Math.round(e.dollars)}`
+  const dollars = e.dollars < 1 ? 'Under $1' : `About $${Math.round(e.dollars)}`
   const k = KINDS[kind]
   return (
     <form
@@ -230,10 +231,11 @@ function Confirm({ estimate: e, example, onBack }: { estimate: EstimateView; exa
                 type="radio"
                 name="hs-pay"
                 checked={kind === c}
+                disabled={busy}
                 onChange={() => {
-                  setKind(c)
-                  setSaid(undefined)
-                  setAskAgain(false)
+                  if (c === kind) return
+                  setBusy(true)
+                  onPay(c)
                 }}
               />
               <span>
@@ -245,7 +247,7 @@ function Confirm({ estimate: e, example, onBack }: { estimate: EstimateView; exa
         </fieldset>
       )}
       <p className="hs-cost">
-        {kind === 'subscription' ? `About ${count(e.agentRuns, 'run')} of your agent on your Claude plan.` : `About ${dollars} on your ${e.providerName} key.`}
+        {kind === 'subscription' ? `About ${count(e.agentRuns, 'run')} of your agent on your Claude plan.` : `${dollars} on your ${e.providerName} key.`}
       </p>
       <p className="hs-quiet">
         {count(e.tasks, `${e.kindName} task`)}, each run {e.runsPerTask} times with your skills. It takes about {e.minutes} minutes.

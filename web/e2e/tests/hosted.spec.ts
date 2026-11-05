@@ -29,7 +29,7 @@ function skills() {
 // The skills it wrote go with it: other specs share this kelve.
 test.afterEach(() => noSkills())
 
-test('signing in, choosing an address and a verified run, to a score on your page', async ({ page }) => {
+test('signing in and a verified run, then choosing an address, to a score on your page', async ({ page }) => {
   await me().hello()
   await signIn(page)
   skills()
@@ -46,25 +46,19 @@ test('signing in, choosing an address and a verified run, to a score on your pag
   await expect(back.getByRole('heading', { name: 'You’re signed in' })).toBeVisible()
   await back.close()
 
-  // Signed in, the address comes first.
-  await expect(page).toHaveURL(/#\/agent\/address$/)
-  const address = page.getByLabel('Address')
-  await address.fill('alex')
-  await expect(page.getByRole('status').filter({ hasText: 'Someone has that one.' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'alex-agent' })).toBeVisible()
-  await address.fill('sam')
-  await expect(page.getByText('You can have that one.')).toBeVisible()
-  await page.getByRole('button', { name: 'Save address' }).click()
-
+  // Signed in, the run comes first: an address is only for publishing.
+  await expect(page).toHaveURL(/#\/agent\/score\/new$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Get a verified score' })).toBeVisible()
   await page.getByRole('button', { name: 'See exactly what goes' }).click()
   await expect(page.getByText('standin-expert/SKILL.md')).toBeVisible()
   await expect(page.getByText('Secrets and paths are taken out first.')).toBeVisible()
   await page.getByRole('button', { name: 'Start the run' }).click()
 
-  // What pays: the stand-in runs locally, so a subscription can too.
+  // What pays: the stand-in runs locally, so a subscription can too, and
+  // it's estimated for that until another is chosen.
   const start = page.getByRole('form', { name: 'Start the run' })
   await expect(start.getByText('Your Claude subscription (from claude setup-token)')).toBeVisible()
+  await expect(start.getByText(/of your agent on your Claude plan\./)).toBeVisible()
   await start.getByText('An API key', { exact: true }).click()
   await expect(start.getByText('About $60 on your Anthropic key.')).toBeVisible()
   const key = start.getByLabel('Your Anthropic API key')
@@ -88,6 +82,18 @@ test('signing in, choosing an address and a verified run, to a score on your pag
   await expect(page.getByText('Rust tasks better than a standard agent')).toBeVisible({ timeout: 15_000 })
   await expect(page.getByLabel('Your score')).toContainText('10')
   await expect(page.getByText('Verified.')).toBeVisible()
+
+  // Publishing needs the page's address: chosen, then back to the score.
+  await expect(page.getByText('Your page needs an address first.')).toBeVisible()
+  await page.getByRole('link', { name: 'Choose an address' }).click()
+  const address = page.getByLabel('Address')
+  await address.fill('alex')
+  await expect(page.getByRole('status').filter({ hasText: 'Someone has that one.' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'alex-agent' })).toBeVisible()
+  await address.fill('sam')
+  await expect(page.getByText('You can have that one.')).toBeVisible()
+  await page.getByRole('button', { name: 'Save address' }).click()
+  await expect(page.getByText('Rust tasks better than a standard agent')).toBeVisible()
   await page.getByRole('button', { name: 'Publish to your page' }).click()
   await expect(page.getByText('It’s on your page.')).toBeVisible()
 

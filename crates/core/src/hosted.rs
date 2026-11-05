@@ -250,6 +250,8 @@ pub struct EstimateView {
     pub accepts: Vec<CredentialKind>,
     /// What kelve keeps already for this provider.
     pub kept: Vec<CredentialKind>,
+    /// What it was estimated for: what pays when it's confirmed.
+    pub paying: CredentialKind,
     pub skills: Vec<SkillFileView>,
 }
 

@@ -74,6 +74,7 @@ export function hostedAnswers(as: string | null): Record<string, unknown> {
     runsLeft: 0,
     accepts: offer.accepts,
     kept: local ? [] : ['apiKey'],
+    paying: offer.accepts[0],
     skills: offer.skills,
   }
   const taken = as === 'taken'

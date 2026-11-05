@@ -10,7 +10,7 @@ import { hrefOf } from '../../routes'
 import { Character } from '../../ui/Character'
 import { Btn } from '../../ui/kit'
 import { useLoad } from '../../useLoad'
-import { Squares, count, saidOf, send, shortPage, tally, useHosted } from './common'
+import { Squares, addressThen, count, saidOf, send, shortPage, tally, useHosted } from './common'
 
 /** How often a run's page asks how it stands. */
 const EVERY = 2_000
@@ -98,6 +98,10 @@ function at(when: Date) {
 function gainOf(s: ScoreView) {
   const n = (x: number) => Math.round(x)
   if (s.verified) return <><b>Verified.</b> Your agent passed about {n(s.gain)} more of every 100 hidden checks, between {n(s.gainLow)} and {n(s.gainHigh)}.</>
+  // Better on more tasks than worse, but too few, or by too little, to be sure.
+  if (s.better > s.squares.filter((q) => q === 'worse').length) {
+    return <><b>No clear difference</b> from a standard agent: it did better, but not by enough to be sure, so it isn’t verified. You can still publish it, and your page says so.</>
+  }
   return <><b>No clear difference</b> from a standard agent, so it isn’t verified. You can still publish it, and your page says so.</>
 }
 
@@ -149,9 +153,16 @@ function Result({ score: start, example }: { score: ScoreView; example?: boolean
           </div>
         ) : (
           <>
-            <p className="hs-quiet">Only the score goes on your page, never your skills or your work.</p>
+            <p className="hs-quiet">
+              {hosted.data && !hosted.data.handle ? 'Your page needs an address first. ' : ''}
+              Only the score goes on your page, never your skills or your work.
+            </p>
             <div className="hs-acts">
-              <Btn kind="primary" size="large" onClick={() => void show(true)}>Publish to your page</Btn>
+              {hosted.data && !hosted.data.handle ? (
+                <Btn kind="primary" size="large" href={hrefOf(addressThen(`agent/score/${score.run}`), example)}>Choose an address</Btn>
+              ) : (
+                <Btn kind="primary" size="large" onClick={() => void show(true)}>Publish to your page</Btn>
+              )}
               <Btn kind="quiet" size="large" onClick={() => setKept(true)}>Keep it private</Btn>
             </div>
           </>
