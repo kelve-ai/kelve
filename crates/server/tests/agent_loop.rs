@@ -96,17 +96,10 @@ async fn show(app: &Shared, dir: &Path, what: &str, extra: Value) -> Opened {
         a.extend(e.clone());
     }
     let asked: OpenIn = serde_json::from_value(asked).unwrap();
-    let opened = open(State(app.clone()), Agent, Json(asked))
+    open(State(app.clone()), Agent, Json(asked))
         .await
         .unwrap()
-        .0;
-    // Reading the change, as kelve did before debriefs, isn't what's tested
-    // here: it's taken off the list.
-    let mut conn = app.db.acquire().await.unwrap();
-    kelve_store::asks::drop_reading(&mut conn, opened.id)
-        .await
-        .unwrap();
-    opened
+        .0
 }
 
 fn only(id: i64) -> Caller {

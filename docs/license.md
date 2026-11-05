@@ -9,9 +9,9 @@ kelve is open source, under the [Apache License, Version 2.0](../LICENSE). This 
 - The license includes a license to any of our patents that kelve necessarily uses. It ends if you claim kelve infringes a patent.
 - The license doesn't give you the right to use the name kelve, its logo or its mark, except to say where the software comes from. [brand/README.md](../brand/README.md#using-the-name-and-the-logo) says how they may be used.
 
-## The shared knowledge graph
+## kelve's hosted service
 
-The `kelve` app reads and adds to a shared knowledge graph that kelve hosts. The graph's server isn't part of this repository. Everything in the graph, its ideas, entries, how ideas relate and lessons, and the graph as a database, is public domain, under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/): anyone may use it, for anything, for good. Contributors agree to that when they first add to it. The Apache License covers the software in this repository.
+The `kelve` app can use kelve's hosted service, kelve.ai, for verified scores and your page. The service's server isn't part of this repository, and it has terms of its own. The Apache License covers the software in this repository.
 
 ## Contributions
 

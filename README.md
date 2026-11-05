@@ -5,9 +5,9 @@
   </picture>
 </h1>
 
-<h3 align="center">Understand what your agent did.</h3>
+<h3 align="center">Make your agent yours.</h3>
 
-<p align="center">kelve walks you through your agent’s work in plain words.<br>It runs on your computer, with the agent you already use.</p>
+<p align="center">kelve turns what you know into skills your agents use, and proves they make your agent better.<br>It runs on your computer, with the agent you already use.</p>
 
 <p align="center">
   <a href="https://kelve.ai/demo/#/example"><b>Try the example</b></a> ·
@@ -25,79 +25,55 @@ Works with Claude Code, Codex, Cursor and other agents.
 
 ---
 
-**Say you ask your agent to make calls to a bank retry properly. It comes back with 1,146 lines across 21 files.**
+Everyone has the same models. What you know that the model doesn't is what makes your agent better than anyone else's. kelve catches it as you work, keeps it as skills, and checks that each part changes what your agent does.
 
-The diff shows you every line, but not what they do or why. Here’s that change, the way kelve shows it.
+## A debrief of every piece of work.
 
-## It starts with what changed.
+When your agent hands its work over, kelve asks it for a debrief, while it still remembers why: what it did, how it works, and every decision that matters, each with where it came from, what else it could have done, and its own lines. Agree, ask for it another way, or have your agent look into it. Ask it to explain an idea the work rests on, in the work's own terms.
 
-One sentence for the whole change, before any files. Then what it fixed, how it works now part by part, and how many of its ideas the shared graph already explains. Then the way in: the files in the order that makes sense, so you can stop when you know enough.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/debrief-dark.png">
+  <img src=".github/assets/debrief-light.png" width="880" alt="A debrief in kelve: what the agent did, how it works in numbered steps, and each decision it made, with Agree, Do it differently and Look into it.">
+</picture>
+
+Every file of the change is a click away, with each decision beside the lines it holds, and anything you changed after it was handed over marked as yours.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/change-dark.png">
-  <img src=".github/assets/change-light.png" width="880" alt="A change’s own page in kelve: calls to the bank now wait longer each time, at a random point, and stop while the bank is down; a charge sent twice is taken once, and one left hanging is finished. Then what Claude Code said, where it fits, what it fixes, that 16 of its 18 ideas already had an entry in the shared graph, and the first of its seven parts, each with the ideas it rests on.">
+  <img src=".github/assets/change-light.png" width="880" alt="The change file by file: its files down the side, the file whole with what changed, and each decision in the margin beside its first line.">
 </picture>
 
-## Each file in plain words, the code a click away.
+## Skills from what you correct.
 
-What it’s for, then each part in the order things happen, with what it did before. Open the lines under any part, and each idea the work rests on sits beside the lines that use it. kelve checks every sentence against the lines it explains, and marks as much as you ask it to.
+kelve learns from what you tell your agent while it works, from what you change in its work after it hands over, and from the decisions you send from a debrief to be done that way every time. Each becomes a part of a skill: how you like it, how you do something, or what a project needs. They're standard `SKILL.md` files, yours alone, and you can edit them as you like.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/plainly-dark.png">
-  <img src=".github/assets/plainly-light.png" width="880" alt="src/retry.rs read plainly: what it does, what it fixes, then its parts in the order they happen. One part’s code is open under it, with Exponential backoff and Jitter beside the lines that use them.">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/skills-dark.png">
+  <img src=".github/assets/skills-light.png" width="880" alt="A skill in kelve: how you like your Rust, part by part, each with what showed it and whether it's been checked.">
 </picture>
 
-## Go as deep as you like.
+## Every agent gets them.
 
-Click an idea and its entry opens beside the work, from a shared graph checked against its sources. Each entry shows how the idea connects to others: what it rests on, what problem it answers, what it’s used with and what could replace it. Click any of them and keep going, down to first principles.
+kelve's hook hands your skills to your agent at the moment they help: your general ones as a session starts, a kind of work's the first time it touches that kind of file. With your yes, they go in each agent's own skills folder too, so they work wherever you do.
+
+## Each part is checked.
+
+A part earns its place by changing what your agent does. kelve has your agent redo one of your past tasks twice, with the part and without, and compares each with what you kept. A part that makes no difference can go; one your agent still gets wrong is reworded. Fits you does the same with all your skills against none, and you pick the one you'd rather keep, blind.
+
+## A score you can show.
+
+On kelve.ai, your agent with your skills runs against a standard agent on the same model, on tasks nobody sees in advance, with hidden tests and a fixed judge. The result is yours to publish on your own page, beside your agent's character.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/entry-dark.png">
-  <img src=".github/assets/entry-light.png" width="880" alt="src/retry.rs read plainly, with the entry for Jitter open beside it, down at how it connects to other ideas: it rests on Randomness, answers the thundering herd problem, is used with exponential backoff, and rate limiting could replace it. Under them, what an agent learned about it.">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/agent-dark.png">
+  <img src=".github/assets/agent-light.png" width="880" alt="Your agent in kelve: its character, what it knows, part by part, and how well it fits you.">
 </picture>
-
-## Leave notes. Your agent picks them up.
-
-Select lines and write: just for you, with the work for anyone who opens it, or for your agent. Your agent does it the next time you message it, then shows you what it changed. Everything you’ve asked of it is one list you can reorder while it works.
-
-## See what it learned.
-
-When an agent learns something the hard way, it writes it down in the shared graph. Your agent is given those lessons as it works. kelve shows you which ones it got, whether they worked and what it learned itself.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/lesson-dark.png">
-  <img src=".github/assets/lesson-light.png" width="880" alt="A part of the change with the two lessons from the shared graph Claude Code was given, opened: one, to claim a charge’s key with an insert before charging, held; the other wasn’t put to the test.">
-</picture>
-
-## Not only changes.
-
-Open a repo you’ve inherited, a folder, or your thesis. Ask in your own words, and it opens the same way: what it is first, then the rest in order.
-
-```
-Show me this repo in kelve.
-```
-
-## Why not just ask your agent?
-
-- **AI code review is built to find bugs.** Some write a summary too, but their job is finding problems, not helping you understand. In kelve, understanding is the whole point: what the change does and why, file by file, every sentence checked against the lines it explains.
-- **Asking your agent to summarise it or write it up gets you prose about its own work.** Nothing checks it against the lines, and it goes stale as the code changes. Or your agent can do the same job through kelve, on the plan you already have, for free. What you get is checked, laid out in the order that makes sense, and kept up to date as the work changes.
-- **You learn from your agent’s work, not just about it.** kelve marks each idea the change rests on, such as backoff, idempotency or circuit breakers. Each opens to an entry checked against its sources, leading down to first principles, and you set how much is marked to what you already know. So with every change your agent makes, you learn a little more yourself.
-
-## Most ideas are already written.
-
-Explanations come from one shared graph of how things work, at `graph.kelve.ai`, written by everyone’s agents and checked against their sources. So most open at once. It holds the lessons other agents learned too, and gives yours one when it helps.
-
-- **Never your work.** Your code, files and notes stay with you.
-- **What your agent writes and learns is added,** without your name. Entries come from the web, never your files. Lessons are checked for your work’s names, paths and secrets, and wait a day for you to stop them. Your reads never say who you are.
-- **Public domain, under [CC0](https://creativecommons.org/publicdomain/zero/1.0/).** Anyone may use what’s in it, for anything.
-
-It’s free with a GitHub or Google sign-in. Rather not? kelve works without it: don’t sign in, or set `KELVE_GRAPH_URL=off`. Using it at work? [What goes where](https://kelve.ai/docs/what-goes/) lists everything that leaves your computer.
 
 ## Yours, on your computer.
 
-- **Runs beside your agent.** What you open goes to no one but it.
-- **No model of its own.** Your agent does the reading, on the plan you already have.
-- **Nothing to sign up for.** It works signed out.
+- **Nothing of yours leaves,** but your skills, to kelve.ai, for a verified run you ask for, with secrets and paths stripped and every file shown to you first. Your work, your messages and your edits never leave.
+- **No model of its own.** Your agent does kelve's work, on the plan you already have.
+- **Nothing to sign up for.** You need an account on kelve.ai only for verified scores and your page.
 - **Open source.** Apache 2.0. Read every line of it.
 
 ## Start
@@ -108,10 +84,10 @@ Ask your agent:
 Install kelve from kelve.ai/install.sh
 ```
 
-Then your agent shows you its work when it’s done. Or ask it:
+Then your agent hands its work over in kelve when it's done. Or ask it:
 
 ```
-Show me what you did in kelve.
+Debrief this in kelve.
 ```
 
 <details>
@@ -149,7 +125,7 @@ Then start a new session with your agent, so it has kelve’s tools.
 ## Docs
 
 - **[kelve’s docs](https://kelve.ai/docs/)**, on kelve.ai: installing kelve, using it with your agent, and what it does with your work. To start: [install](https://kelve.ai/docs/install/), [connect your agent](https://kelve.ai/docs/connect/) and [what goes where](https://kelve.ai/docs/what-goes/).
-- [How kelve is built](docs/architecture.md), [developing it](docs/developing.md), [its settings](docs/self-hosting.md) and [releasing it](docs/releasing.md).
+- [The design](docs/skills.md), [how kelve is built](docs/architecture.md), [developing it](docs/developing.md), [its settings](docs/self-hosting.md) and [releasing it](docs/releasing.md).
 - [Contributing](CONTRIBUTING.md), [working on kelve with agents](AGENTS.md) and [reporting a security problem](SECURITY.md).
 
 ## License

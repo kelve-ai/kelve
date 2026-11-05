@@ -1,4 +1,5 @@
-// A debrief's change, file by file (board ChangeView): its files by folder
+// A debrief's change, file by file (board ChangeView), or work handed over
+// that has no debrief, the same way, from what was kept of it: its files by folder
 // down the side, to find and step through; the file, whole, through the
 // reader's CodeMirror (reader/code.ts), what it left as it was folded away;
 // and each decision in the margin beside its first line, with where it
@@ -25,15 +26,21 @@ const fileParam = () => new URLSearchParams(location.hash.split('?')[1] ?? '').g
 const plus = (n: number) => (n ? `+${n.toLocaleString('en-GB')}` : '')
 const minus = (n: number) => (n ? `−${n.toLocaleString('en-GB')}` : '')
 
-export function Change({ id, example }: { id: string; example?: boolean }) {
+export function Change({ id, example, handover }: {
+  id: string
+  example?: boolean
+  /** Work handed over with no debrief: `id` is the handover's, and there are no decisions. */
+  handover?: boolean
+}) {
   const local = example || id === 'example'
-  const loaded = useLoad<DebriefChangeView>(local ? null : `/api/debriefs/${id}/change`, ['debriefs'])
+  const from = handover ? `/api/handovers/${id}` : `/api/debriefs/${id}`
+  const loaded = useLoad<DebriefChangeView>(local ? null : `${from}/change`, ['debriefs'])
   const change = local ? exampleChange(id) : loaded.data
   const files = useMemo(() => change?.folders.flatMap((f) => f.files) ?? [], [change])
   const [find, setFind] = useState('')
   const [chosen, setChosen] = useState<string | null>(fileParam)
   const path = chosen ?? files.find((f) => f.decisions.length)?.path ?? files[0]?.path ?? null
-  const diff = useLoad<DebriefDiffView>(local || !path ? null : `/api/debriefs/${id}/diff?path=${encodeURIComponent(path)}`, ['debriefs'])
+  const diff = useLoad<DebriefDiffView>(local || !path ? null : `${from}/diff?path=${encodeURIComponent(path)}`, ['debriefs'])
   const file = local && path ? exampleDiff(path) : diff.data?.path === path ? diff.data : undefined
 
   const pick = (p: string) => {
@@ -53,7 +60,7 @@ export function Change({ id, example }: { id: string; example?: boolean }) {
     <div className="cv">
       <div className="cv-head">
         <div className="cv-title">
-          <a className="go" href={hrefOf(`debrief/${id}`, example)}>← Back to the debrief</a>
+          {handover ? <a className="go" href={hrefOf('', example)}>← Back to home</a> : <a className="go" href={hrefOf(`debrief/${id}`, example)}>← Back to the debrief</a>}
           <h1>{change.title}</h1>
         </div>
         <span className="cv-counts">{change.files === 1 ? '1 file' : `${change.files} files`} <span className="add">{plus(change.added)}</span> <span className="del">{minus(change.removed)}</span></span>

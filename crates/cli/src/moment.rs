@@ -4,14 +4,12 @@
 //! line when notes wait for the agent that it hasn't been told of as they are
 //! now, and one, once for each version, when a newer kelve is out; and what
 //! they sent, short and with secrets stripped, kept to catch what they
-//! corrected (`server::moment`). As the agent
-//! reads or edits a file, runs a command, or something fails: the lesson from
-//! the shared graph that helps now, if there is one. As the turn ends, after a
-//! hard stretch of failures the agent got past, one question asking what it
-//! learned, and, when it opened something in kelve whose reading isn't
-//! finished, to finish it; an agent with no such event is asked at the
-//! person's next message. As it opens something in kelve: nothing, but kelve
-//! keeps that its session opened it. It reads the event on standard input,
+//! corrected (`server::moment`); and the person's skills, as their session
+//! starts. As the agent reads or edits a file: the skill for that kind of
+//! work, the first time. As the turn ends: to show its work in kelve, when
+//! it hasn't, and the jobs waiting for it. As it opens something in kelve:
+//! nothing, but kelve keeps that its session handed that work over. It
+//! reads the event on standard input,
 //! answers in a fraction of a second (a few seconds as a turn ends, or as
 //! something is opened) or says nothing, and starts nothing when kelve isn't
 //! running. Never an error.
@@ -27,10 +25,9 @@ use crate::client::Kelve;
 
 /// How long the hook waits for kelve.
 const WAIT: Duration = Duration::from_millis(200);
-/// How long it waits as a turn ends: the agent is done, so a question about
-/// what the turn taught, worked out from every file's ideas, isn't lost. And
-/// as the agent opens something in kelve, which is busy then starting to
-/// read it: what it opened is kept for its session, to finish reading.
+/// How long it waits as a turn ends: the agent is done, so what kelve has
+/// for it then isn't lost. And as the agent opens something in kelve, which
+/// is busy then keeping what was handed over: it's kept for its session.
 const END_WAIT: Duration = Duration::from_secs(3);
 
 /// The agent and event, from the command's flags, else from the event, for
@@ -79,8 +76,7 @@ pub async fn run(
     // agent was last told of them, so the line isn't said every time.
     let text = if m.what == "prompt" {
         // All at once, so the hook still answers within its wait: the notes,
-        // a newer kelve, and work the agent replaced, whose second way
-        // stands now the person has written again.
+        // a newer kelve, and the skills the session starts with.
         let (notes, told, asked) = tokio::join!(
             crate::notes::new_here(&kelve, &m.agent),
             kelve.send(kelve.post("/api/agent/update/tell")),

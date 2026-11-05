@@ -2,7 +2,7 @@
 // shows has changed, here or on the server, so it can fetch again. Cookies
 // go with every call; a 401 means this browser is signed out.
 
-import type { Found, ServerEvent } from './types'
+import type { ServerEvent } from './types'
 
 /** A failed call, with the server's sentence for people. */
 export class ApiError extends Error {
@@ -51,31 +51,9 @@ export function answerFromExample(f: Fixture) {
 
 export const inExample = () => example !== null
 
-/** Search, as the server does it, over what the example holds. */
-function searchExample(f: Fixture, q: string): Found {
-  const words = q.trim().toLowerCase()
-  const ideas = Object.entries(f.answers)
-    .filter(([path]) => /^\/api\/ideas\/[^/?]+$/.test(path))
-    .map(([, page]) => page as { key: string; name: string; definition: string; entry: unknown })
-    .filter((p) => p.name.toLowerCase().includes(words) || p.definition.toLowerCase().includes(words))
-    .map((p) => ({ key: p.key, name: p.name, definition: p.definition, ready: !!p.entry, files: 1 }))
-  const change = f.answers[`/api/opened/${f.opened}/change`] as { files: Array<{ path: string }> } | undefined
-  const paths = (change?.files ?? []).map((x) => x.path)
-  const files = paths.filter((p) => p.toLowerCase().includes(words))
-  // Lines from the files as the example has them: what the change left.
-  const lines = paths.flatMap((path) => {
-    const diff = f.answers[`/api/opened/${f.opened}/diff?path=${encodeURIComponent(path)}`] as { lines: Array<{ new: number | null; text: string }> } | undefined
-    return (diff?.lines ?? [])
-      .filter((l) => l.new != null && l.text.toLowerCase().includes(words))
-      .slice(0, 3)
-      .map((l) => ({ path, line: l.new as number, text: l.text.trim() }))
-  })
-  return { ideas: ideas.slice(0, 8), files, lines: lines.slice(0, 12), notes: [] }
-}
-
+/** A call, answered from the example. */
 function fromExample<T>(f: Fixture, path: string, init?: RequestInit): Promise<T> {
   if (init?.method && init.method !== 'GET') return Promise.reject(new ApiError('The example can’t be changed. Open your own work to do that.', 400))
-  if (path.startsWith('/api/search?')) return Promise.resolve(searchExample(f, new URLSearchParams(path.split('?')[1]).get('q') ?? '') as T)
   if (path in f.answers) return Promise.resolve(structuredClone(f.answers[path]) as T)
   return Promise.reject(new ApiError('That isn’t part of the example.', 404))
 }
@@ -122,7 +100,7 @@ export const del = <T>(path: string) => call<T>(path, { method: 'DELETE' })
 
 /** The screens the server says changed: each fetches again. */
 export type Screen = ServerEvent['type']
-const SCREENS: Screen[] = ['settings', 'opened', 'marks', 'read', 'idea', 'notes', 'asks', 'agent', 'plainly', 'lessons']
+const SCREENS: Screen[] = ['settings', 'opened', 'notes', 'asks', 'agent']
 
 type Listener = (event?: ServerEvent) => void
 const listeners = new Map<Screen, Set<Listener>>()

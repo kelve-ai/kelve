@@ -29,7 +29,6 @@ use crate::text::re;
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", default)]
-#[ts(export)]
 pub struct Card {
     /// Words or names that show it's relevant where they appear: `thread_rng`,
     /// `\cite{`, "et al.".
@@ -51,7 +50,6 @@ pub struct Card {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct Facet {
     pub axis: Axis,
     /// What it's about on that axis: a package, a style guide, a setting.
@@ -75,7 +73,6 @@ pub struct Facet {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Axis {
     Version,
     Edition,

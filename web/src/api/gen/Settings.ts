@@ -9,13 +9,7 @@ import type { Size } from "./Size";
  */
 export type Settings = { 
 /**
- * Whether kelve adds to the shared knowledge graph as you work: new
- * ideas, and entries for ideas it doesn't have yet. Never anything
- * you open.
- */
-contribute: boolean, 
-/**
- * Whether kelve sends the shared graph a count of how it was used,
+ * Whether kelve sends its hosted service a count of how it was used,
  * once a week: numbers only. Off until the person turns it on.
  */
 shareCounts: boolean, 
@@ -39,18 +33,13 @@ notesChosen: boolean,
  */
 agent: AgentKind, 
 /**
- * How large code is drawn, and prose: entries, notes, text files.
+ * How large code is drawn, and prose: debriefs, skills, notes.
  */
 codeSize: Size, textSize: Size, 
 /**
  * Which parts of code have colours of their own.
  */
 highlighting: Highlighting, 
-/**
- * Whether what's been read is kept in the project's `.kelve/read/`,
- * committed with it, or in kelve's own store.
- */
-keepReadInRepo: boolean, 
 /**
  * Who a new note is for, until the person says otherwise.
  */
@@ -68,9 +57,4 @@ notesHook: boolean,
  * The other agents whose settings have kelve's hook, as people name
  * them: "Codex".
  */
-hooksElsewhere: Array<string>, 
-/**
- * Whether to ask, under an entry their agent wrote, to add it to the
- * shared graph: at most once a day, and never after a second no.
- */
-askToAdd: boolean, };
+hooksElsewhere: Array<string>, };

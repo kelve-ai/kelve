@@ -5,13 +5,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
-import { marginNote, me, open, openFile, pane, repo, selectLines, world } from '../world'
+import { me, open, openFile, repo, selectLines, world } from '../world'
 
 test('a note for your agent waits under its lines, is picked up, and says what was done', async ({ page }) => {
   const root = repo()
-  await open(page, { what: 'change', path: root, title: 'Retries that back off' })
+  await open(page, { what: 'folder', path: root })
   await openFile(page, 'src/retry.rs')
-  await expect(marginNote(page, 'Exponential backoff')).toBeVisible()
   await selectLines(page, 'pub fn wait', '200 * 2u64')
   await page.getByRole('button', { name: 'Note', exact: true }).click()
   const box = page.locator('.nbox')
@@ -82,38 +81,8 @@ test('a note for your agent waits under its lines, is picked up, and says what w
   await expect(page2).toHaveCount(0)
 })
 
-test('your own notes on an idea show in its entry, in any project', async ({ page }) => {
-  await open(page, { what: 'change', path: repo(), title: 'Retries that back off' })
-  await openFile(page, 'src/retry.rs')
-  await marginNote(page, 'Exponential backoff').click()
-  const entry = pane(page, 'Exponential backoff')
-  await entry.getByRole('button', { name: 'Add a note' }).click()
-  const pageNote = page.getByRole('region', { name: 'The note' })
-  await pageNote.getByRole('textbox').click()
-  await page.keyboard.type('Backoff alone still lets clients collide.')
-  // [[ finds an idea, a file or a line as you type, and links it.
-  await page.keyboard.type(' See [[expon')
-  await expect(page.getByRole('option', { name: /Exponential backoff/ }).first()).toBeVisible()
-  // CodeMirror takes Enter as a choice only 75ms after the list shows
-  // (interactionDelay), so a key already on its way isn't one; sooner, it's
-  // a new line. Anyone choosing takes longer than that to see the list.
-  await page.waitForTimeout(100)
-  await page.keyboard.press('Enter')
-  await expect(pageNote.getByRole('textbox')).toContainText('See [[Exponential backoff]]')
-  await expect(pageNote.getByRole('status')).toHaveText('Saved')
-  await pageNote.getByRole('button', { name: 'Close the note' }).click()
-
-  // Another project: the note is there, beside the same idea.
-  await open(page, { what: 'change', path: repo(), title: 'Another change' })
-  await openFile(page, 'src/retry.rs')
-  await marginNote(page, 'Exponential backoff').click()
-  const again = pane(page, 'Exponential backoff')
-  await expect(again.getByRole('region', { name: 'Your notes on it' })).toContainText('Backoff alone still lets clients collide.')
-  await expect(again).toContainText('Shown wherever Exponential backoff turns up, in any project.')
-})
-
 test('the hook goes into Claude Code’s settings only when you turn it on', async ({ page }) => {
-  await open(page, { what: 'change', path: repo(), title: 'Retries that back off' })
+  await open(page, { what: 'folder', path: repo() })
   const file = join(world().claudeDir, 'settings.json')
   const set = (on: boolean) => page.evaluate((on) => fetch('/api/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ notesHook: on }) }).then((r) => r.json()), on)
   expect((await set(true)).notesHook).toBe(true)

@@ -1,8 +1,15 @@
-//! Everything in kelve that's pure: entries, their blocks and their checks,
-//! the markdown written from an entry, ideas as everything points at them,
-//! the rules marks keep, what a file read plainly must be, secret
-//! stripping, versions and checksums for updating, and the shapes the API
-//! sends. No IO, and nothing panics on bad input.
+//! Everything in kelve that's pure: skills and their parts, the debrief and
+//! when one is due, learning from what the person corrected, your agent's
+//! character, the hook for each agent, notes, what kelve marks for the
+//! person, what agents are told for each job, secret stripping and fencing,
+//! versions and checksums for updating, and the shapes the API sends. No
+//! IO, and nothing panics on bad input.
+//!
+//! The shared graph's entries, ideas, relations, lessons and terms
+//! (`entry`, `ideas`, `relations`, `lesson`, `matching`, `terms`,
+//! `formula`) are no part of kelve any more. They stay here only for
+//! kelve's hosted service, which still serves version 1 of its API
+//! (`kelve-graph-api`), until it retires it.
 
 pub mod character;
 pub mod code;
@@ -18,11 +25,9 @@ pub mod instructions;
 pub mod learn;
 pub mod lens;
 pub mod lesson;
-pub mod marks;
 pub mod matching;
 pub mod md;
 pub mod notes;
-pub mod plainly;
 pub mod problems;
 pub mod redact;
 pub mod relations;

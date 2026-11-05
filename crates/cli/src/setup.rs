@@ -1,6 +1,6 @@
 //! Setting kelve up, as the installer does once kelve is in place: connecting
 //! the person's agent, adding kelve's hook so it picks up their notes and
-//! lessons, and how much kelve marks for them. Run by their agent, which they
+//! skills, and how much kelve marks for them. Run by their agent, which they
 //! asked to install kelve, it does all three, and leaves the agent the one word
 //! to choose: how well the person knows their work. Run by the person in a
 //! terminal, it asks.
@@ -259,12 +259,12 @@ fn typed(choices: &[&str], default: usize) -> anyhow::Result<usize> {
 /// What setup says when it connects an agent again, whose kelve was set to
 /// read elsewhere.
 const OVERRIDDEN: &str =
-    " afresh, without the kelve settings it had, such as another graph to read";
+    " afresh, without the kelve settings it had, such as another hosted service to use";
 
 /// Why an agent's connection to kelve, as `claude mcp get kelve` shows it,
 /// should be made again: kelve's own settings in its environment, such as
 /// `KELVE_GRAPH_URL` from developing kelve, which would keep a new kelve
-/// reading another graph; or a command that isn't there any more.
+/// using another hosted service; or a command that isn't there any more.
 fn stale(shown: &str) -> Option<&'static str> {
     let mut env = false;
     for line in shown.lines() {
@@ -427,7 +427,7 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
     let hook = !person
         || ask(
             &format!(
-                "Let {} pick up your notes, and lessons as it works? It adds one hook to its settings.",
+                "Let {} pick up your notes, and your skills as it works? It adds one hook to its settings.",
                 chosen.shown
             ),
             &["Yes", "No"],
@@ -438,7 +438,7 @@ pub async fn setup(agent: Option<&str>, word: Option<&str>) -> anyhow::Result<()
             Ok(_) => {
                 crate::notes::hook_changed().await;
                 style::line(&format!(
-                    "✓ Notes and lessons: one hook in {}’s settings. `kelve hook remove {}` takes it out.",
+                    "✓ Notes and skills: one hook in {}’s settings. `kelve hook remove {}` takes it out.",
                     chosen.shown,
                     chosen.agent.name()
                 ));

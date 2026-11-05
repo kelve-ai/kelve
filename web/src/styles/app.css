@@ -211,10 +211,6 @@ button { font: inherit; color: inherit; }
 .page { padding: 0 0 80px; }
 .col { max-width: 640px; margin: 96px auto 0; padding: 0 16px; }
 
-/* An entry's rows: the text, and its sources beside it. */
-.erow { display: grid; grid-template-columns: minmax(0, 600px) minmax(0, 200px); column-gap: 52px; }
-.erow.wide > .main { grid-column: 1 / -1; }
-
 /* The loader: kelve's red square, fading in and out beside the words. */
 /* A load that's quick shows nothing: the square appears only once it's taken a moment. */
 .ld-sq { display: inline-block; flex: none; width: 7px; height: 7px; border-radius: 1.5px; background: var(--red); margin: 0 3px; vertical-align: 1px; animation: appear 0s 150ms backwards, breathe 1.6s ease-in-out 150ms infinite; }
@@ -225,11 +221,6 @@ button { font: inherit; color: inherit; }
 .loading { display: flex; justify-content: center; padding: 180px 0; animation: appear 0.4s ease 0.3s backwards; }
 @keyframes appear { from { opacity: 0; } }
 
-
-/* ---------------------------------------------------------------- entries */
-.entry { margin-top: 0; }
-.entry .p { font-size: 18px; line-height: 30px; margin-bottom: 22px; }
-.entry .list { font-size: 18px; line-height: 30px; }
 .notes { padding-top: 4px; }
 .note { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 2px; font-size: 13px; line-height: 20px; color: var(--soft); margin: 0 0 16px; text-wrap: pretty; }
 .note b { font-weight: 400; color: var(--faint); }
@@ -268,29 +259,12 @@ button { font: inherit; color: inherit; }
 .table .th { padding: 0 0 8px; border-bottom: 1px solid var(--hair); color: var(--faint); font-size: 13px; line-height: 20px; }
 .table .td { padding: 12px 0 0; text-wrap: pretty; }
 .table .td.red { color: var(--red); }
-.bars { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(64px, max-content); gap: 10px 16px; align-items: center; margin: 6px 0 12px; font-size: 14px; line-height: 22px; }
-.bars .bar { height: 6px; border-radius: 3px; transform-origin: left center; }
-.entry.in .bars .bar { animation: bar 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s backwards; }
-@keyframes bar { from { transform: scaleX(0); } }
-.timeline { position: relative; margin: 36px 0 36px; }
-.timeline::before { content: ''; position: absolute; left: 134px; top: 12px; bottom: 26px; width: 1px; background: var(--hair); }
-.timeline .t { position: relative; display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 20px; padding: 0 0 16px; font-size: 15px; line-height: 24px; }
-.timeline .t span:first-child { color: var(--faint); font-size: 13px; }
-.timeline .t i { position: absolute; left: 131px; top: 8px; width: 7px; height: 7px; border-radius: 2px; background: var(--mute); }
-.timeline .t span:last-child { padding-left: 16px; color: var(--text); text-wrap: pretty; }
 .asked { margin: 8px 0 18px; color: var(--text); text-wrap: pretty; }
 
 .sub { list-style: none; margin: 8px 0 4px; padding: 0 0 0 22px; }
 .sub li { position: relative; padding-left: 18px; margin: 0 0 6px; font-size: 15px; line-height: 24px; color: var(--soft); }
 .sub li::before { content: ''; position: absolute; left: 2px; top: 10px; width: 5px; height: 5px; border-radius: 1px; background: var(--mute); }
 
-@media (max-width: 900px) {
-  .erow { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
-  .timeline::before, .timeline .t i { display: none; }
-  .timeline .t { grid-template-columns: 1fr; gap: 0; }
-  .timeline .t span:last-child { padding-left: 0; }
-  .bars { grid-template-columns: 110px minmax(0, 1fr) minmax(54px, max-content); }
-}
 @media (prefers-reduced-motion: reduce) {
   .ld-sq { animation: appear 0s 150ms backwards; }
   .ld-sq.still, .loading { animation: none; }

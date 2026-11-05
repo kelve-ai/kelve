@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { DebriefLine, DebriefView, DecisionChoice, DecisionStatus, DecisionView, IdeaView, SendLine } from '../api/types'
 import { post } from '../api/client'
-import { colours, highlight } from '../blocks/highlight'
+import { colours, highlight } from '../ui/highlight'
 import { agreeRestIn, decideIn, exampleDebrief, explainIn, knowIn, lookIn, rememberIn, sendIn } from '../example/debriefs'
 import { hrefOf } from '../routes'
 import { useLoad } from '../useLoad'

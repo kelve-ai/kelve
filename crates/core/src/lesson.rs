@@ -125,7 +125,6 @@ impl Took {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct Lesson {
     pub about: Vec<String>,
     pub says: String,
@@ -148,7 +147,6 @@ pub struct Lesson {
 /// A public page that backs a lesson, and the line on it that does.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Backing {
     pub url: String,
     pub quote: String,
@@ -158,7 +156,6 @@ pub struct Backing {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Standing {
     /// Live, and not confirmed yet: given to agents as that.
     #[default]
@@ -174,7 +171,6 @@ pub enum Standing {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct Record {
     pub held: u32,
     pub didnt: u32,
@@ -218,7 +214,6 @@ impl Record {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Outcome {
     Held,
     Didnt,
@@ -229,7 +224,6 @@ pub enum Outcome {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum Shown {
     /// The error it answered came back after it.
     CameBack,

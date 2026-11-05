@@ -199,7 +199,6 @@ async fn what_the_person_changed_after_handover_is_kept_and_the_agents_own_edits
         session: "s".into(),
         cwd: dir_s.clone(),
         file: Some(dir.join("src/fetch.rs").display().to_string()),
-        written: Some("wait(0);".into()),
         ..MomentIn::default()
     };
     at(&app, edit).await;

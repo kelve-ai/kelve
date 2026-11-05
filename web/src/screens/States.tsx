@@ -4,7 +4,6 @@
 // to read together.
 
 import { useEffect, useRef, useState } from 'react'
-import example from '../example/example.json'
 import { states, type State } from '../example/states'
 import { Choice } from '../ui/ui'
 
@@ -79,7 +78,7 @@ function Row({ state, phone }: { state: State; phone: boolean }) {
 
 export function States() {
   const [phone, setPhone] = useState(false)
-  const all = states(example.answers as Record<string, unknown>)
+  const all = states()
   const shown = phone ? all.filter((s) => s.phone) : all
   return (
     <main className="states">

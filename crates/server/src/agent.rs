@@ -1,17 +1,15 @@
-//! The person's own agent does kelve's work. Where kelve once called a model,
+//! The person's own agent does kelve's work. Where kelve would call a model,
 //! the work asks the agent instead: `ask` keeps a job under a key and, until
 //! the agent hands in its answer, says there's none yet, so the work stops and
 //! waits. The agent takes jobs with `next`, the most wanted first, each with
-//! the instructions the shared graph serves, the material, and the shape of the
-//! answer, and hands in each with `hand_in`. kelve checks the answer's shape at
+//! the instructions this kelve was built with, the material, and the shape of
+//! the answer, and hands in each with `hand_in`. kelve checks the answer's shape at
 //! once, keeps it, and runs the work that asked again, which now has it.
 //!
 //! kelve never starts the agent. It works when the person asks it to, in
 //! their own session, on their own plan.
 
-use std::collections::HashMap;
 use std::path::Path;
-use std::sync::RwLock;
 use std::time::{Duration, Instant};
 
 use chrono::Utc;
@@ -24,11 +22,7 @@ use crate::error::{ApiError, ApiResult};
 use crate::pipeline;
 use crate::state::Shared;
 
-pub use kelve_core::instructions::{
-    BUILT_ON, CHOOSE, EXTEND, FIX, FOLDERS, LESSON, NOTE, PATH, PLAINLY, PLAINLY_CHANGE,
-    PLAINLY_FOLDER, READ, RELATE, WAY, WRITE,
-};
-pub use kelve_core::instructions::{DEBRIEF, EXPLAIN, LEARN, RESEARCH};
+pub use kelve_core::instructions::{DEBRIEF, EXPLAIN, LEARN, NOTE, RESEARCH};
 
 /// How soon a job is wanted.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -162,98 +156,18 @@ pub async fn answered(app: &Shared, key: &str) -> pipeline::Result<bool> {
 }
 
 /// The version of a kind of job's instructions, as the agent will be given
-/// them: `read@5`. What's kept from an answer is kept under it, so a new
+/// them: `debrief@1`. What's kept from an answer is kept under it, so a new
 /// version is asked again.
-pub async fn version(app: &Shared, kind: &str) -> String {
-    instructions(app, kind)
-        .await
-        .map(|i| format!("{}@{}", i.name, i.version))
+pub fn version(kind: &str) -> String {
+    instructions(kind)
+        .map(|i| i.id())
         .unwrap_or_else(|| format!("{kind}@0"))
 }
 
-/// How long instructions from the graph are used before asking again.
-const FRESH: Duration = Duration::from_secs(60 * 60);
-/// How long kelve waits for the graph's instructions before using its own.
-const WAIT: Duration = Duration::from_secs(3);
-/// How long kelve uses its own after the graph didn't answer, before asking
-/// it again.
-const RETRY: Duration = Duration::from_secs(5 * 60);
-
-/// The instructions kelve has lately had from the graph, by kind: `None`
-/// when it asked and the graph didn't answer, so it isn't asked again at
-/// once; and which kinds are being asked for again, in the background.
-#[derive(Debug, Default)]
-pub struct Instructions {
-    kept: RwLock<HashMap<String, (Instant, Option<kelve_graph_api::Instructions>)>>,
-    asking: std::sync::Mutex<std::collections::HashSet<String>>,
-}
-
-/// A kind of job's instructions: the shared graph's (Nathan, 19 October:
-/// it serves what it can), or, when there's no graph or it doesn't answer,
-/// the ones this kelve was built with. Only the first ask of a kind waits
-/// for the graph, and for no more than `WAIT`: after that, what was had is
-/// used at once and the graph asked again in the background when it's
-/// stale. A graph that isn't there never slows anything down.
-pub async fn instructions(app: &Shared, kind: &str) -> Option<kelve_graph_api::Instructions> {
-    let had = app
-        .instructions
-        .kept
-        .read()
-        .ok()
-        .and_then(|k| k.get(kind).cloned());
-    match had {
-        Some((at, got)) => {
-            let fresh = if got.is_some() { FRESH } else { RETRY };
-            if at.elapsed() >= fresh {
-                refresh(app, kind);
-            }
-            got.or_else(|| own(kind))
-        }
-        None => match ask_graph(app, kind).await {
-            Some(got) => Some(got),
-            None => own(kind),
-        },
-    }
-}
-
-/// The instructions this kelve was built with.
-fn own(kind: &str) -> Option<kelve_graph_api::Instructions> {
-    kelve_core::instructions::get(kind).map(|i| kelve_graph_api::Instructions {
-        name: i.name.into(),
-        version: i.version,
-        text: i.text,
-    })
-}
-
-/// Asks the graph for a kind's instructions, waiting at most `WAIT`, and
-/// keeps what came back, or that nothing did.
-async fn ask_graph(app: &Shared, kind: &str) -> Option<kelve_graph_api::Instructions> {
-    let graph = app.graph.as_ref()?;
-    let got = match tokio::time::timeout(WAIT, graph.instructions(kind)).await {
-        Ok(Ok(Some(got))) => Some(got),
-        _ => None,
-    };
-    if let Ok(mut kept) = app.instructions.kept.write() {
-        kept.insert(kind.to_string(), (Instant::now(), got.clone()));
-    }
-    got
-}
-
-/// Asks the graph again in the background, once at a time for a kind.
-fn refresh(app: &Shared, kind: &str) {
-    let Ok(mut asking) = app.instructions.asking.lock() else {
-        return;
-    };
-    if !asking.insert(kind.to_string()) {
-        return;
-    }
-    let (app, kind) = (app.clone(), kind.to_string());
-    tokio::spawn(async move {
-        ask_graph(&app, &kind).await;
-        if let Ok(mut asking) = app.instructions.asking.lock() {
-            asking.remove(&kind);
-        }
-    });
+/// A kind of job's instructions: the ones this kelve was built with
+/// (`core::instructions`).
+pub fn instructions(kind: &str) -> Option<kelve_core::instructions::Instructions> {
+    kelve_core::instructions::get(kind)
 }
 
 /// A job, as the agent is given it.
@@ -264,7 +178,7 @@ pub struct Job {
     pub job: i64,
     pub kind: String,
     pub about: String,
-    /// What to do, from the shared graph: `read@5`.
+    /// What to do: the instructions, in full.
     pub instructions: String,
     pub version: String,
     /// What to do it with. Text from files or the web in it is fenced, and
@@ -364,11 +278,6 @@ pub async fn next_after(
         .filter(|p| !p.is_empty())
         .map(|p| crate::list::notes_of(&crate::reader::root_of_notes(app, Path::new(p))));
     let mut conn = app.db.acquire().await?;
-    // Asked for one thing opened, by its number: its reading is awake, though
-    // something was opened after it, and only its jobs come.
-    if let Some(only) = caller.only {
-        kelve_store::reader::wake(&mut conn, only).await?;
-    }
     let Some(row) = asks::take_for(
         &mut conn,
         &caller.name(),
@@ -392,7 +301,7 @@ async fn job_of(app: &Shared, row: asks::Ask) -> ApiResult<Job> {
     };
     app.publish(ServerEvent::Asks);
     crate::agent_loop::taken(app, &row).await;
-    let instructions = instructions(app, &row.kind).await.ok_or_else(|| {
+    let instructions = instructions(&row.kind).ok_or_else(|| {
         ApiError::internal(format!("no instructions for a job of kind {}", row.kind))
     })?;
     let kind = row.kind;
@@ -400,7 +309,7 @@ async fn job_of(app: &Shared, row: asks::Ask) -> ApiResult<Job> {
         job: row.id,
         kind: kind.clone(),
         about: row.about,
-        version: format!("{}@{}", instructions.name, instructions.version),
+        version: instructions.id(),
         instructions: instructions.text,
         material: given(
             &kind,
@@ -409,50 +318,6 @@ async fn job_of(app: &Shared, row: asks::Ask) -> ApiResult<Job> {
         answer_shape: serde_json::from_str(&row.schema).unwrap_or(Value::Null),
         waiting,
     })
-}
-
-/// The most kelve waits for a lesson job named to the agent to be ready:
-/// the work that asks for it runs as the agent's turn ends, and has
-/// usually run by the time the agent asks.
-const LESSON_WAIT: Duration = Duration::from_secs(20);
-
-/// The lesson job kelve named to the agent, by the name it gave: only that
-/// agent knows what it learned, so no other is given it (`asks::take_lesson`).
-/// The work that asks for it runs now, if it hasn't yet.
-pub async fn lesson(app: &Shared, caller: &Caller, name: &str) -> ApiResult<Job> {
-    hello(app, caller).await?;
-    let key = format!("{}:{}", crate::lessons::WRITE, name.trim());
-    let until = Instant::now() + LESSON_WAIT;
-    loop {
-        let (row, due) = {
-            let mut conn = app.db.acquire().await?;
-            (
-                asks::take_lesson(&mut conn, &key, &caller.name()).await?,
-                kelve_store::jobs::due(&mut conn, &key).await?,
-            )
-        };
-        if let Some(row) = row {
-            return job_of(app, row).await;
-        }
-        let Some(due) = due else {
-            return Err(ApiError::not_found(
-                "That lesson job isn't waiting any more: it was handed in, or let go because it wasn't taken within six hours. There's nothing more to do for it.",
-            ));
-        };
-        if Instant::now() >= until || due > Utc::now() {
-            return Err(ApiError::conflict(format!(
-                "kelve is still getting that lesson job ready: call next_job again in a minute, giving lesson: \"{}\".",
-                name.trim()
-            )));
-        }
-        if pipeline::run_key(app, &key)
-            .await
-            .map_err(ApiError::internal)?
-            .is_none()
-        {
-            tokio::time::sleep(Duration::from_millis(250)).await;
-        }
-    }
 }
 
 /// The next job, as `next_after` gives it. When none is ready, kelve waits
@@ -508,26 +373,10 @@ async fn busy(app: &Shared, only: Option<i64>) -> ApiResult<bool> {
     })
 }
 
-/// Whether reading something opened, by its number, isn't finished: a job
-/// of its reading waits for the agent or is with it, or kelve's own work
-/// for it is still to run.
-pub async fn unfinished(app: &Shared, opened: i64) -> ApiResult<bool> {
-    let mut conn = app.db.acquire().await?;
-    Ok(asks::reading_left(&mut conn, opened).await?
-        || kelve_store::jobs::pending_for(&mut conn, opened).await?)
-}
-
 /// What of a job's material kelve keeps for reading its answer, and never
-/// gives the agent, by kind: what a check's marks were offered, which its
-/// marks say already, and the print a page was asked with.
-const KELVES: [(&str, &str); 6] = [
-    (CHOOSE, "offered"),
-    (PLAINLY_FOLDER, "print"),
-    (PLAINLY_CHANGE, "print"),
-    (DEBRIEF, "changed"),
-    (LEARN, "given"),
-    (LEARN, "evidence"),
-];
+/// gives the agent, by kind: what a debrief's change was, and what a
+/// learning job was given and its evidence.
+const KELVES: [(&str, &str); 3] = [(DEBRIEF, "changed"), (LEARN, "given"), (LEARN, "evidence")];
 
 /// A job's material as the agent is given it: without what's kelve's own.
 fn given(kind: &str, mut material: Value) -> Value {
@@ -561,40 +410,11 @@ pub async fn hand_in(app: &Shared, caller: &Caller, job: i64, value: Value) -> A
             ApiError::conflict("That job isn't open any more. Take the next one with next_job.")
         })?;
     let material: Value = serde_json::from_str(&row.material).unwrap_or(Value::Null);
-    // Checking an entry takes a connection of its own: this one waits for
-    // it outside the pool, so agents handing in at once never hold every
-    // connection while each waits for another.
-    drop(conn);
-    let shaped = match row.kind.as_str() {
-        WRITE | FIX | EXTEND if value.is_object() => {
-            pipeline::entries::shape(app, &row.kind, row.idea.as_deref(), &value).await
-        }
-        _ => shape(&row.kind, &material, &value),
-    };
-    let mut conn = app.db.acquire().await?;
+    let shaped = shape(&row.kind, &material, &value);
     if let Err(why) = shaped {
         let put_aside = asks::wrong(&mut conn, row.id, &why).await?;
         tracing::info!(kind = %row.kind, put_aside, "an agent's answer wasn't in the shape asked for");
         crate::agent_loop::wrong(app, &row, &why, put_aside).await;
-        // What's opened's overview, the first on its way in, is asked for
-        // afresh, twice at most, rather than left unwritten.
-        let mut payload: Value = serde_json::from_str(&row.resume_payload).unwrap_or_default();
-        let again = payload["again"].as_u64().unwrap_or(0);
-        if put_aside && payload["first"].as_bool() == Some(true) && again < 2 {
-            payload["again"] = Value::from(again + 1);
-            if let Some(o) = payload.as_object_mut() {
-                o.remove("print");
-            }
-            kelve_store::jobs::add(
-                &mut conn,
-                &row.resume_kind,
-                row.resume_key.as_deref(),
-                &payload,
-                Utc::now(),
-            )
-            .await?;
-            app.wake.notify_one();
-        }
         drop(conn);
         app.publish(ServerEvent::Asks);
         return Ok(HandedIn::No { why, put_aside });
@@ -630,18 +450,7 @@ fn shape(kind: &str, material: &Value, value: &Value) -> Result<(), String> {
         return Err("The answer must be one JSON object, in the shape the job gives.".into());
     }
     match kind {
-        READ => pipeline::mark::read_shape(material, value),
-        CHOOSE => pipeline::mark::choose_shape(value),
-        BUILT_ON => crate::reader::built_on_shape(value),
-        RELATE => pipeline::relations::shape(value),
-        FOLDERS => crate::way::folders_shape(material, value),
-        WAY => crate::way::way_shape(material, value),
-        PATH => crate::way::rest_shape(material, value),
         NOTE => crate::list::note_shape(value),
-        PLAINLY => crate::plainly::shape(material, value),
-        PLAINLY_FOLDER => crate::plainly::folder_shape(material, value),
-        PLAINLY_CHANGE => crate::plainly::change_shape(material, value),
-        LESSON => crate::lessons::shape(material, value),
         DEBRIEF => crate::agent_loop::debrief::shape(material, value),
         RESEARCH => crate::agent_loop::research::shape(value),
         EXPLAIN => crate::agent_loop::explain::shape(value),

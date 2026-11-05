@@ -78,7 +78,7 @@ pub fn set(agent: Agent, on: bool, home: &Path, claude: &Path) -> Result<String,
             std::fs::write(&path, now).map_err(cant)?;
         }
         let mut said = format!(
-            "{} is told of notes you leave it, and given lessons as it works. The hook is in {}.",
+            "{} is told of notes you leave it, and given your skills as it works. The hook is in {}.",
             agent.shown(),
             shown(&path)
         );

@@ -6,8 +6,7 @@
 // It says hello to the kelve at KELVE_URL (http://localhost:4600 unless
 // set), with the secret in KELVE_SECRET_FILE, then does kelve's work as
 // it comes, the way the browser tests need: not well, but always, and at
-// once. Start the stand-in graph beside it, to see entries written and
-// checked.
+// once.
 
 import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'

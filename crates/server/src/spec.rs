@@ -1,7 +1,7 @@
 //! What kelve marks for the person, kept as `marks.md` in their own notes
-//! folder: read for every file the agent reads, and for every mark shown.
-//! Theirs alone: it goes only to their own agent, never into the project or to
-//! the shared graph.
+//! folder: which ideas are new to them, for their agent as it explains one.
+//! Theirs alone: it goes only to their own agent, never into the project or
+//! anywhere else.
 
 use std::path::PathBuf;
 

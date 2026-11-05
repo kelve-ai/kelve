@@ -183,3 +183,22 @@ pub async fn diff(
 ) -> ApiResult<Json<DebriefDiffView>> {
     Ok(Json(debriefs::diff(&app, id, &p.path).await?))
 }
+
+/// What was handed over, file by file, while there's no debrief of it.
+pub async fn handover_change(
+    State(app): State<Shared>,
+    _me: Me,
+    UrlPath(id): UrlPath<i64>,
+) -> ApiResult<Json<DebriefChangeView>> {
+    Ok(Json(debriefs::handover_change(&app, id).await?))
+}
+
+/// One file of what was handed over, while there's no debrief of it.
+pub async fn handover_diff(
+    State(app): State<Shared>,
+    _me: Me,
+    UrlPath(id): UrlPath<i64>,
+    Query(p): Query<PathIn>,
+) -> ApiResult<Json<DebriefDiffView>> {
+    Ok(Json(debriefs::handover_diff(&app, id, &p.path).await?))
+}

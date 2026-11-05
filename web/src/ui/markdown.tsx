@@ -8,7 +8,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
 import type { Parents, RootContent } from 'mdast'
-import { colours, highlight } from '../blocks/highlight'
+import { colours, highlight } from './highlight'
 
 /** Only links people expect to follow leave the page. */
 const safeHref = (url: string) => (/^(https?:|mailto:)/i.test(url) ? url : undefined)

@@ -1,7 +1,7 @@
 // kelve's header and its screens (board Shell): Home, Skills and Your agent,
 // Settings and its sections, and light or dark, one click away. Each screen
-// still being built says what it will show; today's start page, settings and
-// reader stay where they were.
+// still being built says what it will show; the old start page and settings
+// lead to where they went.
 
 import { expect, test } from '@playwright/test'
 import { me, signIn } from '../world'
@@ -31,11 +31,11 @@ test('the header leads to each place, and says which one you’re in', async ({ 
   await expect(page.getByRole('region', { name: 'Skill checks' }).getByRole('heading', { level: 2 })).toHaveText('Skill checks')
   await expect(sections.getByRole('link', { name: 'Skill checks' })).toHaveAttribute('aria-current', 'page')
 
-  // Home, by kelve's name; and today's start page, where it was.
+  // Home, by kelve's name; and the old start page leads home.
   await page.getByRole('link', { name: 'kelve', exact: true }).click()
   await expect(page.getByRole('region', { name: 'What happened' })).toBeVisible()
   await page.goto('/#/start')
-  await expect(page.getByText('Show me what you did in kelve.')).toBeVisible()
+  await expect(page).toHaveURL(/#\/$/)
 })
 
 test('light or dark, one click away, kept as chosen', async ({ page }) => {
@@ -68,7 +68,8 @@ test('every screen still being built says what it will show', async ({ page }) =
   // Anywhere else, there's no page.
   await page.goto('/#/nowhere')
   await expect(page.getByRole('heading', { name: 'There’s no page here.' })).toBeVisible()
-  // Today's settings are where they were.
+  // The old settings lead to the new.
   await page.goto('/#/you/reading')
-  await expect(page.locator('.set-body > h2')).toBeVisible()
+  await expect(page).toHaveURL(/#\/settings\/reading$/)
+  await expect(page.getByRole('region', { name: 'Reading' })).toBeVisible()
 })

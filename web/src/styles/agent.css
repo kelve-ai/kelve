@@ -103,6 +103,8 @@
 .sopt .on { display: inline-flex; align-items: center; gap: 7px; }
 .sopt .on i { width: 7px; height: 7px; border-radius: 50%; background: var(--better); flex: none; }
 .sets-body .lede { margin: -14px 0 24px; max-width: 600px; font-size: 16.5px; line-height: 26px; color: var(--soft); }
+/* A folder's path, however long, wraps rather than pushing the page sideways. */
+.sets-body .mono { font-family: var(--mono); overflow-wrap: anywhere; }
 .me { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 28px; padding: 0 0 24px; }
 .me-r { flex: 1 1 260px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-bottom: 14px; }
 .me .nm { font-family: var(--pixel); font-size: 28px; line-height: 34px; font-weight: 700; }

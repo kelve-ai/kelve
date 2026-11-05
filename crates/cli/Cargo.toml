@@ -1,6 +1,6 @@
 [package]
 name = "kelve"
-description = "kelve: see what anything is built on, and how and why it works. The command line and the local service."
+description = "kelve: skills from your work, and proof they make your agent better. The command line and the local service."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

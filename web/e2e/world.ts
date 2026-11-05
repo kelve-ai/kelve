@@ -19,7 +19,7 @@ export interface World {
   pickFile: string
   /** Where kelve writes what it says, as its person sees it where `kelve serve` runs. */
   logFile: string
-  /** The stand-in shared graph. */
+  /** The stand-in for kelve's hosted service. */
   graph: string
   /** The tests' own Claude Code folder, where the notes hook goes. */
   claudeDir: string
@@ -88,30 +88,25 @@ export async function link(w: Pick<World, 'base' | 'secretFile' | 'logFile'> = w
 export async function signIn(page: Page, w?: Pick<World, 'base' | 'secretFile' | 'logFile'>, opts: { new?: boolean } = {}) {
   await page.goto(await link(w))
   if (opts.new) return
-  await started(page, (w ?? world()).base)
-  // The page read its settings before that: read them again, so what's
-  // opened next goes straight to the reader. A goto that only changes the
-  // address's # stays on the page, as a browser does.
+  await met(page, (w ?? world()).base)
+  // The page read its settings before that: read them again, so home is
+  // home. A goto that only changes the address's # stays on the page, as a
+  // browser does.
   await page.reload()
 }
 
-/**
- * The person has been through the first run, so what's opened goes straight
- * to the reader. Whether they hadn't been before.
- */
-async function started(page: Page, base: string): Promise<boolean> {
+/** The person has met their agent, so home is home. Whether they hadn't before. */
+async function met(page: Page, base: string): Promise<boolean> {
   const before = (await (await page.request.get(`${base}/api/settings`)).json()) as { hints: string[] }
-  await page.request.post(`${base}/api/settings`, { data: { hintSeen: 'started' } })
-  // And met their agent, so home is home.
   await page.request.post(`${base}/api/settings`, { data: { hintSeen: 'met' } })
-  return !before.hints.includes('started')
+  return !before.hints.includes('met')
 }
 
 /**
  * The agent opens something, as its `open` tool does, and does kelve's
- * work on it, or, with `work: false`, only finds its way in. Each opening
- * is a new tab: with no browser to open it in, kelve shows its link where
- * it runs, and the browser follows it to what was opened.
+ * work on it, unless `work: false`. Each opening is a new tab: with no
+ * browser to open it in, kelve shows its link where it runs, and the
+ * browser follows it to what was opened.
  */
 export async function open(page: Page, what: Record<string, unknown>, opts: { work?: boolean } = {}) {
   const w = world()
@@ -121,22 +116,12 @@ export async function open(page: Page, what: Record<string, unknown>, opts: { wo
   const opened = await agent.open(what)
   if (!opened.shown) await page.goto(await newLink(w.logFile, before))
   else await page.waitForURL(/#\/o\/\d+/)
-  // The page may have read its settings before that, and be showing the
-  // first run, with what was opened a click away: it reads them again.
-  if (await started(page, w.base)) await page.reload()
+  await met(page, w.base)
   if (opts.work !== false) await agent.work()
-  // Not working yet: the way in is still found first, as it always is.
-  else if (what.what !== 'file') await agent.findWay()
   return opened
 }
 
-/** An idea in the margin, beside its first line, by its name. */
-export const marginNote = (page: Page, name: string) => page.locator('.mnote').filter({ has: page.getByText(name, { exact: true }) }).first()
-
-/** The entry open on top, by its idea's name. */
-export const pane = (page: Page, name: string) => page.getByRole('article', { name, exact: true })
-
-/** Shows the Files tab: In order comes first once there's a way in. */
+/** Shows the Files tab, if the Notes tab is showing. */
 export async function toFiles(page: Page) {
   const tab = page.getByRole('complementary', { name: 'What’s open' }).getByRole('tab', { name: 'Files' })
   if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click()
@@ -191,8 +176,8 @@ pub fn wait(attempt: u32) -> u64 {
 const git = (root: string, ...args: string[]) =>
   execFileSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.com', '-c', 'commit.gpgsign=false', ...args], { cwd: root })
 
-/** A small repo with a ledger committed, and a retry added since, not committed: with `idea`, a file naming it too. */
-export function repo(idea?: string): string {
+/** A small repo with a ledger committed, and a retry added since, not committed. */
+export function repo(): string {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'kelve-e2e-repo-')))
   mkdirSync(join(root, 'src'))
   writeFileSync(join(root, 'src/ledger.rs'), LEDGER)
@@ -200,8 +185,6 @@ export function repo(idea?: string): string {
   git(root, 'add', '.')
   git(root, 'commit', '-q', '-m', 'ledger')
   writeFileSync(join(root, 'src/retry.rs'), RETRY)
-  // A file naming an idea no other test has, so the shared graph has no entry for it.
-  if (idea) writeFileSync(join(root, 'src/keys.rs'), `pub fn key() -> String {\n    // idea: ${idea}\n    String::new()\n}\n`)
   git(root, 'add', '.')
   return root
 }

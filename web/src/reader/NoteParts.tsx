@@ -9,7 +9,6 @@ import { post } from '../api/client'
 import type { Note, NoteIn, NoteRef, Place } from '../api/types'
 import { Button, Choice, Hint, Quiet, State } from '../ui/ui'
 import { roughly } from '../words'
-import { UseLine } from './Margin'
 
 /** What notes need from the reader around them. */
 export type NotesWith = {
@@ -20,8 +19,8 @@ export type NotesWith = {
   place: Place
   /** Where your own notes go: `~/Notes`. */
   notesDir: string
-  /** Opens a note as a page, or a new one, about these ideas. */
-  page: (id: string | null, ideas?: string[]) => void
+  /** Opens a note as a page, or a new one. */
+  page: (id: string | null) => void
   /** Goes to a line of a file. */
   goTo: (path: string, line: number) => void
   /** Whether the hint about notes is still to be shown, once. */
@@ -31,6 +30,18 @@ export type NotesWith = {
 }
 
 export const NotesContext = createContext<NotesWith | null>(null)
+
+/** What your agent said it did: plain text, with `code` allowed and nothing else. */
+export function UseLine({ text }: { text: string }) {
+  const parts = text.split(/(`[^`]+`)/g)
+  return (
+    <>
+      {parts.map((p, i): ReactNode =>
+        p.startsWith('`') && p.endsWith('`') && p.length > 1 ? <code key={i}>{p.slice(1, -1)}</code> : p,
+      )}
+    </>
+  )
+}
 export const useNotes = () => useContext(NotesContext)
 
 /** Who a note is for, as the choice says it. */
@@ -108,12 +119,10 @@ function ForAgent({ agent, place }: { agent: string; place: number | null }): Re
  * it: who it's for, your agent's showing where on its list the note would
  * go, and Keep. A note can open as a page of its own, to write more.
  */
-export function NoteBox({ path, start, end, ideas, close }: {
+export function NoteBox({ path, start, end, close }: {
   path: string
   start: number
   end: number
-  /** The ideas marked on those lines. */
-  ideas: string[]
   close: () => void
 }) {
   const n = useNotes()
@@ -139,7 +148,6 @@ export function NoteBox({ path, start, end, ideas, close }: {
         place,
         text,
         on: { path, start, end },
-        ideas,
       } satisfies NoteIn)
       close()
       if (thenPage) n.page(kept.id)

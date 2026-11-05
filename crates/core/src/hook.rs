@@ -1,7 +1,7 @@
 //! The hook that tells the person's coding agent what kelve has for it, at the
-//! moment it helps: the notes they left it, as they send a message; lessons
-//! from the shared graph, as it reads or edits a file and as something fails;
-//! and work it hasn't shown the person, to show in kelve: as its turn ends,
+//! moment it helps: the notes they left it, and what they said, as they send a
+//! message; their skills, as their session starts and as it reads or edits a
+//! kind of file; and work it hasn't shown the person, to show in kelve: as its turn ends,
 //! if it's done and worth showing, and as it commits, pushes or opens a pull
 //! request. One command, `kelve moment`, naming the agent and the event, on each
 //! agent's own events: installed and taken out together, only with the person's
@@ -19,7 +19,7 @@ use serde_json::{Map, Value, json};
 /// The command every entry runs, before its agent and event.
 pub const COMMAND: &str = "kelve moment";
 
-/// What the hook ran before lessons, taken out as kelve's own.
+/// What the hook ran before `kelve moment`, taken out as kelve's own.
 const BEFORE: &str = "kelve notes --waiting";
 
 /// An agent with hooks kelve can add to.
@@ -1694,10 +1694,10 @@ mod tests {
         // Held up once already: it goes on, never asked twice.
         let again = json!({ "session_id": "s", "cwd": "/w", "stop_hook_active": true });
         assert!(moment(Agent::Claude, "Stop", &again).is_none());
-        let said = reply(Agent::Claude, "Stop", "kelve: write it as a lesson.").unwrap();
+        let said = reply(Agent::Claude, "Stop", "kelve: the debrief is due.").unwrap();
         let said: Value = serde_json::from_str(&said).unwrap();
         assert_eq!(said["decision"], "block");
-        assert_eq!(said["reason"], "kelve: write it as a lesson.");
+        assert_eq!(said["reason"], "kelve: the debrief is due.");
         assert!(
             reply(Agent::Claude, "Stop", "").is_none(),
             "nothing to ask: it stops"
@@ -1884,29 +1884,27 @@ mod tests {
             "a note"
         );
         let v: Value =
-            serde_json::from_str(&reply(Agent::Claude, "PostToolUse", "a lesson").unwrap())
-                .unwrap();
-        assert_eq!(v["hookSpecificOutput"]["additionalContext"], "a lesson");
+            serde_json::from_str(&reply(Agent::Claude, "PostToolUse", "a skill").unwrap()).unwrap();
+        assert_eq!(v["hookSpecificOutput"]["additionalContext"], "a skill");
         let v: Value =
-            serde_json::from_str(&reply(Agent::Cursor, "postToolUse", "a lesson").unwrap())
-                .unwrap();
-        assert_eq!(v["additional_context"], "a lesson");
+            serde_json::from_str(&reply(Agent::Cursor, "postToolUse", "a skill").unwrap()).unwrap();
+        assert_eq!(v["additional_context"], "a skill");
         let v: Value =
-            serde_json::from_str(&reply(Agent::Copilot, "postToolUse", "a lesson").unwrap())
+            serde_json::from_str(&reply(Agent::Copilot, "postToolUse", "a skill").unwrap())
                 .unwrap();
-        assert_eq!(v["additionalContext"], "a lesson");
+        assert_eq!(v["additionalContext"], "a skill");
         assert_eq!(
-            reply(Agent::Antigravity, "PostToolUse", "a lesson"),
+            reply(Agent::Antigravity, "PostToolUse", "a skill"),
             None,
             "held for later"
         );
         let v: Value =
-            serde_json::from_str(&reply(Agent::Antigravity, "PreInvocation", "a lesson").unwrap())
+            serde_json::from_str(&reply(Agent::Antigravity, "PreInvocation", "a skill").unwrap())
                 .unwrap();
-        assert_eq!(v["injectSteps"][0]["ephemeralMessage"], "a lesson");
+        assert_eq!(v["injectSteps"][0]["ephemeralMessage"], "a skill");
         assert_eq!(
-            reply(Agent::Kiro, "PostToolUse", "a lesson").unwrap(),
-            "a lesson"
+            reply(Agent::Kiro, "PostToolUse", "a skill").unwrap(),
+            "a skill"
         );
         assert_eq!(reply(Agent::Claude, "PostToolUse", "  "), None);
     }

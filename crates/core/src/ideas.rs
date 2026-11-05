@@ -17,7 +17,6 @@ pub const ID_LEN: usize = 12;
 /// An idea, as entries, marks and notes point at it.
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct IdeaRef {
     /// `kelve:` and its minted part: `kelve:i3k9xq2m7twa8`.
     pub id: String,
@@ -47,7 +46,6 @@ pub fn is_id(id: &str) -> bool {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum IdeaKind {
     /// An idea: ownership, consensus, amortisation.
     #[default]
@@ -91,7 +89,6 @@ impl IdeaKind {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub enum LinkKind {
     /// To understand this entry's idea, you need that one: going down.
     /// Never loops.

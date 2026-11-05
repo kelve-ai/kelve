@@ -1,5 +1,10 @@
-//! The shared knowledge graph's API, version 1 (spec section 10.2): what a
-//! kelve sends the graph and gets back. The graph holds ideas and their
+//! kelve's hosted service's API. Version 2 (`v2`) is what kelve uses now:
+//! signing in, the account and its page, scores and verified runs.
+//!
+//! Version 1, here, is the shared knowledge graph's (spec section 10.2), which
+//! kelve no longer uses but for the weekly count (`Counts`, `client::send_counts`).
+//! The rest stays only because the hosted service still serves it, until it
+//! retires it. What it was: what a kelve sends the graph and gets back. The graph holds ideas and their
 //! entries, never anyone's work: a kelve sends the names of ideas to look them
 //! up, and new ideas with their entries to add them. It never sends what the
 //! person opened, its names or paths, or which ideas their files use.

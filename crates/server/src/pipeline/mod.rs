@@ -1,15 +1,9 @@
 //! kelve's background work, as jobs in the local store (`store::jobs`):
-//! marking what's open (`mark`), tracing ideas down (`relations`), the
-//! entries ideas lead to (`entries`), and keeping the store tidy
-//! (docs/architecture.md). Where the work needs a model, it asks the
-//! person's agent (`agent`) and stops; the agent's answer runs it again.
-//! Two workers share the jobs; a job that fails is tried again later, with
-//! a growing wait.
-
-pub mod entries;
-pub mod mark;
-pub mod relations;
-pub mod splits;
+//! the agent loop's debriefs, research, explanations and learning, skill
+//! checks, notes done, and keeping the store tidy (docs/architecture.md).
+//! Where the work needs a model, it asks the person's agent (`agent`) and
+//! stops; the agent's answer runs it again. Two workers share the jobs; a
+//! job that fails is tried again later, with a growing wait.
 
 use std::panic::AssertUnwindSafe;
 use std::time::Duration;
@@ -166,27 +160,10 @@ async fn run(app: &Shared, job: jobs::Job) {
         .catch_unwind()
         .await
         .unwrap_or_else(|_| Err(Failed::Other("It stopped part way.".into())));
-    // The day's reading of the shared graph used: what failed waits for it
-    // to reset, without counting a try, rather than failing again and again
-    // until it gives up.
-    let used = match (&result, app.graph_reader()) {
-        (Err(_), Some(graph)) => graph.reads_used().await,
-        _ => None,
-    };
     let Ok(mut conn) = app.db.acquire().await else {
         // The lease runs out and the job is taken again.
         return;
     };
-    if let Some(after) = used {
-        let at = Utc::now() + chrono::Duration::from_std(after).unwrap_or_default();
-        if let Err(e) = jobs::later(&mut conn, job.id, at).await {
-            tracing::warn!(job = %job.kind, error = %e, "couldn't put a job off");
-        }
-        tracing::info!(job = %job.kind, "kelve has read as much of the shared graph as it may today; this waits until it resets");
-        return;
-    }
-    // Claiming a job counts as a try, so more than one means it failed before.
-    let changed = !matches!(result, Ok(Then::Done)) || job.attempts > 1;
     let saved = match result {
         Ok(Then::Done) => jobs::done(&mut conn, job.id).await,
         Ok(Then::Again(at)) => jobs::later(&mut conn, job.id, at).await,
@@ -198,50 +175,13 @@ async fn run(app: &Shared, job: jobs::Job) {
     if let Err(e) = saved {
         tracing::warn!(job = %job.kind, error = %e, "couldn't record how a job went");
     }
-    // How reading a folder stands shows as it changes: failing, or going
-    // again after. Not each time it runs: the reader asks for it as it
-    // looks, and hearing that it ran would ask again.
-    if job.kind == crate::reader::READ_FOLDER
-        && changed
-        && let Some(opened) = job.payload["opened"].as_i64()
-    {
-        app.publish(kelve_core::views::ServerEvent::Read { opened });
-    }
     tracing::debug!(job = %job.kind, ms = started.elapsed().as_millis() as u64, "job ran");
 }
 
 async fn dispatch(app: &Shared, job: &jobs::Job) -> Result<Then> {
-    let idea = job.payload["idea"].as_str().unwrap_or_default();
     match job.kind.as_str() {
         SWEEP => sweep(app).await,
-        entries::WRITE => entries::write(app, idea).await,
-        entries::SEND => entries::send(app, idea).await,
-        entries::FOLLOW => entries::follow(app, idea).await,
-        entries::FIX => entries::fix(app, idea).await,
-        entries::REVISE => entries::revise(app, idea).await,
-        entries::REFRESH => entries::refresh(app, idea).await,
-        relations::RELATE => {
-            relations::propose(
-                app,
-                idea,
-                job.payload["depth"].as_u64().unwrap_or(0),
-                job.payload["below"].as_bool().unwrap_or(false),
-            )
-            .await
-        }
-        crate::reader::READ_FILE => crate::reader::read_job(app, &job.payload, false).await,
-        crate::reader::READ_DIFF => crate::reader::read_job(app, &job.payload, true).await,
-        crate::reader::READ_FOLDER => crate::reader::read_folder_job(app, &job.payload).await,
-        crate::reader::BUILT_ON => crate::reader::built_on_job(app, &job.payload).await,
-        crate::plainly::JOB => crate::plainly::job(app, &job.payload).await,
-        crate::plainly::FOLDER_JOB => crate::plainly::folder_job(app, &job.payload).await,
-        crate::plainly::CHANGE_JOB => crate::plainly::change_job(app, &job.payload).await,
-        crate::way::FOLDERS => crate::way::folders_job(app, &job.payload).await,
-        crate::way::FIND => crate::way::find_job(app, &job.payload).await,
-        crate::way::REST => crate::way::rest_job(app, &job.payload).await,
         crate::list::NOTE_DONE => crate::list::note_done_job(app, &job.payload).await,
-        crate::lessons::WRITE => crate::lessons::write_job(app, &job.payload).await,
-        crate::lessons::SEND => crate::lessons::send_job(app, &job.payload).await,
         crate::v2jobs::DEBRIEF => crate::agent_loop::debrief::job(app, &job.payload).await,
         crate::v2jobs::RESEARCH => crate::agent_loop::research::job(app, &job.payload).await,
         crate::v2jobs::EXPLAIN => crate::agent_loop::explain::job(app, &job.payload).await,
@@ -279,70 +219,12 @@ pub async fn add_by(app: &Shared, kind: &str, key: &str, at: DateTime<Utc>) -> R
     Ok(())
 }
 
-/// What an entry says while it waits to be sent, the account having added
-/// as much as the shared graph takes a day.
-pub const WAITING_FOR_LIMIT: &str = "Waiting to go to the shared graph until today’s limit resets.";
-
-/// Sends a changeset to the shared graph as the person: entries, ideas
-/// and how they relate, which the graph's day's limits count. Once the
-/// graph says the account has added as much as it may today, nothing more
-/// is sent until its limits reset, at midnight UTC, even after a restart:
-/// each send is told so at once, without asking the graph.
-pub async fn apply(
-    app: &Shared,
-    graph: &kelve_graph_api::client::Client,
-    changes: &kelve_graph_api::Changeset,
-    key: &str,
-) -> std::result::Result<kelve_graph_api::Applied, kelve_graph_api::client::Error> {
-    use kelve_graph_api::client::{Error, Limit, Quota};
-    if let Some(held) = app.sends_held() {
-        let left = held.until - kelve_store::now();
-        return Err(Error::Enough(Limit {
-            what: match held.what.as_str() {
-                "ideas" => Some(Quota::Ideas),
-                "entries" => Some(Quota::Entries),
-                "relations" => Some(Quota::Relations),
-                "lessons" => Some(Quota::Lessons),
-                _ => None,
-            },
-            new_account: held.new_account,
-            after: Duration::from_millis(u64::try_from(left).unwrap_or(0)),
-        }));
-    }
-    let applied = graph.apply(changes, key).await;
-    if let Err(Error::Enough(limit)) = &applied {
-        let what = match limit.what {
-            Some(Quota::Ideas) => "ideas",
-            Some(Quota::Entries) => "entries",
-            Some(Quota::Relations) => "relations",
-            Some(Quota::Lessons) => "lessons",
-            None => "",
-        };
-        let after = i64::try_from(limit.after.as_millis()).unwrap_or(i64::MAX);
-        let held = kelve_store::sends::Held {
-            until: kelve_store::now().saturating_add(after),
-            what: what.into(),
-            new_account: limit.new_account,
-        };
-        tracing::info!(
-            what,
-            minutes = after / 60_000,
-            "the account added as much as the shared graph takes today; sending waits until it resets"
-        );
-        if let Err(e) = app.hold_sends(Some(held)).await {
-            tracing::warn!(error = %e.message, "couldn't keep until when sending to the shared graph waits");
-        }
-    }
-    applied
-}
-
 async fn sweep(app: &Shared) -> Result<Then> {
     let mut conn = app.db.acquire().await?;
     kelve_store::auth::sweep(&mut conn).await?;
     kelve_store::jobs::sweep(&mut conn).await?;
     kelve_store::asks::sweep(&mut conn).await?;
-    kelve_store::sends::sweep(&mut conn).await?;
-    kelve_store::lessons::sweep(&mut conn).await?;
+    kelve_store::moments::sweep(&mut conn).await?;
     // What the person said to their agent is kept a week, and what it
     // handed over a month, unless a debrief or a past task is of it.
     const DAY: i64 = 24 * 60 * 60 * 1000;
@@ -350,13 +232,5 @@ async fn sweep(app: &Shared) -> Result<Then> {
     kelve_store::handovers::sweep(&mut conn, kelve_store::now() - 30 * DAY).await?;
     // Which skills a session had: sessions end within a day or two.
     kelve_store::agent_loop::sweep_given(&mut conn, kelve_store::now() - 2 * DAY).await?;
-    drop(conn);
-    // What was kept only until it could go, such as entries written before
-    // the person agreed, goes once it can.
-    match entries::send_held(app).await {
-        Ok(n) if n > 0 => tracing::info!(entries = n, "sending what was kept until it could go"),
-        Ok(_) => {}
-        Err(e) => tracing::warn!(error = %e, "couldn't send what was kept until it could go"),
-    }
     Ok(Then::Again(Utc::now() + chrono::Duration::hours(1)))
 }

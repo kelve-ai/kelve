@@ -3,7 +3,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 import { get, inExample, post } from '../../api/client'
-import type { GraphSignIn, HostedView, ScoreSquare, TaskSquare } from '../../api/types'
+import type { HostedSignIn, HostedView, ScoreSquare, TaskSquare } from '../../api/types'
 import { Character } from '../../ui/Character'
 import { Btn, Spinner } from '../../ui/kit'
 import { useLoad } from '../../useLoad'
@@ -94,7 +94,7 @@ const OUT = (
 /** Starts signing in with GitHub or Google, in a new tab: what went wrong, if anything. */
 export async function signIn(provider: 'github' | 'google'): Promise<string | undefined> {
   try {
-    const at = await post<GraphSignIn>('/api/hosted/signin', { provider })
+    const at = await post<HostedSignIn>('/api/hosted/signin', { provider })
     window.open(at.address, '_blank', 'noopener')
     return undefined
   } catch (e) {

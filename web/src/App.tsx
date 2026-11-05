@@ -1,25 +1,19 @@
 // The app: the top of every page, and the screen for the address.
 //   #/, and the rest   kelve's screens under its header (routes.ts)
-//   #/start            what to open, and what was opened lately
-//   #/o/<id>           the reader, on something opened
-//   #/you, #/you/…     settings
-//   #/adding           adding to the shared graph: who you are, and the terms
+//   #/o/<id>           what your agent opened: its debrief, the change, or the reader
 //   #/example          the app's own example, answered with no server
 //   #/states           every state of every screen, in development only
 
 import { lazy, Suspense, useEffect, useState } from 'react'
 import type { Me, Settings } from './api/types'
 import { isSignedOut, listen, onSignedOut } from './api/client'
-import { Start } from './screens/Start'
-import { Adding } from './screens/Adding'
 import { SignedOut } from './screens/SignedOut'
 import { Moved } from './screens/Moved'
 import { isMoved, onMoved, showHere } from './tabs'
-import { You } from './screens/You'
 import { Screen } from './screens/Screen'
 import { routeOf } from './routes'
 import { met } from './screens/agent/looks'
-import { PageTop } from './Top'
+import { Header } from './Header'
 import { useLoad } from './useLoad'
 import { Loading } from './Loader'
 
@@ -83,12 +77,17 @@ function Kelve() {
   useEffect(() => (known ? listen() : undefined), [known])
   if (out) return <SignedOut />
   if (moved) return <Moved showHere={showHere} />
-  return <Shell me={me.data} />
+  return <Shell />
 }
 
-const SCREENS = ['start', 'you', 'adding']
+/** Where an address kelve no longer has leads now: settings, and home for the start page. */
+function movedTo(screen: string, part?: string): string | null {
+  if (screen === 'you') return `#/settings/${part === 'reading' || part === 'marks' ? 'reading' : 'agent'}`
+  if (screen === 'start' || screen === 'adding') return '#/'
+  return null
+}
 
-function Shell({ me }: { me?: Me }) {
+function Shell() {
   const parts = useRoute()
   const [screen, a] = parts
   const route = routeOf(parts)
@@ -103,19 +102,10 @@ function Shell({ me }: { me?: Me }) {
     // Only from home still: the address may have moved on while settings came.
     if (meet && ['', '#', '#/'].includes(location.hash)) location.replace('#/welcome')
   }, [meet])
-  // Someone new meets the first run before the reader, whatever brought
-  // them: their agent showing them something, or its sign-in link. It says
-  // what was opened, and opens it once they're set up.
-  if (screen === 'o' && Number(a) > 0 && me?.agent && !settings.data) return <Loading />
-  if (screen === 'o' && Number(a) > 0 && me?.agent && !settings.data?.hints.includes('started'))
-    return (
-      <>
-        <PageTop here="start" />
-        <div className="page">
-          <Start me={me} opened={Number(a)} />
-        </div>
-      </>
-    )
+  const moved = movedTo(screen, a)
+  useEffect(() => {
+    if (moved) location.replace(moved)
+  }, [moved])
   if (screen === 'o' && Number(a) > 0)
     return (
       <Suspense fallback={<Loading />}>
@@ -125,20 +115,14 @@ function Shell({ me }: { me?: Me }) {
   // Someone new meets their agent first: home, until they have.
   if (route?.screen === 'home' && !settings.data) return <Loading />
   if (route) return <Screen route={route} />
+  if (moved) return <Loading />
   return (
-    <>
-      <PageTop here={screen === 'you' ? 'settings' : screen === 'start' ? 'start' : undefined} />
-      <div className="page">
-        {screen === 'start' && <Start me={me} />}
-        {screen === 'you' && <You focus={a} me={me} />}
-        {screen === 'adding' && <Adding idea={new URLSearchParams(location.hash.split('?')[1] ?? '').get('idea') ?? undefined} />}
-        {!SCREENS.includes(screen) && (
-          <main className="col" style={{ marginTop: 120 }}>
-            <h1 className="h1">There’s no page here.</h1>
-            <p className="p soft" style={{ marginTop: 14 }}><a className="link" href="#/">Go back</a></p>
-          </main>
-        )}
-      </div>
-    </>
+    <div className="app">
+      <Header here={null} />
+      <main className="app-main narrow">
+        <h1 className="h1" style={{ marginTop: 120 }}>There’s no page here.</h1>
+        <p className="p soft" style={{ marginTop: 14 }}><a className="link" href="#/">Go back</a></p>
+      </main>
+    </div>
   )
 }

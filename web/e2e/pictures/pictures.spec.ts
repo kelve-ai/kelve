@@ -19,14 +19,13 @@ const now = new Date(new Date((example.answers['/api/me'] as { agent: { lastSeen
  * picture with panes beside the work.
  */
 const pictures: { file: string; state: string; folded?: boolean; width?: number }[] = [
-  { file: 'change', state: 'reader-change-page' },
-  { file: 'in-order', state: 'reader-path' },
-  { file: 'plainly', state: 'reader-plainly', folded: true },
-  { file: 'down', state: 'reader-down', width: 1440 },
-  { file: 'lesson', state: 'reader-lesson' },
+  { file: 'debrief', state: 'debrief' },
+  { file: 'change', state: 'change' },
+  { file: 'skills', state: 'skill' },
+  { file: 'agent', state: 'agent' },
 ]
 
-const all = states(example.answers)
+const all = states()
 for (const p of pictures) {
   const s = all.find((x) => x.name === p.state)
   if (!s) throw new Error(`There's no state ${p.state} in the gallery.`)

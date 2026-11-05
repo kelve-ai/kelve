@@ -77,7 +77,6 @@ enum Command {
     ///
     ///   kelve job                        the next job, as JSON
     ///   kelve job --for 12               the next job for what's open as 12
-    ///   kelve job --lesson 17            the lesson job kelve named for you
     ///   kelve job done 7 < answer.json   hand in job 7's answer
     #[command(verbatim_doc_comment)]
     Job {
@@ -92,9 +91,6 @@ enum Command {
         /// Only the jobs for one thing opened, by its number.
         #[arg(long = "for", global = true)]
         only: Option<i64>,
-        /// The lesson job kelve named for you, as it named it.
-        #[arg(long)]
-        lesson: Option<String>,
     },
     /// What's kept for your agent to do
     Kept,
@@ -115,7 +111,7 @@ enum Command {
     /// What kelve has for your agent now: what its hook runs
     ///
     /// Reads the event your agent gives it, and prints the notes waiting,
-    /// or the lesson from the shared graph that helps now, or nothing.
+    /// your skills as they apply, or nothing.
     Moment {
         /// The agent whose hook this is: claude, codex, cursor, copilot,
         /// gemini, antigravity, kiro, droid, qwen, qoder or augment.
@@ -133,7 +129,7 @@ enum Command {
     /// Set kelve up: connect your agent, add its hook, and say what kelve marks
     ///
     /// The installer runs this. It connects the agent running it, or the one
-    /// installed, adds kelve's hook so it picks up your notes and lessons,
+    /// installed, adds kelve's hook so it picks up your notes and skills,
     /// and sets how much kelve marks: new, learning, working or deep. In a
     /// terminal it asks; run by your agent, it leaves your agent to choose.
     ///
@@ -161,7 +157,7 @@ enum Command {
         #[command(subcommand)]
         what: MarksCommand,
     },
-    /// Tell your agent of notes you leave it, and lessons as it works
+    /// Tell your agent of notes you leave it, and your skills as it works
     ///
     /// Adds kelve's hook to your agent's settings, or takes it out, and
     /// leaves the rest of the file as it was. For claude, codex, cursor,
@@ -290,8 +286,7 @@ async fn main() -> std::process::ExitCode {
             agent,
             model,
             only,
-            lesson,
-        } => jobs::next(&agent, model.as_deref(), only, lesson.as_deref()).await,
+        } => jobs::next(&agent, model.as_deref(), only).await,
         Command::Job {
             done: Some(JobCommand::Done { job }),
             agent,
