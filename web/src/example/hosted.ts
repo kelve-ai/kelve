@@ -49,7 +49,7 @@ export function hostedAnswers(as: string | null): Record<string, unknown> {
     page: out ? null : 'https://kelve.ai/@sam',
     public: !out,
     runs: out ? null : { left: as === 'no-runs' ? 0 : 1, aDay: 1, more: MORE },
-    going: null,
+    going: as === 'going' ? '2' : null,
     keys: out ? [] : [{ provider: 'anthropic', name: 'Anthropic', kind: 'apiKey' }],
     problem: null,
   }

@@ -14,10 +14,10 @@ use std::time::Duration;
 
 use kelve_core::character::{Draw, Look, Move};
 use kelve_core::hosted::{
-    CredentialKind, HostedView, ProviderKey, RunsLeft, ScoreView, SkillFileView, for_sending,
-    provider_name,
+    CredentialKind, HostedView, ProviderKey, RunState, RunsLeft, ScoreView, SkillFileView,
+    for_sending, provider_name,
 };
-use kelve_core::views::ScoreSquare;
+use kelve_core::views::{ScoreSquare, ServerEvent};
 use kelve_graph_api::v2::client::{Client, Error};
 use kelve_graph_api::v2::{self as v2, tar};
 use serde::{Deserialize, Serialize};
@@ -30,6 +30,10 @@ const ACCOUNT: &str = "keys.hosted";
 
 /// How long kelve waits for kelve.ai when it only asks how things stand.
 const ASK: Duration = Duration::from_secs(5);
+
+/// How often kelve asks kelve.ai about a run still going, with no one on
+/// its page.
+const WATCH: Duration = Duration::from_secs(60);
 
 /// What kelve holds for kelve.ai while it runs: a sign-in under way.
 #[derive(Debug, Default)]
@@ -264,14 +268,18 @@ pub async fn view(app: &Shared) -> ApiResult<HostedView> {
     if !view.signed_in {
         return Ok(view);
     }
+    let Some(c) = client(app).await? else {
+        return Ok(view);
+    };
+    let (asked, _) = tokio::join!(
+        tokio::time::timeout(ASK, c.account()),
+        runs_up_to_date(app, &c)
+    );
     {
         let mut conn = app.db.acquire().await?;
         view.going = kelve_store::hosted::going(&mut conn).await?.map(|r| r.id);
     }
-    let Some(c) = client(app).await? else {
-        return Ok(view);
-    };
-    match tokio::time::timeout(ASK, c.account()).await {
+    match asked {
         Ok(Ok(a)) => {
             if a.handle != view.handle {
                 keep_handle(app, a.handle.clone()).await?;
@@ -293,6 +301,88 @@ pub async fn view(app: &Shared) -> ApiResult<HostedView> {
         Err(_) => view.problem = Some(Error::Unreachable.to_string()),
     }
     Ok(view)
+}
+
+// ---------------------------------------------------------------- runs
+
+/// A run's state as the app says it, and as the store keeps it.
+pub(crate) fn run_state(state: v2::RunState) -> (RunState, &'static str) {
+    match state {
+        v2::RunState::Estimated => (RunState::Estimated, "estimated"),
+        v2::RunState::Queued => (RunState::Queued, "queued"),
+        v2::RunState::Running => (RunState::Running, "running"),
+        v2::RunState::Finished => (RunState::Finished, "finished"),
+        v2::RunState::Cancelled => (RunState::Cancelled, "cancelled"),
+        v2::RunState::Failed => (RunState::Failed, "failed"),
+    }
+}
+
+/// Asks kelve.ai how each run still going stands, and keeps it, so a run
+/// that finished while no one was on its page doesn't look as if it's going,
+/// and its score comes to home. Those it can't ask about now stay as they
+/// were, to ask again. Anything that changed is published.
+async fn runs_up_to_date(app: &Shared, c: &Client) {
+    let going = match app.db.acquire().await {
+        Ok(mut conn) => kelve_store::hosted::all_going(&mut conn).await,
+        Err(e) => Err(e.into()),
+    };
+    let going = match going {
+        Ok(going) => going,
+        Err(e) => {
+            tracing::warn!(error = %e, "couldn't read which runs are going");
+            return;
+        }
+    };
+    let mut changed = false;
+    for run in going {
+        let (state, score) = match tokio::time::timeout(ASK, c.run(&run.id)).await {
+            Ok(Ok(Some(s))) => (run_state(s.state).1, s.score),
+            // kelve.ai no longer has it, so it can't still be going.
+            Ok(Ok(None)) => ("failed", None),
+            Ok(Err(e)) => {
+                tracing::info!(run = %run.id, error = %e, "couldn't ask kelve.ai how a run stands");
+                continue;
+            }
+            Err(_) => continue,
+        };
+        if state == run.state {
+            continue;
+        }
+        let kept = match app.db.acquire().await {
+            Ok(mut conn) => {
+                kelve_store::hosted::stands(&mut conn, &run.id, state, score.as_deref()).await
+            }
+            Err(e) => Err(e.into()),
+        };
+        match kept {
+            Ok(()) => changed = true,
+            Err(e) => tracing::warn!(run = %run.id, error = %e, "couldn't keep how a run stands"),
+        }
+    }
+    if changed {
+        app.publish(ServerEvent::Settings);
+    }
+}
+
+/// Keeps what kelve knows of runs right with no one looking: a person who
+/// started one and went away finds it as it is.
+pub fn start(app: &Shared) {
+    let app = app.clone();
+    tokio::spawn(async move {
+        loop {
+            tokio::select! {
+                () = tokio::time::sleep(WATCH) => {},
+                () = app.stopped() => return,
+            }
+            match client(&app).await {
+                Ok(Some(c)) => runs_up_to_date(&app, &c).await,
+                Ok(None) => {}
+                Err(e) => {
+                    tracing::warn!(error = %e.message, "couldn't read the account to ask about its runs")
+                }
+            }
+        }
+    });
 }
 
 pub(crate) fn runs_left(a: &v2::Allowance) -> RunsLeft {

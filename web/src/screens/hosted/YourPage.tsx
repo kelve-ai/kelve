@@ -1,8 +1,9 @@
 // Your agent's page, on Your agent (boards YourAgent and YourAgentLive):
-// without one, a way to get a verified score, signing in first; with one,
-// its address to copy, how it stands, every verified score with a switch for
-// whether it shows, and a way to take the page down. Your agent's screen
-// puts this under its character and what it knows.
+// a way back to a run still going, whichever else it shows; without a page, a
+// way to get a verified score, signing in first; with one, its address to
+// copy, how it stands, every verified score with a switch for whether it
+// shows, and a way to take the page down. Your agent's screen puts this under
+// its character and what it knows.
 
 import { useCallback, useEffect, useState } from 'react'
 import type { HostedView, ScoreView } from '../../api/types'
@@ -32,12 +33,7 @@ export function YourPage({ example }: { example?: boolean }) {
   if (!h.signedIn || !h.page || list.length === 0) {
     return (
       <div className="hs-page">
-        {h.going && (
-          <section className="hs-cta" aria-label="Your run">
-            <p>Your agent is doing a verified run.</p>
-            <Btn href={hrefOf(`agent/score/${encodeURIComponent(h.going)}`, example)}>See how it’s going</Btn>
-          </section>
-        )}
+        {h.going && <Going run={h.going} example={example} />}
         {!h.going && h.available && (
           <section className="hs-cta" aria-label="Your page">
             <p>A verified score gives your agent a page to share.</p>
@@ -54,9 +50,20 @@ export function YourPage({ example }: { example?: boolean }) {
   }
   return (
     <div className="hs-page">
+      {h.going && <Going run={h.going} example={example} />}
       <Live h={h} scores={list} example={example} reload={() => { hosted.reload(); scores.reload() }} say={say} />
       {toast}
     </div>
+  )
+}
+
+/** A run still going, with a way back to it, however the page stands. */
+function Going({ run, example }: { run: string; example?: boolean }) {
+  return (
+    <section className="hs-cta" aria-label="Your run">
+      <p>Your agent is doing a verified run.</p>
+      <Btn href={hrefOf(`agent/score/${encodeURIComponent(run)}`, example)}>See how it’s going</Btn>
+    </section>
   )
 }
 

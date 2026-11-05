@@ -87,6 +87,16 @@ pub async fn going(conn: &mut Conn) -> Result<Option<Run>> {
     .await?)
 }
 
+/// Every run that's confirmed and not finished, as kelve last knew: those
+/// to ask kelve.ai about.
+pub async fn all_going(conn: &mut Conn) -> Result<Vec<Run>> {
+    Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{RUN} where state in ('queued', 'running') order by at desc"
+    )))
+    .fetch_all(&mut *conn)
+    .await?)
+}
+
 /// The names of the secrets kept under `prefix`, in order: which
 /// providers' keys are kept, say. Never the secrets.
 pub async fn secrets_named(conn: &mut Conn, prefix: &str) -> Result<Vec<String>> {
@@ -137,6 +147,7 @@ mod tests {
         assert_eq!(going(&mut conn).await.unwrap(), None);
         stands(&mut conn, "run1", "running", None).await.unwrap();
         assert_eq!(going(&mut conn).await.unwrap().unwrap().id, "run1");
+        assert_eq!(all_going(&mut conn).await.unwrap().len(), 1);
         stands(&mut conn, "run1", "finished", Some("s2"))
             .await
             .unwrap();

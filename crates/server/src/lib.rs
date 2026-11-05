@@ -98,6 +98,7 @@ async fn start(config: Config) -> Result<Shared, ServeError> {
     problems::watch(&app.config.data);
     pipeline::start(&app);
     counts::start(&app);
+    hosted::start(&app);
     updates::start(&app);
     skills_sync::start(&app);
     hooks::up_to_date(&app.config.agents_home, &app.config.claude_dir);

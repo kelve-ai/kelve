@@ -116,6 +116,31 @@ test('signing in and a verified run, then choosing an address, to a score on you
   await page.getByRole('button', { name: 'Take it down' }).click()
   await expect(page.getByText('Your page is down. Turn a score on to put it back up.')).toBeVisible()
 
+  // Another run, with scores already. Gone from its page, it can be got back
+  // to from Your agent and from settings.
+  await page.getByRole('link', { name: 'Get another score' }).click()
+  await page.getByRole('button', { name: 'Start the run' }).click()
+  const again = page.getByRole('form', { name: 'Start the run' })
+  await again.getByText('An API key', { exact: true }).click()
+  await again.getByRole('button', { name: 'Start the run' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Your agent is doing Rust tasks' })).toBeVisible()
+  const second = decodeURIComponent(page.url().split('/').pop() ?? '')
+  await page.goto('/#/agent')
+  await page.getByRole('link', { name: 'See how it’s going' }).click()
+  await expect(page).toHaveURL(new RegExp(`#/agent/score/${second}$`))
+  await page.goto('/#/settings/account')
+  await page.getByRole('link', { name: 'See how it’s going' }).click()
+  await expect(page).toHaveURL(new RegExp(`#/agent/score/${second}$`))
+  // It finishes with no one on its page: Your agent knows, and so does home.
+  await page.goto('/#/settings/agent')
+  await standIn({ finish: second })
+  await page.goto('/#/agent')
+  await page.reload()
+  await expect(page.getByRole('link', { name: 'Get another score' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'See how it’s going' })).toHaveCount(0)
+  await page.goto('/#/')
+  await expect(page.getByRole('region', { name: 'What happened' }).getByText('A verified run on Rust tasks, on Sonnet 5.6')).toHaveCount(2)
+
   // The account in settings: the key kept, then forgotten; then the account deleted.
   await page.goto('/#/settings/account')
   await expect(page.getByText('Signed in as @sam')).toBeVisible()
@@ -130,7 +155,7 @@ test('signing in and a verified run, then choosing an address, to a score on you
 test('every kelve.ai screen keeps no one out', async ({ page }) => {
   const { AxeBuilder } = await import('@axe-core/playwright')
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  for (const path of ['agent', 'agent?as=signed-out', 'agent?as=sign-in', 'agent/address?as=taken', 'agent/score/new?as=confirm', 'agent/score/new?as=subscription', 'agent/score/2', 'agent/score/4', 'agent/score/1', 'agent/score/3', 'settings/account', 'settings/account?as=signed-out']) {
+  for (const path of ['agent', 'agent?as=going', 'agent?as=signed-out', 'agent?as=sign-in', 'agent/address?as=taken', 'agent/score/new?as=confirm', 'agent/score/new?as=subscription', 'agent/score/2', 'agent/score/4', 'agent/score/1', 'agent/score/3', 'settings/account', 'settings/account?as=going', 'settings/account?as=signed-out']) {
     for (const theme of ['light', 'dark']) {
       await page.goto(`/?${theme}${path}#/example/${path}${path.includes('?') ? '&' : '?'}theme=${theme}`)
       await expect(page.locator('main h1, main h2').first()).toBeVisible()

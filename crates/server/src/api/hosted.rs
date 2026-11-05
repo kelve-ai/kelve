@@ -18,7 +18,7 @@ use axum::routing::get;
 use axum::{Json, Router};
 use kelve_core::hosted::{
     AgentChoice, CredentialKind, EstimateView, ExampleCheckView, ExampleTaskView, HandleView,
-    HostedView, KindChoice, ModelChoice, OfferView, RunState, RunView, ScoreView, TaskSquare,
+    HostedView, KindChoice, ModelChoice, OfferView, RunView, ScoreView, TaskSquare,
     credential_problem, provider_name,
 };
 use kelve_core::views::{HostedSignIn, ServerEvent};
@@ -626,21 +626,14 @@ async fn run_view(
     run: &kelve_store::hosted::Run,
     s: v2::RunStatus,
 ) -> ApiResult<RunView> {
-    let state = match s.state {
-        v2::RunState::Estimated => RunState::Estimated,
-        v2::RunState::Queued => RunState::Queued,
-        v2::RunState::Running => RunState::Running,
-        v2::RunState::Finished => RunState::Finished,
-        v2::RunState::Cancelled => RunState::Cancelled,
-        v2::RunState::Failed => RunState::Failed,
-    };
-    let name = serde_json::to_value(state)
-        .ok()
-        .and_then(|v| v.as_str().map(str::to_string))
-        .unwrap_or_default();
+    let (state, name) = hosted::run_state(s.state);
     {
         let mut conn = app.db.acquire().await?;
-        kelve_store::hosted::stands(&mut conn, &run.id, &name, s.score.as_deref()).await?;
+        kelve_store::hosted::stands(&mut conn, &run.id, name, s.score.as_deref()).await?;
+    }
+    // A run that finished shows on home, and is no longer one to go back to.
+    if name != run.state {
+        app.publish(ServerEvent::Settings);
     }
     // The score as the account has it, so whether it's on the page is right.
     let score = match &s.score {

@@ -109,6 +109,11 @@ function SignedIn({ h, act, example }: { h: HostedView; act: (run: () => Promise
           />
         </Row>
       )}
+      {h.going && (
+        <Row title="A verified run is going" what="It carries on by itself.">
+          <Btn size="small" href={hrefOf(`agent/score/${encodeURIComponent(h.going)}`, example)}>See how it’s going</Btn>
+        </Row>
+      )}
       {runs && <Row title="Verified runs" what={`${count(runs.left, 'run')} left today, of ${runs.aDay}.`} />}
       {h.keys.length === 0 && <Row title="What pays for your runs" what="kelve asks the first time a run needs it, and keeps it sealed." />}
       {h.keys.map((k) => {
