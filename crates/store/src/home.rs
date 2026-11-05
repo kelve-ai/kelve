@@ -17,10 +17,8 @@ const HANDOVER: &str = "select h.id, h.opened, h.root, h.branch, h.base, h.chang
 /// session before it was sent, is that debrief's.
 pub async fn small(conn: &mut Conn, since: i64, most: i64) -> Result<Vec<Handover>> {
     Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
-        "{HANDOVER} where h.at >= ? and not exists (
-           select 1 from debriefs d where d.handover = h.id
-              or (h.session != '' and d.session = h.session and d.root = h.root
-                  and d.made_at <= h.at and (d.sent_at is null or d.sent_at >= h.at)))
+        "{HANDOVER} where h.at >= ? and h.debrief is null
+           and not exists (select 1 from debriefs d where d.handover = h.id)
          order by h.at desc, h.id desc limit ?"
     )))
     .bind(since)
@@ -31,11 +29,14 @@ pub async fn small(conn: &mut Conn, since: i64, most: i64) -> Result<Vec<Handove
 
 /// The debrief of a handover, when it has one.
 pub async fn debrief_of(conn: &mut Conn, handover: i64) -> Result<Option<i64>> {
-    Ok(sqlx::query_scalar(
-        "select id from debriefs where handover = ? order by made_at desc limit 1",
+    Ok(sqlx::query_scalar::<_, Option<i64>>(
+        "select coalesce(
+           (select debrief from handovers where id = ?),
+           (select id from debriefs where handover = ? order by made_at desc limit 1))",
     )
     .bind(handover)
-    .fetch_optional(&mut *conn)
+    .bind(handover)
+    .fetch_one(&mut *conn)
     .await?)
 }
 
@@ -275,6 +276,9 @@ mod tests {
         let mut conn = pool.acquire().await.expect("a connection");
         let typo = handover(&mut conn, "").await;
         let work = handover(&mut conn, "s").await;
+        // The debrief is made a moment after the handover, as it is in use: the
+        // handover must stay covered once the debrief moves on to newer work.
+        tokio::time::sleep(std::time::Duration::from_millis(5)).await;
         let id = debriefs::for_handover(&mut conn, work, "/w", "s")
             .await
             .expect("made");

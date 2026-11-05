@@ -59,10 +59,11 @@ pub async fn for_handover(
             .bind(id)
             .execute(&mut *conn)
             .await?;
+            cover(conn, handover, id).await?;
             return Ok(id);
         }
     }
-    Ok(sqlx::query_scalar(
+    let id: i64 = sqlx::query_scalar(
         "insert into debriefs (handover, root, session, made_at, updated_at) values (?, ?, ?, ?, ?)
          returning id",
     )
@@ -72,7 +73,20 @@ pub async fn for_handover(
     .bind(at)
     .bind(at)
     .fetch_one(&mut *conn)
-    .await?)
+    .await?;
+    cover(conn, handover, id).await?;
+    Ok(id)
+}
+
+/// Keeps that `debrief` covers `handover`, so the handover is never taken
+/// for a small change once a debrief has been asked for its work.
+async fn cover(conn: &mut Conn, handover: i64, debrief: i64) -> Result<()> {
+    sqlx::query("update handovers set debrief = ? where id = ?")
+        .bind(debrief)
+        .bind(handover)
+        .execute(&mut *conn)
+        .await?;
+    Ok(())
 }
 
 pub async fn get(conn: &mut Conn, id: i64) -> Result<Option<Debrief>> {
