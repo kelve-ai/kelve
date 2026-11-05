@@ -25,9 +25,11 @@ pub mod read;
 pub mod reader;
 pub mod ready;
 pub mod settings;
+pub mod skills_home;
 pub mod spec;
 pub mod state;
 pub mod updates;
+pub mod v2jobs;
 pub mod way;
 pub mod web;
 

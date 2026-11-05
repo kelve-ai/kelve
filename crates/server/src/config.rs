@@ -47,6 +47,10 @@ pub struct Config {
     /// The home folder other agents' settings are in, for their hooks
     /// (`KELVE_AGENTS_HOME`, else `HOME`).
     pub agents_home: PathBuf,
+    /// The folder the person's own skills are kept in, one folder each
+    /// (`KELVE_SKILLS`, else `~/.kelve/skills`). A project's skills are in
+    /// its own `.kelve/skills/`.
+    pub skills_dir: PathBuf,
     /// How often a lesson that fits is held back from the agent, to measure
     /// the lessons, in thousandths (`KELVE_HOLD_BACK`, else 50: one in
     /// twenty), once it's been given `hold_back_from` times across everyone.
@@ -207,6 +211,12 @@ impl Config {
             .map(PathBuf::from)
             .or_else(std::env::home_dir)
             .unwrap_or_default();
+        let skills_dir = var("KELVE_SKILLS").map(PathBuf::from).unwrap_or_else(|| {
+            std::env::home_dir()
+                .unwrap_or_default()
+                .join(".kelve")
+                .join("skills")
+        });
         let hold_back = match var("KELVE_HOLD_BACK") {
             Some(v) => v
                 .parse::<i64>()
@@ -241,6 +251,7 @@ impl Config {
             counts_off: counts_off(var("DO_NOT_TRACK"), var("KELVE_TELEMETRY")),
             claude_dir,
             agents_home,
+            skills_dir,
             hold_back,
             hold_back_from: kelve_core::lesson::HOLD_BACK_FROM,
             lesson_hold,
@@ -480,6 +491,8 @@ pub fn test_config() -> Config {
         // Never the person's own Claude Code settings.
         claude_dir: data.join("claude"),
         agents_home: data.join("home"),
+        // Never the person's own skills.
+        skills_dir: data.join("skills"),
         hold_back: 0,
         hold_back_from: kelve_core::lesson::HOLD_BACK_FROM,
         lesson_hold: kelve_core::lesson::HOLD_SECS,
