@@ -1,0 +1,1683 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "kelve’s hosted service",
+    "description": "Accounts, pages, characters, verified runs and scores, for kelve. A person signs in from their kelve with GitHub or Google, and gets an account key, sent as a bearer token with every call. A verified run takes the person's skills, secrets and paths stripped first, runs their agent with them against a standard agent on the same model, on tasks nobody sees, and deletes the skills as it ends. Nothing is public until the person publishes: then their page, at /@{handle}, shows their agent's character, its name and the scores they chose, never their skills or work. Errors are RFC 9457 problem details, with a sentence to show.",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    },
+    "version": "2"
+  },
+  "servers": [
+    {
+      "url": "https://graph.kelve.ai"
+    }
+  ],
+  "paths": {
+    "/@{handle}": {
+      "get": {
+        "tags": [],
+        "summary": "A person's page, as HTML: their agent's character and name, and the\nscores they published. 404, with a page saying so, when there's none.",
+        "operationId": "page",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {}
+            }
+          },
+          "404": {
+            "content": {
+              "text/html": {}
+            }
+          }
+        }
+      }
+    },
+    "/s/{id}": {
+      "get": {
+        "tags": [],
+        "summary": "A published score's own page, as HTML.",
+        "operationId": "score_page",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {}
+            }
+          },
+          "404": {
+            "content": {
+              "text/html": {}
+            }
+          }
+        }
+      }
+    },
+    "/s/{id}.png": {
+      "get": {
+        "tags": [],
+        "summary": "A published score's link preview, as a 1200 by 630 PNG.",
+        "operationId": "preview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {}
+            }
+          },
+          "404": {}
+        }
+      }
+    },
+    "/v2/account": {
+      "get": {
+        "tags": [],
+        "summary": "The account: its page, and the runs left today.",
+        "operationId": "account",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [],
+        "summary": "Deletes the account, with its page, its character and every score.\nEvery key it has stops working, and its runs are stopped and forgotten.",
+        "operationId": "delete_account",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/account/character": {
+      "get": {
+        "tags": [],
+        "summary": "The agent's character, as the service has it.",
+        "operationId": "character",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Character"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [],
+        "summary": "Gives the agent its character, checked first: pixels only, on the\ngrid, in a few colours.",
+        "operationId": "set_character",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Character"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/account/handle": {
+      "put": {
+        "tags": [],
+        "summary": "Takes an address for the account's page. An account has one; choosing\nanother lets the old one go.",
+        "operationId": "choose_handle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandleAsk"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone has it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not an address it can have, and why.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/account/page": {
+      "put": {
+        "tags": [],
+        "summary": "Names the agent on the page, and publishes the page or takes it down.",
+        "operationId": "set_page",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PageSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No address chosen yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A name it can't show, and why.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/handles/check": {
+      "post": {
+        "tags": [],
+        "summary": "Whether an address can be had, as it's typed: its form, whether\nsomeone has it, whether kelve keeps it, and whether it's fit to show.",
+        "operationId": "check_handle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandleAsk"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandleCheck"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/runs": {
+      "post": {
+        "tags": [],
+        "summary": "Sends the skills for a run, and says what it will take. Nothing runs\nuntil it's confirmed.",
+        "operationId": "estimate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Estimate"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Skills, or a kind, agent or model, it can't take, and why.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "No runs left today: `Retry-After` is the seconds to midnight UTC.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not taking runs for a while.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/runs/offer": {
+      "get": {
+        "tags": [],
+        "summary": "What a verified run can be: kinds of work, agents and models.",
+        "operationId": "offer",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/runs/{id}": {
+      "get": {
+        "tags": [],
+        "summary": "How a run stands, task by task, and its result once it's finished.",
+        "operationId": "status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [],
+        "summary": "Stops a run, or drops an estimate. Its skills are deleted.",
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/runs/{id}/confirm": {
+      "post": {
+        "tags": [],
+        "summary": "Starts a run the person confirmed, paid for on their own key for the\nmodel's provider. The key is used for this run only: never kept, never\nlogged. Confirming twice starts it once.",
+        "operationId": "confirm",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Confirm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The provider turned the key away, and what to do.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/scores": {
+      "get": {
+        "tags": [],
+        "summary": "The account's scores, newest first, published or not.",
+        "operationId": "scores",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Scores"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/scores/{id}/published": {
+      "put": {
+        "tags": [],
+        "summary": "Puts a score on the account's page, publishing the page.",
+        "operationId": "publish",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Score"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No address chosen yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [],
+        "summary": "Takes a score off the account's page.",
+        "operationId": "unpublish",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Score"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/signin": {
+      "get": {
+        "tags": [],
+        "summary": "Starts signing in: on to GitHub, or Google with `provider=google`, then\nback to the person's kelve with a one-time code.",
+        "operationId": "sign_in",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "`github` (the default) or `google`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "description": "The loopback address the person's kelve waits at.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "description": "`S256`.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "On to GitHub or Google."
+          }
+        }
+      },
+      "delete": {
+        "tags": [],
+        "summary": "Signs out: the key it's sent with stops working.",
+        "operationId": "sign_out",
+        "responses": {
+          "204": {}
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/v2/signin/token": {
+      "post": {
+        "tags": [],
+        "summary": "Exchanges the one-time code for an account key, once.",
+        "operationId": "sign_in_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInCode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "type": "object",
+        "description": "The person's account on the hosted service.",
+        "required": [
+          "public",
+          "character",
+          "runs"
+        ],
+        "properties": {
+          "character": {
+            "type": "boolean",
+            "description": "Whether they've given their agent a character. Without one, the\npage shows kelve's robot."
+          },
+          "handle": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Their page's address, `@{handle}`, once they've chosen one."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What their agent is called on their page: \"Sam’s agent\"."
+          },
+          "page": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Their page's address in full, once they've chosen one."
+          },
+          "public": {
+            "type": "boolean",
+            "description": "Whether their page is public. Nothing is, until they publish."
+          },
+          "runs": {
+            "$ref": "#/components/schemas/Allowance",
+            "description": "The verified runs they may start today."
+          }
+        }
+      },
+      "AgentOffer": {
+        "type": "object",
+        "description": "An agent that can be run, and the models it can run on.",
+        "required": [
+          "agent",
+          "name",
+          "models"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string",
+            "description": "`claude-code`."
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelOffer"
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "\"Claude Code\"."
+          }
+        }
+      },
+      "Allowance": {
+        "type": "object",
+        "description": "How many verified runs an account may start in a day, and how many are\nleft.",
+        "required": [
+          "left",
+          "a_day",
+          "more"
+        ],
+        "properties": {
+          "a_day": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "left": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "more": {
+            "$ref": "#/components/schemas/Timestamp",
+            "description": "When more come: midnight UTC."
+          }
+        }
+      },
+      "Character": {
+        "type": "object",
+        "required": [
+          "format",
+          "colours",
+          "layers"
+        ],
+        "properties": {
+          "colours": {
+            "type": "object",
+            "description": "What colour each letter is: `#rrggbb`, or one of the colours the\nperson chose, by name.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "format": {
+            "type": "string",
+            "description": "`kelve-character/1`."
+          },
+          "layers": {
+            "type": "object",
+            "description": "Each layer, by name: 27 rows of 24.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What it is, in a word or two: \"Ghost\". Never shown as its name."
+          },
+          "palette": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Palette",
+                "description": "The colours the person chose. kelve's own, without."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "Confirm": {
+        "type": "object",
+        "description": "What a person sends to start a run they've seen the estimate for: their\nown key for the model's provider. It's used for that run only: held in\nmemory while the run goes, never kept, never logged, and forgotten as\nthe run ends.",
+        "required": [
+          "provider_key"
+        ],
+        "properties": {
+          "provider_key": {
+            "type": "string"
+          }
+        }
+      },
+      "Deleted": {
+        "type": "object",
+        "description": "What deleting an account took with it.",
+        "required": [
+          "page",
+          "scores"
+        ],
+        "properties": {
+          "page": {
+            "type": "boolean",
+            "description": "Whether it had a page, which is gone."
+          },
+          "scores": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "Estimate": {
+        "type": "object",
+        "description": "What a run will take, before anything runs. Nothing starts until the\nperson confirms it in kelve, with their own key for the model's\nprovider: the run is paid for on that key. An estimate nobody confirms\nis dropped, with its skills, once it `expires`.",
+        "required": [
+          "run",
+          "kind",
+          "agent",
+          "model",
+          "tasks",
+          "runs_per_task",
+          "minutes",
+          "provider",
+          "provider_name",
+          "dollars",
+          "runs_left",
+          "expires",
+          "skills"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string"
+          },
+          "dollars": {
+            "type": "number",
+            "format": "double",
+            "description": "About what it costs on the person's own key, in US dollars, at the\nprovider's list prices: only the runs with their skills. The\nstandard agent's runs, and judging, are on kelve's key."
+          },
+          "expires": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "minutes": {
+            "type": "integer",
+            "format": "int32",
+            "description": "About how long it takes, in minutes.",
+            "minimum": 0
+          },
+          "model": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Whose key pays for it: `anthropic`."
+          },
+          "provider_name": {
+            "type": "string",
+            "description": "\"Anthropic\"."
+          },
+          "run": {
+            "type": "string",
+            "description": "The run's ID, to confirm it with."
+          },
+          "runs_left": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The runs the account has left today, this one not counted.",
+            "minimum": 0
+          },
+          "runs_per_task": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many times each task is expected to run with the person's\nskills: from 3, up to 8 where the difference takes longer to tell.",
+            "minimum": 0
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillFile"
+            },
+            "description": "What goes: every file of the skills, as the service read them."
+          },
+          "tasks": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "HandleAsk": {
+        "type": "object",
+        "description": "A page's address to check, or to choose, as typed: in a body, never a\npath, so a secret pasted by mistake reaches no log.",
+        "required": [
+          "handle"
+        ],
+        "properties": {
+          "handle": {
+            "type": "string"
+          }
+        }
+      },
+      "HandleCheck": {
+        "type": "object",
+        "description": "Whether an address can be had.",
+        "required": [
+          "handle",
+          "available"
+        ],
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "handle": {
+            "type": "string",
+            "description": "The address as it would be kept: trimmed, in lower case."
+          },
+          "instead": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Others like it that can be had, when someone has this one."
+          },
+          "why": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What to change, when it can't be had, in a sentence: \"Someone has\nthat one.\""
+          }
+        }
+      },
+      "KindOffer": {
+        "type": "object",
+        "description": "A kind of work tasks are set in: `rust`.",
+        "required": [
+          "kind",
+          "name",
+          "about",
+          "tasks",
+          "scored",
+          "bank"
+        ],
+        "properties": {
+          "about": {
+            "type": "string",
+            "description": "What the tasks are like: \"Command-line tools, libraries, and fixing\nbugs in code that already exists.\""
+          },
+          "bank": {
+            "type": "string",
+            "description": "The version of the task bank runs use now."
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "As people read it: \"Rust\"."
+          },
+          "scored": {
+            "type": "string",
+            "description": "How they're scored, in a sentence."
+          },
+          "tasks": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many tasks a run does.",
+            "minimum": 0
+          }
+        }
+      },
+      "ModelOffer": {
+        "type": "object",
+        "required": [
+          "model",
+          "name",
+          "provider",
+          "provider_name"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "The model's ID at its provider: `claude-sonnet-5-6`."
+          },
+          "name": {
+            "type": "string",
+            "description": "\"Sonnet 5.6\"."
+          },
+          "provider": {
+            "type": "string",
+            "description": "Whose key a run on it needs: `anthropic`."
+          },
+          "provider_name": {
+            "type": "string",
+            "description": "\"Anthropic\"."
+          }
+        }
+      },
+      "Offer": {
+        "type": "object",
+        "description": "What a verified run can be: the kinds of work, and the agents and\nmodels both runs can use. Never the tasks themselves.",
+        "required": [
+          "kinds",
+          "agents"
+        ],
+        "properties": {
+          "agents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentOffer"
+            }
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KindOffer"
+            }
+          }
+        }
+      },
+      "PageSettings": {
+        "type": "object",
+        "description": "What the person changes about their page: its agent's name, and whether\nit's public.",
+        "required": [
+          "public"
+        ],
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "None for \"{Handle}’s agent\"."
+          },
+          "public": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Palette": {
+        "type": "object",
+        "description": "The colours a person chose for their agent.",
+        "required": [
+          "body",
+          "light",
+          "screen",
+          "eyes"
+        ],
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "eyes": {
+            "type": "string"
+          },
+          "light": {
+            "type": "string"
+          },
+          "screen": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Problem": {
+        "type": "object",
+        "description": "An error, as RFC 9457 problem details.",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "RunRequest": {
+        "type": "object",
+        "description": "A verified run asked for: the kind of work, the agent and model both\nruns use, and every skill the person's agent has, as a tar of skill\nfolders (`rust/SKILL.md`, `rust/references/errors.md`), secrets and\npaths stripped by kelve before it's made.",
+        "required": [
+          "kind",
+          "agent",
+          "model",
+          "skills"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "string",
+            "format": "byte",
+            "description": "The tar, in standard base64."
+          }
+        }
+      },
+      "RunResult": {
+        "type": "object",
+        "description": "What a finished run found: a verdict for each task, the headline, the\nmean gain in hidden checks with its 95% interval, and whether the\ndifference is clear enough to call verified.",
+        "required": [
+          "kind",
+          "kind_name",
+          "agent",
+          "agent_name",
+          "model",
+          "model_name",
+          "bank",
+          "tasks",
+          "runs_per_task",
+          "passed",
+          "possible",
+          "standard_passed",
+          "gain",
+          "gain_low",
+          "gain_high",
+          "verified",
+          "finished"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string"
+          },
+          "agent_name": {
+            "type": "string",
+            "description": "\"Claude Code\"."
+          },
+          "bank": {
+            "type": "string",
+            "description": "The version of the task bank it ran on."
+          },
+          "finished": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "gain": {
+            "type": "number",
+            "format": "double",
+            "description": "The mean gain in hidden checks passed, in points, with its 95%\ninterval from a two-level bootstrap."
+          },
+          "gain_high": {
+            "type": "number",
+            "format": "double"
+          },
+          "gain_low": {
+            "type": "number",
+            "format": "double"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "kind_name": {
+            "type": "string",
+            "description": "\"Rust\"."
+          },
+          "model": {
+            "type": "string"
+          },
+          "model_name": {
+            "type": "string",
+            "description": "\"Sonnet 5.6\"."
+          },
+          "passed": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Hidden checks passed with the person's skills, of `possible`, and by\nthe standard agent over as many runs.",
+            "minimum": 0
+          },
+          "possible": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "runs_per_task": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many times each task ran with the person's skills, most often.",
+            "minimum": 0
+          },
+          "standard_passed": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Verdict"
+            },
+            "description": "Each task's verdict. Never which task it was."
+          },
+          "verified": {
+            "type": "boolean",
+            "description": "Whether the bank-level test passed at p < 0.05. Otherwise the score\nsays \"no clear difference\"."
+          }
+        }
+      },
+      "RunState": {
+        "type": "string",
+        "description": "How a run stands.",
+        "enum": [
+          "estimated",
+          "queued",
+          "running",
+          "finished",
+          "cancelled",
+          "failed"
+        ]
+      },
+      "RunStatus": {
+        "type": "object",
+        "description": "How a run stands, task by task, and its result once it's finished.",
+        "required": [
+          "run",
+          "state",
+          "kind",
+          "agent",
+          "model",
+          "tasks"
+        ],
+        "properties": {
+          "agent": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "minutes_left": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "About how long is left, in minutes, while it runs.",
+            "minimum": 0
+          },
+          "model": {
+            "type": "string"
+          },
+          "result": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RunResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "run": {
+            "type": "string"
+          },
+          "score": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The score it made, once it's finished: what's published, if the\nperson chooses."
+          },
+          "state": {
+            "$ref": "#/components/schemas/RunState"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskProgress"
+            },
+            "description": "One for each task, in the order the result gives them."
+          },
+          "why": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why it failed, or was cancelled by the service, in a sentence."
+          }
+        }
+      },
+      "Score": {
+        "type": "object",
+        "description": "A score: a finished run's result, with its own public link, published\nor not as the person chooses.",
+        "required": [
+          "id",
+          "link",
+          "run",
+          "published",
+          "result"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Its public ID, in its link: `/s/{id}`."
+          },
+          "link": {
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "result": {
+            "$ref": "#/components/schemas/RunResult"
+          },
+          "run": {
+            "type": "string"
+          }
+        }
+      },
+      "Scores": {
+        "type": "object",
+        "description": "The account's scores, newest first.",
+        "required": [
+          "scores"
+        ],
+        "properties": {
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Score"
+            }
+          }
+        }
+      },
+      "SignInCode": {
+        "type": "object",
+        "description": "What a person's kelve sends to sign in, once the graph has sent their\nbrowser back to it: the one-time code it came with, the PKCE verifier\nonly this kelve holds, and the address the code was sent to.",
+        "required": [
+          "code",
+          "code_verifier",
+          "redirect_uri"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "code_verifier": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          }
+        }
+      },
+      "SignedIn": {
+        "type": "object",
+        "description": "What it gets for the code: a key of its own, and the page's address, if\nthe account has chosen one.",
+        "required": [
+          "key"
+        ],
+        "properties": {
+          "handle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "SkillFile": {
+        "type": "object",
+        "description": "A file of the skills that goes, as the service read it.",
+        "required": [
+          "path",
+          "bytes"
+        ],
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      },
+      "TaskProgress": {
+        "type": "object",
+        "required": [
+          "state",
+          "runs"
+        ],
+        "properties": {
+          "runs": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many times it's run with the person's skills so far.",
+            "minimum": 0
+          },
+          "state": {
+            "$ref": "#/components/schemas/TaskState"
+          }
+        }
+      },
+      "TaskState": {
+        "type": "string",
+        "description": "How one task in a run stands: its square, as the run goes.",
+        "enum": [
+          "waiting",
+          "running",
+          "better",
+          "same",
+          "worse"
+        ]
+      },
+      "Timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "A UTC timestamp. It always serialises with milliseconds\n(`2026-09-30T12:40:00.000Z`), like JavaScript's `toISOString`, so two of\nthem compare the same as strings as they do as times."
+      },
+      "Verdict": {
+        "type": "string",
+        "description": "What a task came out as, with the person's skills, against the\nstandard agent: better when the gain is at least 10 points and clear of\nchance, worse the same way, and the same otherwise.",
+        "enum": [
+          "better",
+          "same",
+          "worse"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "key": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -172,6 +172,8 @@ struct HeldLesson {
 pub struct StandIn {
     pub url: String,
     held: Arc<Mutex<Held>>,
+    /// The hosted service's version 2, served beside it.
+    pub hosted: crate::v2::stand_in::Hosted,
 }
 
 /// The account a stand-in takes changesets from.
@@ -187,9 +189,10 @@ impl StandIn {
         }));
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let url = format!("http://{}", listener.local_addr()?);
-        let app = router(held.clone());
+        let hosted = crate::v2::stand_in::Hosted::default();
+        let app = router(held.clone()).merge(hosted.routes());
         tokio::spawn(async move { axum::serve(listener, app).await.ok() });
-        Ok(StandIn { url, held })
+        Ok(StandIn { url, held, hosted })
     }
 
     /// Starts one at `addr`, holding what's in `folder` when one is given,
@@ -203,9 +206,10 @@ impl StandIn {
         let held = Arc::new(Mutex::new(held));
         let listener = tokio::net::TcpListener::bind(addr).await?;
         let url = format!("http://{}", listener.local_addr()?);
-        let app = router(held.clone());
+        let hosted = crate::v2::stand_in::Hosted::default();
+        let app = router(held.clone()).merge(hosted.routes());
         tokio::spawn(async move { axum::serve(listener, app).await.ok() });
-        Ok(StandIn { url, held })
+        Ok(StandIn { url, held, hosted })
     }
 
     /// How many ideas, and entries, it holds.
@@ -515,6 +519,7 @@ async fn control(State(held): Shared, Json(c): Json<Control>) -> Response {
     let stand_in = StandIn {
         url: String::new(),
         held,
+        hosted: crate::v2::stand_in::Hosted::default(),
     };
     if let Some((url, text)) = &c.page {
         stand_in.page(url, text);
