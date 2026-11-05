@@ -23,8 +23,10 @@ export interface World {
   graph: string
   /** The tests' own Claude Code folder, where the notes hook goes. */
   claudeDir: string
-  /** The person's own skills, one folder each. */
+  /** The person's own skills, as this kelve reads them. */
   skillsDir: string
+  /** Where this kelve keeps its store. */
+  dataDir: string
 }
 
 export const WORLD_FILE = new URL('./.world.json', import.meta.url)

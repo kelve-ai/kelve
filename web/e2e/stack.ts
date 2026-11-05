@@ -88,7 +88,7 @@ export async function startKelve(port: number, graph: string, opts: { key?: bool
       // Its own Claude Code settings: the notes hook never touches the person's.
       KELVE_CLAUDE_DIR: claudeDir,
       KELVE_AGENTS_HOME: join(claudeDir, '..', 'home'),
-      // Never the person's own skills.
+      // Its own skills folder: never the person's.
       KELVE_SKILLS: join(dir, 'skills'),
       KELVE_HOLD_BACK: '0',
       NO_COLOR: '1',
@@ -104,7 +104,7 @@ export async function startKelve(port: number, graph: string, opts: { key?: bool
     server.kill()
     throw e
   }
-  return { base, secretFile, kelve, pickFile, logFile, claudeDir, skillsDir: join(dir, 'skills'), stop: () => server.kill() }
+  return { base, secretFile, kelve, pickFile, logFile, claudeDir, skillsDir: join(dir, 'skills'), dataDir: join(dir, 'data'), stop: () => server.kill() }
 }
 
 export default async function stack() {

@@ -416,6 +416,31 @@ pub fn change(dir: &Path, which: &Which) -> Result<Change, GitError> {
     read_change(&repo, &root, which, &|_| false, None)
 }
 
+/// What changed from one commit, or tree, to another, however far apart:
+/// what a past task's work came to, from the commit it started on to what
+/// the person kept.
+pub fn between_commits(dir: &Path, from: &str, to: &str) -> Result<Change, GitError> {
+    let (repo, _) = open(dir)?;
+    let tree = |spec: &str| -> Result<ObjectId, GitError> {
+        Ok(repo
+            .rev_parse_single(spec)
+            .map_err(|_| GitError::Unknown(spec.to_string()))?
+            .object()
+            .map_err(read_err)?
+            .peel_to_tree()
+            .map_err(|_| GitError::Unknown(spec.to_string()))?
+            .id)
+    };
+    let (old, new) = (tree(from)?, tree(to)?);
+    between(
+        &repo,
+        Some(old),
+        Some(new),
+        format!("{} to {}", short(old), short(new)),
+        &|_| false,
+    )
+}
+
 /// How a file or a folder stood on disk: what writing to it changes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Stat {

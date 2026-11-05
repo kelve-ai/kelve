@@ -22,6 +22,10 @@ markdown: string,
  */
 line: number, check: PartCheck, 
 /**
+ * The person kept it though it makes no difference.
+ */
+kept: boolean, 
+/**
  * What the check found, in a line: "Better on 2 of 2 past tasks".
  */
 hint: string, 

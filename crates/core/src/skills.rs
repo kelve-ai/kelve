@@ -14,6 +14,7 @@
 //! and an edit changes only the part it's about. Where each part came from
 //! and what its checks found are kept in kelve's store, never in the file.
 
+pub mod compare;
 pub mod work;
 
 use std::collections::{BTreeSet, HashSet};

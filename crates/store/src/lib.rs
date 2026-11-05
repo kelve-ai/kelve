@@ -7,6 +7,7 @@
 pub mod asks;
 pub mod auth;
 pub mod candidates;
+pub mod checking;
 pub mod checks;
 pub mod counts;
 pub mod debriefs;

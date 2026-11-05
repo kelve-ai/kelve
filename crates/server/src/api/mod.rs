@@ -16,6 +16,7 @@ pub mod own;
 pub mod problems;
 pub mod reader;
 pub mod settings;
+pub mod skills;
 pub mod stream;
 
 use axum::Router;
@@ -128,4 +129,17 @@ pub fn router() -> Router<Shared> {
         .route("/search", get(reader::search))
         .route("/problems", get(problems::list).post(problems::from_page))
         .route("/problems/{id}", delete(problems::forget))
+        .route("/skills", get(skills::list).post(skills::create))
+        .route("/skills/{id}", get(skills::one).post(skills::save))
+        .route("/skills/{id}/part", post(skills::part))
+        .route("/skills/{id}/undo", post(skills::undo))
+        .route("/skills/{id}/check", post(skills::check))
+        .route("/skills/{id}/check/stop", post(skills::stop))
+        .route(
+            "/suggested/{id}",
+            get(skills::suggested).post(skills::decide),
+        )
+        .route("/fits", get(skills::fits))
+        .route("/fits/start", post(skills::fits_start))
+        .route("/fits/{id}/pick", post(skills::fits_pick))
 }

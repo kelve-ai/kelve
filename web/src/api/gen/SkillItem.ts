@@ -7,6 +7,11 @@ import type { WorkKind } from "./WorkKind";
  */
 export type SkillItem = { 
 /**
+ * How the app addresses it: its name for one of the person's own, its
+ * number for a project's.
+ */
+id: string, 
+/**
  * Its name, as its folder and front matter have it: `rust`.
  */
 name: string, 
@@ -25,4 +30,8 @@ project: string | null, parts: number,
 /**
  * How many of its parts failed their checks.
  */
-failed: number, };
+failed: number, 
+/**
+ * Whether its parts are being checked now.
+ */
+checking: boolean, };
