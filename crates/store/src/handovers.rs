@@ -167,6 +167,23 @@ pub async fn of_session(conn: &mut Conn, opened: i64, session: &str) -> Result<u
     Ok(done.rows_affected())
 }
 
+/// The files the agent edited in a session since a time, each with the
+/// folder it's in, as its hook saw them (`lessons::touch`): its own work
+/// after a handover, not the person's.
+pub async fn edited_since(
+    conn: &mut Conn,
+    session: &str,
+    since: i64,
+) -> Result<Vec<(String, String)>> {
+    Ok(sqlx::query_as(
+        "select root, path from touched where session = ? and edited_at >= ? order by edited_at",
+    )
+    .bind(session)
+    .bind(since)
+    .fetch_all(&mut *conn)
+    .await?)
+}
+
 /// A commit was compared with a handover, now.
 pub async fn compared(conn: &mut Conn, id: i64) -> Result<()> {
     sqlx::query("update handovers set compared_at = ? where id = ?")
@@ -333,6 +350,22 @@ mod tests {
                 .await
                 .expect("read")
                 .is_none()
+        );
+        crate::lessons::touch(&mut conn, "s1", "/w", "src/retry.rs", true)
+            .await
+            .expect("touched");
+        crate::lessons::touch(&mut conn, "s1", "/w", "README.md", false)
+            .await
+            .expect("touched");
+        assert_eq!(
+            edited_since(&mut conn, "s1", h.at).await.expect("read"),
+            vec![("/w".to_string(), "src/retry.rs".to_string())]
+        );
+        assert!(
+            edited_since(&mut conn, "s1", now() + 1000)
+                .await
+                .expect("read")
+                .is_empty()
         );
         compared(&mut conn, id).await.expect("compared");
         assert!(
