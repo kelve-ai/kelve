@@ -604,14 +604,14 @@ async function status() {
   say(`The sandbox is up, in ${up.mode} mode, with ${up.graph === 'kelve-graph' ? `kelve-graph from ${graphDir}` : 'the stand-in for kelve.ai'} (process ${up.pid}).`, '')
   for (const p of up.processes) {
     const ok = alive(p.pid) && (p.port === undefined || (await listening(p.port)))
-    say(`  ${ok ? '✓' : '✗'} ${p.what.padEnd(28)}${p.port ? `127.0.0.1:${p.port}` : ''}${ok ? '' : '  not running: see .sandbox/'}`)
+    say(`  ${ok ? '✓' : '✗'} ${p.what.padEnd(33)}${p.port ? `127.0.0.1:${p.port}` : ''}${ok ? '' : '  not running: see .sandbox/'}`)
   }
-  if (up.site) say(`  ${(await listening(ports.site)) ? '✓' : '✗'} ${'The site, with kelve.ai’s pages'.padEnd(28)}http://localhost:${ports.site}`)
+  if (up.site) say(`  ${(await listening(ports.site)) ? '✓' : '✗'} ${'The site, with kelve.ai’s pages'.padEnd(33)}http://localhost:${ports.site}`)
   if (up.graph === 'kelve-graph') {
     const pg = composed('ps', '--status', 'running', '-q').stdout.trim()
-    say(`  ${pg ? '✓' : '✗'} ${'Postgres'.padEnd(28)}127.0.0.1:${ports.postgres}`)
+    say(`  ${pg ? '✓' : '✗'} ${'Postgres'.padEnd(33)}127.0.0.1:${ports.postgres}`)
     const fwd = docker('ps', '-q', '--filter', `name=^${forwarder}$`).stdout.trim()
-    say(`  ${fwd ? '✓' : '✗'} ${'The runner’s forwarder'.padEnd(28)}${forwarder}, in Docker`)
+    say(`  ${fwd ? '✓' : '✗'} ${'The runner’s forwarder'.padEnd(33)}${forwarder}, in Docker`)
     const trials = docker('ps', '-q', '--filter', 'label=kelve.bench.trial').stdout.trim().split('\n').filter(Boolean).length
     say('', trials ? `${trials} trial${trials === 1 ? '' : 's'} running in Docker.` : 'No trials running.')
   }
