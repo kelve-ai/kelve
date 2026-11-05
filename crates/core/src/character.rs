@@ -24,6 +24,9 @@ use ts_rs::TS;
 
 use crate::redact::redact;
 
+mod letters;
+pub use letters::{Letters, MOST_COLOURS as MOST_PAGE_COLOURS};
+
 /// The grid every character is drawn on.
 pub const WIDTH: usize = 24;
 pub const HEIGHT: usize = 27;

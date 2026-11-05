@@ -18,6 +18,10 @@
 //   bun dev/kelve.ts mcp             the line that gives your own agent the sandbox's tools
 //   bun dev/kelve.ts graph hold | release | unagree | grade | page <url>
 //                                    what the stand-in graph does next
+//   bun dev/kelve.ts hosted skills | finish <run> | taken <address> | runs <n>
+//                                    kelve.ai standing in: give your agent skills to send (one the
+//                                    stand-in's runs come out better with), finish a run at once,
+//                                    someone else has an address, or how many runs a day
 //   bun dev/kelve.ts record          make the example's graph again, from its agent's work
 //   bun dev/kelve.ts example         record the app's own example, the first run's, from a fresh sandbox
 //   bun dev/kelve.ts newcomer        be someone new: ask a Claude Code of their own to install kelve
@@ -57,6 +61,8 @@ const env = {
   KELVE_CLAUDE_DIR: join(home, 'claude'),
   // And a home of its own for other agents' hooks.
   KELVE_AGENTS_HOME: join(home, 'home'),
+  // The sandbox's own skills, never yours.
+  KELVE_SKILLS: join(home, 'skills'),
   // Lessons are never held back here, so the example records the same each time.
   KELVE_HOLD_BACK: '0',
 }
@@ -745,6 +751,33 @@ async function graphSays(what?: string, url?: string) {
   say('Done.')
 }
 
+/** kelve.ai, standing in beside the graph: what it does next, for trying verified runs. */
+async function hostedSays(what?: string, arg?: string) {
+  const tell = async (body: Record<string, unknown>) => {
+    const res = await fetch(`${graphUrl}/stand-in/v2`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) throw new Error(`The stand-in said ${res.status}. Is the sandbox up?`)
+  }
+  if (what === 'skills') {
+    for (const [name, text] of [
+      ['rust', '---\nname: rust\ndescription: How you like Rust.\n---\n# Rust\n\n## How you like it\n\n### Errors are one enum\n\nOne error type, with a message for each case.\n'],
+      ['standin-expert', '---\nname: standin-expert\ndescription: Makes the stand-in run come out better.\n---\n# Stand-in expert\n'],
+    ]) {
+      mkdirSync(join(env.KELVE_SKILLS, name), { recursive: true })
+      writeFileSync(join(env.KELVE_SKILLS, name, 'SKILL.md'), text)
+    }
+    say(`Your sandbox agent has skills to send, in ${env.KELVE_SKILLS}.`)
+    return
+  }
+  if (what === 'finish' && arg) await tell({ finish: arg })
+  else if (what === 'taken' && arg) await tell({ taken: [arg] })
+  else if (what === 'runs' && Number(arg) >= 0) await tell({ runs_a_day: Number(arg) })
+  else {
+    say('bun dev/kelve.ts hosted skills | finish <run> | taken <address> | runs <n>')
+    process.exit(1)
+  }
+  say('Done.')
+}
+
 const [command, ...rest] = process.argv.slice(2).filter((a) => !a.startsWith('--'))
 switch (command) {
   case 'up':
@@ -799,6 +832,9 @@ switch (command) {
     break
   case 'graph':
     await graphSays(rest[0], rest[1])
+    break
+  case 'hosted':
+    await hostedSays(rest[0], rest[1])
     break
   case 'moment': {
     need()

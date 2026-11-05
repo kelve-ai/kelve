@@ -35,6 +35,7 @@ import { answerFromExample, type Fixture } from '../api/client'
 import type { AgentList, Block, IdeaPage, ListItem, Me, Opened, PlainlyView, Reading, SentToday, Settings, UpdateView, Way } from '../api/types'
 import { BACKOFF as BACKOFF_DIAGRAMS, UNIQUE_KEYS } from '../example/diagrams'
 import { changeWaiting, folderWaiting } from '../example/plainly'
+import { hostedAnswers } from '../example/hosted'
 import { Loading } from '../Loader'
 import { Reader } from '../reader/Reader'
 import { routeOf } from '../routes'
@@ -228,6 +229,8 @@ export function Example() {
         kept: true,
         file: '~/notes/marks.md',
       }
+      // kelve.ai: Sam signed in, with a page and scores on it.
+      Object.assign(fixture.answers, hostedAnswers(as))
       // Every file, folder and the change itself is read plainly, as the
       // example's agent wrote them (dev/example/agent/plainly.json); while
       // what's open is still being read, src/bank/mod.rs isn't yet.
@@ -365,9 +368,9 @@ export function Example() {
       setF(fixture)
     })
   }, [screen])
-  // kelve's screens under its header, and its controls, need nothing from the example.
+  // kelve's screens under its header answer from the example too, once it's in; its controls need nothing from it.
   const route = OWN.includes(screen) ? null : routeOf(hash.split('?')[0].replace(/^#\//, '').split('/').slice(1).map((p) => decodeURIComponent(p)))
-  if (route) return <Screen route={route} example />
+  if (route) return f ? <Screen route={route} example /> : <Loading />
   if (screen === 'kit') return <Kit />
   if (!f) return <Loading />
   const me = f.answers['/api/me'] as Me
