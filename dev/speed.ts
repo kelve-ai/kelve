@@ -1,9 +1,9 @@
 // How fast the reader's calls are: a kelve of its own, with a fresh store
-// in a temporary folder, beside the stand-in shared graph, opens a change
-// and times what the reader asks for as you read it. Each file's diff and
-// plainly cold (the first time it's asked for) and warm (again, with nothing
-// changed), the change's own calls, and the side views. Nothing is read by
-// an agent: the times are kelve's own.
+// in a temporary folder, beside the stand-in hosted service, opens a change
+// and times what the reader asks for as you read it. Each file's diff cold
+// (the first time it's asked for) and warm (again, with nothing changed),
+// the change's own calls, and the side views. Nothing is done by an agent:
+// the times are kelve's own.
 //
 //   bun dev/speed.ts                       this repository, against HEAD~25
 //        --dir=<folder>                    another repository
@@ -13,7 +13,7 @@
 //        --files=<n>                       how many of its files to time (30)
 //
 // KELVE_BIN for a kelve built elsewhere (target/release/kelve, say);
-// SPEED_PORT moves kelve (4670), with the graph on the port above.
+// SPEED_PORT moves kelve (4670), with the hosted service on the port above.
 
 import { type ChildProcess, spawn } from 'node:child_process'
 import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -117,7 +117,7 @@ function say(what: string, times: number[]) {
 
 try {
   start(graphBin, ['--port', String(port + 1)], join(home, 'graph.log'))
-  await up(`${graph}/v1`, 'The stand-in graph')
+  await up(`${graph}/`, 'The stand-in hosted service')
   mkdirSync(join(home, 'data'), { recursive: true })
   writeFileSync(join(home, 'pick.sh'), '#!/bin/sh\n', { mode: 0o755 })
   start(kelveBin, ['serve'], log, {
@@ -126,7 +126,6 @@ try {
     KELVE_DATA: join(home, 'data'),
     KELVE_SECRET_FILE: join(home, 'secret'),
     KELVE_GRAPH_URL: graph,
-    KELVE_GRAPH_KEY: 'stand-in',
     KELVE_PICKER: join(home, 'pick.sh'),
     KELVE_CLAUDE_DIR: join(home, 'claude'),
     KELVE_AGENTS_HOME: join(home, 'home'),
@@ -153,35 +152,22 @@ try {
   for (let i = 0; i < 5; i++) again.push(await time(`/api/opened/${id}/change`))
   say('change, again', again)
 
-  const cold = { diff: [] as number[], plainly: [] as number[], both: [] as number[] }
-  const warm = { diff: [] as number[], plainly: [] as number[] }
+  const cold: number[] = []
+  const warm: number[] = []
   for (const f of files) {
     const q = `path=${encodeURIComponent(f.path)}`
-    // As the reader opens a file now: its diff and its plainly together.
-    const from = performance.now()
-    const [d, p] = await Promise.all([time(`/api/opened/${id}/diff?${q}`), time(`/api/opened/${id}/plainly?${q}`)])
-    cold.both.push(performance.now() - from)
-    cold.diff.push(d)
-    cold.plainly.push(p)
-    warm.diff.push(await time(`/api/opened/${id}/diff?${q}`))
-    warm.plainly.push(await time(`/api/opened/${id}/plainly?${q}`))
+    cold.push(await time(`/api/opened/${id}/diff?${q}`))
+    warm.push(await time(`/api/opened/${id}/diff?${q}`))
   }
   rows.push('')
-  say('a file: diff, first', cold.diff)
-  say('a file: plainly, first', cold.plainly)
-  say('a file: both together, first', cold.both)
-  say('a file: diff, again', warm.diff)
-  say('a file: plainly, again', warm.plainly)
+  say('a file: diff, first', cold)
+  say('a file: diff, again', warm)
 
   rows.push('')
   const side: Record<string, string> = {
-    lessons: `/api/opened/${id}/lessons`,
-    'lessons, a file': `/api/opened/${id}/lessons?path=${encodeURIComponent(files[0]?.path ?? '')}`,
-    'the change plainly': `/api/opened/${id}/plainly/change`,
     'every file': `/api/opened/${id}/folder?list=true`,
     "the agent's list": '/api/list',
     'what kelve marks': '/api/marks',
-    ready: `/api/opened/${id}/ready`,
     notes: `/api/opened/${id}/notes`,
     settings: '/api/settings',
   }

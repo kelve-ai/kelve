@@ -1,8 +1,6 @@
 // Code as kelve shows it, through CodeMirror: its languages; quiet
 // highlighting, where only strings, constants, comments and definitions have
-// colours; the gutter's squares, one on each idea's first line, with a stem
-// down to a foot on its last; and a change's lines, with what's as before
-// folded away.
+// colours; and a change's lines, with what's as before folded away.
 
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField, type Text } from '@codemirror/state'
 import { Decoration, type DecorationSet, EditorView, GutterMarker, gutter, WidgetType } from '@codemirror/view'
@@ -54,9 +52,7 @@ import { verilog } from '@codemirror/legacy-modes/mode/verilog'
 import { vhdl } from '@codemirror/legacy-modes/mode/vhdl'
 import { xml } from '@codemirror/legacy-modes/mode/xml'
 import { yaml } from '@codemirror/legacy-modes/mode/yaml'
-import type { Marked } from '../api/types'
 import { hcl } from './hcl'
-import { type Seen, squareLabel } from './Square'
 
 /** The languages kelve names with a simpler grammar, read line by line. */
 const SIMPLER: Record<string, StreamParser<unknown>> = {
@@ -138,108 +134,6 @@ export function offset(line: string, chars: number): number {
   return Array.from(line).slice(0, chars).join('').length
 }
 
-/** A mark, on the document's lines: its first and last. */
-export type Placed = { a: number; b: number; mark: Marked }
-
-/**
- * Where each mark sits in a document, by line. `lineOf` turns a line of the
- * file into a line of the document, for a change, whose document has the
- * lines it took out too; a mark on a line it doesn't show isn't placed.
- */
-export function place(doc: Text, marks: Marked[], lineOf: (n: number) => number | undefined = (n) => n): Placed[] {
-  const out: Placed[] = []
-  for (const m of marks) {
-    const a = lineOf(m.mark.span?.line ?? m.mark.start)
-    const b = lineOf(m.mark.span?.line ?? m.mark.end) ?? a
-    if (!a || !b || b > doc.lines) continue
-    out.push({ a, b: Math.max(a, b), mark: m })
-  }
-  return out.sort((x, y) => x.a - y.a || x.b - y.b)
-}
-
-/** What the gutter draws on one line: a square, the stem through it, its foot. */
-class Mark extends GutterMarker {
-  constructor(
-    readonly square: Placed | null,
-    readonly stem: 'down' | 'through' | 'end' | null,
-    readonly red: boolean,
-    readonly read: boolean,
-    readonly label: string,
-  ) {
-    super()
-  }
-  eq(o: Mark) {
-    return o.square?.mark.key === this.square?.mark.key && o.stem === this.stem && o.red === this.red && o.read === this.read && o.label === this.label
-  }
-  toDOM() {
-    const g = document.createElement('div')
-    g.className = 'gm'
-    if (this.stem) {
-      const s = document.createElement('i')
-      s.className = `stem ${this.stem}${this.red ? ' new' : ''}`
-      g.append(s)
-      if (this.stem === 'end') {
-        const f = document.createElement('i')
-        f.className = `foot${this.red ? ' new' : ''}`
-        g.append(f)
-      }
-    }
-    // Not a button: the gutter is hidden from screen readers, and the
-    // margin's notes, and ] and [, reach the same ideas.
-    if (this.square) {
-      const b = document.createElement('i')
-      b.className = `sq${this.red ? ' new' : ''}${this.read ? ' read' : ''}`
-      b.dataset.key = this.square.mark.key
-      b.title = this.label
-      g.append(b)
-    }
-    return g
-  }
-}
-
-/**
- * The gutter's squares: one on each idea's first line, and, when it spans
- * lines, a stem down to a short foot on its last, in the square's colour.
- * Clicking a square opens its idea.
- */
-export function squares(placed: Placed[], seen: Seen, open: (m: Marked) => void): Extension {
-  return gutter({
-    class: 'cm-ideas',
-    lineMarker(view, line) {
-      const n = view.state.doc.lineAt(line.from).number
-      const starts = placed.find((p) => p.a === n) ?? null
-      const spans = placed.filter((p) => p.b > p.a && p.a <= n && p.b >= n)
-      let stem: Mark['stem'] = null
-      let by: Placed | undefined
-      for (const p of spans) {
-        const here = p.a === n ? 'down' : p.b === n ? 'end' : 'through'
-        // A stem going on beats one ending; one ending beats one starting.
-        const rank = { through: 3, end: 2, down: 1 }
-        if (!stem || rank[here] > rank[stem]) {
-          stem = here
-          by = p
-        }
-      }
-      if (!starts && !stem) return null
-      const key = (starts ?? by)!.mark.key
-      const red = seen.isNew(key) || spans.some((p) => seen.isNew(p.mark.key))
-      const name = starts ? (starts.mark.mark.idea?.name ?? starts.mark.mark.name) : ''
-      return new Mark(starts, stem, red, seen.isRead(key), starts ? squareLabel(name, seen.isNew(key), seen.isRead(key)) : '')
-    },
-    initialSpacer: () => new Mark(null, null, false, false, ''),
-    domEventHandlers: {
-      click(view, line, event) {
-        const key = (event.target as HTMLElement).closest<HTMLElement>('.sq')?.dataset.key
-        const n = view.state.doc.lineAt(line.from).number
-        const p = placed.find((x) => x.a === n && (!key || x.mark.key === key))
-        if (!p) return false
-        open(p.mark)
-        return true
-      },
-    },
-  })
-}
-
 class Diff extends GutterMarker {
   constructor(readonly kind: string) {
     super()
@@ -267,7 +161,7 @@ export function diffMarks(kinds: Array<string | undefined>): Extension {
   })
 }
 
-/** Classes for lines of the document: lines added and taken out, and the lines an open idea is on. */
+/** Classes for lines of the document: lines added and taken out. */
 export function lineClasses(doc: Text, classes: Map<number, string>): Extension {
   const b = new RangeSetBuilder<Decoration>()
   for (const n of [...classes.keys()].sort((x, y) => x - y)) {

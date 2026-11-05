@@ -51,6 +51,7 @@ function stubOf(route: Exclude<Route, SkillsRoute>): { name: string; line: strin
     case 'debrief':
       return { name: 'Debrief', line: 'What your agent did, how it works and every decision it made. Agree, ask for it another way, or have your agent look into it.', what: `Debrief ${route.id}` }
     case 'change':
+    case 'handover':
       return { name: 'The change', line: 'Every file your agent changed, with each decision beside the lines it holds.', what: `Change ${route.id}` }
     case 'agent':
       return { name: 'Your agent', line: 'It learns from what you correct, and keeps it as skills. What it knows, and how well it fits you.' }
@@ -72,7 +73,7 @@ function stubOf(route: Exclude<Route, SkillsRoute>): { name: string; line: strin
 /** Where the character stands on a stub: the screens that are about your agent. */
 const WITH_CHARACTER: Route['screen'][] = ['home', 'agent', 'look', 'welcome']
 
-function Stub({ route, example }: { route: Exclude<Route, SkillsRoute>; example?: boolean }) {
+function Stub({ route }: { route: Exclude<Route, SkillsRoute> }) {
   const { name, line, what } = stubOf(route)
   return (
     <div className="stub" data-stub={route.screen}>
@@ -82,7 +83,6 @@ function Stub({ route, example }: { route: Exclude<Route, SkillsRoute>; example?
       <p className="stub-line">{line}</p>
       <p className="stub-soon">
         This page is still being built.
-        {route.screen === 'home' && !example && <> Until it is, <a className="go" href="#/start">the start page</a> is still here.</>}
       </p>
     </div>
   )
@@ -119,7 +119,7 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
   return (
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
-      <main className={route.screen === 'settings' || isSkillsRoute(route) ? 'app-main' : ['home', 'debrief', 'change'].includes(route.screen) ? 'app-own' : 'app-main narrow'}>
+      <main className={route.screen === 'settings' || isSkillsRoute(route) ? 'app-main' : ['home', 'debrief', 'change', 'handover'].includes(route.screen) ? 'app-own' : 'app-main narrow'}>
         {route.screen === 'settings' ? (
           <Settings section={route.section} example={example} />
         ) : isSkillsRoute(route) ? (
@@ -128,9 +128,9 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
           <Home example={example} />
         ) : route.screen === 'debrief' ? (
           <Debrief key={`${route.id}${location.hash.split('?')[1] ?? ''}`} id={route.id} example={example} />
-        ) : route.screen === 'change' ? (
+        ) : route.screen === 'change' || route.screen === 'handover' ? (
           <Suspense fallback={<Loading />}>
-            <Change key={route.id} id={route.id} example={example} />
+            <Change key={`${route.screen}:${route.id}`} id={route.id} example={example} handover={route.screen === 'handover'} />
           </Suspense>
         ) : route.screen === 'welcome' ? (
           <Welcome example={example} />
@@ -143,7 +143,7 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
         ) : route.screen === 'agent' ? (
           <YourAgent example={example} />
         ) : (
-          <Stub route={route} example={example} />
+          <Stub route={route} />
         )}
       </main>
     </div>

@@ -1,12 +1,9 @@
 // A note as a page of its own (board N-5): a pane beside the work, with who
 // it's for and where it's kept along the top, then room to write. Markdown, its
-// marks faint as you type; [[an idea]], [[a file]] and a line like ledger.rs:28
-// become links, opened with ⌘ or Ctrl held. Typing [[ finds what you mean as
-// you type: ideas in the work, its files, and lines that say the words. It's
-// kept as you write.
+// marks faint as you type; [[a file]] and a line like ledger.rs:28 become
+// links, opened with ⌘ or Ctrl held. It's kept as you write.
 
 import { useEffect, useRef, useState } from 'react'
-import { autocompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete'
 import { EditorState } from '@codemirror/state'
 import { Decoration, EditorView, MatchDecorator, ViewPlugin, placeholder, type ViewUpdate } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
@@ -15,11 +12,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { markdown } from '@codemirror/lang-markdown'
 import { tags as t } from '@lezer/highlight'
 import { del, get, post } from '../api/client'
-import type { Found, Note, NoteIn, Place } from '../api/types'
+import type { Note, NoteIn, Place } from '../api/types'
 import { Choice, Quiet } from '../ui/ui'
 import { livePreview, livePreviewTheme } from './livePreview'
-import { UseLine } from './Margin'
-import { places, stateOf, useNotes, whereItGoes } from './NoteParts'
+import { places, stateOf, UseLine, useNotes, whereItGoes } from './NoteParts'
 
 /** How long typing rests before the note is kept. */
 const KEEP_AFTER = 700
@@ -35,12 +31,12 @@ const markdownLook = syntaxHighlighting(HighlightStyle.define([
   { tag: t.quote, color: 'var(--soft)' },
 ]))
 
-const IDEA = /\[\[([^[\]\n]{1,80})\]\]/g
+const LINK = /\[\[([^[\]\n]{1,80})\]\]/g
 const LINE = /\b([\w./-]+\.[A-Za-z0-9]{1,8}):(\d+)(?:[–-]\d+)?/g
 
-/** Links in a note: ideas, and lines of files. */
-function links(onIdea: (name: string) => void, onLine: (path: string, line: number) => void) {
-  const ideas = new MatchDecorator({ regexp: IDEA, decoration: () => Decoration.mark({ class: 'cm-idea-link' }) })
+/** Links in a note: files, and lines of them. */
+function links(onLine: (path: string, line: number) => void) {
+  const files = new MatchDecorator({ regexp: LINK, decoration: () => Decoration.mark({ class: 'cm-idea-link' }) })
   const lines = new MatchDecorator({ regexp: LINE, decoration: () => Decoration.mark({ class: 'cm-line-ref' }) })
   const plugin = (m: MatchDecorator) =>
     ViewPlugin.fromClass(
@@ -64,7 +60,7 @@ function links(onIdea: (name: string) => void, onLine: (path: string, line: numb
     return null
   }
   return [
-    plugin(ideas),
+    plugin(files),
     plugin(lines),
     EditorView.domEventHandlers({
       click(event, view) {
@@ -72,9 +68,9 @@ function links(onIdea: (name: string) => void, onLine: (path: string, line: numb
         if (!event.metaKey && !event.ctrlKey) return false
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
         if (pos == null) return false
-        const idea = at(view, pos, IDEA)
-        if (idea) {
-          onIdea(idea[1])
+        const file = at(view, pos, LINK)
+        if (file && isFile(file[1])) {
+          onLine(file[1], 1)
           return true
         }
         const line = at(view, pos, LINE)
@@ -89,59 +85,20 @@ function links(onIdea: (name: string) => void, onLine: (path: string, line: numb
 }
 
 /** What an empty note says, until you write. */
-const HINT = 'Write in markdown. Type [[ to link an idea, a file or a line.'
+const HINT = 'Write in markdown. A file in [[ ]], or a line like ledger.rs:28, links to it.'
 
-/** Whether a link's words name a file rather than an idea: a path, or a name with an extension. */
+/** Whether a link's words name a file: a path, or a name with an extension. */
 export const isFile = (words: string) => words.includes('/') || /\.[A-Za-z0-9]{1,8}$/.test(words)
 
-/**
- * As you type after [[, what you might mean: ideas in the work first, the
- * most used first; then its files; then lines that say the words. Picking
- * one writes its link: [[an idea]], [[a file]], or file:line.
- */
-function linkSearch(opened: number) {
-  return async (ctx: CompletionContext): Promise<CompletionResult | null> => {
-    const before = ctx.matchBefore(/\[\[[^[\]\n]{0,80}$/)
-    if (!before) return null
-    const q = before.text.slice(2)
-    const from = before.from
-    // What's already after the cursor: a closing ]] is replaced, not doubled.
-    const after = ctx.state.sliceDoc(ctx.pos, ctx.pos + 2) === ']]' ? 2 : 0
-    const sections = { Ideas: { name: 'Ideas', rank: 0 }, Files: { name: 'Files', rank: 1 }, Lines: { name: 'Lines', rank: 2 } }
-    const link = (label: string, insert: string, detail: string, section: keyof typeof sections, boost = 0): Completion => ({
-      label,
-      detail,
-      section: sections[section],
-      boost,
-      apply: (view, _c, _from, to) => view.dispatch({ changes: { from, to: to + after, insert }, selection: { anchor: from + insert.length } }),
-    })
-    // From two letters, as kelve's search finds things.
-    if (q.trim().length < 2) return null
-    const found = await get<Found>(`/api/search?q=${encodeURIComponent(q.trim())}&opened=${opened}`).catch(() => null)
-    if (!found || ctx.aborted) return null
-    const options: Completion[] = [
-      ...found.ideas.slice(0, 6).map((i) => link(i.name, `[[${i.name}]]`, i.files ? `idea, in ${i.files} ${i.files === 1 ? 'file' : 'files'}` : 'idea', 'Ideas', 3)),
-      ...found.files.slice(0, 6).map((f) => link(f, `[[${f}]]`, 'file', 'Files', 2)),
-      ...found.lines.slice(0, 6).map((l) => link(`${l.path}:${l.line}`, `${l.path}:${l.line}`, l.text.trim(), 'Lines', 1)),
-    ]
-    return options.length ? { from, options, filter: false } : null
-  }
-}
-
-function Editor({ text, onChange, onIdea, onLine, label, search }: {
+function Editor({ text, onChange, onLine, label }: {
   text: string
-  /** Finds what a [[ link might mean, as you type. */
-  search: (ctx: CompletionContext) => Promise<CompletionResult | null>
   onChange: (text: string) => void
-  onIdea: (name: string) => void
   onLine: (path: string, line: number) => void
   label: string
 }) {
   const host = useRef<HTMLDivElement>(null)
   const changeRef = useRef(onChange)
   changeRef.current = onChange
-  const idea = useRef(onIdea)
-  idea.current = onIdea
   const lineRef = useRef(onLine)
   lineRef.current = onLine
   useEffect(() => {
@@ -160,8 +117,7 @@ function Editor({ text, onChange, onIdea, onLine, label, search }: {
           EditorView.lineWrapping,
           placeholder(HINT),
           EditorView.contentAttributes.of({ 'aria-label': label, 'aria-multiline': 'true' }),
-          links((n) => (isFile(n) ? lineRef.current(n, 1) : idea.current(n)), (p, l) => lineRef.current(p, l)),
-          autocompletion({ override: [search], activateOnTyping: true, icons: false, closeOnBlur: true }),
+          links((p, l) => lineRef.current(p, l)),
           EditorView.updateListener.of((u) => {
             if (u.docChanged) changeRef.current(u.state.doc.toString())
           }),
@@ -175,19 +131,15 @@ function Editor({ text, onChange, onIdea, onLine, label, search }: {
   return <div className="md-view" ref={host} />
 }
 
-export function NotePage({ id, ideas, opened, kept, close, onIdea, place: startAt }: {
+export function NotePage({ id, opened, kept, close, place: startAt }: {
   /** The note, or null for a new one. */
   id: string | null
   /** Who a new note is for, when it's started for someone: your agent, from its list. */
   place?: Place
-  /** What a new note is about. */
-  ideas?: string[]
   opened: number
   /** Hears the note's id once a new one is kept, or it moves. */
   kept: (id: string) => void
   close: () => void
-  /** Opens an idea by its key. */
-  onIdea: (key: string) => void
 }) {
   const n = useNotes()
   const [note, setNote] = useState<Note | null>(null)
@@ -219,7 +171,7 @@ export function NotePage({ id, ideas, opened, kept, close, onIdea, place: startA
   const keep = async (to: Place = place) => {
     setSaving('saving')
     try {
-      const body: NoteIn = { id: current.current.id, place: to, text: current.current.text, ...(current.current.id ? {} : { ideas: ideas ?? [] }) }
+      const body: NoteIn = { id: current.current.id, place: to, text: current.current.text }
       const got = await post<Note>(`/api/opened/${opened}/notes`, body)
       setNote(got)
       setSaid(null)
@@ -250,19 +202,8 @@ export function NotePage({ id, ideas, opened, kept, close, onIdea, place: startA
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const search = linkSearch(opened)
-  // A note links an idea by its name, and a line by a file's name: each is found.
-  const ideaNamed = async (name: string) => {
-    const found = await get<Found>(`/api/search?q=${encodeURIComponent(name)}&opened=${opened}`).catch(() => null)
-    const idea = found?.ideas.find((i) => i.name.toLowerCase() === name.toLowerCase()) ?? found?.ideas[0]
-    if (idea) onIdea(idea.key)
-  }
-  const lineIn = async (path: string, line: number) => {
-    const name = path.split('/').pop() ?? path
-    const found = await get<Found>(`/api/search?q=${encodeURIComponent(name)}&opened=${opened}`).catch(() => null)
-    const file = found?.files.find((f) => f === path || f.endsWith(`/${path}`))
-    if (file) n?.goTo(file, line)
-  }
+  // A note links a line by its file's path: the reader goes there.
+  const lineIn = (path: string, line: number) => n?.goTo(path, line)
 
   // A note your agent has done, cleared for fresh notes: kept, empty, and
   // waiting for your agent again once you write in it.
@@ -309,7 +250,7 @@ export function NotePage({ id, ideas, opened, kept, close, onIdea, place: startA
           </span>
         </div>
       )}
-      {ready && <Editor key={drawn} text={note?.text ?? ''} onChange={changed} onIdea={(name) => void ideaNamed(name)} onLine={(p, l) => void lineIn(p, l)} label={`${note?.title ?? 'A new note'}, in markdown`} search={search} />}
+      {ready && <Editor key={drawn} text={note?.text ?? ''} onChange={changed} onLine={lineIn} label={`${note?.title ?? 'A new note'}, in markdown`} />}
       {note && (
         <p className="np-delete">
           {deleting ? (

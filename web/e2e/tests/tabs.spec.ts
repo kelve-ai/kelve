@@ -28,16 +28,16 @@ async function newTab(page: Page, link: string) {
   return tab
 }
 
-const RETRIES = { what: 'change', title: 'Retries that back off', said: 'Each retry now waits twice as long as the last.' }
+const RETRIES = { what: 'folder', title: 'Retries that back off', said: 'Each retry now waits twice as long as the last.' }
 
 test('showing again what a tab shows takes its place, where you were in it, and the old tab closes', async ({ page }) => {
   await signIn(page)
   const root = repo()
   const first = await show({ ...RETRIES, path: root })
   const old = await newTab(page, first.link)
-  await expect(old.getByRole('heading', { level: 1, name: 'Retries that back off' })).toBeVisible()
+  await expect(old.locator('.reader .title')).toBeVisible()
   // Where you were in it: a file, there from the start, so the tab has been nowhere else.
-  await old.evaluate((id) => location.replace(`#/o/${id}?f=src%2Fretry.rs&r=code`), first.id)
+  await old.evaluate((id) => location.replace(`#/o/${id}?f=src%2Fretry.rs`), first.id)
   await expect(old.locator('.fv-name')).toContainText('src/retry.rs')
 
   const again = await show({ ...RETRIES, path: root, said: 'Each retry now waits a little at random too.' })
@@ -46,7 +46,7 @@ test('showing again what a tab shows takes its place, where you were in it, and 
   const fresh = await newTab(page, again.link)
   await closed
   await expect(fresh.locator('.fv-name')).toContainText('src/retry.rs')
-  expect(new URL(fresh.url()).hash).toBe(`#/o/${first.id}?f=src%2Fretry.rs&r=code`)
+  expect(new URL(fresh.url()).hash).toBe(`#/o/${first.id}?f=src%2Fretry.rs`)
   // A kelve tab on something else stays as it was.
   expect(page.isClosed()).toBe(false)
   await expect(page.getByText('This is open in a newer tab.')).toHaveCount(0)
@@ -57,7 +57,7 @@ test('a tab you moved around in says it’s open in a newer tab, and shows it he
   const root = repo()
   const first = await show({ ...RETRIES, path: root })
   await page.goto(first.link)
-  await expect(page.getByRole('heading', { level: 1, name: 'Retries that back off' })).toBeVisible()
+  await expect(page.locator('.reader .title')).toBeVisible()
   await openFile(page, 'src/retry.rs')
 
   const again = await show({ ...RETRIES, path: root, said: 'Each retry now waits a little at random too.' })
@@ -75,7 +75,7 @@ test('a tab holding a note you haven’t kept stays as it is', async ({ page }) 
   const root = repo()
   const first = await show({ ...RETRIES, path: root })
   const old = await newTab(page, first.link)
-  await old.evaluate((id) => location.replace(`#/o/${id}?f=src%2Fretry.rs&r=code`), first.id)
+  await old.evaluate((id) => location.replace(`#/o/${id}?f=src%2Fretry.rs`), first.id)
   await expect(old.locator('.fv-name')).toContainText('src/retry.rs')
   await expect(old.locator('.cm-line').filter({ hasText: '200 * 2u64' })).toBeVisible()
   await selectLines(old, 'pub fn wait', '200 * 2u64')
@@ -84,7 +84,7 @@ test('a tab holding a note you haven’t kept stays as it is', async ({ page }) 
 
   const again = await show({ ...RETRIES, path: root, said: 'Each retry now waits a little at random too.' })
   const fresh = await newTab(page, again.link)
-  await expect(fresh.getByRole('heading', { level: 1, name: 'Retries that back off' })).toBeVisible()
+  await expect(fresh.locator('.reader .title')).toBeVisible()
   // Long enough for it to have gone, had it gone.
   await fresh.waitForTimeout(500)
   expect(old.isClosed()).toBe(false)

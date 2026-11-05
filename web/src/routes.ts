@@ -1,7 +1,8 @@
 // kelve's screens, by their address after `#/`:
 //   (nothing)                   home
 //   debrief/<id>                a debrief
-//   change/<id>                 a change, file by file
+//   change/<id>                 a debrief's change, file by file
+//   handover/<id>               work handed over with no debrief, file by file
 //   skills, skills/<name>       your skills, and one of them
 //   skills/<name>/edit          editing one
 //   skills/new                  writing a new one
@@ -14,7 +15,7 @@
 //   agent/score/<id>            a verified score
 //   settings/<section>          settings: agent, account, checks, reading, privacy, about
 //   welcome                     meeting your agent, the first time
-// The reader's (#/o/<id>) and today's settings (#/you/…) are App's own.
+// What your agent opened (#/o/<id>) is App's own: it leads to one of these, or the reader.
 
 export const SECTIONS = ['agent', 'account', 'checks', 'reading', 'privacy', 'about'] as const
 export type Section = (typeof SECTIONS)[number]
@@ -23,6 +24,7 @@ export type Route =
   | { screen: 'home' }
   | { screen: 'debrief'; id: string }
   | { screen: 'change'; id: string }
+  | { screen: 'handover'; id: string }
   | { screen: 'skills' }
   | { screen: 'skill'; name: string }
   | { screen: 'skill-edit'; name: string }
@@ -44,6 +46,7 @@ export function routeOf(parts: string[]): Route | null {
   if ((a === '' || a === 'home') && none(b)) return { screen: 'home' }
   if (a === 'debrief' && b && none(c)) return { screen: 'debrief', id: b }
   if (a === 'change' && b && none(c)) return { screen: 'change', id: b }
+  if (a === 'handover' && b && none(c)) return { screen: 'handover', id: b }
   if (a === 'skills' && none(b)) return { screen: 'skills' }
   if (a === 'skills' && b === 'new' && none(c)) return { screen: 'skill-new' }
   if (a === 'skills' && b === 'suggested' && c && none(d)) return { screen: 'skill-suggested', id: c }
@@ -76,6 +79,7 @@ export function placeOf(route: Route): 'home' | 'skills' | 'agent' | 'settings' 
     case 'home':
     case 'debrief':
     case 'change':
+    case 'handover':
       return 'home'
     case 'skills':
     case 'skill':

@@ -71,12 +71,8 @@
 .sq { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 1.5px; background: var(--sq-grey); box-shadow: inset 0 0 0 1.5px var(--sq-grey); }
 .sq.new { background: var(--red); box-shadow: inset 0 0 0 1.5px var(--red); }
 .sq.read, .sq.new.read { background: none; }
-.sq.fp { position: relative; background: var(--ink); box-shadow: none; /* not the folder page's .fp */ max-width: none; padding: 0; }
-.sq.fp::after { content: ''; position: absolute; left: -3px; right: -3px; bottom: -4px; height: 1.5px; background: var(--ink); }
 .sq.small { width: 6px; height: 6px; border-radius: 1px; }
-.sq.small.fp::after { bottom: -3px; left: -2px; right: -2px; }
 .sq.big { width: 11px; height: 11px; border-radius: 2px; }
-.sq.big.fp::after { bottom: -5px; }
 
 /* A list (boards Q-2, L-1 to L-9): one line each, kelve's square saying
    where each stands, small headings with counts, and what you can do
