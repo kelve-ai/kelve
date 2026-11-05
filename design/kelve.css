@@ -40,7 +40,6 @@
   --accent-key: #f6dcd3;
   --accent-edge: #f0c4b8;
   --accent-edge-2: #eab3a5;
-  --accent-focus: #e09a86;
   /* A white key: the secondary button, a field, a switch at rest. */
   --key-hover: #fdfcfa;
   --key-press: #f6f3ee;
@@ -75,7 +74,7 @@
   --rule: #302d29; --rule-2: #26241f; --edge: #3a3732; --shadow: 0, 0, 0;
   --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
   --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22;
-  --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
+  --accent-edge: #6b3a2e; --accent-edge-2: #7a4234;
   --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
   --ev-debrief: #e27862; --ev-debrief-tint: #3d241e; --ev-debrief-ink: #ef8f7a;
   --ev-check: #a991f0; --ev-check-tint: #2a2440; --ev-check-ink: #b9a5f5; --ev-check-edge: #3d3460;
@@ -95,7 +94,7 @@
     --rule: #302d29; --rule-2: #26241f; --edge: #3a3732; --shadow: 0, 0, 0;
     --logo: #e2694c; --accent: #e27862; --accent-ink: #ef8f7a; --accent-ink-2: #f4a593; --accent-rgb: 239, 143, 122;
     --accent-tint: #35221d; --accent-tint-2: #3d241e; --accent-press: #452820; --accent-key: #4a2a22;
-    --accent-edge: #6b3a2e; --accent-edge-2: #7a4234; --accent-focus: #8f4c3b;
+    --accent-edge: #6b3a2e; --accent-edge-2: #7a4234;
     --key-hover: #312e2a; --key-press: #2c2a26; --key-edge: #3f3b35; --key-edge-2: #4a4640; --key-under: #24221f; --hi: 27, 26, 24;
     --ev-debrief: #e27862; --ev-debrief-tint: #3d241e; --ev-debrief-ink: #ef8f7a;
     --ev-check: #a991f0; --ev-check-tint: #2a2440; --ev-check-ink: #b9a5f5; --ev-check-edge: #3d3460;
@@ -164,7 +163,9 @@ button, input, textarea, select { font-family: inherit; }
 /* A field, and a switch. */
 .in { font-family: inherit; font-size: 16px; padding: 10px 13px; border: 1px solid var(--key-edge); border-radius: 10px; background: var(--white); color: var(--ink); box-shadow: inset 0 1px 2px rgba(var(--shadow), .04); }
 .in::placeholder { color: var(--faint); }
-.in:focus { outline: 2px solid var(--accent-edge); border-color: var(--accent-focus); }
+/* Focus on anything typed in or chosen from is quiet and neutral, never the
+   accent; buttons and links keep theirs. */
+:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), textarea, select):focus-visible, .in:focus { outline: 2px solid var(--key-edge-2); outline-offset: 0; border-color: var(--quiet); }
 .sw { position: relative; width: 40px; height: 24px; border-radius: 999px; border: 0; background: var(--key-edge); cursor: pointer; flex: none; padding: 0; }
 .sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--white); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: left .15s ease; }
 .sw[aria-checked='true'] { background: var(--accent); }

@@ -74,7 +74,7 @@ ul.sk-error { padding-left: 18px; }
   display: block; width: 100%; box-sizing: border-box; font: 450 14px/23px var(--mono); padding: 10px 12px; border: 1px solid var(--rule);
   border-radius: 8px; background: transparent; color: var(--ink); resize: vertical; tab-size: 4;
 }
-.sk-ed:focus, .sk-src-ed:focus { outline: 2px solid var(--accent-edge); border-color: var(--accent-focus); }
+.sk-ed:focus, .sk-src-ed:focus { outline: 2px solid var(--key-edge-2); outline-offset: 0; border-color: var(--quiet); }
 
 /* Checking: the parts a check would redo work with. */
 .sk-offer { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
