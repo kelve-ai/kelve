@@ -188,6 +188,10 @@ impl App {
 async fn load_settings(db: &Pool) -> Result<Settings, kelve_store::Error> {
     let mut conn = db.acquire().await?;
     let value = kelve_store::settings::get(&mut conn).await?;
+    // Nothing kept yet: a new install, with every default.
+    if value.as_object().is_some_and(serde_json::Map::is_empty) {
+        return Ok(Settings::default());
+    }
     Ok(serde_json::from_value(value).unwrap_or_else(|e| {
         tracing::error!(error = %e, "the saved settings don't read, so kelve starts without them");
         Settings::default()

@@ -38,7 +38,10 @@ pub struct Settings {
     pub drawn: crate::your_agent::Drawn,
     /// How often a debrief comes.
     pub debriefs: DebriefsWhen,
-    /// Whether skills go in each agent's own skills folder too.
+    /// Whether skills go in each agent's own skills folder too: on for a new
+    /// install (`Default`). Settings kept from before there was this setting
+    /// don't have it, and that stays off until the person says.
+    #[serde(default)]
     pub skills_folder: bool,
     /// When skill checks run, and how many a week at most.
     pub checks: ChecksWhen,
@@ -61,7 +64,7 @@ impl Default for Settings {
             agent_name: None,
             drawn: crate::your_agent::Drawn::default(),
             debriefs: DebriefsWhen::default(),
-            skills_folder: false,
+            skills_folder: true,
             checks: ChecksWhen::default(),
             checks_a_week: 10,
         }
@@ -213,5 +216,9 @@ mod tests {
             !Settings::default().share_counts,
             "off until the person says"
         );
+        assert!(Settings::default().skills_folder, "on for a new install");
+        let kept: Settings =
+            serde_json::from_value(serde_json::json!({ "shareCounts": false })).expect("reads");
+        assert!(!kept.skills_folder, "off for settings kept from before it");
     }
 }

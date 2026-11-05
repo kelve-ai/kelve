@@ -427,13 +427,88 @@ async fn the_page_shows_what_it_knows_and_how_it_fits_you() {
     assert_eq!(page["knows"][1]["kind"], "like");
     assert_eq!(
         page["knows"][1]["parts"],
-        json!(["works", "failed", "checking", "noDifference", "notChecked"])
+        json!(["works", "failed", "waiting", "noDifference", "notChecked"])
     );
     assert_eq!(
         page["fits"],
         json!({ "picked": 2, "of": 3, "tests": [true, false, true] })
     );
     assert_eq!(page["character"]["name"], "Your agent");
+}
+
+/// On by default, the skills folder really is on: kelve's links follow it,
+/// and what the person says, in setup or in settings, holds across restarts.
+#[cfg(unix)]
+#[tokio::test]
+async fn the_skills_folder_is_on_by_default_until_the_person_says_no() {
+    use kelve_core::hook::Agent;
+    use kelve_server::agent_loop::links;
+
+    let k = Kelve::new().await;
+    let c = &k.app.config;
+    let (home, claude, skills) = (&c.agents_home, &c.claude_dir, &c.skills_dir);
+    let linked = || claude.join("skills/rust").symlink_metadata().is_ok();
+    kelve_server::skills_home::write(skills, "rust", "---\nname: rust\n---\n").unwrap();
+
+    // As kelve starts, with no agent connected: nothing to link, and it stays on.
+    links::keep_in_step(&k.app);
+    links::sync_setting(&k.app).await;
+    assert!(k.app.settings().skills_folder);
+    assert!(!linked());
+
+    // An agent connects, and the links come as kelve next starts.
+    kelve_server::hooks::set(Agent::Claude, true, home, claude).unwrap();
+    links::keep_in_step(&k.app);
+    links::sync_setting(&k.app).await;
+    assert!(linked());
+    assert!(k.app.settings().skills_folder);
+
+    // Turned off in settings: they go, and don't come back on a restart.
+    k.json(
+        "POST",
+        "/api/settings/agent",
+        Some(json!({ "skillsFolder": false })),
+    )
+    .await;
+    assert!(!linked());
+    links::keep_in_step(&k.app);
+    links::sync_setting(&k.app).await;
+    assert!(!linked());
+    assert!(!k.app.settings().skills_folder);
+
+    // Turned on again: back, and they hold.
+    k.json(
+        "POST",
+        "/api/settings/agent",
+        Some(json!({ "skillsFolder": true })),
+    )
+    .await;
+    assert!(linked());
+    links::sync_setting(&k.app).await;
+    assert!(k.app.settings().skills_folder);
+
+    // No, as setup says it, comes to the setting; yes likewise.
+    links::unlink(Agent::Claude, home, claude, skills).unwrap();
+    links::sync_setting(&k.app).await;
+    assert!(!k.app.settings().skills_folder);
+    links::keep_in_step(&k.app);
+    assert!(!linked(), "a no isn't undone");
+    links::link(Agent::Claude, home, claude, skills).unwrap();
+    links::sync_setting(&k.app).await;
+    assert!(k.app.settings().skills_folder);
+    assert!(linked());
+
+    // On with no agent to link: it stays on through a restart.
+    kelve_server::hooks::set(Agent::Claude, false, home, claude).unwrap();
+    links::unlink(Agent::Claude, home, claude, skills).unwrap();
+    k.json(
+        "POST",
+        "/api/settings/agent",
+        Some(json!({ "skillsFolder": true })),
+    )
+    .await;
+    links::sync_setting(&k.app).await;
+    assert!(k.app.settings().skills_folder);
 }
 
 #[tokio::test]
@@ -443,7 +518,7 @@ async fn settings_for_your_agent_and_for_checks() {
     assert_eq!(
         s,
         json!({
-            "connected": [], "debriefs": "worthOne", "skillsFolder": false,
+            "connected": [], "debriefs": "worthOne", "skillsFolder": true,
             "checks": "ask", "checksAWeek": 10, "checksThisWeek": 0,
         })
     );
@@ -451,11 +526,11 @@ async fn settings_for_your_agent_and_for_checks() {
         .json(
             "POST",
             "/api/settings/agent",
-            Some(json!({ "debriefs": "onlyAsked", "skillsFolder": true, "checks": "never", "checksAWeek": 20 })),
+            Some(json!({ "debriefs": "onlyAsked", "skillsFolder": false, "checks": "never", "checksAWeek": 20 })),
         )
         .await;
     assert_eq!(s["debriefs"], "onlyAsked");
-    assert_eq!(s["skillsFolder"], true);
+    assert_eq!(s["skillsFolder"], false);
     assert_eq!(s["checks"], "never");
     assert_eq!(s["checksAWeek"], 20);
     assert_eq!(

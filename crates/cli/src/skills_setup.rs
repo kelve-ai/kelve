@@ -47,6 +47,10 @@ pub fn offer(
         kelve_server::reader::shown(&folder)
     ))?;
     if !yes {
+        // Kept, so kelve's setting says so too, and nothing's linked for them.
+        if let Err(e) = links::unlink(agent, home, claude, &skills_dir(home)) {
+            style::line(&e);
+        }
         return Ok(());
     }
     match links::link(agent, home, claude, &skills_dir(home)) {

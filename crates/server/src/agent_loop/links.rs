@@ -1,8 +1,11 @@
-//! The person's skills in each agent's own skills folder, with their yes
-//! (`kelve setup`), so they work where kelve isn't running and in any agent
-//! that reads skills. Each skill folder is linked, not copied, so an edit is
-//! everywhere at once; kelve keeps the links in step as skills come and go,
-//! and touches nothing in those folders that isn't its own link.
+//! The person's skills in each agent's own skills folder, so they work where
+//! kelve isn't running and in any agent that reads skills. It's on for a new
+//! install: `kelve setup` asks as it connects an agent, and anything else that
+//! connects one gets the links as kelve next starts or next changes a skill,
+//! until the person says no, in setup or in settings. Each skill folder is
+//! linked, not copied, so an edit is everywhere at once; kelve keeps the links
+//! in step as skills come and go, and touches nothing in those folders that
+//! isn't its own link.
 //!
 //! Where each agent reads personal skills, from its docs (November 2026):
 //! - Claude Code: `~/.claude/skills/<name>/SKILL.md` (its own folder,
@@ -22,7 +25,8 @@ use crate::skills_home;
 use crate::state::Shared;
 
 /// The file in kelve's own skills folder naming the agents whose skills
-/// folders the person said yes to, one a line.
+/// folders the person said yes to, one a line. Empty, they said no. Not
+/// there, they've said nothing yet, and the setting stands.
 const LINKED: &str = ".linked";
 
 /// Where an agent reads the person's own skills, when it has such a folder.
@@ -45,15 +49,18 @@ pub fn linked(skills: &Path) -> Vec<Agent> {
         .collect()
 }
 
+/// Whether the person has said: yes to an agent's folder, or no to them
+/// all. None until they do.
+fn said(skills: &Path) -> Option<bool> {
+    skills
+        .join(LINKED)
+        .is_file()
+        .then(|| !linked(skills).is_empty())
+}
+
 fn set_linked(skills: &Path, agents: &[Agent]) -> io::Result<()> {
     std::fs::create_dir_all(skills)?;
     let text: String = agents.iter().map(|a| format!("{}\n", a.name())).collect();
-    if text.is_empty() {
-        match std::fs::remove_file(skills.join(LINKED)) {
-            Err(e) if e.kind() != io::ErrorKind::NotFound => return Err(e),
-            _ => return Ok(()),
-        }
-    }
     std::fs::write(skills.join(LINKED), text)
 }
 
@@ -216,12 +223,23 @@ pub fn follow_setting(app: &Shared, on: bool) {
             tracing::warn!(agent = agent.name(), error = %e, "couldn't change the skills links");
         }
     }
+    // Turned on with no agent to link yet: a no from before no longer stands.
+    if on
+        && linked(skills).is_empty()
+        && let Err(e) = std::fs::remove_file(skills.join(LINKED))
+        && e.kind() != io::ErrorKind::NotFound
+    {
+        tracing::warn!(error = %e, "couldn't change the skills links");
+    }
 }
 
-/// The setting as the links are: on when setup linked an agent's folder,
-/// off when they were all taken out.
+/// The setting as the person last said: on when setup linked an agent's
+/// folder, off when they said no or took them all out. If they've said
+/// nothing yet, it stands.
 pub async fn sync_setting(app: &Shared) {
-    let on = !linked(&app.config.skills_dir).is_empty();
+    let Some(on) = said(&app.config.skills_dir) else {
+        return;
+    };
     if app.settings().skills_folder == on {
         return;
     }
@@ -233,9 +251,13 @@ pub async fn sync_setting(app: &Shared) {
 }
 
 /// Keeps the links in each agent's folder the person said yes to in step
-/// with their skills: new skills linked, gone ones taken out.
+/// with their skills: new skills linked, gone ones taken out. With the
+/// setting on and nothing said yet, that's each agent with kelve's hook.
 pub fn keep_in_step(app: &Shared) {
     let skills = &app.config.skills_dir;
+    if app.settings().skills_folder && said(skills).is_none() {
+        follow_setting(app, true);
+    }
     for agent in linked(skills) {
         let Some(to) = folder(agent, &app.config.agents_home, &app.config.claude_dir) else {
             continue;
