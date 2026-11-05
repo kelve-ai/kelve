@@ -1,14 +1,15 @@
 // Your agent (board YourAgent): its character and name, with the brush to
 // change how it looks; what it knows, a square for each part of each skill,
-// coloured by what its checks found; Fits you; and its page on kelve.ai, or a
-// verified score to get one (hosted/YourPage).
+// coloured by what its checks found; Fits you, with the way to pick between
+// two results (Fits.tsx); and its page on kelve.ai, or a verified score to get
+// one (hosted/YourPage).
 
 import type { PartCheck, YourAgentView } from '../../api/types'
 import { EXAMPLE_AGENT } from '../../example/agent'
 import { Loading } from '../../Loader'
 import { hrefOf } from '../../routes'
 import { Character } from '../../ui/Character'
-import { Btn } from '../../ui/kit'
+import { Btn, TextLink } from '../../ui/kit'
 import { madeOf } from '../../ui/pixels'
 import { YourPage } from '../hosted/YourPage'
 import { useAgentLoad } from './looks'
@@ -78,15 +79,25 @@ export function YourAgent({ example }: { example?: boolean }) {
         )}
       </section>
 
-      {p.fits && (
+      {(p.fits || p.fitsOpen) && (
         <section className="ya-fits" aria-labelledby="fits">
           <div>
             <h2 id="fits">Fits you</h2>
-            <p>You picked your agent in <strong>{p.fits.picked} of {p.fits.of}</strong> blind tests on your past work.</p>
+            {p.fits ? (
+              <p>You picked your agent in <strong>{p.fits.picked} of {p.fits.of}</strong> blind tests on your past work.</p>
+            ) : (
+              <p>Your agent redoes some of your past work twice: with your skills, and as a standard agent. You pick the one you’d rather keep, without knowing which is which.</p>
+            )}
+            <p className="ya-go">
+              {p.fitsReady > 0 && <>{p.fitsReady === 1 ? 'A pick is waiting for you. ' : `${p.fitsReady} picks are waiting for you. `}</>}
+              <TextLink href={hrefOf('agent/fits', example)}>Pick between two results</TextLink>
+            </p>
           </div>
-          <div className="ya-tests" role="img" aria-label={`You picked your agent in ${p.fits.picked} of ${p.fits.of} blind tests`} style={{ gridTemplateColumns: `repeat(${p.fits.tests.length}, minmax(0, 1fr))` }}>
-            {p.fits.tests.map((t, i) => <span key={i} className={t ? 'yes' : 'no'} />)}
-          </div>
+          {p.fits && (
+            <div className="ya-tests" role="img" aria-label={`You picked your agent in ${p.fits.picked} of ${p.fits.of} blind tests`} style={{ gridTemplateColumns: `repeat(${p.fits.tests.length}, minmax(0, 1fr))` }}>
+              {p.fits.tests.map((t, i) => <span key={i} className={t ? 'yes' : 'no'} />)}
+            </div>
+          )}
         </section>
       )}
 

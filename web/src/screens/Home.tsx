@@ -115,7 +115,7 @@ export function Home({ example }: { example?: boolean }) {
             <div className="hm-asks">
               {asks.map((a) => (
                 <div className="hm-ask" key={a.id}>
-                  <PixelIcon kind={a.kind as Pixel} />
+                  <PixelIcon kind={a.kind === 'fits' ? 'score' : (a.kind as Pixel)} />
                   <p>{a.text}</p>
                   {a.action && a.to && (
                     <a className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} href={hrefOf(a.to, example)}>{a.action}</a>

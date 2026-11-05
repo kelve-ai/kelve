@@ -17,8 +17,9 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
 use kelve_core::hosted::{
-    AgentChoice, CredentialKind, EstimateView, HandleView, HostedView, KindChoice, ModelChoice,
-    OfferView, RunState, RunView, ScoreView, TaskSquare, credential_problem, provider_name,
+    AgentChoice, CredentialKind, EstimateView, ExampleCheckView, ExampleTaskView, HandleView,
+    HostedView, KindChoice, ModelChoice, OfferView, RunState, RunView, ScoreView, TaskSquare,
+    credential_problem, provider_name,
 };
 use kelve_core::views::{HostedSignIn, ServerEvent};
 use kelve_graph_api::v2::client::Client;
@@ -325,6 +326,29 @@ pub async fn forget_key(
 
 // ---------------------------------------------------------------- a verified run
 
+/// A retired task as the app shows it: its starting files without the
+/// hidden tests, which are kept under `tests/`.
+fn example_of(t: v2::ExampleTask) -> ExampleTaskView {
+    ExampleTaskView {
+        name: t.name,
+        request: t.instruction,
+        files: t
+            .files
+            .into_iter()
+            .map(|f| f.path)
+            .filter(|p| !p.starts_with("tests/"))
+            .collect(),
+        checks: t
+            .checks
+            .into_iter()
+            .map(|c| ExampleCheckView {
+                kind: c.kind,
+                about: c.about,
+            })
+            .collect(),
+    }
+}
+
 /// What a run can be, and every file of the person's skills as it would go.
 pub async fn offer(State(app): State<Shared>, _me: Me) -> ApiResult<Json<OfferView>> {
     let c = hosted::signed_in(&app).await?;
@@ -341,6 +365,7 @@ pub async fn offer(State(app): State<Shared>, _me: Me) -> ApiResult<Json<OfferVi
                 name: k.name,
                 about: k.about,
                 tasks: k.tasks,
+                examples: k.examples.into_iter().map(example_of).collect(),
             })
             .collect(),
         agents: offer

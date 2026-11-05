@@ -13,7 +13,7 @@ use std::path::Path;
 use axum::Json;
 use axum::extract::{Path as UrlPath, State};
 use kelve_core::skills::SkillKind;
-use kelve_core::views::{PartCheck, SkillView};
+use kelve_core::views::{AgentSettingsIn, ChecksWhen, HomeAskKind, PartCheck, SkillView};
 use kelve_server::api::skills::{self, CheckIn, DecideIn, MarkdownIn, PartIn, PickIn, UndoIn};
 use kelve_server::auth::Me;
 use kelve_server::state::Shared;
@@ -804,6 +804,21 @@ async fn fits_you_shows_two_results_blind_and_counts_the_picks() {
     );
     assert_eq!(given[0].material["without"], json!(""));
 
+    // Your agent and home both lead to it while a pick waits.
+    let page = kelve_server::your_agent::page(&app).await.unwrap();
+    assert_eq!((page.fits_ready, page.fits_open), (1, true));
+    let home = kelve_server::home::view(&app).await.unwrap();
+    let ask = home
+        .asks
+        .iter()
+        .find(|a| a.kind == HomeAskKind::Fits)
+        .unwrap();
+    assert_eq!(
+        ask.text,
+        "I redid a past task twice, once with your skills. Which would you rather keep?"
+    );
+    assert_eq!(ask.to.as_deref(), Some("agent/fits"));
+
     let view = skills::fits(State(app.clone()), Me).await.unwrap().0;
     let pick = view.pick.unwrap();
     assert_eq!(pick.request, "Make fetch's errors say what went wrong.");
@@ -843,4 +858,195 @@ async fn fits_you_shows_two_results_blind_and_counts_the_picks() {
         Some((100, 25))
     );
     assert_eq!(view.pick, None);
+    let page = kelve_server::your_agent::page(&app).await.unwrap();
+    assert_eq!(page.fits_ready, 0);
+    let home = kelve_server::home::view(&app).await.unwrap();
+    assert!(!home.asks.iter().any(|a| a.kind == HomeAskKind::Fits));
+}
+
+/// When skill checks run, as the person sets it in settings.
+async fn checks_when(app: &Shared, when: ChecksWhen, a_week: Option<u32>) {
+    kelve_server::your_agent::set_settings(
+        app,
+        AgentSettingsIn {
+            checks: Some(when),
+            checks_a_week: a_week,
+            ..Default::default()
+        },
+    )
+    .await
+    .unwrap();
+}
+
+async fn runs_used(app: &Shared) -> (u32, u32) {
+    let s = kelve_server::your_agent::settings(app).await.unwrap();
+    (s.checks_this_week, s.checks_a_week)
+}
+
+fn home_offers_a_check(home: &kelve_core::views::HomeView) -> bool {
+    home.asks.iter().any(|a| a.kind == HomeAskKind::Check)
+}
+
+#[tokio::test]
+async fn asked_each_time_checks_wait_for_the_person_to_agree() {
+    let app = with_rust().await;
+    assert_eq!(app.settings().checks, ChecksWhen::Ask, "the default");
+    past_task(&app).await;
+    let view = one(&app, "rust").await;
+    assert_eq!(view.offer.when, ChecksWhen::Ask);
+    assert_eq!((view.offer.parts.len(), view.offer.held), (3, None));
+    assert!(
+        view.sections
+            .iter()
+            .flat_map(|s| s.parts.iter())
+            .all(|p| p.check == PartCheck::NotChecked),
+        "nothing runs till they agree"
+    );
+    assert!(home_offers_a_check(
+        &kelve_server::home::view(&app).await.unwrap()
+    ));
+    let _ = skills::check(
+        State(app.clone()),
+        Me,
+        UrlPath("rust".into()),
+        Json(CheckIn::default()),
+    )
+    .await
+    .unwrap();
+    assert_eq!(runs_used(&app).await, (6, 10));
+}
+
+#[tokio::test]
+async fn when_the_agent_is_free_new_and_changed_parts_are_checked_without_asking() {
+    let app = with_rust().await;
+    past_task(&app).await;
+    checks_when(&app, ChecksWhen::WhenFree, None).await;
+    let view = one(&app, "rust").await;
+    assert!(
+        view.sections
+            .iter()
+            .flat_map(|s| s.parts.iter())
+            .all(|p| p.check == PartCheck::Checking),
+        "each part is checked as soon as it's set"
+    );
+    assert_eq!(view.running.map(|r| r.runs), Some(6));
+    assert!(!home_offers_a_check(
+        &kelve_server::home::view(&app).await.unwrap()
+    ));
+    assert_eq!(runs_used(&app).await, (6, 10));
+
+    // Stopped, they wait for the person: looking again starts nothing.
+    let _ = skills::stop(State(app.clone()), Me, UrlPath("rust".into()))
+        .await
+        .unwrap();
+    let view = one(&app, "rust").await;
+    assert_eq!(view.running, None);
+    assert_eq!(part(&view, "Never unwrap").check, PartCheck::NotChecked);
+    assert_eq!(
+        runs_used(&app).await,
+        (0, 10),
+        "stopped runs aren't counted"
+    );
+
+    // A part whose words change is new to check: it's checked by itself.
+    let changed = RUST.replace("Return the error instead.", "Return the error with `?`.");
+    kelve_server::skills_home::write(&app.config.skills_dir, "rust", &changed).unwrap();
+    let view = one(&app, "rust").await;
+    assert_eq!(part(&view, "Never unwrap").check, PartCheck::Checking);
+    assert_eq!(
+        part(&view, "Errors are one enum").check,
+        PartCheck::NotChecked
+    );
+    assert_eq!(view.running.map(|r| r.runs), Some(2));
+}
+
+#[tokio::test]
+async fn never_offers_no_checks_and_says_so() {
+    let app = with_rust().await;
+    past_task(&app).await;
+    checks_when(&app, ChecksWhen::Never, None).await;
+    let view = one(&app, "rust").await;
+    assert_eq!(view.offer.parts.len(), 0);
+    assert_eq!(view.offer.waiting, 3);
+    assert_eq!(
+        view.offer.held.as_deref(),
+        Some("Checks are off. To check new parts, turn them on in Settings, under Skill checks.")
+    );
+    assert!(!home_offers_a_check(
+        &kelve_server::home::view(&app).await.unwrap()
+    ));
+    let off = skills::check(
+        State(app.clone()),
+        Me,
+        UrlPath("rust".into()),
+        Json(CheckIn::default()),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(
+        off.message,
+        "Checks are off. To check new parts, turn them on in Settings, under Skill checks."
+    );
+    assert_eq!(runs_used(&app).await, (0, 10));
+}
+
+#[tokio::test]
+async fn the_weeks_runs_are_counted_and_no_more_are_started_past_them() {
+    let app = with_rust().await;
+    past_task(&app).await;
+    // Each part takes two runs on the one past task: four runs fit two.
+    checks_when(&app, ChecksWhen::Ask, Some(4)).await;
+    let view = one(&app, "rust").await;
+    assert_eq!(
+        (view.offer.parts.len(), view.offer.runs, view.offer.left),
+        (2, 4, 4)
+    );
+    assert_eq!(
+        view.offer.held.as_deref(),
+        Some(
+            "This week’s runs are enough for 2 parts. One more waits till Monday, unless you raise the limit in Settings, under Skill checks."
+        )
+    );
+    let started = skills::check(
+        State(app.clone()),
+        Me,
+        UrlPath("rust".into()),
+        Json(CheckIn::default()),
+    )
+    .await
+    .unwrap()
+    .0;
+    assert_eq!((started.parts, started.runs), (2, 4));
+    assert_eq!(runs_used(&app).await, (4, 4));
+
+    let view = one(&app, "rust").await;
+    assert_eq!((view.offer.parts.len(), view.offer.left), (0, 0));
+    let used = "This week’s check runs are used. New parts wait till Monday, unless you raise the limit in Settings, under Skill checks.";
+    assert_eq!(view.offer.held.as_deref(), Some(used));
+    assert!(!home_offers_a_check(
+        &kelve_server::home::view(&app).await.unwrap()
+    ));
+    let refused = skills::check(
+        State(app.clone()),
+        Me,
+        UrlPath("rust".into()),
+        Json(CheckIn::default()),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(refused.message, used);
+
+    // Checks that run by themselves keep to it too, and start the rest once
+    // the limit is raised.
+    checks_when(&app, ChecksWhen::WhenFree, None).await;
+    assert_eq!(
+        part(&one(&app, "rust").await, "Never unwrap").check,
+        PartCheck::NotChecked
+    );
+    checks_when(&app, ChecksWhen::WhenFree, Some(6)).await;
+    assert_eq!(
+        part(&one(&app, "rust").await, "Never unwrap").check,
+        PartCheck::Checking
+    );
+    assert_eq!(runs_used(&app).await, (6, 6));
 }

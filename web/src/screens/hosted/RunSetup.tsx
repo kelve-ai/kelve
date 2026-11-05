@@ -1,12 +1,13 @@
-// Getting a verified score (board RunSetup): the kind of work, the agent and
-// model both runs use, and exactly what goes, before anything goes. Starting
+// Getting a verified score (board RunSetup): the kind of work, with a retired
+// task of it as an example, the agent and model both runs use, and exactly
+// what goes, before anything goes. Starting
 // it sends your skills, and kelve.ai says what the run will take: about what
 // it costs on your own key for the model's provider, which kelve asks for
 // the first time and keeps sealed. Nothing runs until you confirm.
 
 import { useEffect, useState } from 'react'
 import { ApiError, del } from '../../api/client'
-import type { CredentialKind, EstimateView, OfferView, RunView } from '../../api/types'
+import type { CredentialKind, EstimateView, ExampleTaskView, OfferView, RunView } from '../../api/types'
 import { hrefOf } from '../../routes'
 import { Character } from '../../ui/Character'
 import { Btn } from '../../ui/kit'
@@ -23,6 +24,7 @@ export function RunSetup({ example }: { example?: boolean }) {
   const [model, setModel] = useState<string>()
   const [who, setWho] = useState(false)
   const [files, setFiles] = useState(false)
+  const [seeing, setSeeing] = useState(false)
   const [estimate, setEstimate] = useState<EstimateView | null>(null)
   const [busy, setBusy] = useState(false)
   const [said, setSaid] = useState<string>()
@@ -99,7 +101,16 @@ export function RunSetup({ example }: { example?: boolean }) {
                 </button>
               ))}
             </div>
-            <p className="hs-quiet">{chosenKind.about}</p>
+            <p className="hs-quiet">
+              {chosenKind.about}
+              {chosenKind.examples.length > 0 && (
+                <>
+                  {' '}
+                  <button type="button" className="hs-lkb" aria-expanded={seeing} onClick={() => setSeeing(!seeing)}>{seeing ? 'Hide the example' : 'See an example task'}</button>
+                </>
+              )}
+            </p>
+            {seeing && chosenKind.examples.length > 0 && <Examples tasks={chosenKind.examples} />}
           </section>
           <div className="hs-says">
             <p>
@@ -150,6 +161,34 @@ export function RunSetup({ example }: { example?: boolean }) {
           )}
         </>
       )}
+    </div>
+  )
+}
+
+/** What each kind of hidden check is called. */
+const CHECKED: Record<string, string> = { test: 'Hidden test', static: 'Code check', judge: 'The judge' }
+
+/** Retired tasks of a kind, as examples: what the agent was asked, the files it started with, and how it was checked. */
+function Examples({ tasks }: { tasks: ExampleTaskView[] }) {
+  return (
+    <div className="hs-ex" role="region" aria-label="An example task">
+      {tasks.map((t) => (
+        <div key={t.name} className="hs-ex-task">
+          <h3>What the agent was asked</h3>
+          <p className="hs-ex-ask">{t.request}</p>
+          <h3>The files it started with</h3>
+          <ul className="hs-ex-files">
+            {t.files.map((f) => <li key={f}>{f}</li>)}
+          </ul>
+          <h3>How it was checked</h3>
+          <ul className="hs-ex-checks">
+            {t.checks.map((c, i) => (
+              <li key={i}><b>{CHECKED[c.kind] ?? c.kind}</b> {c.about}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <small>A retired task, shown in full. The tasks a run does are never shown.</small>
     </div>
   )
 }

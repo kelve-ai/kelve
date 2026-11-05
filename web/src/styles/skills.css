@@ -31,6 +31,9 @@
 .sk-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 6px; }
 .sk-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sk-error { margin: 0; font-size: 14.5px; line-height: 21px; color: var(--accent-ink); }
+.sk-held { margin: 0; font-size: 15px; line-height: 23px; color: var(--ink-2); max-width: 560px; }
+.sk-held a { color: var(--accent-ink); font-weight: 600; text-decoration: none; }
+.sk-held a:hover { color: var(--accent-ink-2); }
 ul.sk-error { padding-left: 18px; }
 
 /* What's wrong with the file. */

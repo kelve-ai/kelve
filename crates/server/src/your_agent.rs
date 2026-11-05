@@ -616,10 +616,18 @@ pub async fn fits(app: &Shared) -> ApiResult<Option<FitsYou>> {
 /// The Your agent page: its character, what it knows, and Fits you. Verified
 /// scores and the page come with signing in to kelve.ai.
 pub async fn page(app: &Shared) -> ApiResult<YourAgentView> {
+    let mut conn = app.db.acquire().await?;
+    let fits_ready = kelve_store::checking::pairs_ready(&mut conn).await?;
+    let fits_open = fits_ready > 0
+        || kelve_store::checking::pairs_waiting(&mut conn).await? > 0
+        || kelve_store::checking::tasks_known(&mut conn).await? > 0;
+    drop(conn);
     Ok(YourAgentView {
         character: view(app),
         knows: knows(app).await?,
         fits: fits(app).await?,
+        fits_ready,
+        fits_open,
         scores: Vec::new(),
         page: None,
     })
@@ -640,7 +648,7 @@ fn connected(app: &Shared) -> Vec<ConnectedAgent> {
 }
 
 /// When this week began, Monday at midnight where the person is, in ms.
-fn week_start(app: &Shared) -> i64 {
+pub(crate) fn week_start(app: &Shared) -> i64 {
     let now = Utc::now().with_timezone(&app.config.offset);
     let monday = now.date_naive() - Duration::days(i64::from(now.weekday().num_days_from_monday()));
     monday
@@ -652,15 +660,14 @@ fn week_start(app: &Shared) -> i64 {
 /// The settings for the person's agent, and for skill checks.
 pub async fn settings(app: &Shared) -> ApiResult<AgentSettings> {
     let s = app.settings();
-    let mut conn = app.db.acquire().await?;
-    let this_week = kelve_store::your_agent::checks_since(&mut conn, week_start(app)).await?;
+    let this_week = crate::skill_checks::runs_this_week(app).await?;
     Ok(AgentSettings {
         connected: connected(app),
         debriefs: s.debriefs,
         skills_folder: s.skills_folder,
         checks: s.checks,
         checks_a_week: s.checks_a_week,
-        checks_this_week: u32::try_from(this_week).unwrap_or(u32::MAX),
+        checks_this_week: this_week,
     })
 }
 
@@ -711,6 +718,10 @@ pub async fn set_settings(app: &Shared, change_in: AgentSettingsIn) -> ApiResult
         app.save_settings(s).await?;
     }
     app.publish(ServerEvent::Settings);
+    // Checks that run by themselves start now, within the week's runs.
+    if change_in.checks.is_some() || change_in.checks_a_week.is_some() {
+        crate::skill_checks::auto(app).await?;
+    }
     settings(app).await
 }
 

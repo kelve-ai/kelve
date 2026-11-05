@@ -3,7 +3,9 @@
 //! agents and models on offer, the skill that makes a run come out better,
 //! and the provider keys they take.
 
-use super::{AgentOffer, Credential, KindOffer, ModelOffer, Offer};
+use super::{
+    AgentOffer, Credential, ExampleCheck, ExampleFile, ExampleTask, KindOffer, ModelOffer, Offer,
+};
 
 /// The skill that makes a stand-in's runs come out better, as the runner's
 /// stand-in agent does.
@@ -36,7 +38,7 @@ pub fn the_offer() -> Offer {
                 scored: "Hidden tests check each task, and a fixed judge scores what tests can’t."
                     .into(),
                 bank: "rust-1".into(),
-                examples: Vec::new(),
+                examples: vec![greet_name()],
             },
             KindOffer {
                 kind: "words".into(),
@@ -64,6 +66,37 @@ pub fn the_offer() -> Offer {
                 models: vec![model("gpt-5.5", "GPT-5.5")],
                 credentials: vec![Credential::ApiKey],
             },
+        ],
+    }
+}
+
+/// A retired Rust task, shown as an example of what the live ones are like.
+fn greet_name() -> ExampleTask {
+    let check = |kind: &str, about: &str| ExampleCheck {
+        kind: kind.into(),
+        about: about.into(),
+    };
+    let file = |path: &str, text: &str| ExampleFile {
+        path: path.into(),
+        text: text.into(),
+    };
+    ExampleTask {
+        name: "greet-name".into(),
+        area: "cli".into(),
+        instruction: "Add a --name option to greet, so `greet --name Sam` prints \"Hello, Sam.\" With no name, it still prints \"Hello.\"".into(),
+        checks: vec![
+            check("test", "`greet --name Sam` prints \"Hello, Sam.\""),
+            check("test", "`greet` with no name still prints \"Hello.\""),
+            check("static", "No unwrap outside tests."),
+            check("judge", "The option's help says what it's for."),
+        ],
+        files: vec![
+            file(
+                "Cargo.toml",
+                "[package]\nname = \"greet\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+            ),
+            file("src/main.rs", "fn main() {\n    println!(\"Hello.\");\n}\n"),
+            file("tests/cli.rs", "// The hidden tests.\n"),
         ],
     }
 }

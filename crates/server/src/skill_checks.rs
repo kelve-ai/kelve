@@ -7,8 +7,11 @@
 //! `core::skills::compare`: how close each run came to what the person kept,
 //! and whether the part works, makes no difference or failed.
 //!
-//! Checks cost runs of the agent, so they're started only by the person,
-//! batched, with a rough count of the runs first (`offer`).
+//! Checks cost runs of the agent, so they're batched, with a rough count of
+//! the runs first (`offer`), and run as the person set them in settings:
+//! when they agree to each, by themselves for new and changed parts when the
+//! agent is free (`auto`), or never; and never more runs a week than they
+//! allow.
 
 use std::path::Path;
 
@@ -16,7 +19,7 @@ use kelve_core::fence::fence_with;
 use kelve_core::instructions::COMPARE;
 use kelve_core::skills::compare::{self, Line, Outcome};
 use kelve_core::skills::{PartKey, Skill};
-use kelve_core::views::{CheckOffer, CheckRun, OfferedPart, PartCheck, ServerEvent};
+use kelve_core::views::{CheckOffer, CheckRun, ChecksWhen, OfferedPart, PartCheck, ServerEvent};
 use kelve_store::checks::{self, PastTask};
 use kelve_store::{asks, checking, skills};
 use serde_json::{Value, json};
@@ -89,10 +92,61 @@ async fn kept_lines(task: &PastTask) -> Option<Vec<Line>> {
     }
 }
 
-/// What a check of a skill's parts not checked yet would take.
-pub async fn offer(app: &Shared, skill: &skills::Skill) -> ApiResult<CheckOffer> {
+/// Checks are started one at a time, so two never take the same runs.
+static STARTING: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+/// Said where a check would be offered, when checks are off.
+const OFF: &str =
+    "Checks are off. To check new parts, turn them on in Settings, under Skill checks.";
+
+/// Runs of the agent the person's checks have used this week: two for each
+/// check asked for, but for those stopped before they were done.
+pub async fn runs_this_week(app: &Shared) -> ApiResult<u32> {
     let mut conn = app.db.acquire().await?;
-    let parts: Vec<OfferedPart> = skills::parts(&mut conn, skill.id, false)
+    let checks =
+        kelve_store::your_agent::checks_since(&mut conn, crate::your_agent::week_start(app))
+            .await?;
+    Ok(u32::try_from(checks.saturating_mul(2)).unwrap_or(u32::MAX))
+}
+
+/// Runs of the agent left this week, of the most the person allows.
+pub(crate) async fn runs_left(app: &Shared) -> ApiResult<u32> {
+    let most = app.settings().checks_a_week;
+    Ok(most.saturating_sub(runs_this_week(app).await?))
+}
+
+/// Why parts not checked yet wait for this week's runs, in a sentence: none
+/// of them fit, or `fit` do and `waiting` more don't.
+fn over_limit(fit: usize, waiting: usize) -> String {
+    let raise = "unless you raise the limit in Settings, under Skill checks.";
+    match (fit, waiting) {
+        (0, _) => format!("This week’s check runs are used. New parts wait till Monday, {raise}"),
+        (fit, 1) => format!(
+            "This week’s runs are enough for {}. One more waits till Monday, {raise}",
+            parts_said(fit)
+        ),
+        (fit, n) => format!(
+            "This week’s runs are enough for {}. {n} more wait till Monday, {raise}",
+            parts_said(fit)
+        ),
+    }
+}
+
+fn parts_said(n: usize) -> String {
+    if n == 1 {
+        "one part".into()
+    } else {
+        format!("{n} parts")
+    }
+}
+
+/// What a check of a skill's parts not checked yet would take: as many as
+/// this week's runs allow, and why the rest wait.
+pub async fn offer(app: &Shared, skill: &skills::Skill) -> ApiResult<CheckOffer> {
+    let when = app.settings().checks;
+    let left = runs_left(app).await?;
+    let mut conn = app.db.acquire().await?;
+    let mut parts: Vec<OfferedPart> = skills::parts(&mut conn, skill.id, false)
         .await?
         .into_iter()
         .filter(|p| p.state == "unchecked")
@@ -102,8 +156,93 @@ pub async fn offer(app: &Shared, skill: &skills::Skill) -> ApiResult<CheckOffer>
         })
         .collect();
     let tasks = checking::tasks_known(&mut conn).await?.min(TASKS) as u32;
+    let fit = match when {
+        ChecksWhen::Never => 0,
+        _ if tasks == 0 => parts.len(),
+        _ => (left / (2 * tasks)) as usize,
+    };
+    let waiting = parts.len().saturating_sub(fit);
+    let held = (waiting > 0).then(|| match when {
+        ChecksWhen::Never => OFF.to_string(),
+        _ => over_limit(fit, waiting),
+    });
+    parts.truncate(fit);
     let runs = 2 * tasks * parts.len() as u32;
-    Ok(CheckOffer { parts, tasks, runs })
+    Ok(CheckOffer {
+        parts,
+        tasks,
+        runs,
+        when,
+        left,
+        waiting: waiting as u32,
+        held,
+    })
+}
+
+/// Asks for each part's check on each past task, and keeps the agent's jobs
+/// for them: how many checks.
+async fn begin(app: &Shared, parts: &[skills::Part], tasks: &[PastTask]) -> ApiResult<usize> {
+    let mut conn = app.db.acquire().await?;
+    let batch = kelve_store::now();
+    let mut ids = Vec::new();
+    for part in parts {
+        for task in tasks {
+            ids.push(checking::ask_in(&mut conn, part.id, task.id, batch).await?);
+        }
+        skills::checked(&mut conn, part.id, "running", None, None).await?;
+        skills::tried(&mut conn, part.id).await?;
+    }
+    drop(conn);
+    for id in &ids {
+        v2jobs::queue(app, CHECK, &id.to_string(), json!({ "check": id }))
+            .await
+            .map_err(ApiError::internal)?;
+    }
+    app.wake.notify_one();
+    app.publish(ServerEvent::Skills);
+    Ok(ids.len())
+}
+
+/// When checks run by themselves, checks each skill's new and changed parts
+/// on past work, as many as this week's runs allow, for the agent to do when
+/// it's free. A part whose check was stopped, or couldn't be done, waits for
+/// the person till its text changes. How many runs it asked for.
+pub async fn auto(app: &Shared) -> ApiResult<u32> {
+    if app.settings().checks != ChecksWhen::WhenFree {
+        return Ok(0);
+    }
+    let _one = STARTING.lock().await;
+    let mut left = runs_left(app).await?;
+    let mut conn = app.db.acquire().await?;
+    let made = skills::all(&mut conn, "made").await?;
+    drop(conn);
+    let mut asked = 0;
+    for skill in &made {
+        let mut conn = app.db.acquire().await?;
+        let mut parts: Vec<skills::Part> = skills::parts(&mut conn, skill.id, false)
+            .await?
+            .into_iter()
+            .filter(|p| p.state == "unchecked" && p.tried.as_deref() != Some(p.body_hash.as_str()))
+            .collect();
+        if parts.is_empty() {
+            continue;
+        }
+        let root = (!skill.root.is_empty()).then_some(skill.root.as_str());
+        let tasks = checking::tasks_for(&mut conn, root, TASKS).await?;
+        drop(conn);
+        if tasks.is_empty() {
+            continue;
+        }
+        let each = 2 * tasks.len() as u32;
+        parts.truncate((left / each) as usize);
+        if parts.is_empty() {
+            break;
+        }
+        let runs = 2 * begin(app, &parts, &tasks).await? as u32;
+        left = left.saturating_sub(runs);
+        asked += runs;
+    }
+    Ok(asked)
 }
 
 /// A skill's check, while it runs.
@@ -119,10 +258,16 @@ pub async fn running(app: &Shared, skill: i64) -> ApiResult<Option<CheckRun>> {
 }
 
 /// Starts checking a skill's parts not checked yet, or those of them named
-/// by `keys`, each on the latest past tasks: the check as it starts.
+/// by `keys`, each on the latest past tasks, as many as this week's runs
+/// allow: the check as it starts.
 pub async fn start(app: &Shared, skill: &skills::Skill, keys: &[String]) -> ApiResult<CheckRun> {
+    if app.settings().checks == ChecksWhen::Never {
+        return Err(ApiError::conflict(OFF));
+    }
+    let _one = STARTING.lock().await;
+    let left = runs_left(app).await?;
     let mut conn = app.db.acquire().await?;
-    let parts: Vec<skills::Part> = skills::parts(&mut conn, skill.id, false)
+    let mut parts: Vec<skills::Part> = skills::parts(&mut conn, skill.id, false)
         .await?
         .into_iter()
         .filter(|p| p.state == "unchecked")
@@ -145,26 +290,17 @@ pub async fn start(app: &Shared, skill: &skills::Skill, keys: &[String]) -> ApiR
             "There’s no past work to check it on yet. Once your agent hands over work and you keep it, kelve can check each part on it.",
         ));
     }
-    let batch = kelve_store::now();
-    let mut ids = Vec::new();
-    for part in &parts {
-        for task in &tasks {
-            ids.push(checking::ask_in(&mut conn, part.id, task.id, batch).await?);
-        }
-        skills::checked(&mut conn, part.id, "running", None, None).await?;
-    }
     drop(conn);
-    for id in &ids {
-        v2jobs::queue(app, CHECK, &id.to_string(), json!({ "check": id }))
-            .await
-            .map_err(ApiError::internal)?;
+    let fit = (left / (2 * tasks.len() as u32)) as usize;
+    if fit == 0 {
+        return Err(ApiError::conflict(over_limit(0, parts.len())));
     }
-    app.wake.notify_one();
-    app.publish(ServerEvent::Skills);
+    parts.truncate(fit);
+    let asked = begin(app, &parts, &tasks).await?;
     Ok(CheckRun {
         parts: parts.len() as u32,
         done: 0,
-        runs: 2 * ids.len() as u32,
+        runs: 2 * asked as u32,
     })
 }
 

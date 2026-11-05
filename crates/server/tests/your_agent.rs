@@ -439,19 +439,19 @@ async fn settings_for_your_agent_and_for_checks() {
         s,
         json!({
             "connected": [], "debriefs": "worthOne", "skillsFolder": false,
-            "checks": "whenFree", "checksAWeek": 10, "checksThisWeek": 0,
+            "checks": "ask", "checksAWeek": 10, "checksThisWeek": 0,
         })
     );
     let s = k
         .json(
             "POST",
             "/api/settings/agent",
-            Some(json!({ "debriefs": "onlyAsked", "skillsFolder": true, "checks": "ask", "checksAWeek": 20 })),
+            Some(json!({ "debriefs": "onlyAsked", "skillsFolder": true, "checks": "never", "checksAWeek": 20 })),
         )
         .await;
     assert_eq!(s["debriefs"], "onlyAsked");
     assert_eq!(s["skillsFolder"], true);
-    assert_eq!(s["checks"], "ask");
+    assert_eq!(s["checks"], "never");
     assert_eq!(s["checksAWeek"], 20);
     assert_eq!(
         k.app.settings().debriefs,
