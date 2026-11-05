@@ -919,6 +919,13 @@
             "type": "string",
             "description": "`claude-code`."
           },
+          "credentials": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Credential"
+            },
+            "description": "What a person may pay for its runs with: an API key always, and a\nClaude Code subscription only for Claude Code, and only where the\nservice is run for that person alone."
+          },
           "models": {
             "type": "array",
             "items": {
@@ -1014,15 +1021,26 @@
       },
       "Confirm": {
         "type": "object",
-        "description": "What a person sends to start a run they've seen the estimate for: their\nown key for the model's provider. It's used for that run only: held in\nmemory while the run goes, never kept, never logged, and forgotten as\nthe run ends.",
+        "description": "What a person sends to start a run they've seen the estimate for: their\nown key for the model's provider, or their Claude Code subscription's\ntoken, and which it is. It's used for that run only: held in memory\nwhile the run goes, never kept, never logged, and forgotten as the run\nends.",
         "required": [
           "provider_key"
         ],
         "properties": {
+          "credential": {
+            "$ref": "#/components/schemas/Credential"
+          },
           "provider_key": {
             "type": "string"
           }
         }
+      },
+      "Credential": {
+        "type": "string",
+        "description": "What a person pays for a run with, for the model's provider.",
+        "enum": [
+          "api-key",
+          "subscription"
+        ]
       },
       "Deleted": {
         "type": "object",
@@ -1065,10 +1083,14 @@
           "agent": {
             "type": "string"
           },
+          "credential": {
+            "$ref": "#/components/schemas/Credential",
+            "description": "What it'll be paid with."
+          },
           "dollars": {
             "type": "number",
             "format": "double",
-            "description": "About what it costs on the person's own key, in US dollars, at the\nprovider's list prices: only the runs with their skills. The\nstandard agent's runs, and judging, are on kelve's key."
+            "description": "About what it costs on the person's own key, in US dollars, at the\nprovider's list prices: only the runs with their skills. The\nstandard agent's runs, and judging, are on kelve's key. Nothing for\na subscription: `tokens` says what it uses."
           },
           "expires": {
             "$ref": "#/components/schemas/Timestamp"
@@ -1119,6 +1141,15 @@
           "tasks": {
             "type": "integer",
             "format": "int32",
+            "minimum": 0
+          },
+          "tokens": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "For a subscription: about how many tokens of the plan's allowance it\nuses, the runs with the person's skills only.",
             "minimum": 0
           },
           "working": {
@@ -1418,6 +1449,10 @@
         "properties": {
           "agent": {
             "type": "string"
+          },
+          "credential": {
+            "$ref": "#/components/schemas/Credential",
+            "description": "What the person will pay with: the estimate is in dollars for an\nAPI key, and in tokens for a subscription."
           },
           "kind": {
             "type": "string"

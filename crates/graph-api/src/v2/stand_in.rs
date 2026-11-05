@@ -22,9 +22,9 @@ use kelve_core::time::Timestamp;
 use serde::Deserialize;
 
 use super::{
-    Account, Allowance, Character, Deleted, Estimate, HandleAsk, HandleCheck, ModelOffer,
-    NO_RUNS_LEFT, PageSettings, RunRequest, RunResult, RunState, RunStatus, Score, Scores,
-    SignedIn, SkillFile, TaskProgress, TaskState, Verdict, handle,
+    Account, Allowance, Character, Credential, Deleted, Estimate, HandleAsk, HandleCheck,
+    ModelOffer, NO_RUNS_LEFT, PageSettings, RunRequest, RunResult, RunState, RunStatus, Score,
+    Scores, SignedIn, SkillFile, TaskProgress, TaskState, Verdict, handle,
 };
 use crate::{Problem, SignInCode, pkce_challenge};
 
@@ -579,6 +579,14 @@ async fn estimate(
     let Some(provider) = model_offer(&ask.agent, &ask.model) else {
         return no_run();
     };
+    if !pays_with(&ask.agent, ask.credential) {
+        return problem(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "Not on offer",
+            "Only Claude Code’s runs can be paid with a Claude Code subscription. Use an API key for this agent.",
+        );
+    }
+    let subscription = ask.credential == Credential::Subscription;
     held.minted += 1;
     let run = format!("run{}", held.minted);
     let expert = files
@@ -594,11 +602,13 @@ async fn estimate(
         minutes: 20,
         provider: provider.provider.clone(),
         provider_name: provider.provider_name.clone(),
-        dollars: if ask.model.contains("opus") {
-            120.0
-        } else {
-            60.0
+        dollars: match (subscription, ask.model.contains("opus")) {
+            (true, _) => 0.0,
+            (false, true) => 120.0,
+            (false, false) => 60.0,
         },
+        credential: ask.credential,
+        tokens: subscription.then_some(4_000_000),
         runs_left: left - 1,
         expires: Timestamp(chrono::Utc::now() + chrono::Duration::hours(1)),
         skills: files
@@ -771,6 +781,15 @@ fn step(held: &mut Held, id: &str) -> bool {
     true
 }
 
+/// Whether an agent's runs can be paid with a credential, as the offer
+/// says.
+fn pays_with(agent: &str, credential: Credential) -> bool {
+    the_offer()
+        .agents
+        .iter()
+        .any(|a| a.agent == agent && a.credentials.contains(&credential))
+}
+
 /// A run of the account's, by ID.
 fn mine<'a>(held: &'a Held, key: &str, id: &str) -> Option<&'a Run> {
     held.runs.get(id).filter(|r| r.key == key)
@@ -793,6 +812,21 @@ async fn confirm(
     let provider_key = serde_json::from_slice::<super::Confirm>(&body).ok();
     let provider = model_offer(&r.estimate.agent, &r.estimate.model)
         .map_or_else(|| "the model’s provider".to_string(), |m| m.provider_name);
+    if let Some(c) = &provider_key
+        && let Some(why) = c.credential.mismatch(&c.provider_key)
+    {
+        return problem(StatusCode::UNPROCESSABLE_ENTITY, "Key not accepted", why);
+    }
+    if provider_key
+        .as_ref()
+        .is_some_and(|c| !pays_with(&r.estimate.agent, c.credential))
+    {
+        return problem(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "Key not accepted",
+            "Only Claude Code’s runs can be paid with a Claude Code subscription. Use an API key for this agent.",
+        );
+    }
     if !provider_key.is_some_and(|c| takes_key(c.provider_key.trim())) {
         return problem(
             StatusCode::UNPROCESSABLE_ENTITY,
@@ -1036,6 +1070,60 @@ mod tests {
         let result = client.run(&e.run).await.unwrap().unwrap().result.unwrap();
         assert!(!result.verified);
         assert_eq!(result.better(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_claude_code_run_can_be_paid_with_a_subscription_in_tokens() {
+        let (hosted, client) = signed_in().await;
+        let offer = client.offer().await.unwrap();
+        let credentials = |agent: &str| {
+            offer
+                .agents
+                .iter()
+                .find(|a| a.agent == agent)
+                .unwrap()
+                .credentials
+                .clone()
+        };
+        assert_eq!(
+            credentials("claude-code"),
+            [Credential::ApiKey, Credential::Subscription]
+        );
+        assert_eq!(credentials("codex"), [Credential::ApiKey]);
+        let tar = skills(&["rust"]);
+        let refused = client
+            .estimate_paying("rust", "codex", "gpt-5.5", &tar, Credential::Subscription)
+            .await;
+        assert!(matches!(refused, Err(Error::Refused { status: 422, .. })));
+        let e = client
+            .estimate_paying(
+                "rust",
+                "claude-code",
+                "claude-sonnet-5-6",
+                &tar,
+                Credential::Subscription,
+            )
+            .await
+            .unwrap();
+        assert_eq!((e.credential, e.dollars), (Credential::Subscription, 0.0));
+        assert!(e.tokens.is_some_and(|t| t > 0));
+        // An API key sent as a subscription's token is told apart.
+        let Err(Error::Refused { status: 422, said }) = client
+            .confirm_paying(&e.run, "sk-ant-api03-x", Credential::Subscription)
+            .await
+        else {
+            panic!("an API key isn't a subscription's token");
+        };
+        assert!(
+            said.contains("not a Claude Code subscription’s token"),
+            "{said}"
+        );
+        let s = client
+            .confirm_paying(&e.run, "sk-test-oat", Credential::Subscription)
+            .await
+            .unwrap();
+        assert_eq!(s.state, RunState::Queued);
+        hosted.finish(&e.run);
     }
 
     #[tokio::test]

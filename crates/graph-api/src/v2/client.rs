@@ -9,7 +9,7 @@ use std::time::Duration;
 use base64::Engine;
 
 use super::{
-    API, Account, Character, Confirm, Deleted, Estimate, HandleAsk, HandleCheck, Offer,
+    API, Account, Character, Confirm, Credential, Deleted, Estimate, HandleAsk, HandleCheck, Offer,
     PageSettings, RunRequest, RunStatus, Score, Scores, SignInCode, SignedIn,
 };
 use crate::client::{self as one};
@@ -279,6 +279,20 @@ impl Client {
         model: &str,
         skills_tar: &[u8],
     ) -> Result<Estimate> {
+        self.estimate_paying(kind, agent, model, skills_tar, Credential::ApiKey)
+            .await
+    }
+
+    /// As [`Client::estimate`], for a run paid with `credential`: in tokens
+    /// for a subscription, in dollars for an API key.
+    pub async fn estimate_paying(
+        &self,
+        kind: &str,
+        agent: &str,
+        model: &str,
+        skills_tar: &[u8],
+        credential: Credential,
+    ) -> Result<Estimate> {
         let key = self.key()?;
         let url = self.url("/runs");
         let ask = RunRequest {
@@ -286,6 +300,7 @@ impl Client {
             agent: agent.into(),
             model: model.into(),
             skills: base64::engine::general_purpose::STANDARD.encode(skills_tar),
+            credential,
         };
         self.send(|| self.one.http().post(&url).bearer_auth(key).json(&ask))
             .await?
@@ -296,10 +311,23 @@ impl Client {
     /// model's provider, which goes for this run only. Confirming twice
     /// starts it once.
     pub async fn confirm(&self, run: &str, provider_key: &str) -> Result<RunStatus> {
+        self.confirm_paying(run, provider_key, Credential::ApiKey)
+            .await
+    }
+
+    /// As [`Client::confirm`], paid with `credential`: an API key, or a
+    /// Claude Code subscription's token.
+    pub async fn confirm_paying(
+        &self,
+        run: &str,
+        provider_key: &str,
+        credential: Credential,
+    ) -> Result<RunStatus> {
         let key = self.key()?;
         let url = self.url(&format!("/runs/{}/confirm", segment(run)));
         let confirm = Confirm {
             provider_key: provider_key.into(),
+            credential,
         };
         self.send(|| self.one.http().post(&url).bearer_auth(key).json(&confirm))
             .await?
