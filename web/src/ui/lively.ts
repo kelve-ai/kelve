@@ -42,7 +42,7 @@ function somethingSmall(hello: boolean): Step[] {
 /** A stretch of what `base` does, then the next, for as long as it's shown. */
 function next(base: CharacterMove): Step[] {
   if (base === 'work') {
-    const breath = between(1_200, 3_500)
+    const breath = between(3_000, 8_000)
     return [{ move: 'work', ms: between(7_000, 20_000) }, ...(Math.random() < 0.5 ? [still(breath / 2), blink(), still(breath / 2)] : [still(breath)])]
   }
   return [still(pause()), ...somethingSmall(base === 'wave')]

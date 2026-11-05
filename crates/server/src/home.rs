@@ -28,6 +28,40 @@ const DAYS: i64 = 14;
 /// The most lines on the timeline, and asks in the bubble.
 const MOST_LINES: usize = 40;
 const MOST_ASKS: usize = 3;
+/// How long a working agent says one thing before the next.
+const LINE_MS: i64 = 30 * 1000;
+/// The hint that says the person has seen the example.
+const SEEN_EXAMPLE: &str = "example";
+
+/// What a working agent says, one at a time, in turn.
+pub const WORKING_LINES: [&str; 18] = [
+    "I’m working on what you asked.",
+    "Hold my tea.",
+    "Reading the instructions. Fine, skimming them.",
+    "Thinking. It looks a lot like staring.",
+    "Naming things. The hard part.",
+    "Just one more file.",
+    "Nearly there. I say that a lot.",
+    "Making it work first. Making it nice after.",
+    "Measure twice, cut once. Then measure again.",
+    "Whoever wrote this had a long day. No judgement.",
+    "Don’t mind me. Carry on.",
+    "Go on, put the kettle on. I’ve got this.",
+    "Finding out why that was there.",
+    "If anyone asks, this was always the plan.",
+    "No, this is the quick way.",
+    "Turning it off and on again, in my head.",
+    "I’ve got a good feeling about this one.",
+    "Moving things about until they’re right.",
+];
+
+/// What a working agent says at a moment.
+fn working_line(now_ms: i64) -> &'static str {
+    let turn = now_ms
+        .div_euclid(LINE_MS)
+        .rem_euclid(WORKING_LINES.len() as i64);
+    WORKING_LINES[turn as usize]
+}
 
 /// The day the person said "Not now" to putting kelve's hook back: it's
 /// asked again the next day.
@@ -277,9 +311,15 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
         [first, rest @ ..] => format!(" {when}, I’ll {first}, and {}.", rest.join(", ")),
     };
 
+    let start_now = if waiting.is_empty() {
+        ""
+    } else {
+        " To start now, tell me: Do kelve’s jobs."
+    };
+
     let name = crate::your_agent::shown_name(app);
     let new_here = !ever && !working && asks.is_empty();
-    if new_here {
+    if new_here && !app.settings().hints.iter().any(|h| h == SEEN_EXAMPLE) {
         asks.push(HomeAsk {
             id: "example".into(),
             kind: HomeAskKind::Debrief,
@@ -324,10 +364,7 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
             Move::Idle,
         ),
         HomeState::Working => (
-            format!(
-                "I’m working on what you asked.{}",
-                then("When I hand it over")
-            ),
+            format!("{}{}", working_line(now), then("When I hand it over")),
             "Working".to_string(),
             Move::Work,
         ),
@@ -335,12 +372,13 @@ pub async fn view(app: &Shared) -> ApiResult<HomeView> {
             match asks.len() {
                 // Nothing to ask of them, so it doesn't speak to them: only
                 // what it does next, if anything's waiting for it.
-                0 => then("Next time I work").trim_start().to_string(),
+                0 => format!("{}{}", then("Next time I work").trim_start(), start_now),
                 n => format!(
-                    "{} {} for you.{}",
+                    "{} {} for you.{}{}",
                     counted(n),
                     if n == 1 { "thing" } else { "things" },
-                    then("Next time I work")
+                    then("Next time I work"),
+                    start_now
                 ),
             },
             if asks.is_empty() {
@@ -540,5 +578,25 @@ mod tests {
         assert_eq!(counted(12), "12");
         assert_eq!(titled("rust"), "Rust");
         assert_eq!(titled("retrying-network-calls"), "Retrying network calls");
+    }
+
+    #[test]
+    fn a_working_agent_says_each_line_in_turn() {
+        let lines: std::collections::BTreeSet<_> = (0..WORKING_LINES.len() as i64)
+            .map(|turn| working_line(turn * LINE_MS))
+            .collect();
+        assert_eq!(lines.len(), WORKING_LINES.len(), "each once");
+        assert_eq!(working_line(0), working_line(LINE_MS - 1));
+        assert_ne!(working_line(LINE_MS - 1), working_line(LINE_MS));
+        assert!(!working_line(-1).is_empty());
+    }
+
+    #[test]
+    fn what_a_working_agent_says_is_kelves_voice() {
+        for line in WORKING_LINES {
+            assert!(line.ends_with('.'), "{line}");
+            assert!(!line.contains('!'), "{line}");
+            assert!(line.len() < 60, "{line}");
+        }
     }
 }

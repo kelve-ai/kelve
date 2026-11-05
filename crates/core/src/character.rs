@@ -787,11 +787,12 @@ pub const CSS: &str = ".px *{transform-box:view-box}
 .a-wave .ar-u{animation:px-a .8s steps(1) infinite}
 .a-wave .ar-d{animation:px-b .8s steps(1) infinite}
 .a-wave .light{animation:px-glow .8s steps(1) infinite}
-.a-work .al-u{animation:px-a .5s steps(1) infinite}
-.a-work .al-d{animation:px-b .5s steps(1) infinite}
-.a-work .ar-u{animation:px-b .5s steps(1) infinite}
-.a-work .ar-d{animation:px-a .5s steps(1) infinite}
-.a-work .light{animation:px-glow .4s steps(1) infinite}
+.a-work .up{animation:px-bob 2.8s steps(1) infinite}
+.a-work .al-u{animation:px-lift-l 9s steps(1) infinite}
+.a-work .al-d{animation:px-rest-l 9s steps(1) infinite}
+.a-work .ar-u{animation:px-lift-r 9s steps(1) infinite}
+.a-work .ar-d{animation:px-rest-r 9s steps(1) infinite}
+.a-work .light{animation:px-glow 2.8s steps(1) infinite}
 .a-happy .all{animation:px-jump .7s steps(1) infinite}
 .a-happy .al-u,.a-happy .ar-u{opacity:1}
 .a-happy .al-d,.a-happy .ar-d{opacity:0}
@@ -801,7 +802,7 @@ pub const CSS: &str = ".px *{transform-box:view-box}
 .a-sleep .ec{opacity:1}
 .a-sleep .light{opacity:.3}
 .a-sleep .zz{animation:px-zz 2.4s steps(4) infinite}
-.px .flame{animation:px-glow .3s steps(1) infinite}
+.px .flame{animation:px-glow 1.2s steps(1) infinite}
 @keyframes px-bob{0%{transform:translateY(0)}50%{transform:translateY(1px)}}
 @keyframes px-jump{0%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 @keyframes px-glow{0%{opacity:1}50%{opacity:.4}}
@@ -809,6 +810,10 @@ pub const CSS: &str = ".px *{transform-box:view-box}
 @keyframes px-blink-c{0%{opacity:0}93%{opacity:1}97%{opacity:0}}
 @keyframes px-a{0%{opacity:1}50%{opacity:0}}
 @keyframes px-b{0%{opacity:0}50%{opacity:1}}
+@keyframes px-lift-l{0%{opacity:0}40%{opacity:1}46%{opacity:0}}
+@keyframes px-rest-l{0%{opacity:1}40%{opacity:0}46%{opacity:1}}
+@keyframes px-lift-r{0%{opacity:0}85%{opacity:1}91%{opacity:0}}
+@keyframes px-rest-r{0%{opacity:1}85%{opacity:0}91%{opacity:1}}
 @keyframes px-zz{0%{opacity:0;transform:translate(0,2px)}25%{opacity:1}100%{opacity:1;transform:translate(2px,-2px)}}
 @media (prefers-reduced-motion: reduce){.px *{animation:none !important}}";
 

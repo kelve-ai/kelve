@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import type { HomeAsk, HomeView, TimelineAct, TimelineItem } from '../api/types'
-import { post } from '../api/client'
+import { changed, post } from '../api/client'
 import { exampleHome } from '../example/debriefs'
 import { hrefOf } from '../routes'
 import { useLoad } from '../useLoad'
@@ -15,6 +15,9 @@ import { useToast } from '../ui/kit'
 import { type Pixel, PixelIcon } from '../ui/PixelIcon'
 
 const ACT: Record<TimelineAct, string> = { undo: 'Undo', debriefIt: 'Debrief it', open: 'Open', tryItOn: 'Try it on', seeIt: 'See it' }
+
+/** How often home asks what a working agent says now: kelve changes it every so often. */
+const WORDS_EVERY = 30_000
 
 const asOf = () => new URLSearchParams(location.hash.split('?')[1] ?? '').get('as')
 
@@ -45,6 +48,15 @@ export function Home({ example }: { example?: boolean }) {
   const [fixed, setFixed] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const now = useNow(!!home?.workingSince)
+  const atWork = !example && home?.state === 'working'
+  const { reload } = loaded
+  useEffect(() => {
+    if (!atWork) return
+    const t = window.setInterval(() => {
+      if (!document.hidden) reload()
+    }, WORDS_EVERY)
+    return () => window.clearInterval(t)
+  }, [atWork, reload])
 
   if (!home) {
     if (loaded.error) return <p className="hm-error" role="alert">{loaded.error}</p>
@@ -75,6 +87,12 @@ export function Home({ example }: { example?: boolean }) {
     } finally {
       setBusy(null)
     }
+  }
+
+  /** The example, once opened, isn't offered again. */
+  const seen = (ask: HomeAsk) => {
+    if (example || ask.id !== 'example') return
+    void post('/api/settings', { hintSeen: 'example' }).then(() => changed('settings'), () => {})
   }
 
   /** Debrief it: a debrief of work too small for one, written by your agent. */
@@ -113,8 +131,8 @@ export function Home({ example }: { example?: boolean }) {
 
       <div className="hm-main">
         {speaks ? (
-          <section className="hm-bubble" aria-label="From your agent" key={words}>
-            <p className="hm-say" aria-live="polite">{words}</p>
+          <section className="hm-bubble" aria-label="From your agent" key={working ? 'working' : words}>
+            <p className="hm-say" aria-live={working ? 'off' : 'polite'}>{words}</p>
             {asks.length > 0 && (
               <div className="hm-asks">
                 {asks.map((a) => (
@@ -122,7 +140,7 @@ export function Home({ example }: { example?: boolean }) {
                     <PixelIcon kind={a.kind === 'fits' ? 'score' : (a.kind as Pixel)} />
                     <p>{a.text}</p>
                     {a.action && a.to && (
-                      <a className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} href={hrefOf(a.to, example)}>{a.action}</a>
+                      <a className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} href={hrefOf(a.to, example)} onClick={() => seen(a)}>{a.action}</a>
                     )}
                     {a.action && !a.to && (
                       <button type="button" className={`btn ${a.main ? 'btn-p' : 'btn-s'}`} disabled={busy === a.id} onClick={() => void run(a)}>{a.action}</button>

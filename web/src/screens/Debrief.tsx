@@ -7,6 +7,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { DebriefLine, DebriefView, DecisionChoice, DecisionStatus, DecisionView, IdeaView, SendLine } from '../api/types'
+import { IF_NOT_STARTED, START_NOW } from '../agentList'
 import { post } from '../api/client'
 import { colours, highlight } from '../ui/highlight'
 import { agreeRestIn, decideIn, exampleDebrief, explainIn, knowIn, lookIn, rememberIn, sendIn } from '../example/debriefs'
@@ -129,7 +130,7 @@ function Writing({ v, example }: { v: DebriefView; example?: boolean }) {
       <div className="db-writing-main">
         <div className="db-writing-head">
           <h1>{v.title}</h1>
-          <Spinner>{queued ? 'Your agent is busy with something else.' : 'Your agent is writing this.'}</Spinner>
+          <Spinner>{queued ? `Your agent is busy with something else. ${START_NOW}` : 'Your agent is writing this.'}</Spinner>
         </div>
         <ol className="db-steps">
           {v.steps.map((s) => {
@@ -379,7 +380,7 @@ function Decision({ d, act, sent, example }: { d: DecisionView; act: Act; sent: 
             </div>
           </form>
         )}
-        {looking && <Spinner>Your agent is looking into it.</Spinner>}
+        {looking && <Spinner>{`Your agent is looking into it. ${IF_NOT_STARTED}`}</Spinner>}
         {failed && <p className="db-quiet">Your agent couldn’t look into this. Ask it again with Look into it.</p>}
         {d.choice === 'lookInto' && ready && d.research?.markdown && (
           <div className="db-research">
@@ -457,7 +458,7 @@ function Idea({ i, act }: { i: IdeaView; act: Act }) {
         {open && (e?.state === 'ready' && e.markdown
           ? <Markdown text={e.markdown} size="small" label={`${i.name}, explained`} />
           : e?.state === 'failed' ? <p className="db-quiet">Your agent couldn’t explain this. Try again later.</p>
-            : <Spinner>Your agent is writing this.</Spinner>)}
+            : <Spinner>{`Your agent is writing this. ${IF_NOT_STARTED}`}</Spinner>)}
       </div>
       <div className="ann">{i.newToYou && <span className="db-new">New to you</span>}</div>
     </div>

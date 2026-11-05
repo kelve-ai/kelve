@@ -166,7 +166,7 @@ themselves. A 4xx means the request itself is wrong.
 **Look into it** turns a decision into a question for your agent, which you can edit before you send it.
 
 1. kelve queues a `research` job, holding the decision, its lines of code and your question.
-2. Your agent takes it the next time it's free, or straight away if you tell it to do kelve's research.
+2. Your agent takes it the next time it's free, or straight away if you tell it "Do kelve's jobs".
 3. It answers in a fixed shape: a short answer, the ways it compared (each with one thing for it and one against), the one it suggests, and where it looked.
 4. The answer appears under the decision it's about. While it's running, the decision says so. On home, that debrief shows **Research ready**. Research never gets a line of its own on home.
 5. From the answer, you can have your agent redo the work that way, add it to a skill, or leave it.

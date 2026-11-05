@@ -185,8 +185,11 @@ a { color: var(--ink); text-decoration: none; }
 a:hover { text-decoration: underline; text-decoration-color: var(--mute); text-underline-offset: 4px; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
-/* Focus on anything typed in or chosen from, everywhere: quiet and neutral, never the accent. */
-:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), textarea, select):focus { outline: 2px solid var(--key-edge-2); outline-offset: 0; border-color: var(--quiet); }
+/* Anything typed in shows no ring or border on focus, everywhere: its caret says where you are.
+   A list has no caret, so it keeps a quiet ring, for the keyboard only. */
+:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), textarea):focus { outline: none; }
+:where(select):focus { outline: none; }
+:where(select):focus-visible { outline: 2px solid var(--key-edge-2); outline-offset: 0; }
 
 .page { padding: 0 24px 120px; }
 .col { max-width: 640px; margin: 96px auto 0; }

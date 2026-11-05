@@ -5,6 +5,7 @@
 // until Save.
 
 import { useEffect, useMemo, useState } from 'react'
+import { START_NOW } from '../../agentList'
 import { changed, post } from '../../api/client'
 import type { AgentLook, CharacterMove, CharacterView, DrawingView, PartSlot } from '../../api/types'
 import { EXAMPLE_DRAWINGS } from '../../example/agent'
@@ -22,7 +23,6 @@ const COLOUR_ROWS = [
   { key: 'light', label: 'Light and hands' },
   { key: 'screen', label: 'Screen' },
   { key: 'eyes', label: 'Eyes' },
-  { key: 'background', label: 'Background' },
 ] as const
 
 /** A look with one part changed. */
@@ -47,7 +47,7 @@ function DrawingLine({ d }: { d: DrawingView }) {
     return <li className="drew failed">{`Your agent’s drawing of “${d.asked}” didn’t fit kelve’s grid. Ask again, or say it another way.`}</li>
   if (d.state === 'drawing')
     return <li className="drew"><Spinner>{`Your agent is drawing “${d.asked}”.`}</Spinner></li>
-  return <li className="drew">{`Waiting for your agent to draw “${d.asked}”. Ask it to do what’s waiting for it in kelve.`}</li>
+  return <li className="drew">{`Waiting for your agent to draw “${d.asked}”. ${START_NOW}`}</li>
 }
 
 export function Customise({ example }: { example?: boolean }) {
@@ -192,9 +192,8 @@ export function Customise({ example }: { example?: boolean }) {
           {shownTab === 'colours' && (
             <div className="look-colours">
               {COLOUR_ROWS.map((row) => {
-                const now = row.key === 'background' ? l.background : l.robot.colours[row.key]
-                const choose = (c: string) =>
-                  setLook(row.key === 'background' ? { ...l, background: c } : { ...l, robot: { ...l.robot, colours: { ...l.robot.colours, [row.key]: c } } })
+                const now = l.robot.colours[row.key]
+                const choose = (c: string) => setLook({ ...l, robot: { ...l.robot, colours: { ...l.robot.colours, [row.key]: c } } })
                 return (
                   <div key={row.key} className="look-row" role="group" aria-label={row.label}>
                     <span>{row.label}</span>

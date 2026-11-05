@@ -9,7 +9,8 @@
 
 import { expect, type Page, test } from '@playwright/test'
 import { debriefed, explained, handOver, researched } from '../debriefs'
-import { me, signIn } from '../world'
+import { startKelve } from '../stack'
+import { me, signIn, world } from '../world'
 
 /** A title no other test, or run, has. */
 const unique = (title: string) => `${title} ${Date.now().toString(36)}`
@@ -136,6 +137,23 @@ test('a small change can be debriefed anyway, and the change shows each decision
   await expect(note).toContainText('Your call')
   await note.click()
   await expect(page).toHaveURL(new RegExp(`#/debrief/${id}$`))
+})
+
+test('home offers the example until you’ve opened it', async ({ page, browserName }) => {
+  const port = Number(process.env.E2E_EXAMPLE_PORT ?? 4679) + (browserName === 'webkit' ? 2 : 0)
+  const fresh = await startKelve(port, world().graph, { log: `e2e/.example-${browserName}.log` })
+  try {
+    await signIn(page, fresh)
+    await page.goto(`${fresh.base}/#/`)
+    await page.getByRole('link', { name: 'Try the example' }).click()
+    await expect(page.getByText('An example to try. Nothing here changes your skills.')).toBeVisible()
+    await page.goto(`${fresh.base}/#/`)
+    await page.reload()
+    await expect(page.getByText(/^Hello\. I’m /)).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Try the example' })).toHaveCount(0)
+  } finally {
+    fresh.stop()
+  }
 })
 
 test('the example debrief, to try, changes nothing', async ({ page }) => {

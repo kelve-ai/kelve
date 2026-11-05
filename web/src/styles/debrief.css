@@ -28,7 +28,7 @@
 .hm-dot { width: 8px; height: 8px; border-radius: 2px; background: var(--worse); }
 .hm-dot.ok { background: var(--better); }
 .hm-dot.new { background: var(--same); }
-.hm-dot.live { background: var(--accent); animation: hm-blink 1s steps(1) infinite; }
+.hm-dot.live { background: var(--accent); animation: hm-blink 2.8s steps(1) infinite; }
 @keyframes hm-blink { 50% { opacity: 0.25; } }
 .hm-main { flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 44px; }
 .hm-bubble {

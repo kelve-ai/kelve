@@ -178,6 +178,23 @@ async fn decide(app: &Shared, id: i64, n: u32, choice: Option<DecisionChoice>, n
 }
 
 #[tokio::test]
+async fn home_offers_the_example_until_its_been_opened() {
+    let app = common::kelve(None).await;
+    let home = api::home(State(app.clone()), Me).await.unwrap().0;
+    assert_eq!(home.asks.len(), 1);
+    assert_eq!(home.asks[0].id, "example");
+
+    let opened = serde_json::from_value(json!({ "hintSeen": "example" })).unwrap();
+    let _ = kelve_server::api::settings::post(State(app.clone()), Me, Json(opened))
+        .await
+        .unwrap();
+    let home = api::home(State(app.clone()), Me).await.unwrap().0;
+    assert_eq!(home.state, HomeState::Empty, "still new here");
+    assert!(home.say.starts_with("Hello. I’m your agent."));
+    assert!(home.asks.is_empty());
+}
+
+#[tokio::test]
 async fn home_starts_empty_then_asks_for_the_debrief_in_the_agents_words() {
     let app = common::kelve(None).await;
     let home = api::home(State(app.clone()), Me).await.unwrap().0;
@@ -255,7 +272,11 @@ async fn home_starts_empty_then_asks_for_the_debrief_in_the_agents_words() {
     .unwrap()
     .0;
     assert_eq!(home.state, HomeState::Working);
-    assert_eq!(home.say, "I’m working on what you asked.");
+    assert!(
+        kelve_server::home::WORKING_LINES.contains(&home.say.as_str()),
+        "{}",
+        home.say
+    );
     assert!(home.working_since.is_some());
 }
 
@@ -412,7 +433,7 @@ async fn the_person_answers_each_decision_and_sends_it() {
     let home = api::home(State(app.clone()), Me).await.unwrap().0;
     assert!(
         home.say
-            .ends_with("Next time I work, I’ll look into your question."),
+            .ends_with("Next time I work, I’ll look into your question. To start now, tell me: Do kelve’s jobs."),
         "{}",
         home.say
     );

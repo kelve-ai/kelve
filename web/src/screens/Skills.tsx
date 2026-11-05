@@ -17,7 +17,7 @@ import { Character } from '../ui/Character'
 import { Btn, Dialog, Segmented, Toast } from '../ui/kit'
 import { Markdown } from '../ui/markdown'
 import { useLoad } from '../useLoad'
-import { DO_WAITING } from '../agentList'
+import { START_NOW } from '../agentList'
 import { Fits } from './Fits'
 import { SkillEdit } from './SkillEdit'
 
@@ -374,7 +374,7 @@ function Running({ run, onStop }: { run: CheckRun; onStop: () => void }) {
         <span className="sk-hint">
           {run.done > 0 && `${run.done} of ${run.runs} runs done. `}
           {run.agent
-            ? `It checks ${what} next time it does kelve’s jobs. To start now, tell it: ${DO_WAITING}`
+            ? `It checks ${what} next time it does kelve’s jobs. ${START_NOW}`
             : `No agent is connected, so nothing’s started. Connect one in Settings, and it checks ${what} when it does kelve’s jobs.`}
         </span>
         <Btn size="small" onClick={onStop}>Stop the check</Btn>

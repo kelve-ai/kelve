@@ -7,8 +7,9 @@ use serde::{Deserialize, Serialize};
 
 /// The hints shown once, and the offers made once: the hook.
 // `counts`: the person answered whether to share counts. `met`: the person
-// has met their agent, so home is home.
-const HINTS: [&str; 3] = ["hook", "counts", "met"];
+// has met their agent, so home is home. `example`: the person has opened the
+// example from home, so it isn't offered again.
+const HINTS: [&str; 4] = ["hook", "counts", "met", "example"];
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]

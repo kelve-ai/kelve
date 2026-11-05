@@ -56,7 +56,7 @@ export function exampleHome(as: string | null): HomeView {
       asks: [{ id: 'example', kind: 'debrief', text: 'Want to see what that looks like first?', action: 'Try the example', to: 'debrief/1', main: true, alt: null }],
     }
   if (as === 'clear') return { ...base, status: 'All set', say: '', asks: [] }
-  if (as === 'next') return { ...base, status: 'All set', say: 'Next time I work, I’ll look into your question.', asks: [] }
+  if (as === 'next') return { ...base, status: 'All set', say: 'Next time I work, I’ll look into your question. To start now, tell me: Do kelve’s jobs.', asks: [] }
   if (as === 'working')
     return {
       ...base, state: 'working', status: 'Working', moving: 'work', workingSince: new Date(Date.now() - 252_000).toISOString(),

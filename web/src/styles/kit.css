@@ -58,7 +58,6 @@
   background: var(--white); color: var(--ink); box-shadow: inset 0 1px 2px rgba(var(--shadow), 0.04); min-width: 0;
 }
 .field::placeholder { color: var(--placeholder); }
-.field:focus { outline: 2px solid var(--key-edge-2); outline-offset: 0; border-color: var(--quiet); }
 textarea.field { resize: vertical; }
 
 /* Something to copy: mono in a soft well, a Copy key beside it. */

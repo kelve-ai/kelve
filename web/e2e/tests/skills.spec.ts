@@ -74,6 +74,12 @@ test('with no skills, you can write one yourself', async ({ page }) => {
 
   const name = fresh('words')
   const box = page.getByRole('textbox', { name: 'Markdown' })
+  // Typing in it draws no ring, and no border that wasn't there.
+  const resting = await box.evaluate((e) => getComputedStyle(e).borderColor)
+  await box.focus()
+  await expect(box).toBeFocused()
+  await expect(box).toHaveCSS('outline-style', 'none')
+  await expect(box).toHaveCSS('border-color', resting)
   await box.fill(`---\nname: ${name}\n---\n\n# Words\n`)
   await page.getByRole('button', { name: /^Save/ }).click()
   // Nothing's written till it's right.
