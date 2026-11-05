@@ -1,0 +1,25 @@
+# Postgres for the sandbox's kelve.ai (kelve-graph), started by
+# `bun dev/kelve.ts up` as the project kelve-dev, on a port of its own
+# (KELVE_DEV_PG_PORT), never kelve-graph's own 5443. `bun dev/kelve.ts down`
+# stops it; its data goes with each fresh sandbox.
+name: kelve-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: graph
+      POSTGRES_PASSWORD: graph
+      POSTGRES_DB: graph
+    ports:
+      - "127.0.0.1:${KELVE_DEV_PG_PORT:-4696}:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U graph"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres:

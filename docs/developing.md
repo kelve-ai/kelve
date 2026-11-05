@@ -2,52 +2,70 @@
 
 ## Start here
 
-In one terminal, from the repo root:
+From the repo root, with [kelve-graph](#what-you-need) checked out beside it and Docker running:
 
 ```bash
 bun dev/kelve.ts up
 ```
 
-Open the link it prints. Then, in another:
+Open the link it prints at the end. Then, in another terminal:
 
 ```bash
-bun dev/kelve.ts agent
+bun dev/kelve.ts story
 ```
 
-That's kelve, with an example project, a stand-in for kelve's hosted service and an agent doing its work, all your own and none of them real. Change the web app and the page reloads; start `up` with `--watch` and kelve rebuilds when its Rust changes. Before you say you're done, run the checks in [AGENTS.md](../AGENTS.md).
+That's all of kelve on your computer: the app, with an example project, kelve.ai itself (kelve-graph, with its Postgres, the benchmark's runner and its gateway), and an agent playing the whole story while you watch. None of it is yours or real, and in its default mode none of it needs a key or costs anything. Change the web app and the page reloads; start `up` with `--watch` and kelve rebuilds when its Rust changes. Before you say you're done, run the checks in [AGENTS.md](../AGENTS.md).
 
 ## Why it's this way
 
-kelve does nothing on its own. It needs work handed over, the person's coding agent to do its jobs, and, for verified scores and a page, kelve's hosted service. The sandbox gives it a stand-in for each: a small payments service whose change is handed over (`dev/example`), a hosted service that speaks the real one's API, and an agent that answers kelve's jobs from what it was given to know. So you never touch the kelve you use, your own skills, kelve.ai, or a model you pay for, and it runs the same on any computer. The same example is every screen in the states gallery and every test, so what you see in the sandbox is what the tests check.
+kelve does nothing on its own. It needs work handed over, the person's coding agent to do its jobs, and, for verified scores and a page, kelve's hosted service. The sandbox gives it each: a small payments service whose change is handed over (`dev/example`), kelve.ai run from its own source, signing you in as a local person since there's no GitHub or Google here, and an agent that answers kelve's jobs from what it was given to know. So you never touch the kelve you use, your own skills, the real kelve.ai, or a model you pay for, unless you ask for one, and it runs the same on any computer. The same example is every screen in the states gallery and every test, so what you see in the sandbox is what the tests check.
 
 ## What you need
 
 - Rust (stable) and [Bun](https://bun.sh).
+- Docker, for kelve.ai's Postgres and its runs, and for the screenshot tests.
+- kelve-graph, the hosted service, checked out beside this repo as `../kelve-graph` (or set `KELVE_GRAPH_DIR`). Without it, `up` says so and runs the stand-in for kelve.ai instead (`kelve-graph-stand-in`), which fakes sign-in, runs and pages in memory.
+- kelve-site, if you want kelve.ai's site too, as `../kelve-site` (or `KELVE_SITE_DIR`), with its packages installed (`bun install` there). It's run if it's there.
 - For the browser tests, Chromium and WebKit, once: `cd web && bunx playwright install chromium webkit`.
-- For the screenshot tests, Docker.
 
 ## The sandbox
 
 ```bash
-bun dev/kelve.ts up
+bun dev/kelve.ts up              # stand-in mode: no keys anywhere
+bun dev/kelve.ts up --real       # real models, on your key
+bun dev/kelve.ts status          # what's running, and where
+bun dev/kelve.ts down            # stops all of it, as Ctrl C in up's terminal does
 ```
 
-It builds what's changed, then starts all of it, on ports of its own, so a kelve you use is never touched:
+`up` builds what's changed, then starts each part in order, saying what it started, and prints one link that signs your browser in. It builds the benchmark's images the first time (`bench/build.sh` in kelve-graph; `--images` builds them again after you change kelve-graph or kelve's hook). `--keep` keeps the stores from last time; `--watch` rebuilds and restarts kelve when its Rust changes. Logs are in `.sandbox/`: `kelve.log`, `graph.log`, `runner.log`, `gateway.log`, `web.log`, `site.log`.
 
-- **kelve** with a fresh store in `.sandbox/`, on 4698, and skills of its own in `.sandbox/skills` (`KELVE_SKILLS`), never yours;
-- **the stand-in hosted service** on 4697 (`kelve-graph-stand-in`);
-- **the web app** with hot reload on 4699, handing `/api` to kelve;
-- **the example project**, `.sandbox/ledger`: a small payments service, as a git repository, whose last commit is the change "Calls to the bank that are safe to retry".
+| Port | What |
+|---|---|
+| 4699 | **the web app**, with hot reload: open this one |
+| 4698 | kelve itself, with a fresh store in `.sandbox/` and skills of its own in `.sandbox/skills` (`KELVE_SKILLS`), never yours |
+| 4697 | **kelve.ai**: `kelve-graph serve`, with sign-in, pages (`/@you`, `/s/…`), scores and verified runs |
+| 4696 | its Postgres, in Docker (compose project `kelve-dev`, from `dev/compose.yaml`) |
+| 4695, 4694 | the runner's gateway, its admin and its proxy, which holds the model's key; the runner reaches it from Docker through its forwarder, `kelve-dev-forwarder` |
+| 4693 | the stand-in model, in stand-in mode |
+| 4700 | kelve.ai's site, when kelve-site is there: its dev server (on 4701) behind a door that sends `/@…` and `/s/…` to kelve.ai, as Firebase does |
 
-It prints a link that signs your browser in. Leave it running; Ctrl C stops it all. `--keep` keeps the store from last time; `--watch` rebuilds and restarts kelve when its Rust changes. Logs are in `.sandbox/`. `KELVE_DEV_PORT` moves kelve, with the hosted service on the port below it and the web app on the port above.
+`KELVE_DEV_PORT` moves them all: kelve on it, kelve.ai on the port below, the web app on the port above. The example project is `.sandbox/ledger`: a small payments service, as a git repository, whose last commit is the change "Calls to the bank that are safe to retry".
 
-Then, in another terminal, have the example's agent hand its work over:
+### Two modes
 
-```bash
-bun dev/kelve.ts agent
-```
+**Stand-in, the default.** No keys anywhere: `up` takes every model's key out of what it starts. Verified runs use the example bank, `dev-rust-0` (two small Rust tasks), the stand-in agent, which makes a partial fix, or the whole one when the `standin-expert` skill reaches it through the real delivery path, the stand-in model behind the gateway, and the stand-in judge, with 4 standard runs and 2 with your skills a task. A run takes a few minutes and ends with a real result. It costs nothing.
 
-It hands the change over in kelve, as a person's agent would, asking for a debrief, and does every job kelve keeps for it: the debrief, then research, explanations and learning as you ask for them from the debrief. Its answers come from `dev/example/loop.ts`. `--live` prints each call. Agree with a decision, ask for one another way or look into it, then run it again, and it does what you asked while you watch.
+**`--real`.** kelve.ai's side runs on `ANTHROPIC_API_KEY` from your environment: the standard runs and the judging. It's given only to the gateway and the runner, as they start, and never written anywhere. Runs use `rust-1` (made live in the sandbox's database alone, while it's still being built) and Claude Code on Sonnet 5.5. You give your own API key, or a Claude subscription's token from `claude setup-token`, in the app, as anyone would: this kelve.ai takes a subscription, since it's yours alone. It costs money, and `up` says how much: the standard runs once for the bank and profile, about 10 tasks × 20 runs × $0.40, so around $80 (`--ci` makes it 4 runs a task, around $16), judging within $25 a day, and your own runs, which the app estimates before anything starts.
+
+### What to try first
+
+1. **The story.** `bun dev/kelve.ts story`, with the app open on home. The example's agent, through `kelve mcp` and kelve's hook as Claude Code runs them, makes the ledger's change while you talk to it, corrects course when you correct it, and hands it over; kelve asks it for the debrief, and it writes it. Then the story plays you: it agrees with a decision and wants it every time, has one looked into and an idea explained, changes one, and sends the debrief. The agent does each and turns what you sent into parts of your skills. You keep the work, committing it; kelve doesn't yet keep past work to check skills on by itself, so the story keeps it, as the end-to-end tests do. Then a part is checked, the agent redoing that work with and without it, and it draws a party hat. Watch home, the debrief, Skills and Your agent fill up. `--live` prints each job.
+2. **A verified score.** `bun dev/kelve.ts hosted skills` gives your sandbox agent skills to send, one of them `standin-expert`. In Your agent, choose Get a verified score, and sign in: kelve.ai's page "Sign in as a local person" stands in for GitHub and Google, so type a name (the same name is the same account). Choose your address, give a key (in stand-in mode any will do, but `sk-refused`, which is turned away as a provider would), confirm, and watch the run go task by task; `runner.log` and `bun dev/kelve.ts status` show its trials in Docker. Publish the score and open your page, at `http://127.0.0.1:4697/@you`.
+3. **Be the agent yourself**, below.
+
+Signing in as a local person is kelve-graph's `KELVE_GRAPH_DEV_SIGNIN=on`, which it refuses unless it listens on loopback alone. The older way, the stand-in for kelve.ai, is still there when kelve-graph isn't, and the end-to-end tests use it.
+
+`bun dev/kelve.ts agent` is the shorter story: the example's agent hands its change over, as it was committed, and does every job kelve keeps for it, as you ask for them from the debrief.
 
 ## Being the agent
 
@@ -78,7 +96,7 @@ Each answer taken comes back with the next job. `open` says the number of what i
   ```
 
   They're all one session of the agent's; `SANDBOX_SESSION` names another. A message that corrects the agent becomes a `learn` job, and the skill for a kind of work comes the first time a file of that kind is read.
-- **A verified run.** Sign in from Your agent or Settings, Account: the stand-in sends the browser straight back. `bun dev/kelve.ts hosted skills` gives the sandbox skills to send, one of them the skill the stand-in's runs come out better with. It takes any key starting `sk-test`, as an API key or a subscription's token. A run moves on a task each time its page asks; `hosted finish <run>` finishes it at once, `hosted taken <address>` gives an address to someone else, and `hosted runs <n>` sets how many runs a day.
+- **A verified run, with the stand-in for kelve.ai** (no kelve-graph beside this repo). Sign in from Your agent or Settings, Account: the stand-in sends the browser straight back. It takes any key starting `sk-test`, as an API key or a subscription's token. A run moves on a task each time its page asks; `hosted finish <run>` finishes it at once, `hosted taken <address>` gives an address to someone else, and `hosted runs <n>` sets how many runs a day. With kelve-graph, runs move by themselves, in Docker, and it allows 20 a day.
 - **Notes for the agent.** Leave a note for your agent, then read it as the agent would, from the example project: `bun dev/kelve.ts call notes`, and say it's done with `bun dev/kelve.ts call note_done '{"note":"agent/…","version":"…","did":"…"}'`. The sandbox has a Claude Code folder of its own (`.sandbox/claude`) and a home of its own for other agents' settings (`.sandbox/home`), so turning on kelve's hook never touches yours.
 - `bun dev/kelve.ts link` signs a browser in again.
 

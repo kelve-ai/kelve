@@ -1,6 +1,7 @@
 // The stand-in agent's answers to kelve's agent loop: the debrief of work it
 // handed over, research on a decision, an explanation of an idea, and parts
-// for the person's skills from what they corrected, changed or sent. It
+// for the person's skills from what they corrected, changed or sent, a past
+// task redone with and without their skills, and a drawing for its look. It
 // writes from what each job gives it, the way a person's agent would, with
 // no model: on the ledger example's change, a debrief of that change, whose
 // lines are the ones the change added; on anything else, a plainer one. The
@@ -221,5 +222,57 @@ export function learn(job: LoopJob) {
   return {
     ...none,
     additions: [{ skill: skill.name, section: kept ? 'howYouLikeIt' : 'watchOutFor', heading: heading.slice(0, 120), body, evidence }],
+  }
+}
+
+/**
+ * Redoes a past task twice, as two subagents would: with the part, or every
+ * skill, it does what the skills say; without, it doesn't.
+ */
+export function compare(job: LoopJob) {
+  const part = 'part' in job.material
+  const run = (line: string, followed: boolean) => ({
+    diff: `diff --git a/src/lib.rs b/src/lib.rs\n--- a/src/lib.rs\n+++ b/src/lib.rs\n@@ -1 +1,2 @@\n fn main() {}\n+${line}\n`,
+    said: `Done, ${followed ? 'as the skills say' : 'as it would anyway'}.`,
+    ...(part ? { followed, shows: line } : {}),
+  })
+  return { with: run('// with your skills', true), without: run('// as a standard agent', false) }
+}
+
+/**
+ * A drawing, as the agent hands one in for `draw`: a whole character when
+ * it's asked for a cat, else a party hat for the robot.
+ */
+export function draw(job: LoopJob) {
+  const asked = unfenced(job.material.asked).toLowerCase()
+  if (asked.includes('cat')) {
+    const row = (at: number, text: string) => '.'.repeat(at) + text
+    const rows = (pairs: Array<[number, number, string]>) => {
+      const out: string[] = new Array(27).fill('')
+      for (const [y, x, text] of pairs) out[y] = row(x, text)
+      return out
+    }
+    return {
+      drawing: {
+        format: 'kelve-character/1',
+        name: 'Stand-in cat',
+        colours: { o: '#2b2f3a', b: 'body', e: 'eyes' },
+        layers: {
+          base: rows([[8, 6, 'o..........o'], [9, 6, 'oooooooooooo'], [10, 6, 'obbbbbbbbbbo'], [11, 6, 'obbbbbbbbbbo'], [12, 6, 'obbbbbbbbbbo'], [13, 6, 'oooooooooooo']]),
+          eyes: rows([[11, 9, 'e....e']]),
+          shut: rows([[12, 9, 'e....e']]),
+        },
+      },
+    }
+  }
+  return {
+    drawing: {
+      format: 'kelve-part/1',
+      name: 'Party hat',
+      slot: 'hat',
+      at: [9, 0],
+      colours: { a: 'light', g: '#f4c84a', w: '#ffffff' },
+      pixels: ['..ww..', '..gg..', '.aaaa.', 'agggga'],
+    },
   }
 }
