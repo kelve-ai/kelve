@@ -292,6 +292,8 @@ pub enum ServerEvent {
     },
     /// What kelve marks for the person changed: marks and what's read again.
     Spec,
+    /// The person's skills, their checks, or Fits you changed.
+    Skills,
 }
 
 /// A job kept for the person's agent, as the reader lists them.
@@ -1719,6 +1721,9 @@ pub struct PartEvidence {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct SkillItem {
+    /// How the app addresses it: its name for one of the person's own, its
+    /// number for a project's.
+    pub id: String,
     /// Its name, as its folder and front matter have it: `rust`.
     pub name: String,
     /// Its title, as people read it: "Rust".
@@ -1731,6 +1736,8 @@ pub struct SkillItem {
     pub parts: u32,
     /// How many of its parts failed their checks.
     pub failed: u32,
+    /// Whether its parts are being checked now.
+    pub checking: bool,
 }
 
 /// The skills page's list, in its four groups.
@@ -1763,6 +1770,8 @@ pub struct SuggestedItem {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct SkillView {
+    /// How the app addresses it, as in the list.
+    pub id: String,
     pub name: String,
     pub title: String,
     /// What it's for: the line under its title.
@@ -1779,6 +1788,70 @@ pub struct SkillView {
     pub most_lines: u32,
     /// What's wrong with the file, as sentences that say what to change.
     pub problems: Vec<String>,
+    /// What checking its parts not checked yet would take.
+    pub offer: CheckOffer,
+    /// Its check, while it runs.
+    pub running: Option<CheckRun>,
+}
+
+/// Checking a skill's new parts, before it starts: which, on how many past
+/// tasks, and roughly how many runs of the agent it takes.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CheckOffer {
+    pub parts: Vec<OfferedPart>,
+    /// The past tasks each part is redone on.
+    pub tasks: u32,
+    /// Runs of the agent it takes: two a part on each task.
+    pub runs: u32,
+}
+
+/// A part a check would redo past work with.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct OfferedPart {
+    pub key: String,
+    pub heading: String,
+}
+
+/// A skill's check, while it runs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CheckRun {
+    /// The parts being checked.
+    pub parts: u32,
+    /// Runs of the agent done, of how many.
+    pub done: u32,
+    pub runs: u32,
+}
+
+/// What saving a skill came to: saved, or what's wrong with it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillSaved {
+    pub saved: bool,
+    /// What's wrong with it, as sentences that say what to change.
+    pub problems: Vec<String>,
+    /// How the app addresses it now.
+    pub id: String,
+    /// How many of its parts aren't checked yet.
+    pub unchecked: u32,
+}
+
+/// What a change to a skill came to, with the file before and after it, to
+/// undo it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillChanged {
+    /// What happened, in a line: "Removed from Rust."
+    pub said: String,
+    pub before: Option<String>,
+    pub after: Option<String>,
 }
 
 /// A section of a skill, with its parts.
@@ -1805,6 +1878,8 @@ pub struct SkillPartView {
     /// goes in the markdown view.
     pub line: u32,
     pub check: PartCheck,
+    /// The person kept it though it makes no difference.
+    pub kept: bool,
     /// What the check found, in a line: "Better on 2 of 2 past tasks".
     pub hint: String,
     /// While it's checked: how many past tasks are redone, of how many.
@@ -2330,6 +2405,61 @@ pub struct FitsYou {
     pub of: u32,
     /// Each test, oldest first: whether they picked their own.
     pub tests: Vec<bool>,
+}
+
+/// Fits you's page: the next pair of results to pick between, blind, and
+/// the tally so far.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct FitsView {
+    /// The next pair ready to pick between.
+    pub pick: Option<FitsPick>,
+    /// Pairs the agent is still redoing.
+    pub waiting: u32,
+    /// Past tasks there are to redo.
+    pub tasks: u32,
+    pub tally: FitsYou,
+    /// How close each agent's work came to what the person kept, on
+    /// average over the pairs picked, in percent.
+    pub closeness: Option<FitsCloseness>,
+}
+
+/// Two results of one past task, side by side, which is which hidden.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct FitsPick {
+    #[ts(type = "number")]
+    pub id: i64,
+    /// What the person asked, as they asked it.
+    pub request: String,
+    /// Each side's change, as a diff.
+    pub left: String,
+    pub right: String,
+}
+
+/// A pick, once made: which side was the person's agent, and how close each
+/// came to what they kept, in percent.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct FitsPicked {
+    /// `left` or `right`.
+    pub mine: String,
+    /// `left`, `right` or `same`.
+    pub picked: String,
+    pub skills_close: Option<u32>,
+    pub standard_close: Option<u32>,
+}
+
+/// How close each agent came to what the person kept, in percent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct FitsCloseness {
+    pub skills: u32,
+    pub standard: u32,
 }
 
 /// A verified score.

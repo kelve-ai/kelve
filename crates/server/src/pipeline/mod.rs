@@ -242,6 +242,8 @@ async fn dispatch(app: &Shared, job: &jobs::Job) -> Result<Then> {
         crate::list::NOTE_DONE => crate::list::note_done_job(app, &job.payload).await,
         crate::lessons::WRITE => crate::lessons::write_job(app, &job.payload).await,
         crate::lessons::SEND => crate::lessons::send_job(app, &job.payload).await,
+        crate::v2jobs::CHECK => crate::skill_checks::check_job(app, &job.payload).await,
+        crate::skill_checks::FITS => crate::skill_checks::fits_job(app, &job.payload).await,
         other => {
             tracing::warn!(job = other, "a job of a kind kelve doesn't know; dropped");
             Ok(Then::Done)
