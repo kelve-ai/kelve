@@ -8,6 +8,7 @@
 //! notes, or what kelve keeps beyond a job's material.
 
 pub mod agent;
+pub mod debriefs;
 pub mod graph;
 pub mod me;
 pub mod outline;
@@ -109,6 +110,20 @@ pub fn router() -> Router<Shared> {
         .route("/ideas/{key}/flag", post(reader::flag))
         .route("/ideas/{key}/ask", post(reader::ask))
         .route("/search", get(reader::search))
+        .route("/home", get(debriefs::home))
+        .route("/home/later", post(debriefs::later))
+        .route("/debriefs/{id}", get(debriefs::one))
+        .route("/debriefs/{id}/decide", post(debriefs::decide))
+        .route("/debriefs/{id}/remember", post(debriefs::remember))
+        .route("/debriefs/{id}/agree-rest", post(debriefs::agree_rest))
+        .route("/debriefs/{id}/look", post(debriefs::look_into))
+        .route("/debriefs/{id}/explain", post(debriefs::explain))
+        .route("/debriefs/{id}/know", post(debriefs::know))
+        .route("/debriefs/{id}/send", post(debriefs::send))
+        .route("/debriefs/{id}/again", post(debriefs::again))
+        .route("/debriefs/{id}/change", get(debriefs::change))
+        .route("/debriefs/{id}/diff", get(debriefs::diff))
+        .route("/handovers/{id}/debrief", post(debriefs::debrief_it))
         .route("/problems", get(problems::list).post(problems::from_page))
         .route("/problems/{id}", delete(problems::forget))
 }

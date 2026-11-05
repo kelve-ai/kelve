@@ -3,10 +3,16 @@
 // so no address is ever a blank page. Each stub is replaced here by its
 // screen as it's built.
 
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Header } from '../Header'
+import { Loading } from '../Loader'
 import { hrefOf, placeOf, type Route, SECTIONS, type Section } from '../routes'
 import { Character } from '../ui/Character'
+import { Debrief } from './Debrief'
+import { Home } from './Home'
+
+// The change view brings CodeMirror and its grammars: fetched only when it's opened.
+const Change = lazy(() => import('./Change').then((m) => ({ default: m.Change })))
 
 /** What each settings section is called. */
 const SECTION_NAMES: Record<Section, string> = {
@@ -107,8 +113,12 @@ export function Screen({ route, example }: { route: Route; example?: boolean }) 
   return (
     <div className="app">
       <Header here={placeOf(route)} example={example} bare={route.screen === 'welcome'} />
-      <main className={route.screen === 'settings' ? 'app-main' : 'app-main narrow'}>
-        {route.screen === 'settings' ? <Settings section={route.section} example={example} /> : <Stub route={route} example={example} />}
+      <main className={route.screen === 'settings' ? 'app-main' : ['home', 'debrief', 'change'].includes(route.screen) ? 'app-own' : 'app-main narrow'}>
+        {route.screen === 'settings' ? <Settings section={route.section} example={example} />
+          : route.screen === 'home' ? <Home example={example} />
+            : route.screen === 'debrief' ? <Debrief key={`${route.id}${location.hash.split('?')[1] ?? ''}`} id={route.id} example={example} />
+              : route.screen === 'change' ? <Suspense fallback={<Loading />}><Change key={route.id} id={route.id} example={example} /></Suspense>
+                : <Stub route={route} example={example} />}
       </main>
     </div>
   )

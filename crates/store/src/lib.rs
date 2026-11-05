@@ -13,6 +13,7 @@ pub mod debriefs;
 pub mod entries;
 pub mod follows;
 pub mod handovers;
+pub mod home;
 pub mod jobs;
 pub mod lessons;
 pub mod marks;

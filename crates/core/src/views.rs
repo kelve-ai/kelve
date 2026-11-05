@@ -292,6 +292,9 @@ pub enum ServerEvent {
     },
     /// What kelve marks for the person changed: marks and what's read again.
     Spec,
+    /// A debrief moved on: written, answered, researched, explained or sent;
+    /// or a handover came in. Home and the debrief fetch again.
+    Debriefs,
 }
 
 /// A job kept for the person's agent, as the reader lists them.
@@ -1945,6 +1948,8 @@ pub struct DebriefView {
     pub on_send: Vec<SendLine>,
     /// When it failed: what was wrong with it.
     pub problems: Vec<String>,
+    /// When it was sent.
+    pub sent_at: Option<Timestamp>,
 }
 
 /// A step the agent takes as it writes a debrief.
@@ -1986,8 +1991,15 @@ pub struct DecisionView {
     /// Whether it goes into a skill when the debrief is sent, and which.
     pub remember: bool,
     pub skill: Option<SkillTarget>,
+    /// Whether the person can say they want it this way every time: they
+    /// asked for it another way, their agent's research is in, or it was
+    /// theirs to begin with and they agreed.
+    pub can_remember: bool,
     /// Its own lines of code, folded away until opened.
     pub code: Vec<DebriefLine>,
+    /// The file its code is in, and that file's language, for colouring it.
+    pub path: Option<String>,
+    pub lang: Option<String>,
 }
 
 /// Research on a decision.
@@ -1998,6 +2010,8 @@ pub struct ResearchView {
     pub state: AnswerState,
     /// The answer, in markdown, once it's ready.
     pub markdown: Option<String>,
+    /// What it suggests, in a sentence: what "Redo it this way" asks for.
+    pub suggests: Option<String>,
 }
 
 /// The skill something goes into.
@@ -2120,10 +2134,73 @@ pub struct DebriefFile {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct SendLine {
+    pub kind: SendKind,
     pub text: String,
     /// What it leads to, when it leads somewhere.
     pub action: Option<String>,
     pub to: Option<String>,
+}
+
+/// What a line of what happens when a debrief is sent is about.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum SendKind {
+    /// The agent redoes decisions, as notes.
+    Redo,
+    /// Research still running.
+    Research,
+    /// Into a skill the person has.
+    Skill,
+    /// A new skill.
+    NewSkill,
+    /// Decisions left open, or nothing to do.
+    Open,
+}
+
+/// A debrief's change, file by file: the change view's list.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefChangeView {
+    pub id: String,
+    pub title: String,
+    pub files: u32,
+    pub added: u32,
+    pub removed: u32,
+    pub folders: Vec<DebriefFolder>,
+}
+
+/// One file of a debrief's change, whole, with each decision beside its
+/// lines.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DebriefDiffView {
+    pub path: String,
+    /// Its language, for colouring it.
+    pub lang: Option<String>,
+    /// `new`, `changed`, `deleted` or `your edit`.
+    pub kind: String,
+    /// Whether kelve shows it: not when it's a secret, a lockfile or not text.
+    pub shown: bool,
+    /// Its lines, the ones taken out where they were. A fold stands for
+    /// lines kelve didn't keep.
+    pub lines: Vec<DebriefLine>,
+    /// The decisions in it, each beside its first line.
+    pub notes: Vec<DiffNote>,
+}
+
+/// A decision, in the change view's margin.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DiffNote {
+    /// The line it's beside, as a place in the file's lines, from 1.
+    pub at: u32,
+    pub n: u32,
+    pub title: String,
+    pub status: DecisionStatus,
 }
 
 // ---------------------------------------------------------------- home
@@ -2149,6 +2226,8 @@ pub enum HomeState {
 #[ts(export)]
 pub struct HomeView {
     pub state: HomeState,
+    /// The agent's name: the one given, or "Sam's agent".
+    pub name: String,
     /// The agent's status, in a few words: "Waiting for you".
     pub status: String,
     /// When it started working, for a clock.
@@ -2220,6 +2299,8 @@ pub enum TimelineKind {
     Done,
     /// A small change, with no debrief.
     Small,
+    /// A debrief the agent couldn't write.
+    Failed,
 }
 
 /// What a line on the timeline can do.

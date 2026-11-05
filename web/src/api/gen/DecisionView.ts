@@ -40,6 +40,16 @@ question: string, research: ResearchView | null,
  */
 remember: boolean, skill: SkillTarget | null, 
 /**
+ * Whether the person can say they want it this way every time: they
+ * asked for it another way, their agent's research is in, or it was
+ * theirs to begin with and they agreed.
+ */
+canRemember: boolean, 
+/**
  * Its own lines of code, folded away until opened.
  */
-code: Array<DebriefLine>, };
+code: Array<DebriefLine>, 
+/**
+ * The file its code is in, and that file's language, for colouring it.
+ */
+path: string | null, lang: string | null, };

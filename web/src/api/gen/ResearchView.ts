@@ -8,4 +8,8 @@ export type ResearchView = { state: AnswerState,
 /**
  * The answer, in markdown, once it's ready.
  */
-markdown: string | null, };
+markdown: string | null, 
+/**
+ * What it suggests, in a sentence: what "Redo it this way" asks for.
+ */
+suggests: string | null, };
