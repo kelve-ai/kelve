@@ -669,6 +669,7 @@ async fn keep(
     if let Some(new) = &learned.new_skill {
         suggest(app, signs, new, agreed, show_in, &ev).await?;
     }
+    app.publish(kelve_core::views::ServerEvent::Debriefs);
     app.publish(kelve_core::views::ServerEvent::Asks);
     Ok(())
 }

@@ -10,7 +10,6 @@
 
 use std::path::Path;
 
-use chrono::Utc;
 use kelve_core::debrief::{self, Changed, Range};
 use kelve_core::due::{self, DebriefsWhen};
 use kelve_core::fence::{fence, fence_with};
@@ -322,6 +321,8 @@ pub async fn on_handover(
         // Not worth one: home shows it as one quiet line, with Debrief it.
         drop(conn);
         keep_task(app, &h, None, &open.root).await?;
+        // Home shows it, as one quiet line.
+        app.publish(kelve_core::views::ServerEvent::Debriefs);
         return Ok(Handed {
             debrief: None,
             due: false,
@@ -338,6 +339,7 @@ pub async fn on_handover(
     drop(conn);
     keep_task(app, &h, Some(id), &open.root).await?;
     ask(app, id).await.map_err(ApiError::from)?;
+    app.publish(kelve_core::views::ServerEvent::Debriefs);
     Ok(Handed {
         debrief: Some(id),
         due: true,
@@ -606,8 +608,9 @@ pub async fn ask(app: &Shared, debrief: i64) -> pipeline::Result<Then> {
         },
         Resume::job(
             v2jobs::DEBRIEF,
-            format!("{}:{}", v2jobs::DEBRIEF, d.id),
-            json!({ "debrief": d.id, "opened": h.opened }),
+            // Keyed by the handover, as `v2jobs::queue` keys it.
+            format!("{}:{}", v2jobs::DEBRIEF, h.id),
+            json!({ "handover": h.id, "debrief": d.id, "opened": h.opened }),
         ),
     )
     .await?;
@@ -705,6 +708,7 @@ async fn keep(
         .collect();
     debriefs::keep_decisions(&mut conn, d.id, &new).await?;
     drop(conn);
+    app.publish(kelve_core::views::ServerEvent::Debriefs);
     app.publish(kelve_core::views::ServerEvent::Asks);
     Ok(())
 }
@@ -715,18 +719,6 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
         Some(id) => ask(app, id).await,
         None => Ok(Then::Done),
     }
-}
-
-/// Queues a debrief's job, to run now.
-pub async fn queue(app: &Shared, debrief: i64, opened: Option<i64>) -> pipeline::Result<()> {
-    pipeline::add(
-        app,
-        v2jobs::DEBRIEF,
-        Some(&format!("{}:{debrief}", v2jobs::DEBRIEF)),
-        json!({ "debrief": debrief, "opened": opened }),
-        Utc::now(),
-    )
-    .await
 }
 
 #[cfg(test)]

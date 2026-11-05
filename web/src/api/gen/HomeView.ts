@@ -10,6 +10,10 @@ import type { Timestamp } from "./Timestamp";
  */
 export type HomeView = { state: HomeState, 
 /**
+ * The agent's name: the one given, or "Sam's agent".
+ */
+name: string, 
+/**
  * The agent's status, in a few words: "Waiting for you".
  */
 status: string, 

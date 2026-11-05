@@ -11,6 +11,7 @@ import './styles/list.css'
 import './styles/kit.css'
 import './styles/shell.css'
 import './styles/skills.css'
+import './styles/debrief.css'
 
 // Every screen opens at its top, not where the browser left it.
 history.scrollRestoration = 'manual'

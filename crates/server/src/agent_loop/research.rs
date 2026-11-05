@@ -6,7 +6,6 @@
 
 use std::collections::BTreeMap;
 
-use chrono::Utc;
 use kelve_core::fence::fence;
 use kelve_store::handovers::{self, HandedFile};
 use kelve_store::{agent_loop as store, debriefs};
@@ -43,21 +42,15 @@ pub async fn ask_for(app: &Shared, decision: i64, question: &str) -> ApiResult<i
         )
         .await?
     };
-    queue(app, id).await?;
-    Ok(id)
-}
-
-/// Queues research's job, to run now.
-pub async fn queue(app: &Shared, research: i64) -> ApiResult<()> {
-    pipeline::add(
+    v2jobs::queue(
         app,
         v2jobs::RESEARCH,
-        Some(&format!("{}:{research}", v2jobs::RESEARCH)),
-        json!({ "research": research }),
-        Utc::now(),
+        &decision.to_string(),
+        json!({ "decision": decision, "research": id }),
     )
-    .await
-    .map_err(ApiError::from)
+    .await?;
+    app.publish(kelve_core::views::ServerEvent::Debriefs);
+    Ok(id)
 }
 
 /// The lines of a decision, numbered, from the files as they were handed
@@ -198,8 +191,9 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
         },
         Resume::job(
             v2jobs::RESEARCH,
-            format!("{}:{id}", v2jobs::RESEARCH),
-            json!({ "research": id }),
+            // Keyed by the decision, as `v2jobs::queue` keys it.
+            format!("{}:{}", v2jobs::RESEARCH, r.decision),
+            json!({ "decision": r.decision, "research": id }),
         ),
     )
     .await?;
@@ -212,6 +206,7 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
         .await
         .map_err(|e| fail(ApiError::from(e)))?;
     drop(conn);
+    app.publish(kelve_core::views::ServerEvent::Debriefs);
     app.publish(kelve_core::views::ServerEvent::Asks);
     Ok(Then::Done)
 }

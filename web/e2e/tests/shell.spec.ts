@@ -12,7 +12,7 @@ test('the header leads to each place, and says which one you’re in', async ({ 
   await page.goto('/#/')
   const nav = page.getByRole('navigation', { name: 'kelve' })
   await expect(nav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'From your agent' })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Your agent' })).toBeVisible()
 
   await nav.getByRole('link', { name: 'Skills' }).click()
@@ -30,9 +30,10 @@ test('the header leads to each place, and says which one you’re in', async ({ 
   await expect(page.getByRole('region', { name: 'Skill checks' }).getByRole('heading', { level: 2 })).toHaveText('Skill checks')
   await expect(sections.getByRole('link', { name: 'Skill checks' })).toHaveAttribute('aria-current', 'page')
 
-  // Home, by kelve's name; and today's start page, a link away from it.
+  // Home, by kelve's name; and today's start page, where it was.
   await page.getByRole('link', { name: 'kelve', exact: true }).click()
-  await page.getByRole('link', { name: 'the start page' }).click()
+  await expect(page.getByRole('region', { name: 'What happened' })).toBeVisible()
+  await page.goto('/#/start')
   await expect(page.getByText('Show me what you did in kelve.')).toBeVisible()
 })
 
@@ -52,8 +53,6 @@ test('every screen still being built says what it will show', async ({ page }) =
   await me().hello()
   await signIn(page)
   const screens: Array<[string, string]> = [
-    ['debrief/3', 'Debrief'],
-    ['change/3', 'The change'],
     ['agent/look', 'Change how it looks'],
     ['welcome', 'Meet your agent'],
   ]
@@ -64,7 +63,7 @@ test('every screen still being built says what it will show', async ({ page }) =
   }
   // Meeting your agent has no places to go yet: only a way to skip.
   await page.getByRole('link', { name: 'Skip for now' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'From your agent' })).toBeVisible()
   // Anywhere else, there's no page.
   await page.goto('/#/nowhere')
   await expect(page.getByRole('heading', { name: 'There’s no page here.' })).toBeVisible()

@@ -119,6 +119,7 @@ pub async fn ask_for(app: &Shared, debrief: i64, idea: &str) -> ApiResult<i64> {
             Utc::now(),
         )
         .await?;
+        app.publish(kelve_core::views::ServerEvent::Debriefs);
     }
     Ok(id)
 }
@@ -208,6 +209,7 @@ pub async fn job(app: &Shared, payload: &Value) -> pipeline::Result<Then> {
     let mut conn = app.db.acquire().await?;
     debriefs::answer_explain(&mut conn, id, text).await?;
     drop(conn);
+    app.publish(kelve_core::views::ServerEvent::Debriefs);
     app.publish(kelve_core::views::ServerEvent::Asks);
     Ok(Then::Done)
 }

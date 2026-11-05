@@ -62,6 +62,15 @@ pub async fn taken(app: &Shared, row: &asks::Ask) {
     if let Err(e) = done {
         tracing::warn!(error = %e, kind = %row.kind, "couldn't keep that the agent took a job");
     }
+    // The debrief, research or explanation shows it's being written.
+    if matches!(
+        row.kind.as_str(),
+        kelve_core::instructions::DEBRIEF
+            | kelve_core::instructions::RESEARCH
+            | kelve_core::instructions::EXPLAIN
+    ) {
+        app.publish(kelve_core::views::ServerEvent::Debriefs);
+    }
 }
 
 /// The agent's answer to one of the loop's jobs wasn't in its shape: kept
@@ -103,6 +112,7 @@ pub async fn wrong(app: &Shared, row: &asks::Ask, why: &str, put_aside: bool) {
         tracing::warn!(error = %e, kind = %row.kind, "couldn't keep that an answer was wrong");
     }
     drop(conn);
+    app.publish(kelve_core::views::ServerEvent::Debriefs);
     app.publish(kelve_core::views::ServerEvent::Asks);
 }
 

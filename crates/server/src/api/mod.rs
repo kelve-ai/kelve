@@ -9,6 +9,7 @@
 
 pub mod agent;
 pub mod agent_loop;
+pub mod debriefs;
 pub mod graph;
 pub mod hosted;
 pub mod me;
@@ -78,10 +79,6 @@ pub fn router() -> Router<Shared> {
         .route("/agent/hook", post(agent::hook_changed))
         .route("/agent/moment", post(crate::moment::moment))
         .route("/agent/skills", get(agent_loop::skills))
-        .route("/handovers/{id}/debrief", post(agent_loop::debrief_anyway))
-        .route("/debriefs/{id}/again", post(agent_loop::debrief_again))
-        .route("/debriefs/{id}/explain", post(agent_loop::explain))
-        .route("/decisions/{id}/research", post(agent_loop::research))
         .route("/skills/edits/{id}/undo", post(agent_loop::undo))
         .route("/agent/lessons", post(crate::lessons::know))
         .route("/agent/held", post(crate::lessons::held))
@@ -134,6 +131,20 @@ pub fn router() -> Router<Shared> {
         .route("/ideas/{key}/flag", post(reader::flag))
         .route("/ideas/{key}/ask", post(reader::ask))
         .route("/search", get(reader::search))
+        .route("/home", get(debriefs::home))
+        .route("/home/later", post(debriefs::later))
+        .route("/debriefs/{id}", get(debriefs::one))
+        .route("/debriefs/{id}/decide", post(debriefs::decide))
+        .route("/debriefs/{id}/remember", post(debriefs::remember))
+        .route("/debriefs/{id}/agree-rest", post(debriefs::agree_rest))
+        .route("/debriefs/{id}/look", post(debriefs::look_into))
+        .route("/debriefs/{id}/explain", post(debriefs::explain))
+        .route("/debriefs/{id}/know", post(debriefs::know))
+        .route("/debriefs/{id}/send", post(debriefs::send))
+        .route("/debriefs/{id}/again", post(debriefs::again))
+        .route("/debriefs/{id}/change", get(debriefs::change))
+        .route("/debriefs/{id}/diff", get(debriefs::diff))
+        .route("/handovers/{id}/debrief", post(debriefs::debrief_it))
         .route("/problems", get(problems::list).post(problems::from_page))
         .route("/problems/{id}", delete(problems::forget))
         .route("/skills", get(skills::list).post(skills::create))

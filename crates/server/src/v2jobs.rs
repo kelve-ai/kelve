@@ -35,7 +35,17 @@ pub const CHECK: &str = "v2.check";
 pub const DRAW: &str = "v2.draw";
 
 /// Queues `kind` for `key` now, with `payload`. The same kind and key queued
-/// again replaces the payload instead of adding a second job.
+/// again replaces the payload instead of adding a second job. Keys are kept
+/// under the kind (`v2.research:12`), as the jobs table's keys are one
+/// namespace: research on decision 12 and an explanation numbered 12 are
+/// two jobs.
 pub async fn queue(app: &Shared, kind: &str, key: &str, payload: Value) -> pipeline::Result<()> {
-    pipeline::add(app, kind, Some(key), payload, Utc::now()).await
+    pipeline::add(
+        app,
+        kind,
+        Some(&format!("{kind}:{key}")),
+        payload,
+        Utc::now(),
+    )
+    .await
 }
